@@ -1591,18 +1591,29 @@ class TaskContractTemplateTests(unittest.TestCase):
     def test_router_projection_is_exact_core_rendering(self) -> None:
         router = (self.root / "professional-skill-router.md").read_text(encoding="utf-8")
         self.assertTrue(router.endswith("\n"))
-        self.assertEqual(62, len(router.splitlines()))
+        self.assertLessEqual(len(router.splitlines()), 62)
         self.assertEqual([], VALIDATOR.execution_level_router_errors(router))
-        over_budget = (
-            router.rstrip("\n")
-            + "\n<!-- route-budget-negative-control -->\n"
-        )
-        self.assertEqual(63, len(over_budget.splitlines()))
-        self.assertTrue(
-            any(
-                "at most 62 lines" in error
-                for error in VALIDATOR.execution_level_router_errors(over_budget)
-            )
+        projection = VALIDATION_UTILS.execution_level_router_block()
+
+        def synthetic_router(line_count: int) -> str:
+            projection_lines = projection.splitlines()
+            self.assertGreaterEqual(line_count, len(projection_lines))
+            return "\n".join(
+                [*projection_lines, *(["synthetic boundary filler"] * (line_count - len(projection_lines)))]
+            ) + "\n"
+
+        for line_count in (61, 62):
+            with self.subTest(line_count=line_count):
+                self.assertEqual(
+                    [],
+                    VALIDATOR.execution_level_router_errors(
+                        synthetic_router(line_count)
+                    ),
+                )
+        over_errors = VALIDATOR.execution_level_router_errors(synthetic_router(63))
+        self.assertEqual(
+            ["professional Skill router must contain at most 62 lines"],
+            over_errors,
         )
         payload_drift = router.replace("`effective_level`", "`computed_floor`", 1)
         self.assertTrue(

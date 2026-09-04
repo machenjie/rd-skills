@@ -349,9 +349,13 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         target_changed["readability_targets"] = copy.deepcopy(
             packet["readability_targets"]
         )
-        target_changed["readability_targets"][0]["findings"][0][
-            "sentence_fingerprint"
-        ] = "0" * 64
+        finding = target_changed["readability_targets"][0]["findings"][0]
+        finding["sentence"] += " changed"
+        finding["sentence_fingerprint"] = hashlib.sha256(
+            ("ai-readability-sentence-v1\0" + finding["sentence"]).encode(
+                "utf-8"
+            )
+        ).hexdigest()
         target_changed_fingerprints = PANEL._readability_source_fingerprints(
             **target_changed
         )
@@ -391,6 +395,238 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         self.assertNotEqual(
             baseline["actionability_detector_contract"],
             actionability_fingerprints["actionability_detector_contract"],
+        )
+
+    def test_packet_currentness_uses_normalized_actionability_evidence(self) -> None:
+        packet = copy.deepcopy(self.packet)
+        current_actionability = copy.deepcopy(packet["actionability_targets"])
+        target = current_actionability[0]
+        line_number, source_line, token = self._first_substantive_window_line(
+            target
+        )
+        line_row = next(
+            row
+            for row in target["front_window"]["lines"]
+            if row["line"] == line_number
+        )
+        raw_token = next(
+            part for part in source_line.split() if token in part.casefold()
+        )
+        line_row["text"] = source_line.replace(
+            raw_token, f"**{raw_token}**", 1
+        )
+        target["front_window"]["sha256"] = hashlib.sha256(
+            "\n".join(
+                row["text"] for row in target["front_window"]["lines"]
+            ).encode("utf-8")
+        ).hexdigest()
+        target["content_fingerprint"] = "0" * 64
+        current_fingerprints = PANEL._readability_source_fingerprints(
+            readability_contract=self.audit["ai_readability"]["contract"],
+            content_targets=packet["content_targets"],
+            readability_targets=packet["readability_targets"],
+            actionability_targets=current_actionability,
+            actionability_score_threshold=packet["panel_contract"][
+                "actionability_score_threshold"
+            ],
+            actionability_front_window_lines=packet["panel_contract"][
+                "actionability_front_window_lines"
+            ],
+        )
+        self.assertEqual(packet["source_fingerprints"], current_fingerprints)
+        with mock.patch.object(
+            PANEL,
+            "_current_readability_target_projection",
+            return_value=(
+                current_fingerprints,
+                packet["content_targets"],
+                packet["readability_targets"],
+                current_actionability,
+            ),
+        ):
+            PANEL.validate_packet(packet)
+
+        changed_actionability = copy.deepcopy(current_actionability)
+        changed_target = changed_actionability[0]
+        changed_line = next(
+            row
+            for row in changed_target["front_window"]["lines"]
+            if row["line"] == line_number
+        )
+        changed_line["text"] += " changed"
+        changed_target["front_window"]["sha256"] = hashlib.sha256(
+            "\n".join(
+                row["text"]
+                for row in changed_target["front_window"]["lines"]
+            ).encode("utf-8")
+        ).hexdigest()
+        changed_fingerprints = PANEL._readability_source_fingerprints(
+            readability_contract=self.audit["ai_readability"]["contract"],
+            content_targets=packet["content_targets"],
+            readability_targets=packet["readability_targets"],
+            actionability_targets=changed_actionability,
+            actionability_score_threshold=packet["panel_contract"][
+                "actionability_score_threshold"
+            ],
+            actionability_front_window_lines=packet["panel_contract"][
+                "actionability_front_window_lines"
+            ],
+        )
+        self.assertNotEqual(
+            current_fingerprints["readability_target_manifest"],
+            changed_fingerprints["readability_target_manifest"],
+        )
+        with mock.patch.object(
+            PANEL,
+            "_current_readability_target_projection",
+            return_value=(
+                changed_fingerprints,
+                packet["content_targets"],
+                packet["readability_targets"],
+                changed_actionability,
+            ),
+        ), self.assertRaisesRegex(PANEL.PanelReviewError, "authority is stale"):
+            PANEL.validate_packet(packet)
+
+    def test_front_window_exact_unit_boundary(self) -> None:
+        units = [f"- Governed unit {index}." for index in range(1, 62)]
+        source_text = "---\nname: unit-boundary\ndescription: fixture\n---\n" + (
+            "\n\n".join(units)
+        )
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            source = Path(raw) / "SKILL.md"
+            source.write_text(source_text, encoding="utf-8")
+            relative = source.relative_to(ROOT).as_posix()
+            window = PANEL._actionability_front_window(relative, limit=60)
+
+        PANEL._validate_actionability_front_window(
+            window,
+            label="unit-boundary.front_window",
+            limit=60,
+        )
+        projection = (
+            PANEL.panel_contracts.readability_normalized_logical_units(
+                "\n".join(row["text"] for row in window["lines"]),
+                exclude_fenced=True,
+            )
+        )
+        self.assertEqual(60, len(projection))
+        self.assertEqual("Governed unit 60.", projection[-1]["text"])
+        self.assertNotIn(
+            "Governed unit 61.",
+            {row["text"] for row in projection},
+        )
+        overflow = copy.deepcopy(window)
+        overflow["lines"].extend(
+            [
+                {"line": overflow["end_line"] + 1, "text": ""},
+                {
+                    "line": overflow["end_line"] + 2,
+                    "text": "- Governed unit 61.",
+                },
+            ]
+        )
+        overflow["end_line"] += 2
+        overflow["line_count"] += 2
+        overflow["sha256"] = hashlib.sha256(
+            "\n".join(row["text"] for row in overflow["lines"]).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "logical-unit count is outside",
+        ):
+            PANEL._validate_actionability_front_window(
+                overflow,
+                label="unit-boundary.overflow",
+                limit=60,
+            )
+
+    def test_raw_line_padding_cannot_move_actionability_evidence(self) -> None:
+        units = [f"- Neutral unit {index}." for index in range(1, 60)]
+        units.extend(
+            [
+                "- Validate the owned evidence before completion.",
+                "- Stop after excluded unit 61.",
+            ]
+        )
+        baseline_source = "---\nname: padding-fixture\n---\n" + "\n".join(
+            units
+        )
+        padded_units = list(units)
+        padded_units[59] = "- **Validate** the owned\n  evidence before completion."
+        padded_source = (
+            "---\nname: padding-fixture\ndescription: ignored metadata\n---\n"
+            + "\n".join(
+                line
+                for unit in padded_units
+                for line in ("", "<!-- ignored padding -->", unit)
+            )
+        )
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            source = Path(raw) / "SKILL.md"
+            relative = source.relative_to(ROOT).as_posix()
+            source.write_text(baseline_source, encoding="utf-8")
+            baseline_window = PANEL._actionability_front_window(
+                relative, limit=60
+            )
+            source.write_text(padded_source, encoding="utf-8")
+            padded_window = PANEL._actionability_front_window(
+                relative, limit=60
+            )
+
+        for label, window in (
+            ("baseline", baseline_window),
+            ("padded", padded_window),
+        ):
+            PANEL._validate_actionability_front_window(
+                window,
+                label=f"{label}.front_window",
+                limit=60,
+            )
+
+        def authority(window: dict, source_fingerprint: str) -> dict:
+            return PANEL.panel_attestation.readability_target_authority(
+                category="actionability",
+                target={
+                    "target_id": "padding-target",
+                    "skill_id": "padding-fixture",
+                    "path": relative,
+                    "kind": "professional-skill",
+                    "actionability_model": "runtime-front-loaded-v1",
+                    "front_loaded_action_score": 20,
+                    "front_window": window,
+                    "content_fingerprint": source_fingerprint,
+                },
+            )
+
+        baseline = authority(baseline_window, "a" * 64)
+        padded = authority(padded_window, "b" * 64)
+        self.assertNotEqual(
+            baseline["source_fingerprint"], padded["source_fingerprint"]
+        )
+        self.assertNotEqual(
+            baseline_window["sha256"], padded_window["sha256"]
+        )
+        self.assertEqual(
+            baseline["review_binding_fingerprint"],
+            padded["review_binding_fingerprint"],
+        )
+        normalized = (
+            PANEL.panel_contracts.readability_normalized_logical_units(
+                "\n".join(
+                    row["text"] for row in padded_window["lines"]
+                ),
+                exclude_fenced=True,
+            )
+        )
+        self.assertEqual(
+            "Validate the owned evidence before completion.",
+            normalized[-1]["text"],
+        )
+        self.assertNotIn(
+            "excluded unit 61", " ".join(row["text"] for row in normalized)
         )
 
     def test_schema_two_cli_rejects_removed_readiness_flag(self) -> None:
@@ -523,6 +759,22 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         self.assertEqual(
             PANEL.panel_contracts.READABILITY_TARGET_MANIFEST_CONTRACT_ID,
             manifest["contract_id"],
+        )
+        manifest_text = json.dumps(manifest, sort_keys=True)
+        for raw_field in (
+            "source_fingerprint",
+            "content_fingerprint",
+            "document_context",
+            "source_span",
+            "front_window",
+        ):
+            self.assertNotIn(raw_field, manifest_text)
+        self.assertTrue(
+            all(
+                authority["source_fingerprint"]
+                for category in bindings.values()
+                for authority in category.values()
+            )
         )
         self.assertEqual(
             packet["source_fingerprints"]["readability_target_manifest"],
@@ -739,7 +991,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                 packet["readability_targets"],
                 packet["actionability_targets"],
             ),
-        ), self.assertRaisesRegex(PANEL.PanelReviewError, "bindings or inventory"):
+        ), self.assertRaisesRegex(
+            PANEL.PanelReviewError, "normalized target bindings"
+        ):
             PANEL.validate_packet(packet)
 
         digest = hashlib.sha256(
@@ -1312,6 +1566,11 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         packet = self._synthetic_actionability_packet()
         target = packet["actionability_targets"][0]
         target["front_window"] = window
+        packet["source_fingerprints"]["readability_target_manifest"] = (
+            PANEL.panel_attestation.readability_target_manifest_fingerprint(
+                PANEL._readability_target_authorities(packet)
+            )
+        )
         with self._current_readability_authority(
             packet, track_source_changes=False
         ):
@@ -1429,10 +1688,13 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         self.assertFalse(REGRESSION._readability_review_formal_ready(formal))
 
     def test_regression_reports_all_weak_skills_not_professional_subset(self) -> None:
-        summary = REGRESSION._content_audit_summary(self.audit)
-        self.assertEqual(0, summary["weak_front_loaded_skills"])
+        audit = copy.deepcopy(self.audit)
+        audit["skill_detector"] = (
+            PANEL._load_skill_content_auditor()._skill_detector_contract()
+        )
+        summary = REGRESSION._content_audit_summary(audit)
         self.assertEqual(
-            self.audit["summary"]["review_reasons"]["weak_front_loaded_action"],
+            audit["summary"]["review_reasons"]["weak_front_loaded_action"],
             summary["weak_front_loaded_skills"],
         )
 

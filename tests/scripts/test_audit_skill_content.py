@@ -31,11 +31,11 @@ def _load_module(name: str = "audit_skill_content_test"):
 
 
 def _semantic_disposition(candidate: dict, disposition: str, *, priority: str = "P1") -> dict:
-    return {
+    entry = {
         "candidate_id": candidate["candidate_id"],
         "finding": candidate["finding"],
         "path": candidate["path"],
-        "fingerprint": candidate["fingerprint"],
+        "source_selector": deepcopy(candidate["source_selector"]),
         "skill_owner": candidate["skill_owner"],
         "priority": priority,
         "disposition": disposition,
@@ -52,6 +52,11 @@ def _semantic_disposition(candidate: dict, disposition: str, *, priority: str = 
             "2026-08-01" if disposition == "time-bounded-exception" else None
         ),
     }
+    contracts = __import__("expert_panel_contracts")
+    entry["record_fingerprint"] = contracts.semantic_disposition_record_fingerprint(
+        "reference", entry
+    )
+    return entry
 
 
 class AuditSkillContentDeterminismTests(unittest.TestCase):
@@ -60,12 +65,367 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         cls.module = _load_module()
 
     def test_current_root_schema_domains_exclude_lifecycle(self) -> None:
-        self.assertEqual(7, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
-        self.assertEqual(6, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
+        self.assertEqual(8, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
+        self.assertEqual(7, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
         self.assertEqual(9, self.module.ROOT_CONTENT_SCHEMA_VERSION)
         result = self.module._collect_root_content()
         self.assertNotIn("lifecycle", result["semantic_advisories"])
         self.assertNotIn("lifecycle_status", result["semantic_advisories"])
+
+    def test_semantic_identity_is_stable_while_evidence_requires_confirmation(self) -> None:
+        def document(text: str, *, rule: str = "example/recovery", occurrence: str = "main") -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule={rule} occurrence={occurrence} -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        first = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_text = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain its current owner and rollback evidence.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_occurrence = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.", occurrence="replacement")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_rule = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.", rule="example/retry")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(first["candidate_id"], changed_text["candidate_id"])
+        self.assertEqual(first["candidate_id"], changed_occurrence["candidate_id"])
+        self.assertNotEqual(first["candidate_id"], changed_rule["candidate_id"])
+        self.assertNotEqual(first["content_fingerprint"], changed_text["content_fingerprint"])
+        self.assertNotEqual(first["evidence_fingerprint"], changed_occurrence["evidence_fingerprint"])
+
+        entry = _semantic_disposition(first, "false-positive")
+        governed = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain its current owner and rollback evidence.")],
+            disposition_entries=[entry],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertEqual("needs-confirmation", governed["governance_status"])
+        self.assertIsNone(governed["disposition_record"])
+
+    def test_authored_marker_candidate_survives_detector_non_match(self) -> None:
+        def document(text: str) -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    "rule=example/recovery occurrence=main -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        matched = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current rollback record.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        non_match = self.module._collect_reference_semantic_advisories(
+            [document("Retain a current rollback record for each retry.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(matched["candidate_id"], non_match["candidate_id"])
+        self.assertNotEqual(matched["content_fingerprint"], non_match["content_fingerprint"])
+        self.assertEqual("untriaged", non_match["governance_status"])
+        self.assertEqual([], non_match["signals"])
+
+        def root_document(text: str) -> dict:
+            return {
+                "path": "src/professional-skills/example/SKILL.md",
+                "layer": "professional-skill",
+                "owner": "example",
+                "kind": "professional-skill",
+                "document_part": "body",
+                "text": (
+                    "## Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_mechanism_candidate "
+                    "rule=example/loading occurrence=main-root -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        matched_root = self.module._collect_root_semantic_advisories(
+            [root_document("Never load the complete catalog.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        non_match_root = self.module._collect_root_semantic_advisories(
+            [root_document("Retain a bounded catalog selection.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertEqual(matched_root["candidate_id"], non_match_root["candidate_id"])
+        self.assertNotEqual(matched_root["fingerprint"], non_match_root["fingerprint"])
+        self.assertEqual([], non_match_root["signals"])
+
+    def test_authored_marker_identity_survives_heading_typo(self) -> None:
+        def document(heading: str) -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    f"## {heading}\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    "rule=example/recovery occurrence=main -->\n"
+                    "- Every retry must retain a current rollback record.\n"
+                ),
+            }
+
+        original = self.module._collect_reference_semantic_advisories(
+            [document("Recovery Rules")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        typo = self.module._collect_reference_semantic_advisories(
+            [document("Recovery Rulse")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(original["candidate_id"], typo["candidate_id"])
+        self.assertEqual(original["content_fingerprint"], typo["content_fingerprint"])
+        self.assertNotEqual(original["evidence_fingerprint"], typo["evidence_fingerprint"])
+
+        def unmarked(heading: str) -> dict:
+            item = document(heading)
+            item["text"] = item["text"].replace(
+                "<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=example/recovery occurrence=main -->\n",
+                "",
+            )
+            return item
+
+        unmarked_original = self.module._collect_reference_semantic_advisories(
+            [unmarked("Recovery Rules")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        unmarked_typo = self.module._collect_reference_semantic_advisories(
+            [unmarked("Recovery Rulse")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertNotEqual(
+            unmarked_original["candidate_id"], unmarked_typo["candidate_id"]
+        )
+
+    def test_authored_marker_evidence_drift_requires_confirmation(self) -> None:
+        source = {
+            "path": "src/foundation/example/references/rules.md",
+            "layer": "foundation",
+            "owner": "example",
+            "kind": "targeted",
+            "text": (
+                "# Rules\n\n"
+                "<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=example/recovery occurrence=main -->\n"
+                "- Every retry must retain a current rollback record.\n"
+            ),
+        }
+        original = self.module._collect_reference_semantic_advisories(
+            [source], disposition_entries=[], evaluation_date=date(2026, 9, 3)
+        )["candidates"][0]
+        entry = _semantic_disposition(original, "false-positive")
+        changed = deepcopy(source)
+        changed["text"] = changed["text"].replace(
+            "Every retry must retain a current rollback record.",
+            "Retain a current rollback record for each retry.",
+        )
+        governed = self.module._collect_reference_semantic_advisories(
+            [changed], disposition_entries=[entry], evaluation_date=date(2026, 9, 3)
+        )["candidates"][0]
+
+        self.assertEqual(original["candidate_id"], governed["candidate_id"])
+        self.assertEqual("needs-confirmation", governed["governance_status"])
+        self.assertIsNone(governed["disposition"])
+        self.assertIsNone(governed["disposition_record"])
+
+    def test_semantic_marker_occurrence_collision_fails_closed(self) -> None:
+        documents = [
+            {
+                "path": f"{name}.md",
+                "layer": "foundation",
+                "owner": name,
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule={name}/recovery occurrence=shared -->\n"
+                    "- Every retry must retain a current owner.\n"
+                ),
+            }
+            for name in ("alpha", "beta")
+        ]
+        with self.assertRaisesRegex(ValueError, "duplicate.*occurrence"):
+            self.module._collect_reference_semantic_advisories(
+                documents,
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+        duplicate_rule = [
+            {
+                "path": f"src/foundation/example/references/{name}.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule=example/recovery occurrence={name} -->\n"
+                    "- Every retry must retain a current owner.\n"
+                ),
+            }
+            for name in ("alpha", "beta")
+        ]
+        with self.assertRaisesRegex(ValueError, "rule-id collision"):
+            self.module._collect_reference_semantic_advisories(
+                duplicate_rule,
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+    def test_authored_marker_selector_mutations_change_identity_or_fail_closed(self) -> None:
+        def document(*, path: str, finding: str, owner: str = "example") -> dict:
+            return {
+                "path": path,
+                "layer": "foundation",
+                "owner": owner,
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    f"<!-- rd-semantic-id:v2 finding={finding} "
+                    "rule=example/recovery occurrence=main -->\n"
+                    "- Every retry must retain a current rollback record.\n"
+                ),
+            }
+
+        original = self.module._collect_reference_semantic_advisories(
+            [
+                document(
+                    path="src/foundation/example/references/rules.md",
+                    finding="unconditional_absolute_candidate",
+                )
+            ],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_path = self.module._collect_reference_semantic_advisories(
+            [
+                document(
+                    path="src/foundation/example/references/moved.md",
+                    finding="unconditional_absolute_candidate",
+                )
+            ],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_finding = next(
+            candidate
+            for candidate in self.module._collect_reference_semantic_advisories(
+                [
+                    document(
+                        path="src/foundation/example/references/rules.md",
+                        finding="fixed_number_candidate",
+                    )
+                ],
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )["candidates"]
+            if candidate["source_selector"]["selector_kind"] == "authored-rule"
+        )
+
+        self.assertNotEqual(original["candidate_id"], changed_path["candidate_id"])
+        self.assertNotEqual(original["candidate_id"], changed_finding["candidate_id"])
+        with self.assertRaisesRegex(ValueError, "owner prefix"):
+            self.module._collect_reference_semantic_advisories(
+                [
+                    document(
+                        path="src/foundation/renamed/references/rules.md",
+                        finding="unconditional_absolute_candidate",
+                        owner="renamed",
+                    )
+                ],
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+    def test_semantic_config_migration_is_all_or_nothing_and_legacy_is_immutable(self) -> None:
+        current = self.module.load_yaml_file(
+            self.module.SKILL_CONTENT_EXCEPTIONS_FILE
+        )
+        mutations = []
+        missing_legacy = deepcopy(current)
+        missing_legacy.pop(self.module.SEMANTIC_DISPOSITION_LEGACY_KEY)
+        mutations.append(missing_legacy)
+        partial_schema = deepcopy(current)
+        partial_schema["reference_semantic_dispositions"]["schema_version"] = 2
+        mutations.append(partial_schema)
+        duplicate_legacy = deepcopy(current)
+        duplicate_legacy[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+            "entries"
+        ].append(
+            deepcopy(
+                duplicate_legacy[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+                    "entries"
+                ][0]
+            )
+        )
+        mutations.append(duplicate_legacy)
+        tampered_anchor = deepcopy(current)
+        tampered_anchor[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+            "artifact_sha256"
+        ]["audit"] = "0" * 64
+        mutations.append(tampered_anchor)
+
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                with mock.patch.object(
+                    self.module, "load_yaml_file", return_value=mutation
+                ):
+                    reference, reference_errors = (
+                        self.module._load_reference_semantic_dispositions()
+                    )
+                    root, root_errors = self.module._load_root_semantic_dispositions()
+                self.assertTrue(reference_errors)
+                self.assertTrue(root_errors)
+                self.assertEqual([], reference["entries"])
+                self.assertEqual([], root["entries"])
 
     def _detector_source_change(
         self, original: str, replacement: str, *, relative: str
@@ -86,677 +446,30 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             side_effect=changed,
         )
 
-    def test_foundation_derivation_snapshot_check_mode_is_current(self) -> None:
-        stdout = io.StringIO()
-        stderr = io.StringIO()
-        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            status = self.module.main(
-                [
-                    "foundation-derivation-snapshot",
-                    "--check",
-                    "--date",
-                    "2026-08-30",
-                ]
-            )
-
-        self.assertEqual(0, status, stderr.getvalue())
-        self.assertIn("owned projections are current", stdout.getvalue())
-
-    def _snapshot_projection(
-        self,
-        assignment: str,
-        snapshot: dict[str, object],
-        *,
-        indent: str,
-    ) -> str:
-        lines = [
-            f"{indent}# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT",
-            f"{indent}{assignment} = {{",
-        ]
-        for key, value in snapshot.items():
-            rendered = json.dumps(value) if isinstance(value, str) else repr(value)
-            lines.append(f'{indent}    "{key}": {rendered},')
-        lines.extend(
-            [
-                f"{indent}}}",
-                f"{indent}# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
-                "",
-            ]
-        )
-        return "\n".join(lines)
-
-    def _snapshot_owner_root(
-        self,
-        root: Path,
-        *,
-        audit_snapshot: dict[str, object] | None = None,
-        test_snapshot: dict[str, object] | None = None,
-    ) -> tuple[Path, Path]:
-        audit_snapshot = dict(
-            audit_snapshot or self.module.FOUNDATION_DERIVATION_SNAPSHOT
-        )
-        test_snapshot = dict(test_snapshot or audit_snapshot)
-        audit_path = root / "scripts/audit-skill-content.py"
-        test_path = root / "tests/scripts/test_validate_root_content.py"
-        audit_path.parent.mkdir(parents=True)
-        test_path.parent.mkdir(parents=True)
-        audit_path.write_text(
-            self._snapshot_projection(
-                "FOUNDATION_DERIVATION_SNAPSHOT",
-                audit_snapshot,
-                indent="",
-            ),
-            encoding="utf-8",
-        )
-        test_path.write_text(
-            self._snapshot_projection("expected", test_snapshot, indent="        "),
-            encoding="utf-8",
-        )
-        return audit_path, test_path
-
-    def test_foundation_derivation_snapshot_write_is_byte_stable(self) -> None:
-        current = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected = dict(current)
-        expected["date"] = "2026-08-30"
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+    def test_removed_foundation_snapshot_write_command_has_no_side_effects(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date="2026-08-30",
-                    write=True,
-                )
-                self.assertEqual([], errors)
-                self.assertEqual(
-                    {
-                        "scripts/audit-skill-content.py",
-                        "tests/scripts/test_validate_root_content.py",
-                    },
-                    set(drift),
-                )
-                first = (audit_path.read_bytes(), test_path.read_bytes())
-
-                second_drift, second_errors = (
-                    self.module._synchronize_foundation_derivation_snapshot(
-                        root=root,
-                        snapshot_date="2026-08-30",
-                        write=True,
-                    )
-                )
-
-            self.assertEqual([], second_errors)
-            self.assertEqual([], second_drift)
-            self.assertEqual(
-                first,
-                (audit_path.read_bytes(), test_path.read_bytes()),
-            )
-
-    def test_foundation_derivation_snapshot_second_replace_rolls_back_atomically(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            before = (audit_path.read_bytes(), test_path.read_bytes())
-            real_replace = self.module.os.replace
-            replace_count = 0
-
-            def fail_second_replace(source: object, target: object) -> None:
-                nonlocal replace_count
-                replace_count += 1
-                if replace_count == 2:
-                    raise OSError("injected second replacement failure")
-                real_replace(source, target)
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=fail_second_replace,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any("injected second replacement failure" in error for error in errors),
-                errors,
-            )
-            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-            stdout = io.StringIO()
+            sentinel = root / "sentinel.txt"
+            sentinel.write_text("unchanged\n", encoding="utf-8")
+            before = sentinel.read_bytes()
             stderr = io.StringIO()
-            with mock.patch.object(self.module, "ROOT", root), mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                write_status = self.module.main(
+            with (
+                mock.patch.object(self.module, "ROOT", root),
+                contextlib.redirect_stderr(stderr),
+                self.assertRaises(SystemExit),
+            ):
+                self.module.main(
                     [
                         "foundation-derivation-snapshot",
                         "--write",
                         "--date",
-                        str(expected["date"]),
-                    ]
-                )
-                written = (audit_path.read_bytes(), test_path.read_bytes())
-                check_status = self.module.main(
-                    [
-                        "foundation-derivation-snapshot",
-                        "--check",
-                        "--date",
-                        str(expected["date"]),
+                        "2026-08-30",
                     ]
                 )
 
-            self.assertEqual(0, write_status, stderr.getvalue())
-            self.assertEqual(0, check_status, stderr.getvalue())
-            self.assertIn("changed=2", stdout.getvalue())
-            self.assertEqual(written, (audit_path.read_bytes(), test_path.read_bytes()))
-
-    def test_foundation_derivation_snapshot_reports_rollback_failure_with_original(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._snapshot_owner_root(root)
-            real_replace = self.module.os.replace
-            replace_count = 0
-
-            def fail_commit_and_rollback(source: object, target: object) -> None:
-                nonlocal replace_count
-                replace_count += 1
-                if replace_count == 2:
-                    raise OSError("injected commit failure")
-                if replace_count == 3:
-                    raise OSError("injected rollback failure")
-                real_replace(source, target)
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=fail_commit_and_rollback,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any(
-                    "injected commit failure" in error
-                    and "rollback failed" in error
-                    and "injected rollback failure" in error
-                    for error in errors
-                ),
-                errors,
-            )
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-    def test_foundation_derivation_snapshot_final_verification_failure_rolls_back(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        for fault in ("mismatch", "read-error"):
-            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as raw:
-                root = Path(raw)
-                audit_path, test_path = self._snapshot_owner_root(root)
-                before = (audit_path.read_bytes(), test_path.read_bytes())
-                original_sources = {item.decode("utf-8") for item in before}
-                real_read_text = self.module.Path.read_text
-                injected = False
-
-                def fail_final_verification(path: Path, *args, **kwargs) -> str:
-                    nonlocal injected
-                    source = real_read_text(path, *args, **kwargs)
-                    if source not in original_sources and not injected:
-                        injected = True
-                        if fault == "read-error":
-                            raise OSError("injected final verification read failure")
-                        return source + "# injected final verification mismatch\n"
-                    return source
-
-                with mock.patch.object(
-                    self.module,
-                    "_current_foundation_derivation_snapshot",
-                    return_value=expected,
-                ), mock.patch.object(
-                    self.module.Path,
-                    "read_text",
-                    new=fail_final_verification,
-                ):
-                    drift, errors = (
-                        self.module._synchronize_foundation_derivation_snapshot(
-                            root=root,
-                            snapshot_date=str(expected["date"]),
-                            write=True,
-                        )
-                    )
-
-                self.assertTrue(injected, fault)
-                self.assertEqual([], drift)
-                expected_cause = (
-                    "injected final verification read failure"
-                    if fault == "read-error"
-                    else "Foundation snapshot final verification failed"
-                )
-                self.assertTrue(
-                    any(expected_cause in error for error in errors),
-                    errors,
-                )
-                self.assertEqual(
-                    before,
-                    (audit_path.read_bytes(), test_path.read_bytes()),
-                )
-                self.assertEqual(
-                    [],
-                    list(root.rglob("*.foundation-snapshot.*.tmp")),
-                )
-
-    def test_foundation_derivation_snapshot_final_verification_reports_rollback_failure(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            original_sources = {
-                audit_path.read_text(encoding="utf-8"),
-                test_path.read_text(encoding="utf-8"),
-            }
-            real_read_text = self.module.Path.read_text
-            real_replace = self.module.os.replace
-            injected_verification = False
-            replace_count = 0
-
-            def mismatch_final_verification(path: Path, *args, **kwargs) -> str:
-                nonlocal injected_verification
-                source = real_read_text(path, *args, **kwargs)
-                if source not in original_sources and not injected_verification:
-                    injected_verification = True
-                    return source + "# injected final verification mismatch\n"
-                return source
-
-            def fail_first_rollback(source: object, target: object) -> None:
-                nonlocal replace_count
-                replace_count += 1
-                if replace_count == 3:
-                    raise OSError("injected verification rollback failure")
-                real_replace(source, target)
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.Path,
-                "read_text",
-                new=mismatch_final_verification,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=fail_first_rollback,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertTrue(injected_verification)
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any(
-                    "Foundation snapshot final verification failed" in error
-                    and "rollback failed" in error
-                    and "injected verification rollback failure" in error
-                    for error in errors
-                ),
-                errors,
-            )
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-    def test_foundation_derivation_snapshot_persistent_committed_bytes_fault_rolls_back(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            before = (audit_path.read_bytes(), test_path.read_bytes())
-            real_replace = self.module.os.replace
-            fault_injected = False
-
-            def persistently_modify_committed_target(
-                source: object,
-                target: object,
-            ) -> None:
-                nonlocal fault_injected
-                real_replace(source, target)
-                target_path = Path(target)
-                if not fault_injected and target_path.name == audit_path.name:
-                    target_path.write_bytes(
-                        target_path.read_bytes()
-                        + b"# persistent committed-byte fault\n"
-                    )
-                    fault_injected = True
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=persistently_modify_committed_target,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertTrue(fault_injected, errors)
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any(
-                    "Foundation snapshot final verification failed" in error
-                    for error in errors
-                ),
-                errors,
-            )
-            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-    def test_foundation_derivation_snapshot_persistent_committed_read_failure_rolls_back(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            before = (audit_path.read_bytes(), test_path.read_bytes())
-            real_replace = self.module.os.replace
-            real_read_text = self.module.Path.read_text
-            unreadable_identity: tuple[int, int] | None = None
-
-            def capture_committed_identity(source: object, target: object) -> None:
-                nonlocal unreadable_identity
-                real_replace(source, target)
-                target_path = Path(target)
-                if (
-                    target_path.name == audit_path.name
-                    and unreadable_identity is None
-                ):
-                    current = target_path.stat(follow_symlinks=False)
-                    unreadable_identity = (current.st_dev, current.st_ino)
-
-            def persistently_fail_owned_read(path: Path, *args, **kwargs) -> str:
-                current = path.stat(follow_symlinks=False)
-                if unreadable_identity == (current.st_dev, current.st_ino):
-                    raise OSError("persistent transaction-owned read failure")
-                return real_read_text(path, *args, **kwargs)
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=capture_committed_identity,
-            ), mock.patch.object(
-                self.module.Path,
-                "read_text",
-                new=persistently_fail_owned_read,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertIsNotNone(unreadable_identity, errors)
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any(
-                    "persistent transaction-owned read failure" in error
-                    for error in errors
-                ),
-                errors,
-            )
-            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-    def test_foundation_derivation_snapshot_external_atomic_replace_reports_conflict(
-        self,
-    ) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            before_test = test_path.read_bytes()
-            external_source = b"external atomic replacement\n"
-            real_replace = self.module.os.replace
-            external_replaced = False
-
-            def replace_with_external_identity(
-                source: object,
-                target: object,
-            ) -> None:
-                nonlocal external_replaced
-                real_replace(source, target)
-                target_path = Path(target)
-                if not external_replaced and target_path.name == audit_path.name:
-                    external = audit_path.with_name(
-                        f".{audit_path.name}.external-replacement.tmp"
-                    )
-                    external.write_bytes(external_source)
-                    real_replace(external, audit_path)
-                    external_replaced = True
-
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ), mock.patch.object(
-                self.module.os,
-                "replace",
-                side_effect=replace_with_external_identity,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertTrue(external_replaced, errors)
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any(
-                    "rollback conflict" in error
-                    and "identity changed" in error
-                    for error in errors
-                ),
-                errors,
-            )
-            self.assertEqual(external_source, audit_path.read_bytes())
-            self.assertEqual(before_test, test_path.read_bytes())
-            self.assertEqual(
-                [],
-                list(root.rglob("*.foundation-snapshot.*.tmp")),
-            )
-
-    def test_foundation_derivation_snapshot_preflights_all_outputs(self) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        expected["date"] = "2026-08-30"
-        corruptions = {
-            "missing-marker": lambda source: source.replace(
-                "# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
-                "# END WRONG OWNER",
-            ),
-            "duplicate-marker": lambda source: source.replace(
-                "# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
-                "# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT\n"
-                "        # END GENERATED FOUNDATION DERIVATION SNAPSHOT",
-            ),
-            "wrong-assignment": lambda source: source.replace(
-                "        expected = {",
-                "        wrong_owner = {",
-            ),
-        }
-        for label, corrupt in corruptions.items():
-            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
-                root = Path(raw)
-                audit_path, test_path = self._snapshot_owner_root(root)
-                original_audit = audit_path.read_bytes()
-                test_path.write_text(
-                    corrupt(test_path.read_text(encoding="utf-8")),
-                    encoding="utf-8",
-                )
-                original_test = test_path.read_bytes()
-                with mock.patch.object(
-                    self.module,
-                    "_current_foundation_derivation_snapshot",
-                    return_value=expected,
-                ):
-                    drift, errors = (
-                        self.module._synchronize_foundation_derivation_snapshot(
-                            root=root,
-                            snapshot_date="2026-08-30",
-                            write=True,
-                        )
-                    )
-
-                self.assertEqual([], drift)
-                self.assertTrue(errors, label)
-                self.assertEqual(original_audit, audit_path.read_bytes())
-                self.assertEqual(original_test, test_path.read_bytes())
-
-    def test_foundation_derivation_snapshot_rejects_partial_projection(self) -> None:
-        audit_snapshot = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        test_snapshot = dict(audit_snapshot)
-        test_snapshot["sum_tokens"] = int(test_snapshot["sum_tokens"]) + 1
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(
-                root,
-                audit_snapshot=audit_snapshot,
-                test_snapshot=test_snapshot,
-            )
-            before = (audit_path.read_bytes(), test_path.read_bytes())
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=audit_snapshot,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(audit_snapshot["date"]),
-                    write=True,
-                )
-
-            self.assertEqual([], drift)
-            self.assertTrue(
-                any("owned projections disagree" in error for error in errors),
-                errors,
-            )
-            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
-
-    def test_foundation_derivation_snapshot_rejects_symlink_target(self) -> None:
-        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            _audit_path, test_path = self._snapshot_owner_root(root)
-            outside = root / "outside.py"
-            outside.write_bytes(test_path.read_bytes())
-            test_path.unlink()
-            test_path.symlink_to(outside)
-            outside_before = outside.read_bytes()
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                return_value=expected,
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date=str(expected["date"]),
-                    write=True,
-                )
-
-            self.assertEqual([], drift)
-            self.assertTrue(any("symlink" in error for error in errors), errors)
-            self.assertEqual(outside_before, outside.read_bytes())
-
-    def test_foundation_derivation_snapshot_fails_closed_on_collection_error(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            audit_path, test_path = self._snapshot_owner_root(root)
-            before = (audit_path.read_bytes(), test_path.read_bytes())
-            with mock.patch.object(
-                self.module,
-                "_current_foundation_derivation_snapshot",
-                side_effect=self.module.ValidationProblem(
-                    "expected 150 Foundation body documents; found 149"
-                ),
-            ):
-                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
-                    root=root,
-                    snapshot_date="2026-08-30",
-                    write=True,
-                )
-
-            self.assertEqual([], drift)
-            self.assertEqual(
-                ["expected 150 Foundation body documents; found 149"],
-                errors,
-            )
-            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+            self.assertEqual(before, sentinel.read_bytes())
+            self.assertEqual([sentinel], list(root.iterdir()))
+            self.assertNotEqual("", stderr.getvalue())
 
     def test_root_detector_contract_binds_only_reachable_behavior(self) -> None:
         payload = self.module._root_semantic_detector_payload()
@@ -860,12 +573,12 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         report = self.module._collect_reference_semantic_advisories(
             [], disposition_entries=[], evaluation_date=date(2026, 8, 10)
         )
-        self.assertEqual(7, report["schema_version"])
+        self.assertEqual(8, report["schema_version"])
         self.assertEqual(contract, report["detector_contract"])
 
         baseline = contract["value"]
         self.assertEqual(
-            "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb",
+            "42529c6a62fc7005bbc3052dd3cd939b3db5b33fca2487c5ee0f78868bd4a682",
             baseline,
         )
         source_reader = self.module._detector_repository_source_text
@@ -1300,30 +1013,15 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             item for item in documents if item["document_part"] == "example"
         ]
         expected = {
-            f"src/professional-skills/{owner}/examples/example-output.md"
-            for owner in (
-                "acceptance-criteria-builder",
-                "ai-code-review-refactor",
-                "architecture-impact-reviewer",
-                "backend-change-builder",
-                "change-documentation-gate",
-                "change-intake-compiler",
-                "data-api-contract-changer",
-                "data-middleware-change-builder",
-                "delivery-release-gate",
-                "domain-impact-modeler",
-                "engineering-change-analysis",
-                "experience-impact-modeler",
-                "frontend-change-builder",
-                "integration-change-builder",
-                "quality-test-gate",
-                "reliability-observability-gate",
-                "security-privacy-gate",
-                "task-dag-planner",
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "src/professional-skills").glob(
+                "*/examples/example-output.md"
             )
+            if path.is_file()
         }
 
-        self.assertEqual(18, len(examples))
+        self.assertTrue(expected)
+        self.assertEqual(len(expected), len(examples))
         self.assertEqual(expected, {str(item["path"]) for item in examples})
         self.assertTrue(all(item["line_offset"] == 0 for item in examples))
         self.assertTrue(all(str(item["text"]).strip() for item in examples))
@@ -1625,6 +1323,58 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
                 source_span["sha256"],
             )
 
+    def test_readability_finding_identity_ignores_markdown_presentation_and_coordinates(
+        self,
+    ) -> None:
+        words = [f"bounded{index}" for index in range(25)]
+        plain = "- " + " ".join(words) + ".\n"
+        formatted = (
+            "* **"
+            + words[0]
+            + "** "
+            + " ".join(words[1:12])
+            + "\n  "
+            + " ".join(words[12:])
+            + ".\n"
+        )
+        document = {
+            "document_id": "src/example.md#reference",
+            "path": "src/example.md",
+            "document_part": "reference",
+            "surface": "foundation-reference",
+            "owner": "example",
+            "line_offset": 0,
+            "source_selector": {
+                "kind": "whole-file",
+                "path": "src/example.md",
+            },
+            "check_bullets": True,
+        }
+
+        original = self.module._collect_ai_readability(
+            [{**document, "text": plain}]
+        )
+        moved = self.module._collect_ai_readability(
+            [{**document, "text": formatted}]
+        )
+
+        self.assertNotEqual(
+            original["source_fingerprint"]["value"],
+            moved["source_fingerprint"]["value"],
+        )
+        self.assertNotEqual(
+            original["findings"][0]["sentence_fingerprint"],
+            moved["findings"][0]["sentence_fingerprint"],
+        )
+        self.assertNotEqual(
+            original["findings"][0]["source_span"],
+            moved["findings"][0]["source_span"],
+        )
+        self.assertEqual(
+            original["findings"][0]["finding_id"],
+            moved["findings"][0]["finding_id"],
+        )
+
     def test_current_readability_inventory_is_exact_and_unique(self) -> None:
         source_documents = self.module._ai_readability_documents()
         result = self.module._collect_ai_readability(source_documents)
@@ -1753,6 +1503,42 @@ Inspect the assigned boundary.
         self.assertEqual(
             self.module._front_loaded_action_score(baseline) + 4,
             self.module._front_loaded_action_score(traced),
+        )
+
+    def test_front_window_uses_normalized_logical_units(self) -> None:
+        units = [f"- Neutral instruction {index}." for index in range(1, 60)]
+        units.extend(
+            [
+                "- **Validate** the owned\n  evidence before completion.",
+                "- Stop after excluded unit 61.",
+            ]
+        )
+        padded = "\n".join(
+            [
+                "<!-- ignored leading comment -->",
+                "",
+                *(
+                    line
+                    for unit in units
+                    for line in ("", "<!-- ignored padding -->", unit)
+                ),
+            ]
+        )
+
+        contracts = self.module._expert_panel_contracts
+        projection = (
+            contracts.readability_normalized_logical_units(
+                padded,
+                exclude_fenced=True,
+            )
+        )
+        window = self.module._front_window_text(padded)
+        self.assertEqual(61, len(projection))
+        self.assertIn("Validate the owned evidence before completion.", window)
+        self.assertNotIn("excluded unit 61", window)
+        self.assertEqual(
+            self.module._front_loaded_action_score("\n".join(units)),
+            self.module._front_loaded_action_score(padded),
         )
 
     def test_shared_scaffold_is_actionable_outside_targeted_references(self) -> None:
@@ -3097,19 +2883,26 @@ The root contract already settles the bounded change.
         self.assertEqual(2, len(blank_facts["invalid_decision_section_headings"]))
 
     def test_web3_custody_reference_reports_section_aware_totals(self) -> None:
-        relative = (
-            "src/domain-extensions/web3-product-extension/references/"
-            "custody-and-chain-transactions.md"
+        markdown = (
+            "# Custody controls\n\n"
+            "## Signing decision\n\n"
+            "- Verify signer authority.\n"
+            "- Record the signed payload.\n\n"
+            "## Broadcast recovery checklist\n\n"
+            "- Reconcile unknown outcomes.\n"
         )
         facts = self.module._markdown_structural_facts(
-            (ROOT / relative).read_text(encoding="utf-8"),
-            "targeted",
+            markdown,
+            "decision-checklist",
         )
-        self.assertEqual(19, facts["decision_item_count"])
-        self.assertEqual(15, facts["max_decision_section_item_count"])
+        section_counts = [
+            row["decision_item_count"] for row in facts["decision_sections"]
+        ]
+        self.assertEqual(sum(section_counts), facts["decision_item_count"])
+        self.assertEqual(max(section_counts), facts["max_decision_section_item_count"])
         self.assertEqual(
-            [15, 4],
-            [row["decision_item_count"] for row in facts["decision_sections"]],
+            [2, 1],
+            section_counts,
         )
 
     def test_rds_006_stale_reference_dispositions_are_absent(self) -> None:
@@ -3953,9 +3746,10 @@ Never retain this example.
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
         ]
-        self.assertEqual(6, len(rows))
-        self.assertEqual(1, sum(item["governance_status"] == "untriaged" for item in rows))
-        self.assertEqual(5, sum(item["detector_status"] == "downgraded" for item in rows))
+        occurrences = [row for item in rows for row in item["occurrences"]]
+        self.assertEqual(6, len(occurrences))
+        self.assertEqual(1, sum(item["detector_status"] == "candidate" for item in occurrences))
+        self.assertEqual(5, sum(item["detector_status"] == "downgraded" for item in occurrences))
         self.assertEqual(
             {
                 "negative_or_proof_limit_table_context",
@@ -3965,8 +3759,8 @@ Never retain this example.
                 "same_sentence_conditional_language",
             },
             {
-                item["downgrade_reasons"][0]
-                for item in rows
+                item["downgrade_reason"]
+                for item in occurrences
                 if item["detector_status"] == "downgraded"
             },
         )
@@ -3976,17 +3770,19 @@ Never retain this example.
         self.assertFalse(any("retain this example" in item["preview"] for item in rows))
 
     def test_wrapped_diagnosis_condition_preserves_range_and_is_downgraded(self) -> None:
-        path = (
-            ROOT
-            / "src/professional-skills/engineering-change-analysis/references/diagnosis-only.md"
+        markdown = (
+            "# Diagnosis\n\n"
+            "## Verified Cause\n\n"
+            "- `Verified Cause`: the proven causal chain; if cause is not proved, state that\n"
+            "  explicitly and report only bounded conclusions.\n"
         )
         report = self.module._collect_reference_semantic_advisories(
             [
                 {
-                    "path": path.relative_to(ROOT).as_posix(),
+                    "path": "diagnosis-only.md",
                     "layer": "professional",
                     "owner": "engineering-change-analysis",
-                    "text": path.read_text(encoding="utf-8"),
+                    "text": markdown,
                 }
             ]
         )
@@ -4000,7 +3796,15 @@ Never retain this example.
         self.assertEqual(
             ["same_sentence_conditional_language"], rows[0]["downgrade_reasons"]
         )
-        self.assertEqual({"start": 26, "end": 27}, rows[0]["occurrences"][0]["lines"])
+        span = rows[0]["occurrences"][0]["lines"]
+        self.assertEqual(1, span["end"] - span["start"])
+        self.assertEqual(
+            [
+                "- `Verified Cause`: the proven causal chain; if cause is not proved, state that",
+                "  explicitly and report only bounded conclusions.",
+            ],
+            markdown.splitlines()[span["start"] - 1 : span["end"]],
+        )
 
     def test_scoped_only_and_preceding_context_are_downgraded(self) -> None:
         report = self.module._collect_reference_semantic_advisories(
@@ -4028,15 +3832,16 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
         ]
-        self.assertEqual(6, len(rows))
-        self.assertTrue(all(item["detector_status"] == "downgraded" for item in rows))
+        occurrences = [row for item in rows for row in item["occurrences"]]
+        self.assertEqual(6, len(occurrences))
+        self.assertTrue(all(item["detector_status"] == "downgraded" for item in occurrences))
         self.assertIn(
             "preceding_reference_loading_scope",
-            {reason for item in rows for reason in item.get("downgrade_reasons", [])},
+            {item["downgrade_reason"] for item in occurrences},
         )
         self.assertIn(
             "scoped_only_restriction",
-            {reason for item in rows for reason in item.get("downgrade_reasons", [])},
+            {item["downgrade_reason"] for item in occurrences},
         )
 
     def test_absolute_table_context_rules_have_exact_positive_and_negative_boundaries(self) -> None:
@@ -4093,33 +3898,34 @@ All external consumers are covered.
             documents, disposition_entries=[]
         )
         rows = {
-            item["preview"]: item
+            occurrence["preview"]: occurrence
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
+            for occurrence in item["occurrences"]
         }
         self.assertEqual(
-            ["exact_table_context_header"],
-            rows["Load all references."]["downgrade_reasons"],
+            "exact_table_context_header",
+            rows["Load all references."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["boundary_record_authority"],
-            rows["Read-only inspection; never refresh fixtures."]["downgrade_reasons"],
+            "boundary_record_authority",
+            rows["Read-only inspection; never refresh fixtures."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Build/test only"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Build/test only"]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Builder stage only."]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Builder stage only."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Never existed or unavailable"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Never existed or unavailable"]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["All available actions"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["All available actions"]["downgrade_reason"],
         )
         for preview in (
             "Every Kubernetes service must conform.",
@@ -4129,7 +3935,7 @@ All external consumers are covered.
             "Always choose PostgreSQL",
             "Only deploy Kubernetes",
         ):
-            self.assertEqual("untriaged", rows[preview]["governance_status"])
+            self.assertEqual("candidate", rows[preview]["detector_status"])
 
     def test_absolute_token_and_authority_rules_have_positive_and_negative_boundaries(self) -> None:
         for compound in (
@@ -4217,9 +4023,10 @@ All external consumers are covered.
             documents, disposition_entries=[]
         )
         rows = {
-            item["preview"]: item
+            occurrence["preview"]: occurrence
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
+            for occurrence in item["occurrences"]
         }
         expected_reasons = {
             "Treat `must` and all-or-nothing as lexical labels.": "lexical_literal_or_compound",
@@ -4236,7 +4043,7 @@ All external consumers are covered.
             "Map every accepted claim to a current command, source path, owner review, or explicit residual risk.": "map_every_evidence_closure",
         }
         for preview, reason in expected_reasons.items():
-            self.assertEqual([reason], rows[preview]["downgrade_reasons"])
+            self.assertEqual(reason, rows[preview]["downgrade_reason"])
         for preview in (
             "A must-deploy Kubernetes policy applies to every cluster.",
             "Integration evidence does not prove all deployments, every provider behavior, all consumers.",
@@ -4268,7 +4075,7 @@ All external consumers are covered.
             "Map every API to evidence and PostgreSQL.",
             "Map every API to evidence, owner review, and PostgreSQL.",
         ):
-            self.assertEqual("untriaged", rows[preview]["governance_status"])
+            self.assertEqual("candidate", rows[preview]["detector_status"])
 
     def test_fixed_number_candidates_exclude_dates_versions_code_and_baselines(self) -> None:
         report = self.module._collect_reference_semantic_advisories(
@@ -4304,12 +4111,14 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "fixed_number_candidate"
         ]
-        self.assertEqual(3, len(rows))
+        self.assertEqual(3, sum(len(item["occurrences"]) for item in rows))
         self.assertEqual(
             ["cost-slo-threshold", "money", "percent", "time"],
             sorted({signal for item in rows for signal in item["signals"]}),
         )
-        previews = " ".join(item["preview"] for item in rows)
+        previews = " ".join(
+            occurrence["preview"] for item in rows for occurrence in item["occurrences"]
+        )
         for excluded in (
             "2026",
             "RFC",
@@ -4374,7 +4183,9 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "fixed_number_candidate"
         ]
-        previews = " ".join(item["preview"] for item in rows)
+        previews = " ".join(
+            occurrence["preview"] for item in rows for occurrence in item["occurrences"]
+        )
         for false_positive in (
             "N+1",
             "PID 1",
@@ -4394,7 +4205,7 @@ All external consumers are covered.
             "1 percent",
         ):
             self.assertIn(true_positive, previews)
-        self.assertEqual(5, len(rows))
+        self.assertEqual(5, sum(len(item["occurrences"]) for item in rows))
 
     def test_fixed_number_masks_only_inline_and_contextual_clauses(self) -> None:
         self.assertEqual(
@@ -4447,7 +4258,15 @@ All external consumers are covered.
         ):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 self.module._semantic_candidate_id(
-                    "fixed_number_candidate", path, "a" * 64
+                    {
+                        "selector_version": self.module.REFERENCE_SEMANTIC_SELECTOR_VERSION,
+                        "selector_kind": "source-rule",
+                        "owner": "owner",
+                        "finding": "fixed_number_candidate",
+                        "path": path,
+                        "semantic_section": ["document-root"],
+                        "rule_identity": "fixed_number_candidate",
+                    }
                 )
             with self.subTest(document_path=path), self.assertRaises(ValueError):
                 self.module._collect_reference_semantic_advisories(
@@ -4706,7 +4525,7 @@ All external consumers are covered.
         bad_cases = (
             ([base_entry, base_entry], "duplicate semantic disposition"),
             ([{**base_entry, "candidate_id": "f" * 64}], "candidate_id does not match"),
-            ([{**base_entry, "path": "renamed.md"}], "candidate_id does not match"),
+            ([{**base_entry, "path": "renamed.md"}], "path does not match"),
             ([{**base_entry, "path": "../escape.md"}], "canonical relative POSIX path"),
             ([{**base_entry, "skill_owner": "wrong-owner"}], "skill_owner does not match"),
             ([{**base_entry, "reason": "approved"}], "reason is blank or generic"),
@@ -4784,6 +4603,7 @@ All external consumers are covered.
         def occurrence(path: str, owner: str, start: int, body: str) -> dict:
             return {
             "fingerprint": "a" * 64,
+            "shape_identity": "b" * 64,
             "content_fingerprint": self.module._semantic_occurrence_content_fingerprint(
                 body
             ),
@@ -4909,13 +4729,8 @@ All external consumers are covered.
         stale_entry = _semantic_disposition(base, "false-positive", priority="P2")
         stale_report, _stale_candidate = group(generic_documents, [stale_entry])
         self.assertEqual(0, stale_report["disposition_contract"]["applied_count"])
-        self.assertTrue(
-            any(
-                "evidence.content_fingerprint does not match" in error
-                for error in stale_report["disposition_contract"]["errors"]
-            ),
-            stale_report["disposition_contract"]["errors"],
-        )
+        self.assertEqual([], stale_report["disposition_contract"]["errors"])
+        self.assertEqual("needs-confirmation", _stale_candidate["governance_status"])
 
     def test_yaml_template_content_includes_sequences_and_block_bodies(self) -> None:
         def document(list_item: str, block_body: str) -> dict:

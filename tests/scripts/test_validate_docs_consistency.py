@@ -97,38 +97,54 @@ class DocsCoreProjectionTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source.read_bytes())
 
-    def _volatile_fact_inputs(self, root: Path) -> None:
-        self._copy_paths(
-            root,
-            (
-                "src/registry/control-skills.yaml",
-                "src/registry/professional-skills.yaml",
-                "src/registry/foundation-skills.yaml",
-                "src/registry/domain-skills.yaml",
-                "evals/routing/cases.yaml",
-                "evals/routing/capability-coverage-cases.yaml",
-                "evals/capability-coverage/admission-cases.yaml",
-                "evals/capability-coverage/matrix.yaml",
-                "config/skill-content-exceptions.yaml",
-                "config/professionalism-release-review.yaml",
-                "AGENTS.md",
-                "CHANGELOG.md",
-                ".github/pull_request_template.md",
-                "docs/BUILD_PROFILES.md",
-                "docs/QUICKSTART.md",
-                "docs/VALIDATION.md",
-                "docs/SCORECARD.md",
-                "docs/BENCHMARKS.md",
-                "src/foundation/capabilities/README.md",
-            ),
-        )
-        for relative in (
-            "src/control-skills",
-            "src/professional-skills",
-            "src/foundation/capabilities",
-            "src/domain-extensions",
-        ):
-            shutil.copytree(ROOT / relative, root / relative, dirs_exist_ok=True)
+    def _synthetic_volatile_authority(self) -> dict[str, object]:
+        return {
+            "counts": {
+                "control": 1,
+                "professional": 2,
+                "foundation": 3,
+                "domain": 2,
+            },
+            "total": 8,
+            "non_control": 7,
+            "runtime_top_level_count": 3,
+            "runtime_delivery": {"targeted": 4, "routing_only": 1},
+            "routing_case_count": 5,
+            "capability_routing_case_count": 2,
+            "admission_case_count": 4,
+            "admission_counts": {
+                "professional": 1,
+                "foundation": 2,
+                "domain": 1,
+            },
+            "foundation_candidate_count": 2,
+            "layer3_catalog_count": 5,
+            "matrix_entry_count": 4,
+            "coverage_counts": {
+                "covered": 1,
+                "partial": 1,
+                "missing": 1,
+                "intentionally-unsupported": 1,
+            },
+            "reference_inventory": {
+                "indexed": 2,
+                "physical": 3,
+                "unindexed_templates": 1,
+            },
+        }
+
+    def _volatile_fact_inputs(
+        self, root: Path, authority: dict[str, object]
+    ) -> dict[str, tuple[str, ...]]:
+        projections = self.validator._required_volatile_projections(authority)
+        for relative, facts in projections.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            body = "\n".join(facts) + "\n"
+            if relative == "CHANGELOG.md":
+                body = "# Changelog\n\n## Unreleased\n\n" + body
+            path.write_text(body, encoding="utf-8")
+        return projections
 
     def _current_evidence_inputs(self, root: Path) -> None:
         self._copy_paths(
@@ -333,7 +349,15 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
     def test_command_validation_reports_target_existence_not_flag_validation(self) -> None:
         output = io.StringIO()
-        with redirect_stdout(output):
+        with mock.patch.object(
+            self.validator,
+            "validate_docs_consistency",
+            return_value=[],
+        ), mock.patch.object(
+            self.validator,
+            "_markdown_files",
+            return_value=[Path("README.md")],
+        ), redirect_stdout(output):
             result = self.validator.main(["--root", str(ROOT)])
 
         self.assertEqual(0, result)
@@ -355,7 +379,14 @@ class DocsCoreProjectionTests(unittest.TestCase):
             self.assertEqual([], self.validator._current_term_errors(root, historical))
 
     def test_current_volatile_documentation_facts_match_authorities(self) -> None:
-        self.assertEqual([], self.validator._volatile_fact_errors(ROOT))
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            authority = self._synthetic_volatile_authority()
+            self._volatile_fact_inputs(root, authority)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                self.assertEqual([], self.validator._volatile_fact_errors(root))
 
     def test_current_runtime_surfaces_are_profile_choice_free(self) -> None:
         self.assertEqual([], self.validator._runtime_surface_errors(ROOT))
@@ -563,86 +594,104 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_seeded_stale_domain_and_capability_counts_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             benchmarks = root / "docs/BENCHMARKS.md"
+            domain_fact = projections["docs/BENCHMARKS.md"][0]
             benchmarks.write_text(
                 benchmarks.read_text(encoding="utf-8").replace(
-                    "all 13 Domain Skills",
-                    "all seven Domain Skills",
+                    domain_fact,
+                    "all 3 Domain Skills",
                     1,
                 ),
                 encoding="utf-8",
             )
             validation = root / "docs/VALIDATION.md"
+            matrix_fact = projections["docs/VALIDATION.md"][-2]
             validation.write_text(
                 validation.read_text(encoding="utf-8").replace(
-                    "125 entries classify as 81 covered",
-                    "124 entries classify as 80 covered",
+                    matrix_fact,
+                    "4 entries classify as 2 covered, 1 partial, 1 missing, "
+                    "and 0 intentionally unsupported",
                     1,
                 ),
                 encoding="utf-8",
             )
-
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
-                any("docs/BENCHMARKS.md" in error and "Domain" in error for error in errors),
+                any("docs/BENCHMARKS.md" in error and domain_fact in error for error in errors),
                 errors,
             )
             self.assertTrue(
-                any("docs/VALIDATION.md" in error and "125 entries" in error for error in errors),
+                any("docs/VALIDATION.md" in error and matrix_fact in error for error in errors),
                 errors,
             )
 
     def test_stale_indexed_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-2]
             changed, replacements = re.subn(
                 r"\d+ registry-indexed Markdown files",
-                "610 registry-indexed Markdown files",
+                "1 registry-indexed Markdown files",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'611 registry-indexed Markdown files and 612 physical Markdown files'",
+                f"{expected!r}",
                 errors,
             )
 
     def test_stale_physical_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-2]
             changed, replacements = re.subn(
                 r"\d+(\s+physical Markdown files)",
-                r"611\1",
+                r"2\1",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'611 registry-indexed Markdown files and 612 physical Markdown files'",
+                f"{expected!r}",
                 errors,
             )
 
     def test_stale_unindexed_template_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-1]
             text = profiles.read_text(encoding="utf-8")
             changed, replacements = re.subn(
                 r"The extra physical file is the intentionally\s+unindexed "
@@ -655,12 +704,15 @@ class DocsCoreProjectionTests(unittest.TestCase):
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
                 any(
                     "docs/BUILD_PROFILES.md" in error
-                    and "Exactly 1 physical Reference is unindexed" in error
+                    and expected in error
                     for error in errors
                 ),
                 errors,
@@ -669,11 +721,21 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_reference_inventory_collector_failure_is_closed(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            self._volatile_fact_inputs(root, authority)
+
+            def failed_authority(_root: Path) -> dict[str, object]:
+                self.validator._reference_inventory_authority(root)
+                raise AssertionError("collector failure did not propagate")
+
             with mock.patch.object(
                 self.validator,
                 "_canonical_reference_content",
                 side_effect=RuntimeError("fixture collector failure"),
+            ), mock.patch.object(
+                self.validator,
+                "_volatile_fact_authority",
+                side_effect=failed_authority,
             ):
                 errors = self.validator._volatile_fact_errors(root)
 
@@ -691,29 +753,33 @@ class DocsCoreProjectionTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             changelog = root / "CHANGELOG.md"
             current = changelog.read_text(encoding="utf-8")
-            stale, replacements = re.subn(
-                r"233 canonical entries and 62 capability\s+entries",
-                "232 canonical entries and 62 capability entries",
-                current,
-                count=1,
+            expected = projections["CHANGELOG.md"][0]
+            stale = current.replace(
+                expected,
+                "4 canonical entries and 2 capability entries",
+                1,
             )
-            self.assertEqual(1, replacements)
             changelog.write_text(
                 stale
                 + "\n## Historical fixture\n\n"
-                + "233 canonical entries and 62 capability entries\n",
+                + expected
+                + "\n",
                 encoding="utf-8",
             )
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
                 any(
                     "CHANGELOG.md" in error
-                    and "233 canonical entries and 62 capability entries" in error
+                    and expected in error
                     for error in errors
                 ),
                 errors,
@@ -1049,8 +1115,8 @@ class DocsCoreProjectionTests(unittest.TestCase):
             text = exceptions.read_text(encoding="utf-8")
             exceptions.write_text(
                 text.replace(
-                    "  schema_version: 7\n",
-                    "  schema_version: 7\n  lifecycle: {}\n",
+                    "  schema_version: 8\n",
+                    "  schema_version: 8\n  lifecycle: {}\n",
                     1,
                 ),
                 encoding="utf-8",

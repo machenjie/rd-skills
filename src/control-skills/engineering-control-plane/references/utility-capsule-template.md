@@ -5,6 +5,7 @@ Use this contract only for `validation-only/no-edit`, `diff-export/no-edit`, or
 The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
 contact remotes. It never diagnoses, reroutes, or becomes an analysis authority.
+<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=engineering-control-plane/host-failure occurrence=utility-host-failure -->
 Runtime capability facts are not an execution preflight. Invoke only the
 capsule-named operation. Only an actual Host/tool failure blocks; preserve the
 real Task ID. Host invocation and raw output prove failure; formatting is syntax.
@@ -57,6 +58,7 @@ it exists or mark the check unavailable. A dirty baseline is allowed and must re
 
 ## Commands Allowed
 
+<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=engineering-control-plane/bounded-operation occurrence=utility-bounded-operation -->
 Allow only capsule-named local/offline non-mutating pre/post checks through the
 workspace state observation operation. `diff-export/no-edit` additionally runs
 one exact change evidence export operation. Invoke the current Host tool

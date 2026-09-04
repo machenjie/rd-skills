@@ -31,6 +31,7 @@ For `analysis-agent`, return one mode's source-backed read-only result.
 
 ## Professional Decision Rules
 
+<!-- rd-semantic-id:v2 finding=unconditional_mechanism_candidate rule=engineering-change-analysis/mode-boundary occurrence=eca-mode-boundary -->
 - Load only the selected mode and active named References without preloading the index or switching modes.
 - Apply the `analysis-agent` Profile and Core contracts while consuming the bound Runtime selection receipt.
 - The selected mode contract owns mode-specific source proof, decisions, output, stop conditions, and Proof Limits.

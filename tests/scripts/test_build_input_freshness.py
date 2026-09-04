@@ -103,6 +103,34 @@ class BuildInputFreshnessTests(unittest.TestCase):
 
             self.assertTrue(any("stale" in error for error in errors), errors)
 
+    def test_semantic_marker_change_remains_a_build_provenance_change(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._repository(root)
+            source = root / "src/marker.md"
+            source.write_text(
+                "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                "rule=sample/rule occurrence=first -->\n"
+                "- Retain current evidence.\n",
+                encoding="utf-8",
+            )
+            recorded = self._snapshot(root)
+            source.write_text(
+                "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                "rule=sample/rule occurrence=second -->\n"
+                "- Retain current evidence.\n",
+                encoding="utf-8",
+            )
+
+            self.assertTrue(
+                any(
+                    "stale" in error
+                    for error in VALIDATION.authoritative_build_input_snapshot_errors(
+                        recorded, root
+                    )
+                )
+            )
+
     def test_irrelevant_generated_outputs_and_caches_are_excluded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

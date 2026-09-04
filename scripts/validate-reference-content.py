@@ -37,12 +37,12 @@ PREFACE_FIELDS = (
     "required_output",
 )
 PREFACE_STATUSES = {"resolved", "missing", "conflict", "invalid"}
-SEMANTIC_SCHEMA_VERSION = 7
+SEMANTIC_SCHEMA_VERSION = 8
 SEMANTIC_DETECTOR_CONTRACT_VERSION = (
     "reference-semantic-detector-contract-v1"
 )
 SEMANTIC_DETECTOR_ALGORITHM = "sha256-canonical-json-v1"
-SEMANTIC_DISPOSITION_SCHEMA_VERSION = 2
+SEMANTIC_DISPOSITION_SCHEMA_VERSION = 3
 SEMANTIC_EXCEPTION_SOURCE = "config/skill-content-exceptions.yaml"
 SEMANTIC_FINDINGS = (
     "unconditional_absolute_candidate",
@@ -58,6 +58,7 @@ SEMANTIC_V4_COUNT_FIELDS = (
     "raw",
     "detector_downgraded",
     "untriaged",
+    "needs_confirmation",
     "rewrite",
     "valid_contextual_rule",
     "false_positive",
@@ -84,6 +85,7 @@ SEMANTIC_SUMMARY_FIELDS = frozenset(
         "raw_candidates",
         "detector_downgraded_candidates",
         "untriaged_candidates",
+        "needs_confirmation_candidates",
         "rewrite_candidates",
         "valid_contextual_rule_candidates",
         "false_positive_candidates",
@@ -124,6 +126,7 @@ SEMANTIC_CANDIDATE_BASE_FIELDS = frozenset(
     {
         "finding",
         "fingerprint",
+        "source_selector",
         "scope",
         "candidate_id",
         "path",
@@ -149,7 +152,10 @@ SEMANTIC_CANDIDATE_BASE_FIELDS = frozenset(
 )
 SEMANTIC_GROUP_CANDIDATE_FIELDS = frozenset({"distinct_path_count", "owner_count"})
 SEMANTIC_SENTENCE_OCCURRENCE_FIELDS = frozenset(
-    {"path", "layer", "owner", "lines", "tokens", "signals", "preview", "detector_status"}
+    {
+        "path", "layer", "owner", "lines", "tokens", "signals", "preview",
+        "detector_status", "content_fingerprint", "semantic_contexts",
+    }
 )
 SEMANTIC_GROUP_OCCURRENCE_FIELDS = frozenset(
     {
@@ -161,6 +167,7 @@ SEMANTIC_GROUP_OCCURRENCE_FIELDS = frozenset(
         "lines",
         "tokens",
         "preview",
+        "shape_identity",
     }
 )
 SEMANTIC_FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -689,6 +696,7 @@ def _semantic_contract(
         "semantic_raw_candidates": 0,
         "semantic_detector_downgraded_candidates": 0,
         "semantic_untriaged_candidates": 0,
+        "semantic_needs_confirmation_candidates": 0,
         "semantic_rewrite_candidates": 0,
         "semantic_resolved_candidates": 0,
         "semantic_unresolved_candidates": 0,
@@ -818,9 +826,13 @@ def _semantic_contract(
             if skill_owner != owner or not isinstance(skill_owner, str) or not skill_owner:
                 errors.append(f"{label}.skill_owner must match the sentence owner")
         try:
-            expected_id = auditor._semantic_candidate_id(finding, scope, fingerprint)
+            source_selector = auditor._validate_reference_semantic_source_selector(
+                candidate.get("source_selector")
+            )
+            expected_id = auditor._semantic_candidate_id(source_selector)
         except (TypeError, ValueError):
             expected_id = None
+            errors.append(f"{label}.source_selector is invalid")
         candidate_id = candidate.get("candidate_id")
         if not isinstance(candidate_id, str) or not SEMANTIC_FINGERPRINT_RE.fullmatch(
             candidate_id
@@ -855,7 +867,7 @@ def _semantic_contract(
         elif occurrence_count != len(occurrences):
             errors.append(f"{label}.occurrence_count must match occurrences")
         valid_occurrences: list[dict] = []
-        occurrence_keys: set[tuple[str, int, int]] = set()
+        occurrence_keys: set[tuple[str, int, int, str]] = set()
         for occurrence_index, occurrence in enumerate(occurrences):
             occurrence_label = f"{label}.occurrences[{occurrence_index}]"
             if not isinstance(occurrence, dict):
@@ -871,6 +883,8 @@ def _semantic_contract(
                     expected_occurrence_fields.add("downgrade_reason")
                 if "semantic_contexts" in occurrence:
                     expected_occurrence_fields.add("semantic_contexts")
+            if not is_group and "semantic_occurrence_id" in occurrence:
+                expected_occurrence_fields.add("semantic_occurrence_id")
             if set(occurrence) != expected_occurrence_fields:
                 errors.append(
                     f"{occurrence_label} fields must exactly match the schema for {finding}"
@@ -886,7 +900,7 @@ def _semantic_contract(
             if not isinstance(occurrence_owner, str) or not occurrence_owner:
                 errors.append(f"{occurrence_label}.owner must be non-empty")
                 continue
-            if is_group and (
+            if (
                 not isinstance(occurrence.get("content_fingerprint"), str)
                 or not SEMANTIC_FINGERPRINT_RE.fullmatch(
                     occurrence["content_fingerprint"]
@@ -896,6 +910,16 @@ def _semantic_contract(
                     f"{occurrence_label}.content_fingerprint must be lowercase sha256"
                 )
                 continue
+            if is_group:
+                shape_identity = occurrence.get("shape_identity")
+                if (
+                    not isinstance(shape_identity, str)
+                    or not SEMANTIC_FINGERPRINT_RE.fullmatch(shape_identity)
+                ):
+                    errors.append(
+                        f"{occurrence_label}.shape_identity must be lowercase sha256"
+                    )
+                    continue
             occurrence_tokens = occurrence.get("tokens")
             if not _is_exact_non_negative_int(occurrence_tokens):
                 errors.append(f"{occurrence_label}.tokens must be a non-negative integer")
@@ -915,7 +939,12 @@ def _semantic_contract(
             ):
                 errors.append(f"{occurrence_label}.lines must be a positive ordered range")
                 continue
-            key = (occurrence_path, start, end)
+            key = (
+                occurrence_path,
+                start,
+                end,
+                str(occurrence.get("content_fingerprint", "")),
+            )
             if key in occurrence_keys:
                 errors.append(f"{occurrence_label} duplicates a path/range occurrence")
             occurrence_keys.add(key)
@@ -956,6 +985,18 @@ def _semantic_contract(
                     ):
                         errors.append(
                             f"{occurrence_label}.semantic_contexts must be sorted unique non-blank strings"
+                        )
+                occurrence_id = occurrence.get("semantic_occurrence_id")
+                if occurrence_id is not None:
+                    if (
+                        not isinstance(occurrence_id, str)
+                        or len(occurrence_id) > auditor._validation_utils.SEMANTIC_ID_MAX_LENGTH
+                        or auditor._validation_utils.SEMANTIC_ID_COMPONENT_RE.fullmatch(
+                            occurrence_id
+                        ) is None
+                    ):
+                        errors.append(
+                            f"{occurrence_label}.semantic_occurrence_id is invalid"
                         )
             valid_occurrences.append(occurrence)
         expected_occurrences = sorted(
@@ -1024,21 +1065,42 @@ def _semantic_contract(
                         )
         evidence_fingerprint = candidate.get("evidence_fingerprint")
         content_fingerprint = candidate.get("content_fingerprint")
-        if is_group:
+        try:
             expected_evidence = auditor._semantic_evidence_fingerprint(valid_occurrences)
-            if evidence_fingerprint != expected_evidence:
-                errors.append(f"{label}.evidence_fingerprint does not match membership")
-            try:
-                expected_content = auditor._semantic_content_fingerprint(
-                    valid_occurrences
-                )
-            except ValueError as exc:
-                errors.append(f"{label}.content_fingerprint: {exc}")
-                expected_content = None
-            if content_fingerprint != expected_content:
+        except ValueError as exc:
+            errors.append(f"{label}.evidence_fingerprint: {exc}")
+            expected_evidence = None
+        if evidence_fingerprint != expected_evidence:
+            errors.append(f"{label}.evidence_fingerprint does not match membership")
+        try:
+            expected_content = auditor._semantic_content_fingerprint(
+                valid_occurrences
+            )
+        except ValueError as exc:
+            errors.append(f"{label}.content_fingerprint: {exc}")
+            expected_content = None
+        if content_fingerprint != expected_content:
+            errors.append(
+                f"{label}.content_fingerprint does not match normalized content"
+            )
+        if is_group:
+            occurrence_fingerprints = {
+                row.get("fingerprint") for row in valid_occurrences
+            }
+            if occurrence_fingerprints != {fingerprint}:
                 errors.append(
-                    f"{label}.content_fingerprint does not match normalized content"
+                    f"{label}.fingerprint does not match group occurrence evidence"
                 )
+        else:
+            expected_fingerprint = auditor._canonical_semantic_hash(
+                f"{auditor.REFERENCE_SEMANTIC_EVIDENCE_VERSION}:text",
+                sorted(row["content_fingerprint"] for row in valid_occurrences),
+            )
+            if fingerprint != expected_fingerprint:
+                errors.append(
+                    f"{label}.fingerprint does not match normalized text evidence"
+                )
+        if is_group:
             if len({row["path"] for row in valid_occurrences}) < 2:
                 errors.append(f"{label} group must retain at least two paths")
             if finding == "templated_block_candidate" and len(
@@ -1068,10 +1130,6 @@ def _semantic_contract(
                 {row["owner"] for row in valid_occurrences}
             ):
                 errors.append(f"{label}.owner_count does not match occurrences")
-        elif evidence_fingerprint is not None:
-            errors.append(f"{label}.evidence_fingerprint must be null for sentence candidates")
-        elif content_fingerprint is not None:
-            errors.append(f"{label}.content_fingerprint must be null for sentence candidates")
 
         detector_status = candidate.get("detector_status")
         disposition = candidate.get("disposition")
@@ -1089,7 +1147,13 @@ def _semantic_contract(
         expected_status: str
         expected_unresolved: bool
         expected_resolved: bool
-        if disposition is None and detector_status == "downgraded":
+        if governance_status == "needs-confirmation" and disposition is None:
+            expected_status, expected_unresolved, expected_resolved = (
+                "needs-confirmation",
+                True,
+                False,
+            )
+        elif disposition is None and detector_status == "downgraded":
             expected_status, expected_unresolved, expected_resolved = (
                 "detector-downgraded",
                 False,
@@ -1130,6 +1194,7 @@ def _semantic_contract(
         row["raw"] += 1
         row["detector_downgraded"] += governance_status == "detector-downgraded"
         row["untriaged"] += governance_status == "untriaged"
+        row["needs_confirmation"] += governance_status == "needs-confirmation"
         row["rewrite"] += disposition == "rewrite"
         row["valid_contextual_rule"] += disposition == "valid-contextual-rule"
         row["false_positive"] += disposition == "false-positive"
@@ -1158,7 +1223,7 @@ def _semantic_contract(
         for finding, row in by_finding.items():
             if not isinstance(row, dict) or set(row) != set(SEMANTIC_V4_COUNT_FIELDS):
                 errors.append(
-                    f"semantic_advisories.summary.by_finding.{finding} fields must exactly match schema v7"
+                    f"semantic_advisories.summary.by_finding.{finding} fields must exactly match schema v8"
                 )
                 continue
             for field in SEMANTIC_V4_COUNT_FIELDS:
@@ -1179,7 +1244,7 @@ def _semantic_contract(
         for finding, row in reported_group_metrics.items():
             if not isinstance(row, dict) or set(row) != SEMANTIC_GROUP_METRIC_FIELDS:
                 errors.append(
-                    f"semantic_advisories.summary.group_metrics.{finding} fields must exactly match schema v7"
+                    f"semantic_advisories.summary.group_metrics.{finding} fields must exactly match schema v8"
                 )
                 continue
             for field in SEMANTIC_GROUP_METRIC_FIELDS:
@@ -1197,6 +1262,7 @@ def _semantic_contract(
         "raw_candidates": totals["raw"],
         "detector_downgraded_candidates": totals["detector_downgraded"],
         "untriaged_candidates": totals["untriaged"],
+        "needs_confirmation_candidates": totals["needs_confirmation"],
         "rewrite_candidates": totals["rewrite"],
         "valid_contextual_rule_candidates": totals["valid_contextual_rule"],
         "false_positive_candidates": totals["false_positive"],
@@ -1353,6 +1419,9 @@ def _semantic_contract(
                 "detector_downgraded"
             ],
             "semantic_untriaged_candidates": totals["untriaged"],
+            "semantic_needs_confirmation_candidates": totals[
+                "needs_confirmation"
+            ],
             "semantic_rewrite_candidates": totals["rewrite"],
             "semantic_resolved_candidates": totals["resolved"],
             "semantic_unresolved_candidates": totals["unresolved"],
@@ -1661,6 +1730,7 @@ def _format_counts(counts: dict[str, int], *, strict: bool) -> list[str]:
             f"raw={counts['semantic_raw_candidates']} "
             f"detector_downgraded={counts['semantic_detector_downgraded_candidates']} "
             f"untriaged={counts['semantic_untriaged_candidates']} "
+            f"needs_confirmation={counts['semantic_needs_confirmation_candidates']} "
             f"rewrite={counts['semantic_rewrite_candidates']} "
             f"resolved={counts['semantic_resolved_candidates']} "
             f"unresolved={counts['semantic_unresolved_candidates']} "

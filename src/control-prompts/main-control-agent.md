@@ -9,6 +9,7 @@ Bounded subagents authorized; permission required for scope expansion, destructi
 ## Choose Exactly One Path
 
 Choose exactly Direct Task or Analyzed Work.
+<!-- rd-semantic-id:v2 finding=tutorial_explanatory_density_candidate rule=main-control-agent/source-backed-route occurrence=main-source-route -->
 Source-free user-fact questions=no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
 Evidence Resolution reuses change-intake-compiler: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
 User owns business/product/scope/production/destructive/irreversible choices; Agent: engineering placement/storage-lock.
@@ -37,7 +38,9 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 
 ## Analyzed Work
 
+<!-- rd-semantic-id:v2 finding=unconditional_mechanism_candidate rule=main-control-agent/analyzed-handoff occurrence=main-analyzed-handoff -->
 Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis→current Engineering Brief+First Executable Slice; dispatch verbatim, never reinterpret.
+<!-- rd-semantic-id:v2 finding=unconditional_mechanism_candidate rule=main-control-agent/route-authority occurrence=main-route-authority -->
 references/engineering-brief-template.md JIT-owns protected semantics; Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
 blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; Delta/reroute only on its decision triggers.
 Core Evidence 1/2/1→same Analysis; permission/unavailable never reroutes.

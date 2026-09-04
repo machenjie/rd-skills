@@ -50,6 +50,7 @@ assumptions no longer hold.
   and any work that can proceed safely in parallel.
 - `## Integration Boundary`: integration ownership, shared contracts or
   resources, write-collision risk, and cross-task validation.
+<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=engineering-change-analysis/review-boundary occurrence=eca-review-boundary -->
 - `## Review Boundary`: minimum sufficient independent review scope, covered
   work, professional-risk dimensions, and required current evidence. Combine
   related work unless concrete risk requires an intermediate boundary.
@@ -69,7 +70,7 @@ assumptions no longer hold.
 - Do not use provider-only checks as proof of downstream consumer behavior.
 
 ## Task DAG Boundary
-
+<!-- rd-semantic-id:v2 finding=fixed_number_candidate rule=engineering-change-analysis/dag-contradiction occurrence=eca-dag-contradiction -->
 Record whether two or more semantic tasks have an evidence-backed dependency,
 parallel benefit, cross-owner boundary, integration need, write collision, or
 ordered migration or release. When they do, the Brief is input to Task DAG

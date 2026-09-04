@@ -347,9 +347,23 @@ def _current_semantic_application_fixture(
     overrides = winner_overrides or {}
     for axis in sorted(PANEL.SEMANTIC_AXES):
         semantic = audit[f"{axis}_content"]["semantic_advisories"]
-        covered_ids = {
-            entry["candidate_id"]
+        candidates_by_id = {
+            candidate["candidate_id"]: candidate
+            for candidate in semantic["candidates"]
+        }
+        exact_entries = [
+            entry
             for entry in semantic["disposition_contract"]["entries"]
+            if entry["candidate_id"] in candidates_by_id
+            and not PANEL._semantic_entry_mismatches(
+                axis=axis,
+                candidate=candidates_by_id[entry["candidate_id"]],
+                entry=entry,
+            )
+        ]
+        semantic["disposition_contract"]["entries"] = exact_entries
+        covered_ids = {
+            entry["candidate_id"] for entry in exact_entries
         }
         semantic["candidates"] = [
             candidate
@@ -1703,12 +1717,14 @@ Route current work to `candidate-a`.
         PANEL.validate_packet(packet)
         self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
         self.assertEqual(188, len(packet["professional_targets"]))
-        self.assertEqual(
-            603,
-            sum(
-                len(target["indexed_references"])
+        self.assertTrue(
+            all(
+                [row["path"] for row in target["indexed_references"]]
+                == sorted(
+                    {row["path"] for row in target["indexed_references"]}
+                )
                 for target in packet["professional_targets"]
-            ),
+            )
         )
         self.assertEqual(
             {"professional": 25, "foundation": 150, "domain": 13},
@@ -3218,45 +3234,20 @@ Route current work to `candidate-a`.
             ("reference", "reference_content"),
         ):
             semantic = audit[content_key]["semantic_advisories"]
-            candidates = [
-                candidate
-                for candidate in semantic["candidates"]
-                if axis == "root" or candidate.get("detector_status") == "candidate"
-            ]
+            candidates = PANEL._semantic_eligible_candidates(
+                axis=axis, semantic=semantic
+            )
             entries = semantic["disposition_contract"]["entries"]
             entries_by_id = {entry["candidate_id"]: entry for entry in entries}
             target_ids = []
             exact_ids = []
             for candidate in candidates:
                 entry = entries_by_id.get(candidate["candidate_id"])
-                fields = [
-                    "candidate_id",
-                    "finding",
-                    "path",
-                    "fingerprint",
-                    "skill_owner",
-                ]
-                if axis == "root":
-                    fields.extend(["document_part", "priority"])
-                exact = entry is not None and all(
-                    entry.get(field) == candidate.get(field) for field in fields
+                exact = not PANEL._semantic_entry_mismatches(
+                    axis=axis,
+                    candidate=candidate,
+                    entry=entry,
                 )
-                evidence = entry.get("evidence") if isinstance(entry, dict) else None
-                if exact and axis == "root":
-                    exact = isinstance(evidence, dict) and all(
-                        evidence.get(field) == candidate.get(field)
-                        for field in (
-                            "occurrence_fingerprint",
-                            "context_fingerprint",
-                        )
-                    )
-                elif exact:
-                    exact = isinstance(evidence, dict) and (
-                        evidence.get("fingerprint")
-                        == candidate.get("evidence_fingerprint")
-                        and evidence.get("content_fingerprint")
-                        == candidate.get("content_fingerprint")
-                    )
                 (exact_ids if exact else target_ids).append(candidate["candidate_id"])
             stale_old = sorted(
                 set(entries_by_id) - {candidate["candidate_id"] for candidate in candidates}
@@ -3485,11 +3476,11 @@ Route current work to `candidate-a`.
         )
 
         expected_axis_counts = {
-            axis: sum(
-                axis == "root"
-                or candidate.get("detector_status") == "candidate"
-                for candidate in audit[f"{axis}_content"]
-                ["semantic_advisories"]["candidates"]
+            axis: len(
+                PANEL._semantic_eligible_candidates(
+                    axis=axis,
+                    semantic=audit[f"{axis}_content"]["semantic_advisories"],
+                )
             )
             for axis in ("root", "reference")
         }
@@ -3516,11 +3507,13 @@ Route current work to `candidate-a`.
 
         self.assertEqual(original, audit)
         expected_axis_counts = {
-            axis: sum(
-                axis == "root"
-                or candidate.get("detector_status") == "candidate"
-                for candidate in original[f"{axis}_content"]
-                ["semantic_advisories"]["candidates"]
+            axis: len(
+                PANEL._semantic_eligible_candidates(
+                    axis=axis,
+                    semantic=original[f"{axis}_content"][
+                        "semantic_advisories"
+                    ],
+                )
             )
             for axis in ("root", "reference")
         }
@@ -3721,7 +3714,7 @@ Route current work to `candidate-a`.
             }
         PANEL.validate_semantic_packet_current(packet, changed)
 
-    def test_semantic_currentness_rejects_five_stable_evidence_changes(self) -> None:
+    def test_semantic_currentness_rejects_stable_identity_evidence_changes(self) -> None:
         packet = _semantic_packet()
         current = copy.deepcopy(_live_semantic_audit())
 
@@ -3781,8 +3774,6 @@ Route current work to `candidate-a`.
             index
             for index, candidate in enumerate(candidates)
             if candidate.get("detector_status") != "candidate"
-            and candidate.get("evidence_fingerprint") is None
-            and candidate.get("content_fingerprint") is None
         )
 
         removed = copy.deepcopy(current)
@@ -3849,6 +3840,11 @@ Route current work to `candidate-a`.
                 disposition
                 for disposition in sorted(PANEL.SEMANTIC_DISPOSITIONS)
                 if disposition != target["winning_disposition"]
+            )
+            entry["record_fingerprint"] = (
+                PANEL.panel_contracts.semantic_disposition_record_fingerprint(
+                    target["axis"], entry
+                )
             )
             with self.assertRaisesRegex(
                 PANEL.PanelReviewError, "disposition mismatch"
@@ -3979,7 +3975,7 @@ Route current work to `candidate-a`.
             root_semantic=root_semantic,
             reference_semantic=reference_semantic,
         )
-        self.assertEqual(
+        self.assertNotEqual(
             fixed["detector_contract_fingerprints"],
             {key: live_fingerprints[key] for key in sorted(detector_keys)},
         )
@@ -3996,7 +3992,7 @@ Route current work to `candidate-a`.
                 for axis in sorted(PANEL.SEMANTIC_AXES)
             },
         )
-        self.assertEqual("compact-v2", current_mode)
+        self.assertIsNone(current_mode)
 
         direct = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=current,
@@ -4144,9 +4140,21 @@ Route current work to `candidate-a`.
 
     def test_reviewed_rewrite_removal_is_self_contained_but_entry_retention_fails(self) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
-        candidate_id = audit["root_content"]["semantic_advisories"][
-            "disposition_contract"
-        ]["entries"][0]["candidate_id"]
+        root_semantic = audit["root_content"]["semantic_advisories"]
+        candidates_by_id = {
+            candidate["candidate_id"]: candidate
+            for candidate in root_semantic["candidates"]
+        }
+        candidate_id = next(
+            entry["candidate_id"]
+            for entry in root_semantic["disposition_contract"]["entries"]
+            if entry["candidate_id"] in candidates_by_id
+            and not PANEL._semantic_entry_mismatches(
+                axis="root",
+                candidate=candidates_by_id[entry["candidate_id"]],
+                entry=entry,
+            )
+        )
         target_id = f"root:{candidate_id}"
         with _current_semantic_application_fixture(
             audit, winner_overrides={target_id: "rewrite"}

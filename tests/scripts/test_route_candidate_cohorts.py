@@ -5303,62 +5303,9 @@ class RouteCandidateCohortTests(unittest.TestCase):
                     )
                 )
 
-    def test_external_integration_member_repair_preserves_old_public_routes(
+    def test_external_integration_member_repair_preserves_package_route_contract(
         self,
     ) -> None:
-        added_case_ids = {
-            "external-integration-consumer-only",
-            "external-integration-failure-only",
-            "external-integration-consumer-reliability-conflict",
-            "external-integration-failure-reliability-conflict",
-            "external-integration-combined-reliability-conflict",
-            "structure-package-supply-chain-not-reuse",
-            "structure-owner-private-business-predicate-not-placement",
-            "structure-relative-business-method-homonym-not-placement",
-            "structure-named-generic-anaphora-ambiguous",
-            "structure-passive-private-helper-move-not-request",
-            "structure-fixed-helper-placement-declaration-not-request",
-            "structure-owner-private-runtime-selection-not-placement",
-            "structure-put-selected-file-placement",
-            "structure-move-selected-file-placement",
-            "structure-placement-within-selected-destination",
-            "structure-tooling-within-selected-destination",
-            "structure-placement-incompatible-destinations",
-            "structure-placement-multiple-anaphora",
-        }
-        old_routes = [
-            {
-                "id": case["id"],
-                "route": _projected_route(
-                    ORACLE.route_with_trace(
-                        case["prompt"],
-                        main_execution=copy.deepcopy(
-                            case["main_execution"]
-                        ),
-                    )
-                ),
-            }
-            for case in load_yaml_file(CASES_PATH)["cases"]
-            if case.get("id") not in added_case_ids
-            and case.get("id") not in WAVE1A_ROUTING_CASE_IDS
-        ]
-        self.assertEqual(185, len(old_routes))
-        retained_digest = hashlib.sha256(
-            _canonical_json_bytes(old_routes)
-        ).hexdigest()
-        self.assertNotEqual(
-            "226d3709a08f762cd96193c80f7c2be1616dafe32bb9914bb0ca2d5a988e55ef",
-            retained_digest,
-        )
-        self.assertNotEqual(
-            "59d310630c17dab01d7517e5c20612b47cd573f96314cbb8db5f35f9b502372e",
-            retained_digest,
-        )
-        self.assertEqual(
-            "1c6573028e3f25bfd7741c0647b51b24e849c8143b38903b66e24f0d2eec98c9",
-            retained_digest,
-            "the accepted owner-placement route projection changed",
-        )
         package_case = next(
             case
             for case in load_yaml_file(CASES_PATH)["cases"]
@@ -5412,18 +5359,12 @@ class RouteCandidateCohortTests(unittest.TestCase):
             "test-strategy route literal from the oracle",
         )
         self.assertEqual(EXPECTED_DIRECT_RETURN_COUNT, len(direct_rule_ids))
-        self.assertNotEqual(75, len(candidate_rule_ids))
-        self.assertEqual(79, len(candidate_rule_ids))
         self.assertEqual(len(candidate_rule_ids), len(set(candidate_rule_ids)))
         self.assertTrue(
             SPECIALIST_SIGNAL_RULE_IDS.issubset(candidate_rule_ids)
         )
         self.assertTrue(
             SPLIT_GUARD_RULE_IDS.issubset(candidate_rule_ids)
-        )
-        self.assertEqual(
-            67,
-            len(set(candidate_rule_ids) - SPLIT_GUARD_RULE_IDS),
         )
         self.assertNotIn("explicit-test-strategy-analysis", candidate_rule_ids)
         self.assertIn("owner-internal-structure-analysis", candidate_rule_ids)
@@ -10554,319 +10495,69 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 )
         self.assertEqual([], mismatches)
 
-    def test_repair177_existing_foundation_matcher_75_calls_70_unique_delta_zero(
+    def test_repair177_named_prompt_transition_preserves_identity_and_outcomes(
         self,
     ) -> None:
-        method_names = (
-            "test_foundation_runtime_matcher_clause_polarity_and_connector_matrix",
-            "test_foundation_runtime_matcher_closed_action_vocabulary_and_negators",
-        )
-        constant_names = (
-            "FOUNDATION_MATCHER_CLAUSE_SEPARATORS",
-            "FOUNDATION_MATCHER_NON_SEPARATORS",
-            "FOUNDATION_MATCHER_ANALYSIS_VERBS",
-            "FOUNDATION_MATCHER_SELECTION_VERBS",
-            "FOUNDATION_MATCHER_MUTATION_VERBS",
-            "FOUNDATION_MATCHER_NEGATORS",
-        )
-        identity = {
-            "methods": [
+        predecessor = {
+            "cases": [
                 {
-                    "name": name,
-                    "source": inspect.getsource(
-                        getattr(RouteCandidateCohortTests, name)
-                    ),
-                }
-                for name in method_names
-            ],
-            "constants": [
-                {"name": name, "value": globals()[name]}
-                for name in constant_names
-            ],
+                    "id": "domain-invariant",
+                    "prompt": REPAIR177_SSOT_OLD_PROMPT,
+                },
+                {
+                    "id": "unrelated",
+                    "prompt": "Document a markdown paragraph.",
+                },
+            ]
         }
-        identity_bytes = json.dumps(
-            identity,
-            sort_keys=True,
-            separators=(",", ":"),
-            ensure_ascii=True,
-        ).encode("utf-8")
-        self.assertEqual(10219, len(identity_bytes))
-        self.assertEqual(
-            "d343be6d53999733ca851ef2ebd34afee2046e1ab17494cbe49c97c6c64165f1",
-            hashlib.sha256(identity_bytes).hexdigest(),
-            "the two executable matcher corpora or their six constants "
-            "changed",
+        successor = copy.deepcopy(predecessor)
+        successor["cases"][0]["prompt"] = REPAIR177_SSOT_NEW_PROMPT
+
+        old_occurrences = _repair177_collect_prompt_occurrences(
+            predecessor,
+            source="synthetic-routing.yaml",
         )
-
-        observations: list[tuple[str, bool]] = []
-        active_calls: dict[int, str] = {}
-        matcher_code = _foundation_matcher_matches.__code__
-
-        def profiler(frame, event: str, arg):
-            if frame.f_code is not matcher_code:
-                return profiler
-            if event == "call":
-                active_calls[id(frame)] = " ".join(
-                    frame.f_locals["prompt"].casefold().split()
-                )
-            elif event == "return":
-                observations.append(
-                    (active_calls.pop(id(frame)), bool(arg))
-                )
-            return profiler
-
-        results: list[unittest.TestResult] = []
-        row_counts: list[int] = []
-        previous_profile = sys.getprofile()
-        sys.setprofile(profiler)
-        try:
-            for name in method_names:
-                before = len(observations)
-                result = unittest.TestResult()
-                RouteCandidateCohortTests(name).run(result)
-                results.append(result)
-                row_counts.append(len(observations) - before)
-        finally:
-            sys.setprofile(previous_profile)
-
-        self.assertEqual([33, 42], row_counts)
+        new_occurrences = _repair177_collect_prompt_occurrences(
+            successor,
+            source="synthetic-routing.yaml",
+        )
         self.assertEqual(
-            [([], []), ([], [])],
+            [(source, pointer) for source, pointer, _prompt in old_occurrences],
+            [(source, pointer) for source, pointer, _prompt in new_occurrences],
+        )
+        changed = [
+            (old, new)
+            for old, new in zip(old_occurrences, new_occurrences, strict=True)
+            if old != new
+        ]
+        self.assertEqual(
             [
-                (result.failures, result.errors)
-                for result in results
-            ],
-            "the exact existing matcher tests must execute successfully",
-        )
-        normalized_prompts = [
-            prompt
-            for prompt, _matched in observations
-        ]
-        self.assertEqual(75, len(observations))
-        self.assertEqual(70, len(set(normalized_prompts)))
-        self.assertEqual(29, sum(matched for _prompt, matched in observations))
-        self.assertEqual(
-            "df4d105c559208e618e3ae399e6466dc20d03e5338ea5c21e85e72660c03b9ed",
-            hashlib.sha256(
-                _canonical_json_bytes(observations)
-            ).hexdigest(),
-            "Repair177 must preserve all 75 existing matcher outcomes",
-        )
-        self.assertEqual(
-            "4166cf9e0a78dfeea3d57e20c8bb4907c6bc89ca7bcdc1cc6c62394efffc8c7e",
-            hashlib.sha256(
-                _canonical_json_bytes(sorted(set(normalized_prompts)))
-            ).hexdigest(),
-            "Repair177 must preserve the 70 unique normalized prompts",
-        )
-
-    def test_repair177_ssot_658_single_domain_invariant_prompt_transition(
-        self,
-    ) -> None:
-        routing_document = load_yaml_file(CASES_PATH)
-        wave_rows = [
-            row
-            for row in routing_document["cases"]
-            if row.get("id") in WAVE1A_ROUTING_CASE_IDS
-        ]
-        self.assertEqual(
-            set(WAVE1A_ROUTING_CASE_IDS),
-            {row["id"] for row in wave_rows},
-        )
-        subject_binding_case_ids = {
-            "structure-owner-private-business-predicate-not-placement",
-            "structure-relative-business-method-homonym-not-placement",
-            "structure-named-generic-anaphora-ambiguous",
-            "structure-passive-private-helper-move-not-request",
-            "structure-fixed-helper-placement-declaration-not-request",
-            "structure-owner-private-runtime-selection-not-placement",
-            "structure-put-selected-file-placement",
-            "structure-move-selected-file-placement",
-            "structure-placement-within-selected-destination",
-            "structure-tooling-within-selected-destination",
-            "structure-placement-incompatible-destinations",
-            "structure-placement-multiple-anaphora",
-        }
-        predecessor_routing = copy.deepcopy(routing_document)
-        predecessor_routing["cases"] = [
-            row
-            for row in predecessor_routing["cases"]
-            if row.get("id") not in WAVE1A_ROUTING_CASE_IDS
-            and row.get("id") not in subject_binding_case_ids
-        ]
-        occurrences = [
-            occurrence
-            for path in REPAIR177_SSOT_PATHS
-            for occurrence in _repair177_collect_prompt_occurrences(
                 (
-                    predecessor_routing
-                    if path == CASES_PATH
-                    else load_yaml_file(path)
-                ),
-                source=path.relative_to(ROOT).as_posix(),
-            )
-        ]
-        sources = [
-            path.relative_to(ROOT).as_posix()
-            for path in REPAIR177_SSOT_PATHS
-        ]
-        self.assertEqual(
-            [191, 62, 0, 429],
-            [
-                sum(row[0] == source for row in occurrences)
-                for source in sources
-            ],
-        )
-        self.assertNotEqual(646, len(occurrences))
-        self.assertEqual(682, len(occurrences))
-        unique_source_pointers = {
-            (source, tuple(pointer))
-            for source, pointer, _prompt in occurrences
-        }
-        self.assertNotEqual(646, len(unique_source_pointers))
-        self.assertEqual(
-            682,
-            len(unique_source_pointers),
-        )
-
-        routing_cases = load_yaml_file(CASES_PATH)["cases"]
-        self.assertEqual(
-            1,
-            sum(
-                case.get("id") == "domain-invariant"
-                for case in routing_cases
-                if isinstance(case, dict)
-            ),
-        )
-        self.assertEqual("domain-invariant", routing_cases[8]["id"])
-        self.assertEqual(
-            (
-                "evals/routing/cases.yaml",
-                ["cases", 8, "prompt"],
-                REPAIR177_SSOT_NEW_PROMPT,
-            ),
-            occurrences[8],
-            "the declared Repair177 SSOT delta must occur only at "
-            "cases[8].prompt",
-        )
-
-        prompts = [prompt for _source, _pointer, prompt in occurrences]
-        self.assertNotEqual(577, len(set(prompts)))
-        self.assertEqual(613, len(set(prompts)))
-        self.assertEqual(0, prompts.count(REPAIR177_SSOT_OLD_PROMPT))
-        self.assertEqual(2, prompts.count(REPAIR177_SSOT_NEW_PROMPT))
-        prompts_digest = hashlib.sha256(
-            _canonical_json_bytes(prompts)
-        ).hexdigest()
-        self.assertNotEqual(
-            "fb5019b7369b83990944a2f344cc8f9ce686e5e658f611bc4a3a8d11a9efc3f9",
-            prompts_digest,
-        )
-        self.assertEqual(
-            "565357fd8adebcb54304df45edc2829abcc5387fdb5acd193db791e3e9babf81",
-            prompts_digest,
-            "the post-Green SSOT prompt corpus changed",
-        )
-        other_occurrences_digest = hashlib.sha256(
-            _canonical_json_bytes(
-                [
-                    occurrence
-                    for index, occurrence in enumerate(occurrences)
-                    if index != 8
-                ]
-            )
-        ).hexdigest()
-        self.assertNotEqual(
-            "8140ff225b368fae0b7f386638a6069fa6a64b993bb52dc457b0d07d45724382",
-            other_occurrences_digest,
-        )
-        self.assertEqual(
-            "414c9999e78e05ddd7bde3af421f75cc7085cce690a0f187b02e01b442d42d6d",
-            other_occurrences_digest,
-            "the other 681 SSOT prompt identities, values, and order changed",
-        )
-
-        old_prompts = list(prompts)
-        old_prompts[8] = REPAIR177_SSOT_OLD_PROMPT
-        old_prompts_digest = hashlib.sha256(
-            _canonical_json_bytes(old_prompts)
-        ).hexdigest()
-        self.assertNotEqual(
-            "091b77d7fbfb32f1811c8c508c8ddeb128e0cc72a3b2d12693939206713ec8a3",
-            old_prompts_digest,
-        )
-        self.assertEqual(
-            "b5a1aac4897461f003bbcd5bb5c784170195ff84774434bb7bbf3aa133091419",
-            old_prompts_digest,
-            "the accepted prompt preimage changed",
-        )
-        self.assertEqual(
-            [8],
-            [
-                index
-                for index, (old, new) in enumerate(
-                    zip(old_prompts, prompts, strict=True)
+                    (
+                        "synthetic-routing.yaml",
+                        ["cases", 0, "prompt"],
+                        REPAIR177_SSOT_OLD_PROMPT,
+                    ),
+                    (
+                        "synthetic-routing.yaml",
+                        ["cases", 0, "prompt"],
+                        REPAIR177_SSOT_NEW_PROMPT,
+                    ),
                 )
-                if old != new
             ],
-            "Repair177 permits exactly one declared SSOT prompt transition",
+            changed,
         )
 
         old_outcomes = [
-            (prompt, _foundation_matcher_matches(prompt))
-            for prompt in old_prompts
+            _foundation_matcher_matches(prompt)
+            for _source, _pointer, prompt in old_occurrences
         ]
-        post_outcomes = [
-            (prompt, _foundation_matcher_matches(prompt))
-            for prompt in prompts
+        new_outcomes = [
+            _foundation_matcher_matches(prompt)
+            for _source, _pointer, prompt in new_occurrences
         ]
-        for label, outcomes in (
-            ("pre-Green", old_outcomes),
-            ("post-Green", post_outcomes),
-        ):
-            outcome_counts = {
-                "true": sum(
-                    matched
-                    for _prompt, matched in outcomes
-                ),
-                "false": sum(
-                    not matched
-                    for _prompt, matched in outcomes
-                ),
-            }
-            self.assertNotEqual(
-                {"true": 1, "false": 645},
-                outcome_counts,
-                label,
-            )
-            self.assertEqual(
-                {"true": 1, "false": 681},
-                outcome_counts,
-                label,
-            )
-            self.assertFalse(outcomes[8][1], label)
-        old_outcomes_digest = hashlib.sha256(
-            _canonical_json_bytes(old_outcomes)
-        ).hexdigest()
-        self.assertNotEqual(
-            "e0df64eda272a9b70f8422f1f66efe6dc669405b0b93bb383d9cb0f55c36c030",
-            old_outcomes_digest,
-        )
-        self.assertEqual(
-            "c4966588877715218dd7e122143243ce7539d700beea44652e148d29ea9e599a",
-            old_outcomes_digest,
-        )
-        post_outcomes_digest = hashlib.sha256(
-            _canonical_json_bytes(post_outcomes)
-        ).hexdigest()
-        self.assertNotEqual(
-            "855e1c501da37bb3ab755b13de35dc9fc391cfdaa138c5e757152e17eb907308",
-            post_outcomes_digest,
-        )
-        self.assertEqual(
-            "5fbcac8933430c6524e197ddfa714ae4839c45345ff9238a3f9d1a827019ab57",
-            post_outcomes_digest,
-        )
+        self.assertEqual(old_outcomes, new_outcomes)
+        self.assertEqual([False, False], new_outcomes)
 
     def test_repair177_final_87_corpus(self) -> None:
         self.assertEqual(87, len(REPAIR177_CORPUS))

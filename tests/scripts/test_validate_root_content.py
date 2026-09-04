@@ -31,19 +31,11 @@ def _load_module():
 
 
 class ValidateRootContentTests(unittest.TestCase):
-    _baseline_root_content_cache: dict | None = None
-
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = _load_module()
         cls.auditor = cls.module._load_auditor()
         cls.validation_utils = importlib.import_module("validation_utils")
-
-    @classmethod
-    def _baseline_root_content(cls) -> dict:
-        if cls._baseline_root_content_cache is None:
-            cls._baseline_root_content_cache = cls.module._fresh_root_content()
-        return deepcopy(cls._baseline_root_content_cache)
 
     def _unfenced_logical_list_items(self, markdown: str) -> dict[str, list[str]]:
         unfenced = "\n".join(
@@ -68,154 +60,46 @@ class ValidateRootContentTests(unittest.TestCase):
         auditor._collect_root_content.assert_called_once_with()
         auditor._collect_semantic_content_with_application.assert_not_called()
 
-    def test_foundation_derivation_snapshot_matches_current_inventory(self) -> None:
-        # BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT
-        expected = {
-            "date": "2026-08-30",
-            "foundation_documents": 150,
-            "compact_documents": 128,
-            "complex_documents": 22,
-            "sum_tokens": 65730,
-            "min_tokens": 138,
-            "p25_tokens": 269,
-            "p50_tokens": 511,
-            "p75_tokens": 555,
-            "p90_tokens": 605,
-            "p95_tokens": 628,
-            "p99_tokens": 663,
-            "distribution_max_tokens": 688,
-            "mean_tokens": 438.2,
-            "sum_words": 46118,
-            "min_words": 94,
-            "p25_words": 182,
-            "p50_words": 357,
-            "p75_words": 394,
-            "p90_words": 424,
-            "p95_words": 437,
-            "p99_words": 475,
-            "max_words": 497,
-            "mean_words": 307.453,
-            "median_token_word_ratio": 1.415,
-            "p90_token_word_ratio": 1.552,
-            "p95_token_word_ratio": 1.593,
-            "max_token_word_ratio": 1.673,
-            "mean_token_word_ratio": 1.435,
-        }
-        # END GENERATED FOUNDATION DERIVATION SNAPSHOT
-        test_class = type(self)
-        existing_cache = test_class._baseline_root_content_cache
-        synthetic = {"nested": {"value": 1}}
-        try:
-            test_class._baseline_root_content_cache = None
-            with mock.patch.object(
-                self.module,
-                "_fresh_root_content",
-                return_value=synthetic,
-            ) as fresh_root_content:
-                first = self._baseline_root_content()
-                first["nested"]["value"] = 2
-                second = self._baseline_root_content()
-            fresh_root_content.assert_called_once_with()
-            self.assertEqual(1, second["nested"]["value"])
-        finally:
-            test_class._baseline_root_content_cache = existing_cache
-
-        snapshot = self._baseline_root_content()["foundation_budget_contract"][
-            "derivation_snapshot"
-        ]
-        self.assertEqual(expected, snapshot)
-        foundation_documents = [
-            document
-            for document in self._baseline_root_content()["documents"]
-            if document.get("layer") == "foundation-capability"
-            and document.get("document_part") == "body"
-        ]
-        self.assertEqual(
-            expected,
-            self.auditor.foundation_derivation_snapshot_from_documents(
-                foundation_documents
-            ),
+    def test_foundation_budget_contract_excludes_derivation_snapshot(self) -> None:
+        document = self._document(
+            "# Capability\n\n## High-Value Rules\n\n"
+            "- Verify the bounded input against the owned invariant.\n"
+            "- Reject values above the declared hard limit.\n"
+            "- Preserve current evidence for the observed result.\n"
         )
-        self.assertNotIn("reviewed_positive_sample_max_tokens", snapshot)
+        with (
+            mock.patch.object(
+                self.auditor, "_root_skill_documents", return_value=[document]
+            ),
+            mock.patch.object(
+                self.auditor, "count_o200k_base_tokens", return_value=100
+            ),
+            mock.patch.object(
+                self.auditor,
+                "_load_root_semantic_dispositions",
+                return_value=self._empty_disposition_contract([document]),
+            ),
+        ):
+            content = self.auditor._collect_root_content(
+                evaluation_date=date(2026, 8, 2)
+            )
 
-    def test_foundation_derivation_snapshot_stat_drift_fails_closed(self) -> None:
-        drifted = self._baseline_root_content()
-        snapshot = drifted["foundation_budget_contract"][
-            "derivation_snapshot"
-        ]
-        snapshot["p90_tokens"] += 1
+        self.assertNotIn(
+            "derivation_snapshot", content["foundation_budget_contract"]
+        )
+        stale = deepcopy(content)
+        stale["foundation_budget_contract"]["derivation_snapshot"] = {
+            "sum_tokens": 100
+        }
         _counts, errors = self.module._evaluate(
-            drifted,
+            stale,
             strict=False,
             evaluation_date=date(2026, 8, 2),
         )
         self.assertIn(
-            "Foundation token threshold derivation snapshot does not match the canonical inventory snapshot",
+            "root_content.foundation_budget_contract does not match canonical policy",
             errors,
         )
-
-    def test_foundation_derivation_snapshot_recomputes_document_metrics(self) -> None:
-        root_content = self._baseline_root_content()
-        foundation_documents = [
-            document
-            for document in root_content["documents"]
-            if document.get("layer") == "foundation-capability"
-            and document.get("document_part") == "body"
-        ]
-        self.assertEqual(150, len(foundation_documents))
-        foundation_documents[0]["token_count"] += 1
-        _counts, errors = self.module._evaluate(
-            root_content,
-            strict=False,
-            evaluation_date=date(2026, 8, 2),
-        )
-        self.assertIn(
-            "Foundation token threshold derivation snapshot does not match current Foundation body document metrics",
-            errors,
-        )
-
-    def test_foundation_derivation_recomputation_fails_closed_on_row_shape(self) -> None:
-        cases = {
-            "count": lambda documents: documents.pop(),
-            "duplicate-id": lambda documents: documents[1].update(
-                document_id=documents[0]["document_id"]
-            ),
-            "metric-type": lambda documents: documents[0].update(
-                token_count=True
-            ),
-        }
-        for label, mutate in cases.items():
-            with self.subTest(label=label):
-                root_content = self.module._fresh_root_content()
-                foundation_documents = [
-                    document
-                    for document in root_content["documents"]
-                    if document.get("layer") == "foundation-capability"
-                    and document.get("document_part") == "body"
-                ]
-                mutate(foundation_documents)
-                if label == "count":
-                    removed = next(
-                        index
-                        for index, document in enumerate(root_content["documents"])
-                        if document.get("layer") == "foundation-capability"
-                        and document.get("document_part") == "body"
-                    )
-                    root_content["documents"].pop(removed)
-                _counts, errors = self.module._evaluate(
-                    root_content,
-                    strict=False,
-                    evaluation_date=date(2026, 8, 2),
-                )
-                self.assertTrue(
-                    any(
-                        error.startswith(
-                            "Foundation derivation recomputation failed closed:"
-                        )
-                        for error in errors
-                    ),
-                    errors,
-                )
 
     def _document(
         self,
@@ -275,12 +159,12 @@ class ValidateRootContentTests(unittest.TestCase):
         }
 
     def _entry(self, candidate: dict, *, disposition: str = "valid-contextual-rule") -> dict:
-        return {
+        entry = {
             "candidate_id": candidate["candidate_id"],
             "finding": candidate["finding"],
             "path": candidate["path"],
             "document_part": candidate["document_part"],
-            "fingerprint": candidate["fingerprint"],
+            "source_selector": deepcopy(candidate["source_selector"]),
             "skill_owner": candidate["skill_owner"],
             "priority": candidate["priority"],
             "disposition": disposition,
@@ -295,6 +179,11 @@ class ValidateRootContentTests(unittest.TestCase):
             "mitigation": "Rewrite the rule when its owning repository policy or local context changes.",
             "review_after": "2026-08-01" if disposition == "time-bounded-exception" else None,
         }
+        contracts = importlib.import_module("expert_panel_contracts")
+        entry["record_fingerprint"] = contracts.semantic_disposition_record_fingerprint(
+            "root", entry
+        )
+        return entry
 
     def test_review_positive_detector_table(self) -> None:
         cases = (
@@ -908,14 +797,10 @@ Use the owned boundary instead of a generic organization policy.
         )
         self.assertEqual([], governed["disposition_contract"]["errors"])
 
-        variants = (
+        evidence_variants = (
             self._document(
                 "# Capability\n\n## Rules\n\n"
                 "- Every diagnosis must produce a hypothesis table.\n"
-                "- Every diagnosis must produce a hypothesis table.\n"
-            ),
-            self._document(
-                "# Capability\n\n## Required Process\n\n"
                 "- Every diagnosis must produce a hypothesis table.\n"
             ),
             self._document(
@@ -923,17 +808,26 @@ Use the owned boundary instead of a generic organization policy.
                 "- Every diagnosis must produce a hypothesis table.\n"
             ),
         )
-        for variant in variants:
+        for variant in evidence_variants:
             with self.subTest(text=variant["text"][:60]):
                 candidate = self._semantic(variant)["candidates"][0]
                 self.assertEqual(first["candidate_id"], candidate["candidate_id"])
                 governed = self.auditor._collect_root_semantic_advisories(
                     [variant], disposition_entries=[entry], evaluation_date=date(2026, 7, 14)
                 )
-                self.assertTrue(
-                    any("does not match current candidate" in error for error in governed["disposition_contract"]["errors"]),
-                    governed["disposition_contract"]["errors"],
+                self.assertEqual([], governed["disposition_contract"]["errors"])
+                self.assertEqual(
+                    "needs-confirmation",
+                    governed["candidates"][0]["governance_status"],
                 )
+                self.assertIsNone(governed["candidates"][0]["disposition_record"])
+
+        moved_section = self._document(
+            "# Capability\n\n## Required Process\n\n"
+            "- Every diagnosis must produce a hypothesis table.\n"
+        )
+        moved_candidate = self._semantic(moved_section)["candidates"][0]
+        self.assertNotEqual(first["candidate_id"], moved_candidate["candidate_id"])
 
     def test_disposition_contract_rejects_malformed_expired_and_unsorted_entries(self) -> None:
         document = self._document(
@@ -953,6 +847,9 @@ Use the owned boundary instead of a generic organization policy.
 
         expired = self._entry(candidates[0], disposition="time-bounded-exception")
         expired["review_after"] = "2026-07-14"
+        expired["record_fingerprint"] = importlib.import_module(
+            "expert_panel_contracts"
+        ).semantic_disposition_record_fingerprint("root", expired)
         _, _, errors = self.auditor._validate_root_semantic_dispositions(
             candidates, [expired], date(2026, 7, 13), require_applied=False
         )
@@ -1009,10 +906,10 @@ Use the owned boundary instead of a generic organization policy.
             contract["errors"],
         )
         governed_candidate = governed["candidates"][0]
-        self.assertEqual("untriaged", governed_candidate["governance_status"])
+        self.assertEqual("needs-confirmation", governed_candidate["governance_status"])
         self.assertIsNone(governed_candidate["disposition_record"])
 
-    def test_control_disposition_error_does_not_block_professional_surface(self) -> None:
+    def test_control_needs_confirmation_blocks_only_control_surface(self) -> None:
         documents = [
             {
                 "path": "src/control-prompts/main-control-agent.md",
@@ -1041,6 +938,9 @@ Use the owned boundary instead of a generic organization policy.
         candidates = {item["layer"]: item for item in initial["candidates"]}
         control_entry = self._entry(candidates["control-prompt"])
         control_entry["evidence"]["context_fingerprint"] = "0" * 64
+        control_entry["record_fingerprint"] = importlib.import_module(
+            "expert_panel_contracts"
+        ).semantic_disposition_record_fingerprint("root", control_entry)
         professional_entry = self._entry(candidates["professional-skill"])
         governed = self.auditor._collect_root_semantic_advisories(
             documents,
@@ -1052,10 +952,14 @@ Use the owned boundary instead of a generic organization policy.
         )
         contract = governed["disposition_contract"]
         self.assertEqual([], contract["common_errors"])
-        self.assertTrue(contract["surface_errors"]["control"])
+        self.assertEqual([], contract["surface_errors"]["control"])
         self.assertEqual([], contract["surface_errors"]["professional"])
         governed_by_layer = {item["layer"]: item for item in governed["candidates"]}
         self.assertIsNone(governed_by_layer["control-prompt"]["disposition"])
+        self.assertEqual(
+            "needs-confirmation",
+            governed_by_layer["control-prompt"]["governance_status"],
+        )
         self.assertEqual(
             "valid-contextual-rule",
             governed_by_layer["professional-skill"]["disposition"],
@@ -1066,6 +970,7 @@ Use the owned boundary instead of a generic organization policy.
             governed,
         )["surfaces"]
         self.assertEqual("fail", surfaces["control"]["status"])
+        self.assertTrue(surfaces["control"]["semantic_p0_p1_unresolved_count"])
         self.assertEqual("pass", surfaces["professional"]["status"])
 
     def test_candidate_error_is_attributed_to_its_root_surface(self) -> None:
@@ -1352,13 +1257,7 @@ When failure remains possible, preserve the owned invariant before release.
             content = self.auditor._collect_root_content()
         _counts, default_errors = self.module._evaluate(content, strict=False)
         counts, strict_errors = self.module._evaluate(content, strict=True)
-        self.assertEqual(
-            [
-                "Foundation derivation recomputation failed closed: expected 150 "
-                "Foundation body documents; found 1"
-            ],
-            default_errors,
-        )
+        self.assertEqual([], default_errors)
         self.assertGreater(counts["semantic_p0_p1_unresolved"], 0)
         self.assertGreater(counts["foundation_rules_without_decision_semantics"], 0)
         self.assertTrue(any("root P0/P1 unresolved" in item for item in strict_errors))

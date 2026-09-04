@@ -28,7 +28,7 @@ def _reviewer_added_request(
         ),
         "ranking_evidence": copy.deepcopy(ranking),
         "material_fingerprint": bindings[candidate_id][
-            "package_material_binding"
+            "content_fingerprint"
         ],
     }
 

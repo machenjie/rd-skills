@@ -39,6 +39,7 @@ mutation, or machine-managed task state.
   material-rework, or independent-integration risk.
 - For each Review Boundary, identify covered Task IDs, final paths, professional
   risk dimensions, required evidence, and any independent specialist review.
+<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=task-dag-planner/review-closure occurrence=dag-review-closure -->
 - Keep review strategy, cadence, assignment, and closure ordering on the Review
   Boundary rather than duplicating them across task nodes.
 - The accountable review owner consumes every required specialist result and

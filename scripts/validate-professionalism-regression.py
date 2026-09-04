@@ -1867,6 +1867,7 @@ def _reference_content_summary(
         (
             counts["semantic_detector_downgraded_candidates"],
             counts["semantic_untriaged_candidates"],
+            counts["semantic_needs_confirmation_candidates"],
             counts["semantic_rewrite_candidates"],
             counts["semantic_resolved_candidates"],
         )
@@ -1874,6 +1875,7 @@ def _reference_content_summary(
     semantic_triage_complete = (
         semantic_accounted
         and counts["semantic_untriaged_candidates"] == 0
+        and counts["semantic_needs_confirmation_candidates"] == 0
         and counts["semantic_disposition_errors"] == 0
         and counts["semantic_disposition_configured"]
         == counts["semantic_disposition_applied"]
@@ -1937,6 +1939,9 @@ def _reference_content_summary(
             "semantic_detector_downgraded_candidates"
         ],
         "semantic_untriaged_candidates": counts["semantic_untriaged_candidates"],
+        "semantic_needs_confirmation_candidates": counts[
+            "semantic_needs_confirmation_candidates"
+        ],
         "semantic_rewrite_candidates": counts["semantic_rewrite_candidates"],
         "semantic_resolved_candidates": counts["semantic_resolved_candidates"],
         "semantic_unresolved_candidates": counts["semantic_unresolved_candidates"],
@@ -2067,11 +2072,19 @@ def _root_content_summary(
     )
     semantic_raw = int(semantic_summary.get("raw_candidates", 0))
     semantic_untriaged = int(semantic_summary.get("untriaged_candidates", 0))
+    semantic_needs_confirmation = int(
+        semantic_summary.get("needs_confirmation_candidates", 0)
+    )
     semantic_rewrite = int(semantic_summary.get("rewrite_candidates", 0))
     semantic_resolved = int(semantic_summary.get("resolved_candidates", 0))
     semantic_triage_complete = (
-        semantic_raw == semantic_untriaged + semantic_rewrite + semantic_resolved
+        semantic_raw
+        == semantic_untriaged
+        + semantic_needs_confirmation
+        + semantic_rewrite
+        + semantic_resolved
         and semantic_untriaged == 0
+        and semantic_needs_confirmation == 0
         and counts["disposition_errors"] == 0
         and counts["dispositions_configured"] == counts["dispositions_applied"]
     )
@@ -2133,6 +2146,7 @@ def _root_content_summary(
         "semantic_finding_families": list(semantic.get("finding_families") or []),
         "semantic_raw_candidates": semantic_raw,
         "semantic_untriaged_candidates": semantic_untriaged,
+        "semantic_needs_confirmation_candidates": semantic_needs_confirmation,
         "semantic_rewrite_candidates": semantic_rewrite,
         "semantic_resolved_candidates": semantic_resolved,
         "semantic_unresolved_candidates": counts["semantic_unresolved"],
@@ -7350,6 +7364,8 @@ def _reference_content_findings(
                 (
                     "semantic_triage_complete=false; "
                     f"untriaged={int(summary.get('semantic_untriaged_candidates', 0))}; "
+                    "needs_confirmation="
+                    f"{int(summary.get('semantic_needs_confirmation_candidates', 0))}; "
                     "dispositions="
                     f"{int(summary.get('semantic_disposition_applied', 0))}/"
                     f"{int(summary.get('semantic_disposition_configured', 0))}; "
@@ -7403,6 +7419,8 @@ def _root_content_findings(
                 (
                     "semantic_triage_complete=false; "
                     f"untriaged={int(summary.get('semantic_untriaged_candidates', 0))}; "
+                    "needs_confirmation="
+                    f"{int(summary.get('semantic_needs_confirmation_candidates', 0))}; "
                     "dispositions="
                     f"{int(summary.get('semantic_disposition_applied', 0))}/"
                     f"{int(summary.get('semantic_disposition_configured', 0))}; "

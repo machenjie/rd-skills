@@ -19,7 +19,7 @@ Use this reference for L3+ cleanup, public/runtime deletion, stale flags, fallba
 
 ## Closure Gate
 
-- Map deletion to tests for remaining behavior, absence of obsolete path, contract/generation/build/install checks, and release or rollback validators.
+- Map deletion to its verification evidence: tests for remaining behavior, absence of obsolete path, contract/generation/build/install checks, and release or rollback validators.
 - Mark repository inspection and prior task evidence, generated reports, and command output as selector evidence until current source and fresh validation confirm them.
 - Re-run mapped validators after final material edits or disclose stale, partial, not-run, or not-verified status.
 - Handoff with what evidence proves, what it does not prove, rollback note, residual deletion risk, and next owner.

@@ -32,5 +32,5 @@ Reject “the list is small” without an owned bound, Big-O without memory, and
 
 Route query and index ownership to `indexing-query-optimization`.
 Route cache semantics to `cache-design` and concurrency or coordination to `concurrency-control`.
-Route resource budgets to `performance-budgeting` and empirical hot-path diagnosis to `profiling`.
+Use `performance-budgeting` for resource budgets and `profiling` for empirical hot-path diagnosis.
 Route final validation sufficiency to `quality-test-gate`.

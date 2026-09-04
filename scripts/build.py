@@ -54,6 +54,9 @@ from validation_utils import (
     runtime_asset_bundle_metadata_errors,
     runtime_asset_build_identity,
     runtime_asset_build_identity_bytes,
+    semantic_identity_projection,
+    strip_semantic_identity_markers,
+    validate_semantic_identity_marker_inventory,
 )
 
 
@@ -267,6 +270,7 @@ def build_profile(profile: str) -> dict[str, Any]:
         for layer, entries in registries.items()
     }
     _validate_global_skill_names(items)
+    _preflight_semantic_marker_inventory(registries)
     profiles = _load_agent_profiles()
     enforcement = _load_host_enforcement()
     top_level = _top_level_items(items)
@@ -338,10 +342,14 @@ def _preflight_static_paths() -> None:
         prompt_text = prompt_bytes.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise BuildError("authoritative control prompt must be UTF-8") from exc
+    try:
+        visible_prompt_text = strip_semantic_identity_markers(prompt_text)
+    except ValueError as exc:
+        raise BuildError("authoritative control prompt has malformed semantic identity markers") from exc
     projection_errors = prompt_projection_errors(
-        prompt_text,
+        visible_prompt_text,
         CORE_CONTRACTS,
-        document_bytes=prompt_bytes,
+        document_bytes=visible_prompt_text.encode("utf-8"),
     )
     if projection_errors:
         raise BuildError(
@@ -512,6 +520,61 @@ def _preflight_registry_entries(
                     )
 
 
+def _preflight_semantic_marker_inventory(
+    registries: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Validate every source marker before snapshots or managed mutations."""
+
+    sources: list[tuple[Path, str, str]] = [
+        (CONTROL_PROMPT_SOURCE, CONTROL_PROMPT_SOURCE.stem, "root")
+    ]
+    for layer in REGISTRY_SPECS:
+        for entry in registries.get(layer, []):
+            owner = _required_string(entry, "name", f"{layer} marker inventory")
+            relative = PurePosixPath(
+                _required_string(entry, "path", f"{layer} marker inventory")
+            )
+            skill_root = ROOT.joinpath(*relative.parts)
+            sources.append((skill_root / "SKILL.md", owner, "root"))
+            references = skill_root / "references"
+            if references.is_dir():
+                sources.extend(
+                    (path, owner, "reference")
+                    for path in sorted(references.rglob("*.md"))
+                )
+
+    inventory: list[dict[str, object]] = []
+    for path, owner, axis in sources:
+        try:
+            source = path.read_bytes().decode("utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise BuildError(
+                f"semantic marker source {_display_path(path)} must be readable UTF-8"
+            ) from exc
+        try:
+            projection = semantic_identity_projection(
+                source,
+                owner=owner,
+                axis=axis,
+            )
+        except ValueError as exc:
+            raise BuildError(
+                f"semantic marker inventory {_display_path(path)}: {exc}"
+            ) from exc
+        inventory.append(
+            {
+                "path": _display_path(path),
+                "owner": owner,
+                "axis": axis,
+                "markers": projection["markers"],
+            }
+        )
+    try:
+        validate_semantic_identity_marker_inventory(inventory)
+    except ValueError as exc:
+        raise BuildError(f"semantic marker inventory: {exc}") from exc
+
+
 def _validate_global_skill_names(items: dict[str, list[SkillItem]]) -> None:
     owners: dict[str, str] = {}
     for layer, layer_items in items.items():
@@ -617,12 +680,15 @@ def _preflight_build_plan(
                     reference_partitions,
                     build_identity,
                 )
+                _strip_runtime_semantic_markers(destination)
                 _write_and_validate_runtime_bundle_metadata(
                     destination,
                     item.name,
                     source_snapshot,
                 )
                 _validate_rendered_professional_body(destination / "SKILL.md")
+            else:
+                _strip_runtime_semantic_markers(destination)
             _validate_zip_source(destination)
 
     # Renderer failures are likewise configuration failures and must happen
@@ -918,6 +984,7 @@ def _build_skill_roots(
                     reference_partitions,
                     build_identity,
                 )
+                _strip_runtime_semantic_markers(destination)
                 runtime_asset_bindings[item.name] = (
                     _write_and_validate_runtime_bundle_metadata(
                         destination,
@@ -927,6 +994,8 @@ def _build_skill_roots(
                 )
                 compiled_by_skill[item.name] = compiled
                 all_compiled.update(compiled)
+            else:
+                _strip_runtime_semantic_markers(destination)
         _write_build_manifest(
             profile_root,
             top_level,
@@ -2185,6 +2254,25 @@ def _copy_skill_tree(source: Path, destination: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination, ignore=ignore)
+
+
+def _strip_runtime_semantic_markers(destination: Path) -> None:
+    """Remove source-only semantic identity markers from built Markdown."""
+
+    for path in sorted(destination.rglob("*.md")):
+        source = path.read_text(encoding="utf-8")
+        try:
+            rendered = strip_semantic_identity_markers(source)
+        except ValueError as exc:
+            raise BuildError(
+                f"{_display_path(path)} contains a malformed semantic identity marker"
+            ) from exc
+        if "rd-semantic-id:" in rendered:
+            raise BuildError(
+                f"{_display_path(path)} contains a malformed semantic identity marker"
+            )
+        if rendered != source:
+            path.write_text(rendered, encoding="utf-8")
 
 
 def _reset_dir(path: Path) -> None:

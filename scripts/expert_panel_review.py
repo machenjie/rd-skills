@@ -2199,39 +2199,42 @@ def _semantic_candidate_current_binding(
 ) -> dict[str, Any]:
     """Return only semantic identity and local evidence used for currentness."""
 
-    fields = (
+    identity_fields = (
         "candidate_id",
         "finding",
         "path",
         "owner",
         "skill_owner",
-        "fingerprint",
+        "source_selector",
     )
-    binding = {field: copy.deepcopy(candidate.get(field)) for field in fields}
+    identity = {
+        field: copy.deepcopy(candidate.get(field)) for field in identity_fields
+    }
+    evidence = {"fingerprint": candidate.get("fingerprint")}
     if axis == "root":
-        binding.update(
+        identity["document_part"] = candidate.get("document_part")
+        evidence.update(
             {
-                "document_part": candidate.get("document_part"),
                 "occurrence_fingerprint": candidate.get("occurrence_fingerprint"),
                 "context_fingerprint": candidate.get("context_fingerprint"),
             }
         )
     else:
-        binding.update(
+        evidence.update(
             {
                 "evidence_fingerprint": candidate.get("evidence_fingerprint"),
                 "content_fingerprint": candidate.get("content_fingerprint"),
             }
         )
         if candidate.get("path") == "group":
-            binding["group_members"] = sorted(
+            evidence["group_members"] = sorted(
                 {
                     (occurrence.get("path"), occurrence.get("owner"))
                     for occurrence in candidate.get("occurrences", [])
                     if isinstance(occurrence, dict)
                 }
             )
-    return binding
+    return {"stable_identity": identity, "current_evidence": evidence}
 
 
 def _semantic_entry_mismatches(
@@ -2244,7 +2247,7 @@ def _semantic_entry_mismatches(
 
     if entry is None:
         return ["prior-entry-missing"]
-    fields = ["candidate_id", "finding", "path", "fingerprint", "skill_owner"]
+    fields = ["candidate_id", "finding", "path", "source_selector", "skill_owner"]
     if axis == "root":
         fields.extend(["document_part", "priority"])
     mismatches = [field for field in fields if entry.get(field) != candidate.get(field)]
@@ -2270,7 +2273,49 @@ def _semantic_entry_mismatches(
         for entry_field, candidate_field in evidence_fields
         if evidence.get(entry_field) != candidate.get(candidate_field)
     )
+    try:
+        expected_record_fingerprint = (
+            panel_contracts.semantic_disposition_record_fingerprint(axis, entry)
+        )
+    except ValueError:
+        expected_record_fingerprint = None
+    if entry.get("record_fingerprint") != expected_record_fingerprint:
+        mismatches.append("record_fingerprint")
     return sorted(set(mismatches))
+
+
+def _semantic_eligible_candidates(
+    *, axis: str, semantic: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Select review-visible candidates, including configured detector drift."""
+
+    candidates = semantic.get("candidates")
+    contract = semantic.get("disposition_contract")
+    entries = contract.get("entries") if isinstance(contract, dict) else None
+    if not isinstance(candidates, list) or not all(
+        isinstance(candidate, dict) for candidate in candidates
+    ):
+        raise PanelReviewError(f"semantic audit {axis} candidates must be an array")
+    if not isinstance(entries, list) or not all(
+        isinstance(entry, dict) for entry in entries
+    ):
+        raise PanelReviewError(
+            f"semantic audit {axis} disposition entries must be an array"
+        )
+    configured_ids = {
+        str(entry.get("candidate_id"))
+        for entry in entries
+        if isinstance(entry.get("candidate_id"), str)
+    }
+    return [
+        candidate
+        for candidate in candidates
+        if (
+            axis == "root"
+            or candidate.get("detector_status") == "candidate"
+            or str(candidate.get("candidate_id")) in configured_ids
+        )
+    ]
 
 
 def _semantic_axis_diff(
@@ -2291,11 +2336,7 @@ def _semantic_axis_diff(
         raise PanelReviewError(
             f"semantic audit {axis} disposition entries must be an array"
         )
-    eligible = [
-        candidate
-        for candidate in candidates
-        if axis == "root" or candidate.get("detector_status") == "candidate"
-    ]
+    eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
     candidate_ids = [candidate.get("candidate_id") for candidate in eligible]
     entry_ids = [entry.get("candidate_id") for entry in entries]
     for label, values in (("candidate", candidate_ids), ("entry", entry_ids)):
@@ -2404,15 +2445,11 @@ def _semantic_source_fingerprints(
     ):
         raise PanelReviewError("semantic disposition candidates are unavailable")
     manifests: dict[str, list[dict[str, Any]]] = {}
-    for axis, candidates in (
-        ("root", root_candidates),
-        ("reference", reference_candidates),
+    for axis, candidates, semantic in (
+        ("root", root_candidates, root_semantic),
+        ("reference", reference_candidates, reference_semantic),
     ):
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         rows = []
         for candidate in eligible:
             candidate_id = _lowercase_sha256(
@@ -2601,12 +2638,13 @@ def prepare_semantic_disposition_packet(
 def _semantic_audit_for_axis_rereview(
     audit: dict[str, Any], axes: list[str]
 ) -> dict[str, Any]:
-    """Return a review-only audit view with selected axis entries withheld.
+    """Return a review-only view with selected-axis carry proofs invalidated.
 
     This reuses the ordinary semantic packet contract after a detector change:
-    current candidates remain unchanged, while exact prior dispositions on the
-    affected axis become explicit review targets again. The canonical audit and
-    its single-source-of-truth entries are never modified.
+    current candidates and configured stable IDs remain unchanged, while exact
+    prior dispositions on the affected axis become explicit review targets
+    again. The canonical audit and its single-source-of-truth entries are never
+    modified.
     """
 
     selected = sorted(set(axes))
@@ -2631,7 +2669,12 @@ def _semantic_audit_for_axis_rereview(
             raise PanelReviewError(
                 f"semantic re-review requires {axis} disposition entries"
             )
-        contract["entries"] = []
+        for entry in contract["entries"]:
+            if not isinstance(entry, dict):
+                raise PanelReviewError(
+                    f"semantic re-review requires valid {axis} disposition entries"
+                )
+            entry["record_fingerprint"] = None
     return result
 
 
@@ -3628,37 +3671,20 @@ def _readability_finding_id(
     *,
     document_id: str,
     kind: str,
-    band: str | None,
-    words: int | None,
-    sentence_fingerprint: str,
-    source_span: dict[str, Any],
+    sentence: str,
+    occurrence: int,
 ) -> str:
-    """Return the canonical identity of one exact detector finding."""
+    """Return a stable identity independent of raw source coordinates."""
 
-    return hashlib.sha256(
-        (
-            "ai-readability-finding-v2\0ai-readability-v1\0"
-            + document_id
-            + "\0"
-            + kind
-            + "\0"
-            + str(band or "")
-            + "\0"
-            + str(words or "")
-            + "\0"
-            + sentence_fingerprint
-            + "\0"
-            + str(source_span["start_line"])
-            + "\0"
-            + str(source_span["end_line"])
-            + "\0"
-            + str(source_span["start_offset"])
-            + "\0"
-            + str(source_span["end_offset"])
-            + "\0"
-            + str(source_span["sha256"])
-        ).encode("utf-8")
-    ).hexdigest()
+    try:
+        return panel_contracts.readability_stable_finding_id(
+            document_id=document_id,
+            kind=kind,
+            sentence=sentence,
+            occurrence=occurrence,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(str(exc)) from exc
 
 
 def _readability_targets_from_evidence(
@@ -3977,6 +4003,8 @@ def _actionability_target_id(path: str) -> str:
 
 
 def _actionability_front_window(path: str, *, limit: int) -> dict[str, Any]:
+    if type(limit) is not int or limit < 1:
+        raise PanelReviewError("actionability front-window limit is invalid")
     source = _canonical_relative_path(path, label="actionability target path")
     try:
         lines = source.read_text(encoding="utf-8").splitlines()
@@ -3997,9 +4025,22 @@ def _actionability_front_window(path: str, *, limit: int) -> dict[str, Any]:
             f"actionability source has unterminated YAML frontmatter: {path}"
         )
     body_lines = lines[end_index + 1 :]
-    window_lines = body_lines[:limit]
-    if not window_lines:
-        raise PanelReviewError(f"actionability source body is empty: {path}")
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            "\n".join(body_lines),
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(
+            f"actionability source body is invalid: {path}"
+        ) from exc
+    selected_units = logical_units[:limit]
+    if not selected_units:
+        raise PanelReviewError(
+            f"actionability source body has no governed logical units: {path}"
+        )
+    window_lines = body_lines[: int(selected_units[-1]["end_line"])]
     start_line = end_index + 2
     numbered_lines = [
         {"line": start_line + index, "text": text}
@@ -4034,7 +4075,7 @@ def _validate_actionability_front_window(
         or start_line < 1
         or type(end_line) is not int
         or type(line_count) is not int
-        or not 1 <= line_count <= limit
+        or line_count < 1
         or end_line != start_line + line_count - 1
     ):
         raise PanelReviewError(f"{label} coordinates are invalid")
@@ -4055,6 +4096,18 @@ def _validate_actionability_front_window(
     ).hexdigest()
     if fingerprint != expected_fingerprint:
         raise PanelReviewError(f"{label}.sha256 does not match embedded lines")
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            "\n".join(row["text"] for row in lines),
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(f"{label} logical units are invalid") from exc
+    if not 1 <= len(logical_units) <= limit:
+        raise PanelReviewError(
+            f"{label} normalized logical-unit count is outside the limit"
+        )
     return value
 
 
@@ -4065,7 +4118,19 @@ def _actionability_window_line_is_substantive(
 
     relative_line = line - int(window["start_line"]) + 1
     content = "\n".join(row["text"] for row in window["lines"])
-    return _is_substantive_markdown_line(content, relative_line)
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            content,
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError:
+        return False
+    return any(
+        unit["kind"] not in {"heading", "fenced"}
+        and relative_line in unit["source_lines"]
+        for unit in logical_units
+    )
 
 
 def _root_body_fingerprints(audit: dict[str, Any]) -> dict[str, str]:
@@ -4697,6 +4762,7 @@ def _validate_readability_packet(
                 f"packet readability target {index} findings are required"
             )
         finding_order: list[tuple[Any, ...]] = []
+        finding_identity_occurrences: dict[tuple[str, str], int] = {}
         for finding_index, finding in enumerate(findings):
             finding_fields = (
                 {
@@ -4777,13 +4843,22 @@ def _validate_readability_packet(
                         f"readability target {index} finding {finding_index}.finding_id"
                     ),
                 )
+                normalized_sentence = (
+                    panel_contracts.readability_normalized_visible_text(
+                        sentence
+                    )
+                )
+                occurrence_key = (
+                    str(finding["kind"]), normalized_sentence
+                )
+                finding_identity_occurrences[occurrence_key] = (
+                    finding_identity_occurrences.get(occurrence_key, 0) + 1
+                )
                 expected_finding_id = _readability_finding_id(
                     document_id=document_id,
                     kind=str(finding["kind"]),
-                    band=finding.get("band"),
-                    words=words,
-                    sentence_fingerprint=sentence_fingerprint,
-                    source_span=source_span,
+                    sentence=sentence,
+                    occurrence=finding_identity_occurrences[occurrence_key],
                 )
                 if finding_id != expected_finding_id:
                     raise PanelReviewError(
@@ -4825,17 +4900,25 @@ def _validate_readability_packet(
             raise PanelReviewError(
                 "schema-2 readability packet target or detector authority is stale"
             )
-        if readability_targets != current_targets:
+        packet_manifest = _readability_target_manifest_projection(
+            content_targets=content_targets,
+            readability_targets=readability_targets,
+            actionability_targets=packet.get("actionability_targets", []),
+        )
+        current_manifest = _readability_target_manifest_projection(
+            content_targets=current_content_targets,
+            readability_targets=current_targets,
+            actionability_targets=current_actionability_targets,
+        )
+        if packet_manifest != current_manifest:
             raise PanelReviewError(
-                "schema-2 readability packet findings or source inventory are stale"
+                "schema-2 readability normalized target bindings are stale"
             )
-        if content_targets != current_content_targets:
+        if packet["source_fingerprints"]["readability_target_manifest"] != (
+            _canonical_json_sha256(packet_manifest)
+        ):
             raise PanelReviewError(
-                "schema-2 content source bindings or inventory are stale"
-            )
-        if packet.get("actionability_targets") != current_actionability_targets:
-            raise PanelReviewError(
-                "schema-2 actionability source bindings or inventory are stale"
+                "schema-2 readability target manifest is internally stale"
             )
 
     if schema_version == READABILITY_SCHEMA_VERSION:
@@ -5930,11 +6013,7 @@ def _validate_semantic_packet_current(
             raise PanelReviewError(
                 f"semantic audit {axis} disposition entries must be an array"
             )
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         current_by_id = {
             str(candidate.get("candidate_id")): candidate for candidate in eligible
         }
@@ -9432,12 +9511,9 @@ def _validate_legacy_semantic_decision_application(
                     raise PanelReviewError(
                         f"semantic application current {axis} candidates must be an array"
                     )
-                eligible = [
-                    candidate
-                    for candidate in candidates
-                    if axis == "root"
-                    or candidate.get("detector_status") == "candidate"
-                ]
+                eligible = _semantic_eligible_candidates(
+                    axis=axis, semantic=semantic
+                )
                 for candidate in eligible:
                     target_id = f"{axis}:{candidate.get('candidate_id')}"
                     if target_id in current_bindings:
@@ -9529,12 +9605,9 @@ def _validate_legacy_semantic_decision_application(
                 raise PanelReviewError(
                     f"semantic application current {axis} entries must be an array"
                 )
-            eligible = [
-                candidate
-                for candidate in candidates
-                if axis == "root"
-                or candidate.get("detector_status") == "candidate"
-            ]
+            eligible = _semantic_eligible_candidates(
+                axis=axis, semantic=semantic
+            )
             candidates_by_id = {
                 str(candidate.get("candidate_id")): candidate
                 for candidate in eligible
@@ -9789,11 +9862,7 @@ def validate_semantic_decision_application(
             raise PanelReviewError(
                 f"semantic application current {axis} entries must be an array"
             )
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         candidates_by_id = {
             str(candidate.get("candidate_id")): candidate
             for candidate in eligible
@@ -10023,8 +10092,15 @@ def _professional_v3_binding_state(
     base_targets: list[dict[str, Any]],
     *,
     review_contract_fingerprint: str,
+    historical_content_binding: bool = False,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-    bindings = professional_carry.professional_review_bindings(base_targets)
+    bindings = (
+        professional_carry.professional_historical_content_review_bindings(
+            base_targets
+        )
+        if historical_content_binding
+        else professional_carry.professional_review_bindings(base_targets)
+    )
     snapshot = professional_carry.professional_carry_snapshot(
         bindings,
         review_contract_fingerprint=review_contract_fingerprint,
@@ -10469,7 +10545,7 @@ def _professional_v3_review_plan(
 def _professional_v3_packet_limitations() -> list[str]:
     return [
         "Schema 3 carries only whole accepted packages through a bounded, recursively validated canonical plan lineage and direct last-fresh origin.",
-        "Carry eligibility is authoritative on package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+        "Carry eligibility is authoritative on professional-semantic-predicate-projection-v4 through the canonical package_material_binding, review_unit_binding, and direct dependency semantic bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
         "A full-fresh checkpoint resets plan lineage depth after recomputing its immediate predecessor effective evidence and reset trigger; superseded history is not recursively re-proved.",
         "Review capsules and deterministic byte proxies do not prove actual host tokens, latency, reviewer identity, credentials, behavior, production accuracy, or installed user experience.",
         "This packet does not by itself satisfy any formal release gate, and a static artifact tree cannot prove that historical rounds were not deleted.",
@@ -10973,6 +11049,11 @@ def _professional_v3_packet_state(
     bindings, snapshot = _professional_v3_binding_state(
         base_targets,
         review_contract_fingerprint=expected_contract_fingerprint,
+        historical_content_binding=(
+            validation_mode == VALIDATION_MODE_HISTORICAL
+            and packet_contract_fingerprint
+            != panel_contracts.professional_review_contract_fingerprint()
+        ),
     )
     embedded_targets = packet["professional_targets"]
     for target in embedded_targets:
@@ -13981,7 +14062,7 @@ def _professional_v3_decision_record(
         ),
         "limitations": [
             "Fresh evidence is derived only from validated target-scoped capsules; carried rows contain no new votes and point directly to a validated depth-zero fresh origin.",
-            "Carried authority records package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+            "Carried authority records professional-semantic-predicate-projection-v4 through the canonical package_material_binding, review_unit_binding, and direct dependency semantic bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
             "Canonical JSON byte and optional ratio values are deterministic input-size proxies, not actual tokens, reviewer effort, latency, identity, credentials, behavior, or production outcomes.",
             "Static professional review and simulated carry validation do not prove real-host startup, wall-clock performance, production accuracy, or installed user experience.",
         ],
@@ -15712,17 +15793,23 @@ def _readability_attestation_from_decision(
         review_id=packet["review_id"],
         created_on=packet["created_on"],
     )
-    for field in (
-        "source_fingerprints",
-        "panel_contract",
-        "content_targets",
-        "readability_targets",
-        "actionability_targets",
-    ):
+    for field in ("source_fingerprints", "panel_contract"):
         if packet.get(field) != current.get(field):
             raise PanelReviewError(
                 f"readability decision {field} is incomplete or stale"
             )
+    if _readability_target_manifest_projection(
+        content_targets=packet["content_targets"],
+        readability_targets=packet["readability_targets"],
+        actionability_targets=packet["actionability_targets"],
+    ) != _readability_target_manifest_projection(
+        content_targets=current["content_targets"],
+        readability_targets=current["readability_targets"],
+        actionability_targets=current["actionability_targets"],
+    ):
+        raise PanelReviewError(
+            "readability decision normalized target bindings are incomplete or stale"
+        )
     voter_ids = [reviewer["voter_id"] for reviewer in record["voters"]]
     ballot_by_voter = {
         ballot["voter"]["voter_id"]: ballot for ballot in ballots
@@ -16877,11 +16964,9 @@ def _semantic_fixed_current_validation(
             raise PanelReviewError(
                 f"semantic current {axis} candidates are invalid"
             )
-        for candidate in candidates:
-            if axis == "reference" and candidate.get(
-                "detector_status"
-            ) != "candidate":
-                continue
+        for candidate in _semantic_eligible_candidates(
+            axis=axis, semantic=semantic
+        ):
             candidate_id = candidate.get("candidate_id")
             target_id = f"{axis}:{candidate_id}"
             if target_id in current_authorities:

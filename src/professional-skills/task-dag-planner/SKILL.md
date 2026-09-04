@@ -60,6 +60,7 @@ scheduling is unknown.
   plus an explicit workspace requirement.
 - Define minimum sufficient Review Boundaries: combine related work by default
   and require concrete risk for an intermediate boundary.
+<!-- rd-semantic-id:v2 finding=unconditional_mechanism_candidate rule=task-dag-planner/review-boundary occurrence=dag-review-boundary -->
 - Keep review strategy, scope, independence requirements, and evidence on the
   Review Boundary; task nodes carry only the review obligations they must satisfy.
 - Carry graph claims, source evidence, freshness, and proof limits in a visible

@@ -10,12 +10,15 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import html
 import json
+import re
+import unicodedata
 from typing import Any, Mapping
 
 
 READABILITY_CURRENTNESS_CONTRACT_VERSION = (
-    "readability-target-authority-currentness-v2"
+    "readability-normalized-evidence-currentness-v4"
 )
 READABILITY_SOURCE_FINGERPRINT_KEYS = frozenset(
     {
@@ -33,21 +36,31 @@ READABILITY_LEGACY_SOURCE_FINGERPRINT_KEYS = frozenset(
     }
 )
 READABILITY_TARGET_BINDING_CONTRACT_ID = (
-    "readability-target-review-binding-v2"
+    "readability-normalized-target-review-binding-v4"
 )
 READABILITY_FINDING_BINDING_CONTRACT_ID = (
-    "readability-finding-review-binding-v2"
+    "readability-normalized-finding-review-binding-v4"
 )
 READABILITY_TARGET_MANIFEST_CONTRACT_ID = (
-    "readability-complete-target-authority-manifest-v2"
+    "readability-complete-normalized-binding-manifest-v4"
 )
 READABILITY_REVIEW_UNIT_BINDING_CONTRACT_ID = (
-    "readability-review-unit-binding-v3"
+    "readability-normalized-review-unit-binding-v5"
+)
+READABILITY_VISIBLE_TEXT_CONTRACT_ID = (
+    "readability-visible-text-and-sentence-boundaries-v2"
+)
+READABILITY_LOGICAL_UNIT_CONTRACT_ID = (
+    "readability-normalized-logical-unit-v1"
+)
+READABILITY_FINDING_IDENTITY_CONTRACT_ID = (
+    "readability-stable-finding-identity-v4"
 )
 READABILITY_DETECTOR_CONTRACT_ID = "ai-readability-detector-contract-v1"
 ACTIONABILITY_DETECTOR_CONTRACT_ID = (
-    "weak-front-loaded-action-detector-contract-v1"
+    "weak-front-loaded-action-detector-contract-v2"
 )
+READABILITY_ACTIONABILITY_FRONT_WINDOW_UNIT_LIMIT = 60
 READABILITY_TARGET_REVIEW_FIELDS = {
     "content": (
         "path",
@@ -56,8 +69,8 @@ READABILITY_TARGET_REVIEW_FIELDS = {
         "owner",
         "document_part",
         "source_selector",
-        "content_fingerprint",
-        "document_context",
+        "normalized_visible_text",
+        "sentence_boundaries",
     ),
     "readability": (
         "document_id",
@@ -66,9 +79,9 @@ READABILITY_TARGET_REVIEW_FIELDS = {
         "document_part",
         "owner",
         "source_selector",
-        "content_fingerprint",
-        "document_context",
         "highest_band",
+        "normalized_visible_text",
+        "sentence_boundaries",
     ),
     "actionability": (
         "target_id",
@@ -77,8 +90,7 @@ READABILITY_TARGET_REVIEW_FIELDS = {
         "kind",
         "actionability_model",
         "front_loaded_action_score",
-        "front_window",
-        "content_fingerprint",
+        "normalized_front_window",
     ),
 }
 READABILITY_FINDING_REVIEW_FIELDS = (
@@ -86,9 +98,7 @@ READABILITY_FINDING_REVIEW_FIELDS = (
     "band",
     "words",
     "kind",
-    "sentence",
-    "sentence_fingerprint",
-    "source_span",
+    "normalized_sentence",
 )
 READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
     "contract_version": READABILITY_CURRENTNESS_CONTRACT_VERSION,
@@ -103,6 +113,11 @@ READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
         "categories": ["content", "readability", "actionability"],
         "target_binding_contract_id": READABILITY_TARGET_BINDING_CONTRACT_ID,
         "finding_binding_contract_id": READABILITY_FINDING_BINDING_CONTRACT_ID,
+        "visible_text_contract_id": READABILITY_VISIBLE_TEXT_CONTRACT_ID,
+        "logical_unit_contract_id": READABILITY_LOGICAL_UNIT_CONTRACT_ID,
+        "finding_identity_contract_id": (
+            READABILITY_FINDING_IDENTITY_CONTRACT_ID
+        ),
         "review_unit_binding_contract": {
             "contract_id": READABILITY_REVIEW_UNIT_BINDING_CONTRACT_ID,
             "minimum_units": {
@@ -129,6 +144,12 @@ READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
         "ordering": "category-then-target-id-ascending",
         "nested_finding_ordering": "finding-id-ascending",
         "excludes": [
+            "raw-content-fingerprint",
+            "raw-context-span-and-window-sha256",
+            "raw-line-offsets-and-columns",
+            "markdown-presentation",
+            "comments-and-frontmatter-metadata",
+            "redundant-whitespace",
             "audit-report-metadata",
             "configured-selector-metadata",
             "review-state-and-review-reasons",
@@ -146,6 +167,13 @@ READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
         },
         "promotion": "exact-reprojection-from-validated-runtime-artifacts",
         "fixed_trust": "tracked-head-bytes-and-release-manifest-content-sha256",
+        "raw_source_purpose": [
+            "provenance",
+            "artifact-integrity",
+            "tamper-detection",
+            "debug-audit",
+        ],
+        "raw_source_is_currentness_authority": False,
     },
     "detector_contracts": {
         "readability": READABILITY_DETECTOR_CONTRACT_ID,
@@ -154,7 +182,12 @@ READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
             "actionability-applicable-iff-weak-front-loaded-action-reason"
         ),
         "actionability_identity": "sha256-actionability-target-v1-path",
-        "actionability_source": "canonical-root-body-front-window",
+        "actionability_source": (
+            "first-n-normalized-root-body-logical-units-with-raw-provenance"
+        ),
+        "actionability_front_window_unit_limit": (
+            READABILITY_ACTIONABILITY_FRONT_WINDOW_UNIT_LIMIT
+        ),
     },
     "authority_selection": {
         "fixed_path": "evals/expert-panel/readability.json",
@@ -170,8 +203,9 @@ READABILITY_CURRENTNESS_CONTRACT_PROJECTION = {
 
 
 SEMANTIC_DISPOSITION_CONTRACT_VERSION = (
-    "semantic-disposition-candidate-manifest-currentness-v1"
+    "semantic-disposition-stable-identity-evidence-currentness-v2"
 )
+SEMANTIC_DISPOSITION_RECORD_VERSION = "semantic-disposition-record-integrity-v1"
 SEMANTIC_DISPOSITION_SOURCE_FINGERPRINT_KEYS = frozenset(
     {
         "root_candidate_manifest",
@@ -264,7 +298,22 @@ SEMANTIC_DISPOSITION_CONTRACT_PROJECTION = {
         "root_eligibility": "all-canonical-root-candidates",
         "reference_eligibility": "detector-status-candidate-only",
         "ordering": "target-id-ascending",
-        "binding": "target-local-current-binding-v1",
+        "binding": "stable-identity-plus-current-evidence-v2",
+        "stable_identity": [
+            "owner",
+            "finding-type",
+            "stable-source-selector",
+            "semantic-section-or-shape-identity",
+        ],
+        "evidence": [
+            "candidate-text",
+            "occurrences",
+            "membership",
+            "normalized-content",
+        ],
+        "evidence_change": "same-target-id-needs-confirmation",
+        "selector_change": "new-target-id",
+        "collision_policy": "deterministic-fail-closed-no-content-line-ordinal-member-fallback",
         "excludes": [
             "configured-dispositions",
             "audit-report-metadata",
@@ -288,6 +337,11 @@ SEMANTIC_DISPOSITION_CONTRACT_PROJECTION = {
         ],
         "required_match_count": 1,
         "config_selector_allowed": False,
+    },
+    "configuration": {
+        "migration": "all-or-nothing-current-schema",
+        "record_integrity": SEMANTIC_DISPOSITION_RECORD_VERSION,
+        "legacy_or_partial": "reject",
     },
 }
 
@@ -539,22 +593,608 @@ PROFESSIONAL_SEMANTIC_GROUNDING_CONTRACT = {
     },
 }
 
+PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION = (
+    "professional-semantic-predicate-projection-v4"
+)
+PROFESSIONAL_SEMANTIC_FACT_FIELDS = (
+    "source_class",
+    "fact_class",
+    "section_kind",
+    "unit_kind",
+    "fact_kind",
+    "predicate_ordinal",
+    "incoming_connector",
+    "subject_scope_concepts",
+    "action_concept",
+    "argument_role_bindings",
+    "object_scope_concepts",
+    "condition_concepts",
+    "modality",
+    "polarity",
+)
+PROFESSIONAL_SEMANTIC_ARGUMENT_ROLE_FIELDS = (
+    "argument_ordinal",
+    "relation",
+    "scope_concepts",
+    "attachment",
+    "owner_action_concept",
+    "owner_modality",
+    "owner_polarity",
+)
+PROFESSIONAL_SEMANTIC_ARGUMENT_RELATIONS = (
+    "direct",
+    "from",
+    "to",
+)
+PROFESSIONAL_SEMANTIC_ARGUMENT_ATTACHMENTS = (
+    "condition-scope",
+    "dependent-complement",
+    "dependent-condition",
+    "governing-predicate",
+)
+PROFESSIONAL_SEMANTIC_FACT_SOURCE_CLASSES = (
+    "indexed-reference",
+    "registry",
+    "required-expertise",
+    "root",
+)
+PROFESSIONAL_SEMANTIC_SECTION_ALIASES = {
+    "adjacency-routing": (
+        "adjacency",
+        "adjacent",
+        "overlap",
+        "route",
+        "routing",
+        "selection",
+    ),
+    "anti-trigger": ("anti trigger", "do not load", "do not use"),
+    "decision-rules": (
+        "authority",
+        "behavior",
+        "contract",
+        "decision",
+        "implementation",
+        "matrix",
+        "mode",
+        "pattern",
+        "professional",
+        "rule",
+    ),
+    "failure-constraint": (
+        "anti pattern",
+        "blocking",
+        "boundary",
+        "constraint",
+        "escalation",
+        "failure",
+        "gotcha",
+        "limit",
+        "recovery",
+        "risk",
+        "source limit",
+        "stop",
+    ),
+    "required-input": ("input",),
+    "required-output": ("handoff", "output", "record", "result"),
+    "responsibility": ("owner", "ownership", "responsibility", "role"),
+    "source-citation": (
+        "official source",
+        "primary source",
+        "reference index",
+    ),
+    "trigger": ("activation", "load trigger", "registry trigger", "when to use"),
+    "verification": (
+        "benchmark",
+        "check",
+        "closure",
+        "evidence",
+        "proof",
+        "quality gate",
+        "test",
+        "validation",
+        "verification",
+    ),
+}
+PROFESSIONAL_SEMANTIC_EXCLUDED_SECTION_ALIASES = (
+    "targeted references",
+)
+PROFESSIONAL_SEMANTIC_SECTION_FACTS = {
+    "adjacency-routing": ("required-adjacency", "routing", "route", "relationship"),
+    "anti-trigger": ("anti-trigger", "exclusion", "exclude", "routing-trigger"),
+    "decision-rules": ("professional-decision", "obligation", "govern", "contract"),
+    "failure-constraint": ("failure-constraint", "constraint", "guard", "constraint"),
+    "general-guidance": ("professional-decision", "obligation", "govern", "contract"),
+    "required-input": ("required-input", "obligation", "consume", "input"),
+    "required-output": ("required-output", "obligation", "produce", "output"),
+    "responsibility": ("responsibility", "responsibility", "own", "owner"),
+    "trigger": ("trigger", "activation", "activate", "routing-trigger"),
+    "verification": ("verification", "verification", "validate", "evidence"),
+}
+PROFESSIONAL_SEMANTIC_REGISTRY_FACTS = {
+    "anti_trigger_signals": ("anti-trigger", "registry-anti-trigger", "exclusion", "exclude", "routing-trigger"),
+    "boundary_signals": ("routing-boundary", "registry-boundary", "constraint", "guard", "boundary"),
+    "escalation_signals": ("failure-constraint", "registry-escalation", "constraint", "stop", "constraint"),
+    "output_contract": ("required-output", "registry-output-contract", "obligation", "produce", "output"),
+    "required_inputs": ("required-input", "registry-required-input", "obligation", "consume", "input"),
+    "role_support": ("responsibility", "registry-role-support", "responsibility", "own", "owner"),
+    "trigger_signals": ("trigger", "registry-trigger", "activation", "activate", "routing-trigger"),
+}
+PROFESSIONAL_SEMANTIC_ACTION_ALIASES = {
+    "accept": ("accept", "admit", "approve"),
+    "activate": ("activate", "trigger"),
+    "add": ("add", "append", "insert"),
+    "allow": ("allow", "permit"),
+    "analyze": ("analyse", "analyze", "assess", "evaluate", "judge"),
+    "apply": ("apply", "serve", "use"),
+    "authorize": ("authenticate", "authorize"),
+    "bind": ("bind", "couple", "link"),
+    "build": (
+        "build",
+        "construct",
+        "copy",
+        "create",
+        "form",
+        "generate",
+        "produce",
+        "rebuild",
+    ),
+    "change": (
+        "alter",
+        "become",
+        "change",
+        "collapse",
+        "correct",
+        "drift",
+        "edit",
+        "evolve",
+        "improve",
+        "make",
+        "modify",
+        "move",
+        "override",
+        "overwrite",
+        "reduce",
+        "unify",
+        "update",
+    ),
+    "classify": ("categorize", "classify", "label"),
+    "compare": ("compare", "contrast"),
+    "consume": ("consume", "ingest", "load", "read"),
+    "contain": ("bound", "contain", "exceed", "limit", "overconstrain"),
+    "coordinate": ("coordinate", "orchestrate", "synchronize"),
+    "decide": ("choose", "decide", "select"),
+    "define": ("define", "establish", "express", "name", "specify", "state"),
+    "delete": ("clean", "delete", "reap", "remove"),
+    "derive": ("calculate", "derive", "infer"),
+    "design": ("design", "model", "plan", "structure"),
+    "detect": ("detect", "discover", "find", "identify"),
+    "diagnose": ("diagnose", "investigate", "trace"),
+    "emit": ("emit", "leave", "provide", "return", "surface"),
+    "enforce": ("enforce", "prevent", "protect"),
+    "exclude": ("exclude", "hide", "omit", "skip"),
+    "execute": ("do", "execute", "invoke", "perform", "proceed", "run"),
+    "expose": ("expose", "publish", "share"),
+    "extract": ("extract", "parse", "project"),
+    "handoff": ("escalate", "hand off", "handoff", "route"),
+    "fail": ("bypass", "corrupt", "hang", "leak", "lose", "stall", "violate"),
+    "include": ("carry", "cover", "have", "hold", "include"),
+    "inspect": ("inspect", "observe", "review"),
+    "install": ("install", "uninstall"),
+    "map": ("map", "match"),
+    "measure": ("benchmark", "count", "measure", "monitor", "profile"),
+    "migrate": ("backfill", "migrate", "upgrade"),
+    "mutate": ("mutate", "persist", "store", "write"),
+    "own": ("own", "support"),
+    "preserve": ("be", "keep", "preserve", "remain", "retain"),
+    "reconcile": ("compensate", "reconcile", "recover", "repair", "restore"),
+    "record": ("capture", "document", "log", "record", "report"),
+    "reject": ("deny", "forbid", "prohibit", "reject"),
+    "release": ("deploy", "promote"),
+    "replace": ("replace", "supersede"),
+    "require": ("need", "require"),
+    "resolve": ("close", "resolve", "unblock"),
+    "retry": ("repeat", "retry"),
+    "send": ("dispatch", "forward", "reach", "send"),
+    "separate": ("isolate", "separate", "split"),
+    "serialize": ("encode", "serialize"),
+    "stop": ("block", "exit", "halt", "stop", "terminate", "wait"),
+    "validate": (
+        "check",
+        "confirm",
+        "prove",
+        "test",
+        "validate",
+        "validte",
+        "verify",
+    ),
+}
+PROFESSIONAL_SEMANTIC_OBJECT_CONDITION_ALIASES = {
+    "adjacency": ("adjacency", "adjacent", "overlap", "relationship"),
+    "artifact": ("artifact", "capsule", "decision", "document", "file", "packet", "report"),
+    "authority": ("authority", "authorization", "permission"),
+    "behavior": ("behavior", "behaviour", "outcome"),
+    "boundary": ("boundary", "scope"),
+    "change": ("change", "delta", "diff"),
+    "changed-condition": ("changed", "modified", "revised"),
+    "cleanup": ("cleanup", "deletion", "removal"),
+    "command": ("cli", "command", "invocation"),
+    "compatibility": ("compatibility", "migration", "version"),
+    "configuration": ("config", "configuration", "setting"),
+    "constraint": ("constraint", "limit", "restriction"),
+    "consumer": ("caller", "consumer", "client"),
+    "contract": ("contract", "obligation", "requirement", "rule"),
+    "cost": ("budget", "cost", "performance"),
+    "data": ("data", "payload", "record", "schema"),
+    "dependency": ("candidate", "dependency", "reference"),
+    "effect": ("effect", "side effect"),
+    "evidence": ("evidence", "proof", "signal"),
+    "expertise": ("expertise", "qualification"),
+    "failure": ("error", "failure", "fault"),
+    "identity": ("agent", "identity", "principal", "voter"),
+    "input": ("argument", "input", "request"),
+    "invalid-condition": ("ambiguous", "invalid", "malformed", "unsafe"),
+    "invariant": ("invariant", "integrity", "safety"),
+    "lifecycle": ("lifecycle", "state", "transition"),
+    "output": ("output", "response", "result"),
+    "owner": ("owner", "ownership", "responsibility", "role"),
+    "policy": ("policy", "precedence"),
+    "precondition": ("before", "precondition", "prior to"),
+    "postcondition": ("after", "following", "postcondition"),
+    "process": ("process", "runtime", "workflow"),
+    "provenance": ("freshness", "provenance", "source"),
+    "recovery": ("fallback", "recovery", "rollback"),
+    "release": ("deploy", "promotion", "release"),
+    "review": ("ballot", "review", "reviewer", "vote"),
+    "risk": ("hazard", "risk", "threat"),
+    "routing-trigger": ("activation", "trigger", "use"),
+    "security": ("privacy", "secret", "security", "trust"),
+    "target": ("package", "skill", "target"),
+    "test": ("fixture", "test", "validation", "verification"),
+    "time": ("deadline", "duration", "timeout", "timing"),
+}
+PROFESSIONAL_SEMANTIC_TERM_ALIASES = {
+    "behaviour": "behavior",
+    "cancelation": "cancellation",
+    "contraint": "constraint",
+    "non canonical": "noncanonical",
+    "occurence": "occurrence",
+    "ouput": "output",
+    "ouputs": "outputs",
+    "read only": "readonly",
+    "responsiblity": "responsibility",
+    "seperate": "separate",
+    "teh": "the",
+    "validtion": "validation",
+}
+PROFESSIONAL_SEMANTIC_STOP_TOKENS = (
+    "a", "an", "and", "any", "as", "at", "be", "been", "being", "by",
+    "each", "every", "for", "from", "has", "have", "in", "into", "is",
+    "it", "its", "of", "on", "or", "root", "that", "the", "their", "them",
+    "then", "this", "to", "under", "with", "you", "your",
+)
+PROFESSIONAL_SEMANTIC_MODALITY_ALIASES = {
+    "permitted": ("can", "may"),
+    "recommended": ("should",),
+    "required": ("must", "shall"),
+}
+PROFESSIONAL_SEMANTIC_NEGATION_ALIASES = (
+    "cannot",
+    "do not",
+    "must not",
+    "never",
+    "no",
+    "not",
+    "shall not",
+    "without",
+)
+PROFESSIONAL_SEMANTIC_PREDICATE_CONNECTORS = (
+    "and",
+    "but",
+    "or",
+    "then",
+)
+PROFESSIONAL_SEMANTIC_CONDITION_CONCEPTS = (
+    "changed-condition",
+    "invalid-condition",
+    "postcondition",
+    "precondition",
+)
+PROFESSIONAL_SEMANTIC_PREDICATE_LEAD_TOKENS = (
+    "can",
+    "cannot",
+    "do",
+    "may",
+    "must",
+    "never",
+    "no",
+    "not",
+    "shall",
+    "should",
+    "without",
+    "you",
+)
+PROFESSIONAL_SEMANTIC_UNIT_KINDS = (
+    "labeled-field",
+    "list-item",
+    "ordered-step",
+    "paragraph",
+    "table-row",
+)
+PROFESSIONAL_SEMANTIC_FINITE_RELATION_ALIASES = {
+    "apply": ("fit", "fits"),
+    "bind": ("reflect", "reflects"),
+    "compare": ("differentiate", "differentiates"),
+    "copular-assert": ("be", "is", "are", "was", "were"),
+    "define": ("govern", "governs"),
+    "include": ("has", "have"),
+    "preserve": ("remain", "remains", "stay", "stays"),
+    "require": ("depend", "depends"),
+}
+PROFESSIONAL_SEMANTIC_RELATIVE_CONDITION_TOKENS = (
+    "if",
+    "that",
+    "unless",
+    "when",
+    "where",
+    "which",
+    "who",
+    "whose",
+)
+PROFESSIONAL_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES = (
+    "after",
+    "before",
+    "following",
+    "if",
+    "prior to",
+    "that",
+    "unless",
+    "when",
+    "where",
+    "which",
+    "who",
+    "whose",
+)
+PROFESSIONAL_SEMANTIC_FACT_PROJECTION_CONTRACT = {
+    "contract_version": PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION,
+    "fields": list(PROFESSIONAL_SEMANTIC_FACT_FIELDS),
+    "argument_role_fields": list(PROFESSIONAL_SEMANTIC_ARGUMENT_ROLE_FIELDS),
+    "argument_relations": list(PROFESSIONAL_SEMANTIC_ARGUMENT_RELATIONS),
+    "argument_attachments": list(PROFESSIONAL_SEMANTIC_ARGUMENT_ATTACHMENTS),
+    "source_classes": list(PROFESSIONAL_SEMANTIC_FACT_SOURCE_CLASSES),
+    "section_aliases": {
+        key: list(values)
+        for key, values in sorted(PROFESSIONAL_SEMANTIC_SECTION_ALIASES.items())
+    },
+    "excluded_section_aliases": list(
+        PROFESSIONAL_SEMANTIC_EXCLUDED_SECTION_ALIASES
+    ),
+    "section_facts": {
+        key: list(values)
+        for key, values in sorted(PROFESSIONAL_SEMANTIC_SECTION_FACTS.items())
+    },
+    "registry_facts": {
+        key: list(values)
+        for key, values in sorted(PROFESSIONAL_SEMANTIC_REGISTRY_FACTS.items())
+    },
+    "action_aliases": {
+        key: list(values)
+        for key, values in sorted(PROFESSIONAL_SEMANTIC_ACTION_ALIASES.items())
+    },
+    "object_condition_aliases": {
+        key: list(values)
+        for key, values in sorted(
+            PROFESSIONAL_SEMANTIC_OBJECT_CONDITION_ALIASES.items()
+        )
+    },
+    "term_aliases": dict(sorted(PROFESSIONAL_SEMANTIC_TERM_ALIASES.items())),
+    "stop_tokens": list(PROFESSIONAL_SEMANTIC_STOP_TOKENS),
+    "modality_aliases": {
+        key: list(values)
+        for key, values in sorted(PROFESSIONAL_SEMANTIC_MODALITY_ALIASES.items())
+    },
+    "negation_aliases": list(PROFESSIONAL_SEMANTIC_NEGATION_ALIASES),
+    "predicate_connectors": list(
+        PROFESSIONAL_SEMANTIC_PREDICATE_CONNECTORS
+    ),
+    "condition_concepts": list(PROFESSIONAL_SEMANTIC_CONDITION_CONCEPTS),
+    "predicate_lead_tokens": list(
+        PROFESSIONAL_SEMANTIC_PREDICATE_LEAD_TOKENS
+    ),
+    "unit_kinds": list(PROFESSIONAL_SEMANTIC_UNIT_KINDS),
+    "finite_relation_aliases": {
+        key: list(values)
+        for key, values in sorted(
+            PROFESSIONAL_SEMANTIC_FINITE_RELATION_ALIASES.items()
+        )
+    },
+    "relative_condition_tokens": list(
+        PROFESSIONAL_SEMANTIC_RELATIVE_CONDITION_TOKENS
+    ),
+    "grammatical_condition_boundaries": list(
+        PROFESSIONAL_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES
+    ),
+    "labeled_symbol_concepts": {
+        "&": "ampersand",
+        ",": "comma",
+        "?": "question-mark",
+    },
+    "logical_units": "unfenced-uncommented-paragraph-list-or-table-row",
+    "material_signal": "closed-section-or-explicit-modality-or-closed-action",
+    "unknown_action_with_explicit_modality": "fail-closed",
+    "lexical_predicate_slots": [
+        "after-explicit-modal",
+        "after-do-not-or-never",
+        "first-predicate-of-list-item-or-ordered-step",
+        "after-established-coordinator-with-unique-attachment",
+    ],
+    "no_forced_predicate": "fail-closed-material-semantic-clause-has-no-predicate",
+    "predicate_relation": (
+        "subject-scope-to-action-to-ordered-argument-role-bindings-to-"
+        "condition-with-local-modality-polarity-predicate-ordinal-and-"
+        "incoming-connector"
+    ),
+    "argument_role_binding": (
+        "one-based-contiguous-argument-ordinal-with-direct-from-or-to-"
+        "relation-nonempty-sorted-scope-concepts-closed-attachment-and-"
+        "attachment-owner-action-modality-polarity"
+    ),
+    "direction_markers": {
+        "from": "from",
+        "into": "to",
+        "to": "to",
+    },
+    "direction_marker_classification": {
+        "condition-phrase-marker": "owned-by-condition-not-an-argument-role",
+        "from-and-into": "always-directional",
+        "bare-to-before-unique-exact-closed-base-action": (
+            "infinitive-owner-not-an-argument-role"
+        ),
+        "bare-to-before-bounded-unknown-base-action": (
+            "infinitive-only-with-determiner-and-nonempty-complement"
+        ),
+        "bare-to-before-unsupported-inflection-or-alias-overlap": (
+            "fail-closed"
+        ),
+        "other-bare-to": "directional",
+    },
+    "object_scope_compatibility_summary": (
+        "enforced-sorted-union-of-all-argument-role-scope-concepts"
+    ),
+    "directional_failure_contract": [
+        "empty-or-incomplete-argument-segment",
+        "structurally-signaled-unknown-or-competing-owner",
+        "unsupported-inflected-infinitive-or-action-alias-overlap",
+        "malformed-unknown-lexical-infinitive-complement",
+        "overlapping-or-unconsumed-direction-marker",
+        "noncontiguous-argument-ordinals",
+        "unknown-argument-relation",
+        "object-scope-union-mismatch",
+    ],
+    "direction_attachment": {
+        "governing-predicate": "direction-before-boundary-without-dependent-owner",
+        "dependent-complement": (
+            "unique-infinitive-or-gerund-owner-before-condition-boundary"
+        ),
+        "dependent-condition": (
+            "unique-modal-negated-passive-or-immediate-owner-after-boundary"
+        ),
+        "condition-scope": "direction-after-boundary-without-dependent-owner",
+    },
+    "direction_owner_locality": {
+        "discovery": (
+            "structural-owner-signals-and-unique-exact-closed-action-barriers-"
+            "independent-of-directions"
+        ),
+        "plain-exact-closed-action": (
+            "barrier-in-every-region-owner-only-after-condition-boundary"
+        ),
+        "sliced-window-context": (
+            "preserve-whether-window-begins-inside-condition-region"
+        ),
+        "interval": (
+            "half-open-action-end-to-next-structural-predicate-condition-"
+            "boundary-or-window-end"
+        ),
+        "selection": "greatest-action-end-local-owner",
+        "equal-nearest-distinct": "fail-closed",
+        "unknown-owner": "fail-only-for-confirmed-direction-in-owner-interval",
+        "no-local-owner": (
+            "governing-before-condition-boundary-condition-scope-after"
+        ),
+    },
+    "forced_lexical_dependent_owner": {
+        "head": "one-normalized-alphabetic-base-form-token",
+        "closed-precedence": "closed-action-alias-or-stem-before-lexical",
+        "excluded": [
+            "stop-token",
+            "direction-marker",
+            "condition-boundary",
+            "predicate-connector",
+            "modality-or-negation",
+            "closed-action-or-finite-relation-collision",
+            "object-or-condition-collision",
+            "ed-ing-ies-or-non-double-s-terminal-inflection",
+        ],
+        "slots": [
+            "immediately-after-maximal-modal-or-negation-lead",
+            "bare-to-then-head-then-determiner-then-nonempty-complement",
+        ],
+        "forbidden-slots": [
+            "passive-owner",
+            "gerund-owner",
+        ],
+        "unknown-infinitive-direction_ownership": (
+            "may-own-later-confirmed-direction-in-local-interval"
+        ),
+    },
+    "dependent_owner_metadata": {
+        "modal_classes": {
+            "can-cannot-may": "permitted",
+            "should": "recommended",
+            "must-shall": "required",
+            "without-positive-modal": "asserted",
+        },
+        "negative_tokens": ["cannot", "do not", "must not", "never", "not"],
+        "modal_passive": (
+            "maximal-modal-negation-lead-plus-be-plus-unique-closed-past-"
+            "participle-is-one-owner"
+        ),
+        "event_merge": (
+            "exact-action-span-action-attachment-modality-and-polarity-only"
+        ),
+    },
+    "direction_only_action_aliases": {
+        "gerund-directional-frame": {"turn": "change"},
+        "modal-dependent-frame": {"distinguish": "compare"},
+    },
+    "compound_predicate_segmentation": (
+        "left-to-right-closed-connector-local-scope-or-unique-shared-"
+        "complement-else-fail-closed"
+    ),
+    "object_scope_and_condition_concept_grammar": (
+        "closed-alias-or-term-colon-nfkc-casefold-token-partitioned-by-"
+        "condition-marker"
+    ),
+    "deduplication": "canonical-whole-predicate-fact-set",
+    "excludes": [
+        "raw-prose",
+        "raw-content-sha256",
+        "line-and-word-counts",
+        "repository-paths-and-current-file-set",
+        "comments-frontmatter-fenced-code-and-source-citation-sections",
+        "targeted-reference-rendering-duplicated-by-adjacency-authority",
+    ],
+}
+
 PROFESSIONAL_CARRY_CONTRACT = {
     "carry_unit": "whole-professional-package",
-    "baseline_requirement": "exact-prior-target-snapshot",
+    "baseline_requirement": "canonical-prior-semantic-review-snapshot",
     "review_contract_requirement": "exact-fingerprint-match",
-    "dependency_depth": "one-hop-factual-material",
+    "dependency_depth": "one-hop-semantic-review-authority",
     "required_dependency_sources": [
         "packet-required-candidate",
         "reviewer-added-candidate-union-from-all-prior-target-ballots",
     ],
-    "candidate_material_excludes": [
-        "routing_adjacency",
+    "content_fingerprint_purpose": [
+        "provenance",
+        "artifact-integrity",
+        "tamper-detection",
+        "debug-audit",
+    ],
+    "content_fingerprint_is_review_routing_authority": False,
+    "semantic_review_authority": [
+        PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION,
+        "responsibility-contract",
+        "trigger-and-anti-trigger",
+        "required-inputs-and-outputs",
+        "required-expertise",
+        "routing-failure-and-constraint-boundary",
+        "required-adjacency-relationships",
     ],
     "target_selection_authority": [
         "selection-contract-version",
         "required-candidate-ids",
-        "required-candidate-material-bindings",
+        "required-candidate-semantic-bindings",
     ],
     "diagnostic_only_target_context": [
         "full-catalog-ranking",
@@ -567,7 +1207,7 @@ PROFESSIONAL_REVIEW_CAPSULE_CONTRACT = {
     "projection": "final-assigned-fresh-target-review-capsule",
     "target_material": "complete-own-material-registry-expertise",
     "adjacency_metadata": "complete-full-ranking-and-required-selection",
-    "candidate_material": "complete-material-without-candidate-ranking",
+    "candidate_material": "complete-raw-material-without-candidate-ranking",
     "candidate_origins": ["packet-required", "reviewer-added"],
     "reviewer_added_source": "validated-immutable-candidate-request",
     "predecessor": "immutable-discovery-capsule",
@@ -577,7 +1217,7 @@ PROFESSIONAL_REVIEW_CAPSULE_CONTRACT = {
 PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT = {
     "projection": "assigned-fresh-target-discovery-capsule",
     "target_material": "complete-own-material-registry-expertise",
-    "required_candidate_material": "complete-material-without-candidate-ranking",
+    "required_candidate_material": "complete-raw-material-without-candidate-ranking",
     "adjacency_metadata": "complete-full-ranking-and-required-selection",
     "candidate_boundary_catalog": "complete-lightweight-catalog",
     "candidate_request": "separate-immutable-artifact-required",
@@ -586,10 +1226,10 @@ PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT = {
 }
 
 PROFESSIONAL_TARGET_BINDING_CONTRACT_VERSION = (
-    "professional-target-review-binding-v3"
+    "professional-target-semantic-review-binding-v5"
 )
 PROFESSIONAL_DEPENDENCY_BINDING_CONTRACT_VERSION = (
-    "professional-one-hop-dependency-binding-v1"
+    "professional-one-hop-semantic-dependency-binding-v3"
 )
 PROFESSIONAL_MATERIAL_RECORD_FIELDS = {
     "path",
@@ -600,6 +1240,34 @@ PROFESSIONAL_MATERIAL_RECORD_FIELDS = {
 PROFESSIONAL_ADJACENCY_REVIEW_BINDING_FIELDS = {
     "required_candidate_ids",
     "selection_contract_version",
+}
+PROFESSIONAL_SEMANTIC_RESPONSIBILITY_FIELDS = {
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+    "layer3_candidates",
+    "used_by",
+    "boundary_signals",
+    "group",
+    "content_class",
+    "delivery_scope",
+    "task_routable",
+}
+PROFESSIONAL_SEMANTIC_RESPONSIBILITY_REQUIRED_LIST_FIELDS = {
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+}
+PROFESSIONAL_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS = {
+    "layer3_candidates",
+    "used_by",
+    "boundary_signals",
 }
 PROFESSIONAL_REQUIRED_CANDIDATE_MATERIAL_BINDING_FIELDS = {
     "skill_id",
@@ -612,6 +1280,7 @@ PROFESSIONAL_TARGET_BINDING_FIELDS = {
     "registry",
     "required_expertise_tags",
     "adjacency",
+    "content_fingerprint",
     "package_material_binding",
     "dependency_material_bindings",
     "review_unit_binding",
@@ -634,7 +1303,7 @@ PROFESSIONAL_DECISION_DEPENDENCY_FIELDS = {
 }
 
 PROFESSIONAL_COMPACT_AUTHORITY_CONTRACT_VERSION = (
-    "professional-target-current-authority-v3"
+    "professional-target-current-semantic-authority-v5"
 )
 PROFESSIONAL_COMPACT_AUTHORITY_FIELDS = {
     "package_material_binding",
@@ -696,32 +1365,449 @@ def readability_currentness_contract_projection() -> dict[str, Any]:
     return copy.deepcopy(READABILITY_CURRENTNESS_CONTRACT_PROJECTION)
 
 
+_READABILITY_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+_READABILITY_FENCE_RE = re.compile(r"^\s*(```+|~~~+)")
+_READABILITY_ATX_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+")
+_READABILITY_LIST_MARKER_RE = re.compile(
+    r"^\s*(?:[-*+]|\d+[.)])\s+"
+)
+_READABILITY_LIST_ITEM_RE = re.compile(
+    r"^(?P<indent>\s*)(?:[-*+]|\d+[.)])\s+(?P<text>.*)$"
+)
+_READABILITY_LINK_RE = re.compile(r"!?\[([^\]]*)\]\([^)]*\)")
+_READABILITY_REFERENCE_LINK_RE = re.compile(r"!?\[([^\]]*)\]\[[^\]]*\]")
+_READABILITY_REFERENCE_DEFINITION_RE = re.compile(
+    r"^\s{0,3}\[[^\]]+\]:\s+\S+.*$"
+)
+_READABILITY_INLINE_CODE_RE = re.compile(r"`([^`\n]*)`")
+_READABILITY_AUTOLINK_RE = re.compile(r"<((?:https?://|mailto:)[^ >]+)>")
+_READABILITY_HTML_TAG_RE = re.compile(
+    r"</?[A-Za-z][A-Za-z0-9-]*(?:\s[^>]*)?/?>"
+)
+_READABILITY_SETEXT_OR_THEMATIC_RE = re.compile(
+    r"^\s{0,3}(?:=+|(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})\s*$"
+)
+_READABILITY_EMPHASIS_RE = re.compile(
+    r"(?<!\w)(\*\*|__|~~|\*|_)(?=\S)(.+?)(?<=\S)\1(?!\w)"
+)
+_READABILITY_SENTENCE_BOUNDARY_RE = re.compile(
+    r"(?<=[.!?])\s+(?=[A-Za-z0-9])"
+)
+_READABILITY_SENTENCE_ABBREVIATIONS = frozenset(
+    {
+        "e.g.",
+        "i.e.",
+        "etc.",
+        "vs.",
+        "mr.",
+        "mrs.",
+        "ms.",
+        "dr.",
+        "prof.",
+        "sr.",
+        "jr.",
+        "no.",
+    }
+)
+_LOWERCASE_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _readability_text(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} must be non-blank text")
+    return value
+
+
+def _readability_sha256(value: object, *, label: str) -> str:
+    if not isinstance(value, str) or _LOWERCASE_SHA256_RE.fullmatch(value) is None:
+        raise ValueError(f"{label} must be lowercase sha256")
+    return value
+
+
+def _readability_preserve_newlines(match: re.Match[str], *, space: bool) -> str:
+    return (" " if space else "") + ("\n" * match.group(0).count("\n"))
+
+
+def _readability_source_lines(
+    value: object, *, strip_frontmatter: bool
+) -> list[tuple[int, str]]:
+    """Remove hidden raw HTML before decoding visible escaped syntax."""
+
+    text = _readability_text(value, label="readability visible source")
+    text = _READABILITY_AUTOLINK_RE.sub(lambda match: match.group(1), text)
+    text = _READABILITY_COMMENT_RE.sub(
+        lambda match: _readability_preserve_newlines(match, space=False),
+        text,
+    )
+    text = _READABILITY_HTML_TAG_RE.sub(
+        lambda match: _readability_preserve_newlines(match, space=True),
+        text,
+    )
+    text = unicodedata.normalize("NFKC", html.unescape(text))
+    lines = text.splitlines()
+    start = 0
+    if strip_frontmatter and lines and lines[0].strip() == "---":
+        end = next(
+            (
+                index
+                for index, line in enumerate(lines[1:], start=1)
+                if line.strip() == "---"
+            ),
+            None,
+        )
+        if end is not None:
+            start = end + 1
+    return [
+        (line_number, line)
+        for line_number, line in enumerate(lines[start:], start=start + 1)
+    ]
+
+
+def _readability_normalize_fragment(value: str, *, literal: bool = False) -> str:
+    rendered = value.strip()
+    if literal:
+        return re.sub(r"\s+", " ", rendered).strip()
+    if rendered.startswith("|") and rendered.count("|") >= 2:
+        rendered = " ".join(
+            cell.strip() for cell in rendered.strip("|").split("|")
+        )
+    rendered = _READABILITY_ATX_HEADING_RE.sub("", rendered)
+    rendered = re.sub(r"\s+#+\s*$", "", rendered)
+    rendered = re.sub(r"^\s*(?:>\s*)+", "", rendered)
+    rendered = _READABILITY_LIST_MARKER_RE.sub("", rendered)
+    rendered = re.sub(r"^\[[ xX]\]\s+", "", rendered)
+    rendered = _READABILITY_LINK_RE.sub(lambda match: match.group(1), rendered)
+    rendered = _READABILITY_REFERENCE_LINK_RE.sub(
+        lambda match: match.group(1), rendered
+    )
+    rendered = _READABILITY_INLINE_CODE_RE.sub(
+        lambda match: match.group(1), rendered
+    )
+    rendered = re.sub(r"\\([\\`*{}\[\]()#+.!_>~-])", r"\1", rendered)
+    while True:
+        unwrapped = _READABILITY_EMPHASIS_RE.sub(
+            lambda match: match.group(2), rendered
+        )
+        if unwrapped == rendered:
+            break
+        rendered = unwrapped
+    return re.sub(r"\s+", " ", rendered).strip()
+
+
+def readability_normalized_logical_units(
+    value: object,
+    *,
+    exclude_fenced: bool = False,
+    strip_frontmatter: bool = True,
+) -> list[dict[str, Any]]:
+    """Project presentation-insensitive logical units with raw line provenance."""
+
+    units: list[dict[str, Any]] = []
+    current_kind: str | None = None
+    current_parts: list[tuple[int, str]] = []
+    current_indent = 0
+    fence_marker: str | None = None
+
+    def flush() -> None:
+        nonlocal current_kind, current_parts, current_indent
+        if current_parts:
+            normalized = " ".join(
+                part
+                for part in (
+                    _readability_normalize_fragment(
+                        text,
+                        literal=current_kind == "fenced",
+                    )
+                    for _line, text in current_parts
+                )
+                if part
+            )
+            normalized = re.sub(r"\s+", " ", normalized).strip()
+            if normalized:
+                units.append(
+                    {
+                        "ordinal": len(units) + 1,
+                        "kind": current_kind,
+                        "text": normalized,
+                        "start_line": current_parts[0][0],
+                        "end_line": current_parts[-1][0],
+                        "source_lines": [line for line, _text in current_parts],
+                    }
+                )
+        current_kind = None
+        current_parts = []
+        current_indent = 0
+
+    for line_number, raw_line in _readability_source_lines(
+        value,
+        strip_frontmatter=strip_frontmatter,
+    ):
+        fence = _READABILITY_FENCE_RE.match(raw_line)
+        if fence is not None:
+            marker = fence.group(1)[0]
+            if fence_marker is None:
+                flush()
+                fence_marker = marker
+                if not exclude_fenced:
+                    current_kind = "fenced"
+            elif marker == fence_marker:
+                flush()
+                fence_marker = None
+            continue
+        if fence_marker is not None:
+            if not exclude_fenced and raw_line.strip():
+                current_parts.append((line_number, raw_line))
+            continue
+
+        structural = re.sub(r"^\s*(?:>\s*)+", "", raw_line)
+        stripped = structural.strip()
+        if not stripped:
+            continue
+        if _READABILITY_REFERENCE_DEFINITION_RE.fullmatch(structural) is not None:
+            continue
+        if _READABILITY_SETEXT_OR_THEMATIC_RE.fullmatch(structural) is not None:
+            flush()
+            continue
+        if stripped.startswith("|") and stripped.count("|") >= 2:
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            if cells and all(
+                re.fullmatch(r":?-{3,}:?", cell) is not None for cell in cells
+            ):
+                continue
+            flush()
+            current_kind = "table-row"
+            current_parts = [(line_number, structural)]
+            flush()
+            continue
+
+        list_item = _READABILITY_LIST_ITEM_RE.match(structural)
+        if list_item is not None:
+            flush()
+            current_kind = "list-item"
+            current_indent = len(
+                structural[: list_item.start("text")].expandtabs(4)
+            )
+            current_parts = [(line_number, list_item.group("text"))]
+            continue
+        line_indent = len(structural) - len(structural.lstrip(" \t"))
+        if current_kind == "list-item" and line_indent >= current_indent:
+            current_parts.append((line_number, stripped))
+            continue
+        if current_kind == "list-item":
+            flush()
+
+        if _READABILITY_ATX_HEADING_RE.match(structural) is not None:
+            flush()
+            current_kind = "heading"
+            current_parts = [(line_number, structural)]
+            flush()
+            continue
+        if current_kind != "prose":
+            flush()
+            current_kind = "prose"
+        current_parts.append((line_number, structural))
+    flush()
+    return units
+
+
+def readability_normalized_visible_text(
+    value: object, *, exclude_fenced: bool = False
+) -> str:
+    """Return presentation-insensitive text used only for Readability routing.
+
+    Exact source bytes remain in the review packet and are validated separately.
+    This projection removes only Markdown/YAML presentation that the closed
+    Readability detectors do not judge.
+    """
+
+    return " ".join(
+        unit["text"]
+        for unit in readability_normalized_logical_units(
+            value,
+            exclude_fenced=exclude_fenced,
+        )
+    )
+
+
+def readability_sentence_boundaries(visible_text: object) -> list[dict[str, Any]]:
+    """Split normalized visible text into stable, explicit sentence units."""
+
+    text = _readability_text(visible_text, label="normalized readability text")
+    result: list[dict[str, Any]] = []
+    start = 0
+    for boundary in _READABILITY_SENTENCE_BOUNDARY_RE.finditer(text):
+        prefix = text[: boundary.start()].casefold()
+        abbreviation = re.search(
+            r"(?:^|[^a-z0-9])([a-z]+(?:\.[a-z]+)*)\.$", prefix
+        )
+        if (
+            abbreviation is not None
+            and f"{abbreviation.group(1)}." in _READABILITY_SENTENCE_ABBREVIATIONS
+        ) or re.search(r"(?:^|\s)[a-z]\.$", prefix):
+            continue
+        sentence = text[start : boundary.start()].strip()
+        if sentence:
+            sentence_start = text.find(sentence, start, boundary.start())
+            result.append(
+                {
+                    "ordinal": len(result) + 1,
+                    "start_offset": sentence_start,
+                    "end_offset": sentence_start + len(sentence),
+                    "text": sentence,
+                }
+            )
+        start = boundary.end()
+    sentence = text[start:].strip()
+    if sentence:
+        sentence_start = text.find(sentence, start)
+        result.append(
+            {
+                "ordinal": len(result) + 1,
+                "start_offset": sentence_start,
+                "end_offset": sentence_start + len(sentence),
+                "text": sentence,
+            }
+        )
+    return result
+
+
+def readability_visible_text_projection(
+    value: object, *, exclude_fenced: bool = False
+) -> dict[str, Any]:
+    normalized = readability_normalized_visible_text(
+        value, exclude_fenced=exclude_fenced
+    )
+    if not normalized:
+        raise ValueError("readability visible source has no governed text")
+    return {
+        "contract_id": READABILITY_VISIBLE_TEXT_CONTRACT_ID,
+        "normalized_visible_text": normalized,
+        "sentence_boundaries": readability_sentence_boundaries(normalized),
+    }
+
+
+def readability_stable_finding_id(
+    *, document_id: object, kind: object, sentence: object, occurrence: object
+) -> str:
+    """Identify one finding without raw lines, offsets, spans, or presentation."""
+
+    identity = {
+        "contract_id": READABILITY_FINDING_IDENTITY_CONTRACT_ID,
+        "document_id": _readability_text(document_id, label="document_id"),
+        "kind": _readability_text(kind, label="finding kind"),
+        "normalized_sentence": readability_normalized_visible_text(sentence),
+        "occurrence": occurrence,
+    }
+    if not identity["normalized_sentence"]:
+        raise ValueError("finding normalized sentence must be non-blank")
+    if type(occurrence) is not int or occurrence < 1:
+        raise ValueError("finding occurrence must be a positive integer")
+    return canonical_json_sha256(identity)
+
+
 def readability_target_review_projection(
     *, category: str, target: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Project only target-local evidence visible to a Readability reviewer."""
+    """Project only normalized evidence that can change Readability judgment."""
 
-    fields = READABILITY_TARGET_REVIEW_FIELDS.get(category)
-    if fields is None or not isinstance(target, Mapping):
+    if category not in READABILITY_TARGET_REVIEW_FIELDS or not isinstance(
+        target, Mapping
+    ):
         raise ValueError("readability target review projection input is invalid")
-    return {
-        field: copy.deepcopy(target[field])
-        for field in fields
-        if field in target
+    identity_fields = {
+        "content": (
+            "path", "classification", "document_id", "owner",
+            "document_part", "source_selector",
+        ),
+        "readability": (
+            "document_id", "path", "surface", "document_part", "owner",
+            "source_selector", "highest_band",
+        ),
+        "actionability": (
+            "target_id", "skill_id", "path", "kind", "actionability_model",
+            "front_loaded_action_score",
+        ),
+    }[category]
+    missing = [field for field in identity_fields if field not in target]
+    if missing:
+        raise ValueError(
+            "readability target review projection is missing "
+            + ", ".join(missing)
+        )
+    projection = {
+        field: copy.deepcopy(target[field]) for field in identity_fields
     }
+    if category in {"content", "readability"}:
+        context = target.get("document_context")
+        if not isinstance(context, Mapping) or "text" not in context:
+            raise ValueError("readability target document context is invalid")
+        projection.update(readability_visible_text_projection(context["text"]))
+    else:
+        window = target.get("front_window")
+        lines = window.get("lines") if isinstance(window, Mapping) else None
+        if not isinstance(lines, list) or not lines or any(
+            not isinstance(row, Mapping) or not isinstance(row.get("text"), str)
+            for row in lines
+        ):
+            raise ValueError("actionability front window is invalid")
+        logical_units = readability_normalized_logical_units(
+            "\n".join(str(row["text"]) for row in lines),
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+        if not logical_units:
+            raise ValueError("actionability front window has no governed units")
+        if len(logical_units) > (
+            READABILITY_ACTIONABILITY_FRONT_WINDOW_UNIT_LIMIT
+        ):
+            raise ValueError("actionability front window exceeds static unit limit")
+        projection["normalized_front_window"] = {
+            "contract_id": READABILITY_LOGICAL_UNIT_CONTRACT_ID,
+            "units": [
+                {"ordinal": index, "text": unit["text"]}
+                for index, unit in enumerate(logical_units, start=1)
+            ],
+        }
+    return projection
 
 
 def readability_finding_review_projection(
     *, finding: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Project exact sentence and source-span evidence for one finding."""
+    """Project normalized detector evidence while retaining raw data elsewhere."""
 
     if not isinstance(finding, Mapping):
         raise ValueError("readability finding review projection input is invalid")
+    required = {"finding_id", "band", "words", "kind", "sentence", "sentence_fingerprint"}
+    missing = sorted(required - set(finding))
+    if missing:
+        raise ValueError(
+            "readability finding review projection is missing "
+            + ", ".join(missing)
+        )
+    sentence = _readability_text(
+        finding["sentence"], label="readability finding sentence"
+    )
+    raw_fingerprint = _readability_sha256(
+        finding["sentence_fingerprint"],
+        label="readability finding sentence fingerprint",
+    )
+    expected_raw = hashlib.sha256(
+        ("ai-readability-sentence-v1\0" + sentence).encode("utf-8")
+    ).hexdigest()
+    if raw_fingerprint != expected_raw:
+        raise ValueError("readability finding sentence fingerprint is stale")
+    normalized = readability_normalized_visible_text(sentence)
+    if not normalized:
+        raise ValueError("readability finding normalized sentence is empty")
     return {
-        field: copy.deepcopy(finding[field])
-        for field in READABILITY_FINDING_REVIEW_FIELDS
-        if field in finding
+        "finding_id": _readability_sha256(
+            finding["finding_id"], label="readability finding identity"
+        ),
+        "band": copy.deepcopy(finding["band"]),
+        "words": copy.deepcopy(finding["words"]),
+        "kind": copy.deepcopy(finding["kind"]),
+        "normalized_sentence": normalized,
     }
 
 
@@ -770,7 +1856,8 @@ def actionability_detector_contract_projection(
         type(score_threshold) is not int
         or score_threshold < 1
         or type(front_window_lines) is not int
-        or front_window_lines < 1
+        or front_window_lines
+        != READABILITY_ACTIONABILITY_FRONT_WINDOW_UNIT_LIMIT
     ):
         raise ValueError("actionability detector contract thresholds are invalid")
     return {
@@ -779,9 +1866,10 @@ def actionability_detector_contract_projection(
             "actionability-applicable-iff-weak-front-loaded-action-reason"
         ),
         "target_identity": "sha256-actionability-target-v1-path",
-        "source": "canonical-root-body-front-window",
+        "source": "canonical-root-body-normalized-logical-unit-front-window",
+        "window_unit": READABILITY_LOGICAL_UNIT_CONTRACT_ID,
         "score_threshold": score_threshold,
-        "front_window_lines": front_window_lines,
+        "front_window_unit_limit": front_window_lines,
     }
 
 
@@ -908,6 +1996,9 @@ def _semantic_contract_projection() -> dict[str, Any]:
         },
         "binding_contracts": {
             "target_version": PROFESSIONAL_TARGET_BINDING_CONTRACT_VERSION,
+            "semantic_fact_projection": copy.deepcopy(
+                PROFESSIONAL_SEMANTIC_FACT_PROJECTION_CONTRACT
+            ),
             "target_fields": sorted(PROFESSIONAL_TARGET_BINDING_FIELDS),
             "snapshot_target_fields": sorted(PROFESSIONAL_SNAPSHOT_TARGET_FIELDS),
             "material_record_fields": sorted(PROFESSIONAL_MATERIAL_RECORD_FIELDS),
@@ -923,7 +2014,7 @@ def _semantic_contract_projection() -> dict[str, Any]:
             "dependency_fields": sorted(
                 PROFESSIONAL_DECISION_DEPENDENCY_FIELDS
             ),
-            "dependency_depth": "one-hop-factual-material",
+            "dependency_depth": "one-hop-semantic-review-authority",
             "dependency_union": (
                 "packet-required-plus-reviewer-added-candidate-union"
             ),
@@ -935,13 +2026,16 @@ def _semantic_contract_projection() -> dict[str, Any]:
                 PROFESSIONAL_COMPACT_AUTHORITY_FIELDS
             ),
             "currentness_projection": (
-                "target-local-own-required-and-authenticated-reviewer-added-v3"
+                "target-local-semantic-required-and-authenticated-reviewer-added-v5"
+            ),
+            "content_fingerprint": (
+                "raw-package-provenance-integrity-only-not-currentness"
             ),
             "fresh_review_context_is_currentness_authority": False,
             "compact_storage": {
                 "schema_version": 2,
                 "dependency_material_catalog": (
-                    "top-level-dependency-id-to-material-binding"
+                    "top-level-dependency-id-to-semantic-review-binding"
                 ),
                 "finding_authority": [
                     "package_material_binding",
@@ -1101,6 +2195,23 @@ def canonical_json_sha256(value: object) -> str:
     """Return the canonical SHA-256 for one JSON-compatible value."""
 
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
+
+
+def semantic_disposition_record_fingerprint(axis: str, entry: object) -> str:
+    """Bind one config decision record independently from current source evidence."""
+
+    if axis not in {"root", "reference"} or not isinstance(entry, dict):
+        raise ValueError("semantic disposition record input is invalid")
+    projection = {
+        key: copy.deepcopy(value)
+        for key, value in entry.items()
+        if key != "record_fingerprint"
+    }
+    return hashlib.sha256(
+        f"{SEMANTIC_DISPOSITION_RECORD_VERSION}:{axis}".encode("utf-8")
+        + b"\0"
+        + canonical_json_bytes(projection)
+    ).hexdigest()
 
 
 def professional_review_contract_fingerprint(

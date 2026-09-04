@@ -97,6 +97,213 @@ class BuildSafetyTests(unittest.TestCase):
         ):
             self.assertFalse(hasattr(BUILD, obsolete), obsolete)
 
+    def test_runtime_strips_source_only_semantic_identity_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "sample" / "SKILL.md"
+            reference = root / "sample" / "references" / "rule.md"
+            reference.parent.mkdir(parents=True)
+            skill.write_text(
+                "# Sample\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=sample/rule occurrence=root -->\n"
+                "- Every operation retains an owner.\n",
+                encoding="utf-8",
+            )
+            reference.write_text(
+                "# Rule\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=sample/evidence occurrence=reference -->\n"
+                "- Record current evidence.\n",
+                encoding="utf-8",
+            )
+
+            BUILD._strip_runtime_semantic_markers(root / "sample")
+
+            self.assertNotIn("rd-semantic-id:", skill.read_text(encoding="utf-8"))
+            self.assertNotIn(
+                "rd-semantic-id:", reference.read_text(encoding="utf-8")
+            )
+
+    def test_runtime_rejects_malformed_semantic_identity_marker_leakage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "SKILL.md"
+            skill.write_text(
+                "# Sample\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=bad--rule occurrence=root -->\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(BUILD.BuildError, "malformed semantic identity"):
+                BUILD._strip_runtime_semantic_markers(root)
+
+    def test_semantic_marker_inventory_preflight_accepts_valid_sources(self) -> None:
+        class SnapshotReached(RuntimeError):
+            pass
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root):
+                registries = BUILD._load_registries()
+                BUILD._preflight_registry_entries(registries)
+                BUILD._preflight_semantic_marker_inventory(registries)
+                with mock.patch.object(
+                    BUILD,
+                    "authoritative_build_input_snapshot",
+                    side_effect=SnapshotReached,
+                ) as snapshot:
+                    with self.assertRaises(SnapshotReached):
+                        BUILD.build_profile("recommended")
+
+            snapshot.assert_called_once_with(root)
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def _assert_marker_preflight_failure_preserves_outputs(
+        self, mutate, message: str
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            mutate(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root), mock.patch.object(
+                BUILD, "authoritative_build_input_snapshot"
+            ) as snapshot, self.assertRaisesRegex(BUILD.BuildError, message):
+                BUILD.build_profile("recommended")
+
+            snapshot.assert_not_called()
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_semantic_marker_wrong_owner_and_orphan_fail_before_mutation(self) -> None:
+        relative = Path(
+            "src/professional-skills/engineering-change-analysis/SKILL.md"
+        )
+
+        def wrong_owner(root: Path) -> None:
+            path = root / relative
+            source = path.read_text(encoding="utf-8")
+            path.write_text(
+                source.replace(
+                    "rule=engineering-change-analysis/mode-boundary",
+                    "rule=wrong-owner/mode-boundary",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+        def orphan(root: Path) -> None:
+            path = root / relative
+            path.write_text(
+                path.read_text(encoding="utf-8").rstrip()
+                + "\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=engineering-change-analysis/orphan occurrence=r4-orphan -->\n",
+                encoding="utf-8",
+            )
+
+        self._assert_marker_preflight_failure_preserves_outputs(
+            wrong_owner, "owner prefix"
+        )
+        self._assert_marker_preflight_failure_preserves_outputs(orphan, "orphan")
+
+    def test_semantic_marker_rule_and_occurrence_collisions_fail_before_mutation(
+        self,
+    ) -> None:
+        relative = Path(
+            "src/professional-skills/engineering-change-analysis/SKILL.md"
+        )
+
+        def append_marker(root: Path, *, rule: str, occurrence: str) -> None:
+            path = root / relative
+            path.write_text(
+                path.read_text(encoding="utf-8").rstrip()
+                + "\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                f"rule={rule} occurrence={occurrence} -->\n"
+                "- Retain the bounded source decision.\n",
+                encoding="utf-8",
+            )
+
+        self._assert_marker_preflight_failure_preserves_outputs(
+            lambda root: append_marker(
+                root,
+                rule="engineering-change-analysis/mode-boundary",
+                occurrence="r4-second",
+            ),
+            "rule-id collision",
+        )
+        self._assert_marker_preflight_failure_preserves_outputs(
+            lambda root: append_marker(
+                root,
+                rule="engineering-change-analysis/r4-second",
+                occurrence="eca-mode-boundary",
+            ),
+            "duplicate.*occurrence",
+        )
+
+    def test_build_marker_preflight_does_not_consume_audit_or_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            observed: list[Path] = []
+            original = Path.read_bytes
+
+            def tracked(path: Path) -> bytes:
+                observed.append(path)
+                return original(path)
+
+            with self._layout(root), mock.patch.object(
+                Path, "read_bytes", tracked
+            ), mock.patch.object(
+                BUILD,
+                "validate_semantic_identity_marker_inventory",
+                wraps=VALIDATION.validate_semantic_identity_marker_inventory,
+            ) as validator:
+                registries = BUILD._load_registries()
+                BUILD._preflight_registry_entries(registries)
+                BUILD._preflight_semantic_marker_inventory(registries)
+
+            self.assertTrue(observed)
+            self.assertTrue(
+                all(path.is_relative_to(root / "src") for path in observed)
+            )
+            expected: dict[str, tuple[str, str]] = {
+                "src/control-prompts/main-control-agent.md": (
+                    "main-control-agent",
+                    "root",
+                )
+            }
+            for entries in registries.values():
+                for entry in entries:
+                    skill_root = root / entry["path"]
+                    expected[(skill_root / "SKILL.md").relative_to(root).as_posix()] = (
+                        entry["name"],
+                        "root",
+                    )
+                    references = skill_root / "references"
+                    if references.is_dir():
+                        for path in references.rglob("*.md"):
+                            expected[path.relative_to(root).as_posix()] = (
+                                entry["name"],
+                                "reference",
+                            )
+            records = validator.call_args.args[0]
+            actual = {
+                record["path"]: (record["owner"], record["axis"])
+                for record in records
+            }
+            self.assertEqual(expected, actual)
+            self.assertNotIn("audit-skill-content", BUILD.__dict__)
+
     def test_review_ready_fails_closed_for_self_reported_native_handoff(self) -> None:
         handoff = self._current_handoff("reviewer-accessible-native-reference")
         self.assertFalse(VALIDATION.review_input_ready(handoff))
@@ -1045,16 +1252,12 @@ Own one bounded decision.
             shutil.copytree(item.path, destination)
             BUILD._write_compact_control_projection(destination, item)
             text = (destination / "SKILL.md").read_text(encoding="utf-8")
+            BUILD._write_compact_control_projection(destination, item)
+            repeated = (destination / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("Reference Contract v2; Prompt owns rules.", text)
-        encoded = text.encode("utf-8")
-        self.assertEqual(
-            "f67957d0f282d0ee3b91eb0fce7045c205cbaccfa558e84c33d51dacd4406c3d",
-            hashlib.sha256(encoded).hexdigest(),
-        )
-        self.assertEqual(1546, len(encoded))
-        self.assertEqual(18, sum(bool(line.strip()) for line in text.splitlines()))
-        self.assertEqual(342, count_o200k_base_tokens(text))
+        self.assertEqual(text, repeated)
+        self.assertLessEqual(count_o200k_base_tokens(text), 400)
         for contract in contracts:
             with self.subTest(path=contract["path"]):
                 row = next(

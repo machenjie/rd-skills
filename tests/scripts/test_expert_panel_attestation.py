@@ -171,17 +171,35 @@ def _compact_readability_targets() -> dict[str, dict]:
         "content": {
             "path": "src/foundation/example/SKILL.md",
             "classification": "REVIEW_DENSITY",
+            "document_id": "src/foundation/example/SKILL.md#body",
+            "owner": "example",
+            "document_part": "body",
+            "source_selector": {
+                "kind": "yaml-body",
+                "path": "src/foundation/example/SKILL.md",
+            },
             "content_fingerprint": _sha("content-source"),
             "document_context": {"text": "Regenerable source context."},
         },
         "readability": {
             "document_id": "document-one",
             "path": "src/foundation/example/SKILL.md",
+            "surface": "foundation-capability-body",
+            "document_part": "body",
+            "owner": "example",
+            "source_selector": {
+                "kind": "yaml-body",
+                "path": "src/foundation/example/SKILL.md",
+            },
             "highest_band": "review-as-complex",
             "content_fingerprint": _sha("readability-source"),
+            "document_context": {"text": sentence},
             "findings": [
                 {
                     "finding_id": _sha("finding-one"),
+                    "band": "review-as-complex",
+                    "words": 25,
+                    "kind": "sentence-length",
                     "sentence": sentence,
                     "sentence_fingerprint": sentence_fingerprint,
                     "source_span": {"start_offset": 0, "end_offset": len(sentence)},
@@ -192,6 +210,8 @@ def _compact_readability_targets() -> dict[str, dict]:
             "target_id": "action-one",
             "skill_id": "example",
             "path": "src/foundation/example/SKILL.md",
+            "kind": "foundation-capability",
+            "actionability_model": "runtime-front-loaded-v1",
             "front_loaded_action_score": 1,
             "content_fingerprint": _sha("actionability-source"),
             "front_window": {
@@ -352,10 +372,8 @@ def _readability_decision_adapter_fixture() -> tuple[dict, dict]:
             finding_id = PANEL._readability_finding_id(
                 document_id=document_id,
                 kind="compound-sentence",
-                band="review-as-complex",
-                words=len(sentence.split()),
-                sentence_fingerprint=sentence_fingerprint,
-                source_span=source_span,
+                sentence=sentence,
+                occurrence=1,
             )
             raw_findings.append(
                 {
@@ -480,6 +498,16 @@ def _semantic_candidates() -> dict[str, dict]:
         "path": "src/foundation/example/SKILL.md",
         "owner": "example",
         "skill_owner": "example",
+        "source_selector": {
+            "selector_version": "root-semantic-source-selector-test-v1",
+            "selector_kind": "source-rule",
+            "owner": "example",
+            "finding": "One contextual semantic rule requires disposition.",
+            "path": "src/foundation/example/SKILL.md",
+            "document_part": "body",
+            "semantic_section": ["heading:rules"],
+            "rule_identity": "contextual-rule",
+        },
         "fingerprint": _sha("root-candidate-finding"),
         "document_part": "body",
         "occurrence_fingerprint": _sha("root-occurrence"),
@@ -505,6 +533,14 @@ def _semantic_candidates() -> dict[str, dict]:
             "path": "group",
             "owner": "shared-reference",
             "skill_owner": "example",
+            "source_selector": {
+                "selector_version": "reference-semantic-source-selector-test-v1",
+                "selector_kind": "cross-source-shape",
+                "finding": "One repeated Reference rule requires disposition.",
+                "scope": "group",
+                "rule_identity": "repeated-reference-rule",
+                "shape_identity": _sha("reference-shape"),
+            },
             "fingerprint": _sha("reference-candidate-finding"),
             "evidence_fingerprint": _sha("reference-evidence"),
             "content_fingerprint": _sha("reference-content"),
@@ -1193,7 +1229,21 @@ def _carry_targets(*, changed_skill_id: str | None = None) -> list[dict]:
                 "selection_reasons": ["fixture-required"],
             }
         ]
-        responsibility = {"marker": skill_id}
+        responsibility = {
+            "role_support": ["task-agent"],
+            "trigger_signals": [f"trigger {skill_id}"],
+            "anti_trigger_signals": [f"exclude {skill_id}"],
+            "required_inputs": [f"input {skill_id}"],
+            "output_contract": [f"output {skill_id}"],
+            "escalation_signals": [f"constraint {skill_id}"],
+            "layer3_candidates": [],
+            "used_by": [],
+            "boundary_signals": [f"boundary {skill_id}"],
+            "group": "fixture",
+            "content_class": "professional",
+            "delivery_scope": "targeted",
+            "task_routable": True,
+        }
         adjacency = {
             "algorithm": "fixture-v1",
             "document_frequency_filter": {},
@@ -1340,19 +1390,15 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
     def test_current_compact_storage_schema_is_v2(self) -> None:
         self.assertEqual(2, ATTESTATION.ATTESTATION_SCHEMA_VERSION)
         self.assertEqual(
-            "25b596b788197ac59ce85d09d701eb3fd004b5418589b119857c856838184f49",
-            PANEL.panel_contracts.professional_review_contract_fingerprint(),
-        )
-        self.assertEqual(
-            "readability-target-authority-currentness-v2",
+            "readability-normalized-evidence-currentness-v4",
             PANEL.panel_contracts.READABILITY_CURRENTNESS_CONTRACT_VERSION,
         )
         self.assertEqual(
-            "readability-complete-target-authority-manifest-v2",
+            "readability-complete-normalized-binding-manifest-v4",
             PANEL.panel_contracts.READABILITY_TARGET_MANIFEST_CONTRACT_ID,
         )
         self.assertEqual(
-            "readability-review-unit-binding-v3",
+            "readability-normalized-review-unit-binding-v5",
             PANEL.panel_contracts.READABILITY_REVIEW_UNIT_BINDING_CONTRACT_ID,
         )
 
@@ -1612,12 +1658,35 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
             expected_semantic_current_bindings=_semantic_expected_bindings(),
         )
         self.assertEqual(
-            "90510de8c48742a87d584923e351acb3241b9346cea9240c12bab19c6ebaf627",
-            hashlib.sha256(readability).hexdigest(),
+            readability,
+            ATTESTATION.canonical_attestation_bytes(
+                ATTESTATION.parse_attestation_bytes(
+                    readability,
+                    expected_source_fingerprints=(
+                        readability_fixture()["source_fingerprints"]
+                    ),
+                    expected_readability_current_bindings=(
+                        _compact_readability_bindings()
+                    ),
+                ),
+                expected_readability_current_bindings=(
+                    _compact_readability_bindings()
+                ),
+            ),
         )
         self.assertEqual(
-            "8de2dceab394c8b970bfb1ff6d558e354a6bee75e4a4218208fd2d611af1e664",
-            hashlib.sha256(semantic).hexdigest(),
+            semantic,
+            ATTESTATION.canonical_attestation_bytes(
+                ATTESTATION.parse_attestation_bytes(
+                    semantic,
+                    expected_semantic_current_bindings=(
+                        _semantic_expected_bindings()
+                    ),
+                ),
+                expected_semantic_current_bindings=(
+                    _semantic_expected_bindings()
+                ),
+            ),
         )
 
     @staticmethod
@@ -1812,20 +1881,19 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
 
         self.assertEqual(set(), forbidden & keys(finalized))
 
-        mutations = []
-        for field in ("source_fingerprint", "review_binding_fingerprint"):
-            changed = copy.deepcopy(finalized)
-            changed["findings"][0][field] = SHA_A
-            mutations.append(changed)
-        coordinated = copy.deepcopy(finalized)
-        coordinated["findings"][0]["source_fingerprint"] = SHA_A
-        coordinated["findings"][0]["review_binding_fingerprint"] = SHA_B
-        mutations.append(coordinated)
-        for changed in mutations:
-            with self.assertRaises(ATTESTATION.AttestationError):
-                ATTESTATION.validate_attestation(
-                    changed, expected_readability_current_bindings=bindings
-                )
+        raw_provenance_changed = copy.deepcopy(finalized)
+        raw_provenance_changed["findings"][0]["source_fingerprint"] = SHA_A
+        ATTESTATION.validate_attestation(
+            raw_provenance_changed,
+            expected_readability_current_bindings=bindings,
+        )
+
+        changed = copy.deepcopy(finalized)
+        changed["findings"][0]["review_binding_fingerprint"] = SHA_A
+        with self.assertRaises(ATTESTATION.AttestationError):
+            ATTESTATION.validate_attestation(
+                changed, expected_readability_current_bindings=bindings
+            )
 
         partial = copy.deepcopy(bindings)
         partial["actionability"].clear()
@@ -1936,44 +2004,276 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
             category="readability", target=targets["readability"]
         )
         finding_id = _sha("finding-one")
-        for field, mutate in (
+        changed = copy.deepcopy(targets["readability"])
+        changed_finding = changed["findings"][0]
+        changed_finding["sentence"] += " changed"
+        changed_finding["sentence_fingerprint"] = hashlib.sha256(
             (
-                "sentence",
-                lambda finding: finding.__setitem__(
-                    "sentence", finding["sentence"] + " changed"
-                ),
-            ),
-            (
-                "sentence-fingerprint",
-                lambda finding: finding.__setitem__(
-                    "sentence_fingerprint", SHA_A
-                ),
-            ),
-            (
-                "source-span",
-                lambda finding: finding["source_span"].__setitem__(
-                    "end_offset", finding["source_span"]["end_offset"] - 1
-                ),
-            ),
+                "ai-readability-sentence-v1\0"
+                + changed_finding["sentence"]
+            ).encode("utf-8")
+        ).hexdigest()
+        authority = ATTESTATION.readability_target_authority(
+            category="readability", target=changed
+        )
+        self.assertNotEqual(
+            readability["review_binding_fingerprint"],
+            authority["review_binding_fingerprint"],
+        )
+        self.assertNotEqual(
+            readability["findings"][finding_id][
+                "review_binding_fingerprint"
+            ],
+            authority["findings"][finding_id][
+                "review_binding_fingerprint"
+            ],
+        )
+
+        malformed = copy.deepcopy(targets["readability"])
+        malformed["findings"][0]["sentence_fingerprint"] = SHA_A
+        with self.assertRaisesRegex(
+            ATTESTATION.AttestationError, "sentence fingerprint is stale"
         ):
-            changed = copy.deepcopy(targets["readability"])
-            mutate(changed["findings"][0])
-            authority = ATTESTATION.readability_target_authority(
-                category="readability", target=changed
+            ATTESTATION.readability_target_authority(
+                category="readability", target=malformed
             )
-            with self.subTest(field=field):
-                self.assertNotEqual(
-                    readability["review_binding_fingerprint"],
-                    authority["review_binding_fingerprint"],
-                )
-                self.assertNotEqual(
-                    readability["findings"][finding_id][
-                        "review_binding_fingerprint"
-                    ],
-                    authority["findings"][finding_id][
-                        "review_binding_fingerprint"
-                    ],
-                )
+
+        moved = copy.deepcopy(targets["readability"])
+        moved["findings"][0]["source_span"]["end_offset"] -= 1
+        moved_authority = ATTESTATION.readability_target_authority(
+            category="readability", target=moved
+        )
+        self.assertEqual(
+            readability["review_binding_fingerprint"],
+            moved_authority["review_binding_fingerprint"],
+        )
+        self.assertEqual(
+            readability["findings"][finding_id][
+                "review_binding_fingerprint"
+            ],
+            moved_authority["findings"][finding_id][
+                "review_binding_fingerprint"
+            ],
+        )
+
+    def test_readability_review_binding_ignores_raw_presentation_provenance(
+        self,
+    ) -> None:
+        targets = _compact_readability_targets()
+        targets["readability"]["document_context"] = {
+            "text": targets["readability"]["findings"][0]["sentence"]
+        }
+        original = ATTESTATION.readability_target_authority(
+            category="readability", target=targets["readability"]
+        )
+        changed = copy.deepcopy(targets["readability"])
+        changed["content_fingerprint"] = _sha("new-raw-readability-source")
+        changed["document_context"]["text"] = (
+            "<!-- presentation only -->\n"
+            + changed["document_context"]["text"].replace(
+                "bounded", "**bounded**"
+            )
+        )
+        finding = changed["findings"][0]
+        finding["sentence"] = finding["sentence"].replace(
+            "bounded", "**bounded**"
+        )
+        finding["sentence_fingerprint"] = hashlib.sha256(
+            ("ai-readability-sentence-v1\0" + finding["sentence"]).encode(
+                "utf-8"
+            )
+        ).hexdigest()
+        finding["source_span"] = {
+            "start_offset": 27,
+            "end_offset": 27 + len(finding["sentence"]),
+        }
+        current = ATTESTATION.readability_target_authority(
+            category="readability", target=changed
+        )
+
+        self.assertNotEqual(
+            original["source_fingerprint"], current["source_fingerprint"]
+        )
+        self.assertNotEqual(
+            original["findings"][finding["finding_id"]]["source_fingerprint"],
+            current["findings"][finding["finding_id"]]["source_fingerprint"],
+        )
+        self.assertEqual(
+            original["review_binding_fingerprint"],
+            current["review_binding_fingerprint"],
+        )
+        self.assertEqual(
+            original["findings"][finding["finding_id"]][
+                "review_binding_fingerprint"
+            ],
+            current["findings"][finding["finding_id"]][
+                "review_binding_fingerprint"
+            ],
+        )
+
+    def test_readability_visible_text_normalization_is_markdown_specific(
+        self,
+    ) -> None:
+        presented = """---
+title: ignored metadata
+---
+<!-- ignored comment -->
+# Choose **one** [owner][owner-link]. #
+
+- [x] Verify `result`.
+[owner-link]: https://example.invalid/owner
+"""
+        plain = "Choose one owner. Verify result."
+
+        self.assertEqual(
+            PANEL.panel_contracts.readability_visible_text_projection(plain),
+            PANEL.panel_contracts.readability_visible_text_projection(
+                presented
+            ),
+        )
+        self.assertNotEqual(
+            PANEL.panel_contracts.readability_normalized_visible_text(
+                "Keep foo_bar visible."
+            ),
+            PANEL.panel_contracts.readability_normalized_visible_text(
+                "Keep foobar visible."
+            ),
+        )
+
+    def test_escaped_html_comment_and_tag_syntax_remain_visible(self) -> None:
+        source = (
+            "Before <!-- actual hidden comment --> "
+            "<strong>shown</strong> "
+            "&lt;!-- visible comment syntax --&gt; "
+            "&lt;strong&gt;visible tag syntax&lt;/strong&gt;."
+        )
+
+        self.assertEqual(
+            (
+                "Before shown <!-- visible comment syntax --> "
+                "<strong>visible tag syntax</strong>."
+            ),
+            PANEL.panel_contracts.readability_normalized_visible_text(
+                source
+            ),
+        )
+
+    def test_compact_readability_carries_across_raw_sha_when_binding_is_unchanged(
+        self,
+    ) -> None:
+        value, original_bindings = _compact_readability_value()
+        finalized = ATTESTATION.finalize_attestation(
+            value,
+            expected_readability_current_bindings=original_bindings,
+        )
+        payload = ATTESTATION.canonical_attestation_bytes(
+            finalized,
+            expected_readability_current_bindings=original_bindings,
+        )
+
+        current_targets = _compact_readability_targets()
+        current_content = current_targets["content"]
+        current_content["content_fingerprint"] = _sha(
+            "formatting-only-content-source"
+        )
+        current_content["document_context"]["text"] = (
+            "<!-- ignored metadata -->\n"
+            "**Regenerable**   source context."
+        )
+        current_authority = ATTESTATION.readability_target_authority(
+            category="content", target=current_content
+        )
+        current_bindings = copy.deepcopy(original_bindings)
+        current_bindings["content"] = {
+            current_authority["target_id"]: current_authority
+        }
+        current_sources = copy.deepcopy(finalized["source_fingerprints"])
+        current_sources["readability_target_manifest"] = (
+            ATTESTATION.readability_target_manifest_fingerprint(
+                current_bindings
+            )
+        )
+
+        self.assertEqual(
+            finalized["source_fingerprints"]["readability_target_manifest"],
+            current_sources["readability_target_manifest"],
+        )
+        parsed = ATTESTATION.parse_attestation_bytes(
+            payload,
+            expected_source_fingerprints=current_sources,
+            expected_readability_current_bindings=current_bindings,
+        )
+        parsed_content = next(
+            row for row in parsed["findings"] if row["category"] == "content"
+        )
+        self.assertEqual(
+            current_authority["source_fingerprint"],
+            parsed_content["source_fingerprint"],
+        )
+
+        changed_content = copy.deepcopy(current_content)
+        changed_content["content_fingerprint"] = _sha(
+            "visible-content-source-change"
+        )
+        changed_content["document_context"]["text"] = (
+            "Changed source context."
+        )
+        changed_authority = ATTESTATION.readability_target_authority(
+            category="content", target=changed_content
+        )
+        changed_bindings = copy.deepcopy(current_bindings)
+        changed_bindings["content"] = {
+            changed_authority["target_id"]: changed_authority
+        }
+        changed_sources = copy.deepcopy(current_sources)
+        changed_sources["readability_target_manifest"] = (
+            ATTESTATION.readability_target_manifest_fingerprint(
+                changed_bindings
+            )
+        )
+        self.assertNotEqual(
+            current_sources["readability_target_manifest"],
+            changed_sources["readability_target_manifest"],
+        )
+        with self.assertRaisesRegex(
+            ATTESTATION.AttestationCurrentnessError,
+            "target manifest binding is stale",
+        ):
+            ATTESTATION.parse_attestation_bytes(
+                payload,
+                expected_source_fingerprints=changed_sources,
+                expected_readability_current_bindings=changed_bindings,
+            )
+
+    def test_readability_detector_and_actionability_outcomes_change_binding(
+        self,
+    ) -> None:
+        targets = _compact_readability_targets()
+        readability = ATTESTATION.readability_target_authority(
+            category="readability", target=targets["readability"]
+        )
+        detector_changed = copy.deepcopy(targets["readability"])
+        detector_changed["findings"][0]["words"] += 1
+        detector_authority = ATTESTATION.readability_target_authority(
+            category="readability", target=detector_changed
+        )
+        self.assertNotEqual(
+            readability["review_binding_fingerprint"],
+            detector_authority["review_binding_fingerprint"],
+        )
+
+        actionability = ATTESTATION.readability_target_authority(
+            category="actionability", target=targets["actionability"]
+        )
+        score_changed = copy.deepcopy(targets["actionability"])
+        score_changed["front_loaded_action_score"] += 1
+        score_authority = ATTESTATION.readability_target_authority(
+            category="actionability", target=score_changed
+        )
+        self.assertNotEqual(
+            actionability["review_binding_fingerprint"],
+            score_authority["review_binding_fingerprint"],
+        )
 
     def test_readability_decision_adapter_persists_only_compact_review_facts(
         self,
@@ -2137,6 +2437,9 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
         second_sentence = "Another bounded sentence has a different decision."
         second_finding = {
             "finding_id": _sha("finding-two"),
+            "band": "review-as-complex",
+            "words": 25,
+            "kind": "sentence-length",
             "sentence": second_sentence,
             "sentence_fingerprint": hashlib.sha256(
                 ("ai-readability-sentence-v1\0" + second_sentence).encode(
@@ -2888,7 +3191,7 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
                     "candidate_id",
                     "finding",
                     "path",
-                    "fingerprint",
+                    "source_selector",
                     "skill_owner",
                 )
             }
@@ -2913,6 +3216,11 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
                     "fingerprint": candidate["evidence_fingerprint"],
                     "content_fingerprint": candidate["content_fingerprint"],
                 }
+            entry["record_fingerprint"] = (
+                PANEL.panel_contracts.semantic_disposition_record_fingerprint(
+                    axis, entry
+                )
+            )
             return {
                 "schema_version": 6,
                 "finding_families": [],
@@ -3331,6 +3639,17 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
                 expected_semantic_current_bindings=coordinated,
             )
 
+        changed_identity = _semantic_candidates()
+        changed_identity["root"]["source_selector"]["semantic_section"] = [
+            "heading:recovery"
+        ]
+        coordinated_identity = _semantic_expected_bindings(changed_identity)
+        with self.assertRaises(ATTESTATION.AttestationError):
+            ATTESTATION.validate_attestation(
+                value,
+                expected_semantic_current_bindings=coordinated_identity,
+            )
+
     def test_semantic_source_shape_accepts_only_current_or_exact_legacy_contracts(
         self,
     ) -> None:
@@ -3394,6 +3713,16 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
             "path": "src/foundation/example/SKILL.md",
             "owner": "example",
             "skill_owner": "example",
+            "source_selector": {
+                "selector_version": "root-semantic-source-selector-test-v1",
+                "selector_kind": "source-rule",
+                "owner": "example",
+                "finding": "One current Root candidate.",
+                "path": "src/foundation/example/SKILL.md",
+                "document_part": "body",
+                "semantic_section": ["heading:rules"],
+                "rule_identity": "example/compact-root",
+            },
             "fingerprint": _sha("semantic-compact-root-finding"),
             "document_part": "body",
             "occurrence_fingerprint": _sha("semantic-compact-root-occurrence"),
@@ -3751,7 +4080,9 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
     def test_every_stored_digest_is_recomputed_or_currentness_compared(self) -> None:
         cases: list[tuple[dict, dict]] = []
         readability = readability_fixture()
-        readability["findings"][1]["finding_reviews"][0]["source_fingerprint"] = SHA_A
+        readability["findings"][1]["finding_reviews"][0][
+            "review_binding_fingerprint"
+        ] = SHA_A
         cases.append(
             (readability, {"expected_readability_current_bindings": _compact_readability_bindings()})
         )
@@ -5065,7 +5396,7 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
                 )
             )
 
-    def test_fixed_professional_baseline_reopens_only_changed_package(self) -> None:
+    def test_fixed_professional_baseline_carries_raw_only_package_change(self) -> None:
         value, packet = _current_professional_attestation_fixture()
         contract = value["review_contract_fingerprint"]
         current_targets = []
@@ -5077,7 +5408,7 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
             target for target in current_targets
             if target["skill_id"] == "carried-skill"
         )
-        changed["root"]["content"] += "Changed current package evidence.\n"
+        changed["root"]["content"] += "<!-- Formatting-only change. -->\n"
         changed["root"]["sha256"] = hashlib.sha256(
             changed["root"]["content"].encode("utf-8")
         ).hexdigest()
@@ -5128,10 +5459,44 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
             prior_decision_dependencies=state["dependencies"],
             review_contract_fingerprint=contract,
         )
-        self.assertEqual(["carried-skill"], plan["fresh_target_ids"])
+        self.assertEqual([], plan["fresh_target_ids"])
+        self.assertEqual(
+            ["adjacent-skill", "carried-skill", "unaffected-skill"],
+            plan["carry_target_ids"],
+        )
+        semantic_targets = copy.deepcopy(current_targets)
+        semantic_candidate = next(
+            target
+            for target in semantic_targets
+            if target["skill_id"] == "unaffected-skill"
+        )
+        semantic_candidate["registry"]["responsibility_contract"][
+            "output_contract"
+        ] = ["changed required output semantics"]
+        semantic_bindings = (
+            PANEL.professional_carry.professional_review_bindings(
+                semantic_targets
+            )
+        )
+        semantic_plan = (
+            PANEL.professional_carry.plan_exact_professional_carry_forward(
+                current_bindings=semantic_bindings,
+                prior_snapshot=state["snapshot"],
+                prior_decision_dependencies=state["dependencies"],
+                review_contract_fingerprint=contract,
+            )
+        )
         self.assertEqual(
             ["adjacent-skill", "unaffected-skill"],
-            plan["carry_target_ids"],
+            semantic_plan["fresh_target_ids"],
+        )
+        self.assertIn(
+            "required-candidate-material-changed",
+            semantic_plan["reasons_by_target"]["adjacent-skill"],
+        )
+        self.assertIn(
+            "target-material-changed",
+            semantic_plan["reasons_by_target"]["unaffected-skill"],
         )
         self.assertTrue(
             all(
@@ -5140,7 +5505,7 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
             )
         )
 
-    def test_fixed_professional_baseline_reopens_changed_required_candidate_closure(
+    def test_fixed_professional_baseline_carries_raw_only_dependency_change(
         self,
     ) -> None:
         value, packet = _current_professional_attestation_fixture()
@@ -5155,7 +5520,7 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
             for target in current_targets
             if target["skill_id"] == "unaffected-skill"
         )
-        changed["root"]["content"] += "Changed required candidate evidence.\n"
+        changed["root"]["content"] += "<!-- Formatting-only dependency change. -->\n"
         changed["root"]["sha256"] = hashlib.sha256(
             changed["root"]["content"].encode("utf-8")
         ).hexdigest()
@@ -5206,11 +5571,11 @@ class ExpertPanelAttestationPromotionTests(unittest.TestCase):
             prior_decision_dependencies=state["dependencies"],
             review_contract_fingerprint=contract,
         )
+        self.assertEqual([], plan["fresh_target_ids"])
         self.assertEqual(
-            ["adjacent-skill", "unaffected-skill"],
-            plan["fresh_target_ids"],
+            ["adjacent-skill", "carried-skill", "unaffected-skill"],
+            plan["carry_target_ids"],
         )
-        self.assertEqual(["carried-skill"], plan["carry_target_ids"])
         self.assertTrue(
             all(
                 "predecessor" not in json.dumps(origin)

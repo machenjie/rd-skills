@@ -71,6 +71,15 @@ References, and compiled Layer 3 projections. Fenced code, standalone commands,
 schema fields, table cells, and pure term enumerations are exempt. Inline code
 is one atom, while links count their visible labels.
 
+Weak front-loaded-action scoring and Readability currentness share one
+normalized logical-unit projection. The static front window is the first 60
+unfenced governed units, not the first 60 physical lines. Blank-line padding,
+HTML comments, frontmatter size, prose wrapping, and Markdown decoration do not
+move that boundary. Actual raw HTML comments and tags are removed before entity
+decoding, so escaped comment or tag syntax remains visible evidence. Review
+packets retain the continuous raw source lines and SHA-256 for provenance and
+tamper checks; those coordinates and raw bytes do not decide currentness.
+
 ## Root Content
 
 Keep rules that an agent needs on every selection:
@@ -199,17 +208,35 @@ without applying Reference preface or duplicate-block heuristics to roots. This
 shared collector architecture replaces the proposed duplicate
 `audit-reference-content.py`; do not add a second crawler or generated report.
 
-The exact predecessor Root disposition schema versions 4 and 5 may remain
-inside `config/skill-content-exceptions.yaml` only until an authorized recorder
-migrates them. A line-independent candidate ID is not
-sufficient evidence: every entry must also match the current occurrence
-membership fingerprint and heading/section/local-context fingerprint. Copying
-the same sentence, moving it under another heading, or changing its surrounding
-condition therefore makes the disposition stale. Canonical Registry projection
-is excluded as described above. Manual loading prose and every other root
-section remain scanned.
+Current Root disposition schema version 8 separates a content-independent
+`source_selector` from mutable evidence. The selector contains owner, finding,
+canonical path, document part, and rule identity; unmarked selectors also use
+their semantic section. Candidate IDs are hashes of that selector only.
+Occurrence membership, marker occurrence ID, discovered heading, and local
+context remain evidence fingerprints: changing them preserves a marker-backed
+candidate ID, does not apply the old disposition, and reports
+`needs-confirmation`. Moving an unmarked rule to another semantic section or
+changing owner, finding, path, document part, or rule identity creates a new
+candidate identity. Canonical Registry projection is excluded as described
+above. Manual loading prose and every other root section remain scanned.
 
-Root disposition schema version 6 contains lifecycle schema version 4 with
+The source-only marker
+`<!-- rd-semantic-id:v2 finding=<closed-finding> rule=<rule-id> occurrence=<occurrence-id> -->`
+binds the next logical unit when section identity alone is insufficient. A
+marker-backed identity contains owner, declared finding, canonical path,
+document part, and rule ID; its discovered heading is evidence only. If the
+declared detector no longer matches, the candidate remains at the same identity
+with changed evidence and requires confirmation. Unmarked candidates retain
+their section-scoped identity. Finding, rule, and occurrence IDs use the closed
+lowercase selector grammar; single-owner rules use that owner's prefix, grouped
+rules use `group/`, and occurrence IDs are unique per semantic axis. Rule IDs
+participate in stable identity, while occurrence IDs participate only in
+evidence. Markers are removed from semantic, budget, readability, and
+Professional-review projections, remain present in raw source provenance and
+build-input freshness, and are stripped from built Runtime Markdown. Malformed,
+ambiguous, orphaned, or colliding markers fail closed.
+
+Historical retired Root disposition schema version 6 contained lifecycle schema version 4 with
 bounded `previous` and `current` snapshot-version-4 records. A snapshot records candidate
 identity, lineage, owning-document fingerprint, disposition, first-observed
 release metadata, discriminated formal change reviews, and a closed
@@ -492,19 +519,19 @@ strict validation:
   schemas across at least two owners. It compares schema structure, not matrix
   meaning, and remains distinct from exact normalized duplication.
 
-Every candidate records a stable ID derived from finding, scope, and semantic
-fingerprint. Line numbers exist only under sorted `occurrences`, so line movement
-does not change sentence identity. Duplicate groups use scope `group` and bind a
-separate evidence fingerprint to the sorted path/owner occurrence multiset.
-Multiplicity is preserved while line numbers are excluded, so an added repeated
-occurrence invalidates prior evidence but a line move does not. Group occurrences
-also carry normalized decision-row/body fingerprints that exclude pure schema
-headers and line locations. A separate sorted path/owner/content multiset binds
-dispositions to row semantics, so unchanged membership cannot hide converged or
-rewritten rows. The schema-version 7 block reconciles detector-downgraded,
-untriaged, rewrite, resolved, unresolved,
+Every Reference candidate records a stable ID derived only from its versioned
+`source_selector`. Sentence selectors contain owner, finding, canonical path,
+semantic section, and rule identity. Group selectors contain finding and a
+content-independent structural shape identity. Evidence and normalized content
+have separate fingerprints. Text, occurrence-ID, multiplicity, membership, or
+normalized-body drift therefore retains the same candidate ID but prevents the
+old disposition from applying and reports `needs-confirmation`. A selector
+change creates a new identity. Line numbers remain display evidence only.
+Duplicate groups preserve multiplicity while excluding line movement from
+membership evidence. The schema-version 8 block reconciles detector-downgraded,
+untriaged, needs-confirmation, rewrite, resolved, unresolved,
 priority, group, occurrence, and token counts.
-The schema-version 7 object also carries the exact closed
+The schema-version 8 object also carries the exact closed
 `reference-semantic-detector-contract-v1` object
 `{contract_version, algorithm, value}`. Its value hashes the reachable closure
 of the pure Reference candidate entrypoint, including sentence parsing,
@@ -515,14 +542,20 @@ occurrence, disposition contract, disposition entry, and nested evidence shapes
 are closed; unknown fields and legacy aliases fail default validation.
 
 `config/skill-content-exceptions.yaml` remains the single governance file. Its
-versioned `reference_semantic_dispositions` entries name candidate identity,
+versioned schema-3 `reference_semantic_dispositions` entries name stable
+candidate identity and selector,
 skill owner, P0/P1/P2 priority, one of `rewrite`, `valid-contextual-rule`,
 `false-positive`, or `time-bounded-exception`, accountable evidence, mitigation,
-and review date. Only time-bounded exceptions may carry a future ISO
+review date, and a record fingerprint protecting config integrity. Only time-bounded exceptions may carry a future ISO
 `review_after`; all other dispositions require null. `rewrite` remains
-unresolved; the other three dispositions resolve the candidate. Stale entries,
-identity, group-membership, or normalized-content mismatches, duplicates, malformed evidence, and
-expired exceptions fail default validation. Strict validation requires zero
+unresolved; the other three dispositions resolve the candidate. Evidence drift
+is a same-ID `needs-confirmation` state and never reuses the old decision.
+Identity, selector, record-integrity, duplicate, malformed, ambiguous migration,
+and expired-exception failures reject the active migration all-or-nothing.
+Exactly 19 unmatched historical records are retained under
+`semantic_disposition_legacy_evidence` with immutable commit/config/audit/
+attestation anchors; they are provenance only and never apply or resolve a
+candidate. Strict validation requires zero
 unresolved fixed numbers, templated groups, and P0/P1 unconditional absolutes;
 exact duplicate groups and non-family P2 rewrites are non-blocking advisories.
 
@@ -620,6 +653,36 @@ professional corrections, and zero unresolved professional disagreements
 across 188 packages. Static qualification claims prove declared tag coverage,
 not real-world identity, credentials, or experience.
 
+Professional currentness uses
+`professional-semantic-predicate-projection-v4`, not the raw package digest. The
+versioned projection reduces material Registry fields and unfenced,
+uncommented Root/indexed-Reference logical clauses to closed source, section,
+fact, modality, polarity, action, and object/condition concepts. Its closed
+alias and typo tables make proven spelling, Markdown, whitespace, and wording
+aliases identical; canonical facts are deduplicated. Direction markers are
+classified before attachment: condition-owned markers and exact closed
+infinitive `to` are not argument roles, while confirmed directions bind only
+to the nearest structural owner in that owner's half-open local interval.
+Unknown owners fail closed only when their own interval contains a confirmed
+direction. Every exact closed action is an interval barrier; a plain action
+owns a direction only inside a grammatical condition region, and predicate
+slicing preserves that region context. A lexical dependent owner is permitted
+only as one collision-free,
+uninflected alphabetic head immediately after a maximal modal/negation lead,
+or after infinitive `to` when a closed determiner and nonempty complement make
+that slot explicit. Closed aliases and stemming take precedence; passive and
+gerund owners have no lexical fallback. An explicit material
+modality with no closed action concept fails instead of falling back to raw
+text or silently carrying. The projection contains no raw prose, raw SHA-256,
+line/word counts, repository paths, or current file-set identity. Its detector,
+alias, stop-token, section, and fact contracts are part of the Professional
+review-contract fingerprint, so changing any of them forces all packages
+fresh. The separate raw `content_fingerprint` continues to bind the complete
+Root, indexed References, Registry record, and expertise material for packet,
+capsule, provenance, and tamper validation; it never selects fresh versus
+carry. Required and authenticated reviewer-added dependencies compare the same
+semantic package binding at exactly one hop.
+
 Current Professional schema-3 packets store no target-level
 `package_fingerprint`; each target has one `review_binding` containing
 `package_material_binding`, direct `dependency_material_bindings`, and the
@@ -649,10 +712,11 @@ after promotion, the tracked artifact SHA-256 and clean `HEAD` bytes remain the
 external anchor.
 
 Readability compact storage keeps the
-`readability-complete-target-authority-manifest-v2` digest as its sole source
+`readability-complete-normalized-binding-manifest-v4` digest as its sole source
 authority. Each content or actionability target and each readability finding
-stores one tool-generated `readability-review-unit-binding-v3` digest over its
-identity and normalized local authority from that manifest. The digest excludes
+stores one tool-generated `readability-normalized-review-unit-binding-v5`
+digest over its identity and normalized local authority from that manifest. The
+digest excludes
 votes and outcomes; the document conclusion remains derived from finding votes.
 The top-level `review_artifacts` object retains the packet SHA-256, exactly three
 voter-keyed ballot SHA-256 values in voter order, and the decision SHA-256.
@@ -752,12 +816,12 @@ disposition entries remain the single source of truth for applied governance.
 The packet retains four closed source fingerprints: Root and Reference candidate
 manifests plus the two reachable-behavior detector contracts. Currentness
 rechecks both semantic detectors, the complete eligible candidate ID set,
-candidate identity and local text fingerprints, Root occurrence/context
-evidence, Reference group membership/content evidence, and every review target
-and exact carry-forward set. Governance-only fields are excluded from candidate
+stable identity and its separate current evidence, and every review target and
+exact carry-forward set. Governance-only fields are excluded from candidate
 evidence. Reference `priority` is also excluded because the disposition entry
-selects it. A change to detector, candidate identity or text, local context, or
-group evidence still invalidates the round.
+selects it. Same-ID text, occurrence, membership, normalized-content, or local
+context drift reopens that target as `needs-confirmation`; selector drift is an
+identity replacement. Neither path can silently apply old evidence.
 Raw and detector-downgraded candidate counts remain review-time provenance;
 their churn does not invalidate a round when the detector and complete eligible
 candidate set and evidence remain unchanged.

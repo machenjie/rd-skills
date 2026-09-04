@@ -22,7 +22,7 @@ Derive explicit timeout budgets for the affected hops in the actual request chai
 
 ## Header Trust Pattern
 
-At the first trusted ingress, discard or normalize untrusted client-identity headers. Each subsequent trusted proxy preserves or appends identity according to the documented hop model, and downstream services accept forwarded identity only from authenticated or allowlisted proxies.
+At the first trusted ingress, remove untrusted client-identity headers or change those headers to the ingress-owned canonical form. Each subsequent trusted proxy preserves or appends identity according to the documented hop model, and downstream services accept forwarded identity only from authenticated or allowlisted proxies.
 
 ## Streaming Pattern
 

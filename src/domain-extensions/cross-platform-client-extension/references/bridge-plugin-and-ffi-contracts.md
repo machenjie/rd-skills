@@ -13,7 +13,7 @@ Official framework documentation below was accessed on 2026-07-24.
 - Define payload schema, nullability, ownership, threading, reentrancy,
   cancellation, timeout, error, and unknown-result behavior.
 - Keep capability and permission checks on the platform side that can prove
-  them; return structured denial and unavailable states to shared code.
+  them; return structured denial and unavailable states to the shared code.
 - Treat generated or plugin APIs as compatibility contracts across rolling
   upgrades and target-specific implementations.
 

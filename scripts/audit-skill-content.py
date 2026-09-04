@@ -13,10 +13,6 @@ and writes two grouped reports:
 
 Finding a problem does not make the audit fail; it always exits 0 unless an
 internal error occurs. Thresholds are centralized in THRESHOLDS below.
-
-The internal `foundation-derivation-snapshot` maintenance mode checks or
-refreshes only this module's Foundation derivation constant and its exact
-validator-test oracle from current authored Foundation bodies.
 """
 
 from __future__ import annotations
@@ -26,12 +22,9 @@ import ast
 import builtins
 import hashlib
 import json
-import math
-import os
 import re
 import stat
 import sys
-import tempfile
 import unicodedata
 from collections import Counter, defaultdict
 from copy import deepcopy
@@ -39,6 +32,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
 
+import expert_panel_contracts as _expert_panel_contracts
 import validation_utils as _validation_utils
 
 from validation_utils import (
@@ -154,7 +148,9 @@ THRESHOLDS = {
     # used_by fan-out that, combined with heavy body, is a concern.
     "used_by_fanout": 4,
     # Actionability / control-plane signal gates.
-    "front_window_lines": 60,
+    "front_window_lines": (
+        _expert_panel_contracts.READABILITY_ACTIONABILITY_FRONT_WINDOW_UNIT_LIMIT
+    ),
     "weak_front_loaded_action": 60,
     "poor_front_loaded_action": 40,
     "control_boilerplate_density_high": 2.0,
@@ -164,598 +160,12 @@ THRESHOLDS = {
     "control_boilerplate_repeated_phrase_high": 3,
 }
 
-FOUNDATION_DERIVATION_SNAPSHOT_FIELDS = (
-    "date",
-    "foundation_documents",
-    "compact_documents",
-    "complex_documents",
-    "sum_tokens",
-    "min_tokens",
-    "p25_tokens",
-    "p50_tokens",
-    "p75_tokens",
-    "p90_tokens",
-    "p95_tokens",
-    "p99_tokens",
-    "distribution_max_tokens",
-    "mean_tokens",
-    "sum_words",
-    "min_words",
-    "p25_words",
-    "p50_words",
-    "p75_words",
-    "p90_words",
-    "p95_words",
-    "p99_words",
-    "max_words",
-    "mean_words",
-    "median_token_word_ratio",
-    "p90_token_word_ratio",
-    "p95_token_word_ratio",
-    "max_token_word_ratio",
-    "mean_token_word_ratio",
-)
-FOUNDATION_DERIVATION_SNAPSHOT_MODE = "foundation-derivation-snapshot"
-FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS = (
-    ("scripts/audit-skill-content.py", "FOUNDATION_DERIVATION_SNAPSHOT"),
-    ("tests/scripts/test_validate_root_content.py", "expected"),
+FOUNDATION_RULE_CONTRACT = (
+    "Count every High-Value Rules list item, including nested items; "
+    "every rule needs substantive decision, condition, risk, evidence, "
+    "or authority semantics."
 )
 
-# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT
-FOUNDATION_DERIVATION_SNAPSHOT = {
-    "date": "2026-08-30",
-    "foundation_documents": 150,
-    "compact_documents": 128,
-    "complex_documents": 22,
-    "sum_tokens": 65730,
-    "min_tokens": 138,
-    "p25_tokens": 269,
-    "p50_tokens": 511,
-    "p75_tokens": 555,
-    "p90_tokens": 605,
-    "p95_tokens": 628,
-    "p99_tokens": 663,
-    "distribution_max_tokens": 688,
-    "mean_tokens": 438.2,
-    "sum_words": 46118,
-    "min_words": 94,
-    "p25_words": 182,
-    "p50_words": 357,
-    "p75_words": 394,
-    "p90_words": 424,
-    "p95_words": 437,
-    "p99_words": 475,
-    "max_words": 497,
-    "mean_words": 307.453,
-    "median_token_word_ratio": 1.415,
-    "p90_token_word_ratio": 1.552,
-    "p95_token_word_ratio": 1.593,
-    "max_token_word_ratio": 1.673,
-    "mean_token_word_ratio": 1.435,
-}
-# END GENERATED FOUNDATION DERIVATION SNAPSHOT
-
-
-def _nearest_rank(values: list[int] | list[float], percentile: float) -> int | float:
-    ordered = sorted(values)
-    return ordered[math.ceil(percentile * len(ordered)) - 1]
-
-
-def foundation_derivation_snapshot_from_documents(
-    documents: list[dict],
-) -> dict[str, object]:
-    """Recompute the fixed Foundation provenance from validated body rows."""
-
-    expected_count = FOUNDATION_DERIVATION_SNAPSHOT["foundation_documents"]
-    if len(documents) != expected_count:
-        raise ValidationProblem(
-            f"expected {expected_count} Foundation body documents; found {len(documents)}"
-        )
-    document_ids: list[str] = []
-    token_counts: list[int] = []
-    word_counts: list[int] = []
-    content_classes: list[str] = []
-    for index, document in enumerate(documents):
-        if not isinstance(document, dict):
-            raise ValidationProblem(
-                f"Foundation body document[{index}] must be a mapping"
-            )
-        document_id = document.get("document_id")
-        if not isinstance(document_id, str) or not document_id.strip():
-            raise ValidationProblem(
-                f"Foundation body document[{index}].document_id must be non-blank"
-            )
-        document_ids.append(document_id)
-        content_class = document.get("content_class")
-        if content_class not in FOUNDATION_CONTENT_CLASSES:
-            raise ValidationProblem(
-                f"Foundation body document[{index}].content_class is invalid"
-            )
-        content_classes.append(str(content_class))
-        for field, destination in (
-            ("token_count", token_counts),
-            ("word_count", word_counts),
-        ):
-            value = document.get(field)
-            if type(value) is not int or value <= 0:
-                raise ValidationProblem(
-                    f"Foundation body document[{index}].{field} must be a positive integer"
-                )
-            destination.append(value)
-    if len(document_ids) != len(set(document_ids)):
-        raise ValidationProblem("Foundation body document_id values must be unique")
-
-    token_word_ratios = [
-        token_count / word_count
-        for token_count, word_count in zip(
-            token_counts,
-            word_counts,
-            strict=True,
-        )
-    ]
-    return {
-        "date": FOUNDATION_DERIVATION_SNAPSHOT["date"],
-        "foundation_documents": len(documents),
-        "compact_documents": content_classes.count("compact"),
-        "complex_documents": content_classes.count("complex"),
-        "sum_tokens": sum(token_counts),
-        "min_tokens": min(token_counts),
-        "p25_tokens": _nearest_rank(token_counts, 0.25),
-        "p50_tokens": _nearest_rank(token_counts, 0.50),
-        "p75_tokens": _nearest_rank(token_counts, 0.75),
-        "p90_tokens": _nearest_rank(token_counts, 0.90),
-        "p95_tokens": _nearest_rank(token_counts, 0.95),
-        "p99_tokens": _nearest_rank(token_counts, 0.99),
-        "distribution_max_tokens": max(token_counts),
-        "mean_tokens": round(sum(token_counts) / len(token_counts), 3),
-        "sum_words": sum(word_counts),
-        "min_words": min(word_counts),
-        "p25_words": _nearest_rank(word_counts, 0.25),
-        "p50_words": _nearest_rank(word_counts, 0.50),
-        "p75_words": _nearest_rank(word_counts, 0.75),
-        "p90_words": _nearest_rank(word_counts, 0.90),
-        "p95_words": _nearest_rank(word_counts, 0.95),
-        "p99_words": _nearest_rank(word_counts, 0.99),
-        "max_words": max(word_counts),
-        "mean_words": round(sum(word_counts) / len(word_counts), 3),
-        "median_token_word_ratio": round(
-            _nearest_rank(token_word_ratios, 0.50), 3
-        ),
-        "p90_token_word_ratio": round(
-            _nearest_rank(token_word_ratios, 0.90), 3
-        ),
-        "p95_token_word_ratio": round(
-            _nearest_rank(token_word_ratios, 0.95), 3
-        ),
-        "max_token_word_ratio": round(max(token_word_ratios), 3),
-        "mean_token_word_ratio": round(
-            sum(token_word_ratios) / len(token_word_ratios), 3
-        ),
-    }
-
-
-def _foundation_snapshot_marker(boundary: str) -> str:
-    if boundary not in {"BEGIN", "END"}:
-        raise ValidationProblem("Foundation snapshot marker boundary is invalid")
-    return f"# {boundary} GENERATED " + "FOUNDATION DERIVATION SNAPSHOT"
-
-
-def _foundation_snapshot_date(value: str) -> date:
-    try:
-        parsed = date.fromisoformat(value)
-    except ValueError as exc:
-        raise ValidationProblem(
-            "Foundation derivation snapshot date must use YYYY-MM-DD"
-        ) from exc
-    if parsed.isoformat() != value:
-        raise ValidationProblem(
-            "Foundation derivation snapshot date must use canonical YYYY-MM-DD"
-        )
-    return parsed
-
-
-def _validate_foundation_snapshot_shape(
-    snapshot: object,
-    *,
-    context: str,
-) -> dict[str, object]:
-    if not isinstance(snapshot, dict):
-        raise ValidationProblem(f"{context} must be a mapping")
-    if tuple(snapshot) != FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
-        raise ValidationProblem(
-            f"{context} fields do not match the owned Foundation snapshot schema"
-        )
-    normalized = dict(snapshot)
-    for field in FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
-        expected_type = type(FOUNDATION_DERIVATION_SNAPSHOT[field])
-        if type(normalized[field]) is not expected_type:
-            raise ValidationProblem(
-                f"{context}.{field} must be {expected_type.__name__}"
-            )
-    _foundation_snapshot_date(str(normalized["date"]))
-    if normalized["foundation_documents"] != EXPECTED_FOUNDATION_CAPABILITY_COUNT:
-        raise ValidationProblem(
-            f"{context}.foundation_documents must equal "
-            f"{EXPECTED_FOUNDATION_CAPABILITY_COUNT}"
-        )
-    return normalized
-
-
-def _foundation_snapshot_owned_file(root: Path, relative: str) -> Path:
-    try:
-        trusted_root = root.resolve(strict=True)
-    except OSError as exc:
-        raise ValidationProblem(
-            f"Foundation snapshot owner root is unavailable: {root}"
-        ) from exc
-    relative_path = Path(relative)
-    if relative_path.is_absolute() or ".." in relative_path.parts:
-        raise ValidationProblem(
-            f"Foundation snapshot output path is not contained: {relative}"
-        )
-    target = trusted_root
-    for index, part in enumerate(relative_path.parts):
-        target = target / part
-        try:
-            metadata = target.lstat()
-        except OSError as exc:
-            raise ValidationProblem(
-                f"Foundation snapshot output is unavailable: {relative}"
-            ) from exc
-        if stat.S_ISLNK(metadata.st_mode):
-            raise ValidationProblem(
-                f"Foundation snapshot output must not use a symlink: {relative}"
-            )
-        if index < len(relative_path.parts) - 1:
-            if not stat.S_ISDIR(metadata.st_mode):
-                raise ValidationProblem(
-                    f"Foundation snapshot output ancestor is not a directory: {relative}"
-                )
-        elif not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
-            raise ValidationProblem(
-                f"Foundation snapshot output must be one regular file: {relative}"
-            )
-    try:
-        target.resolve(strict=True).relative_to(trusted_root)
-    except (OSError, ValueError) as exc:
-        raise ValidationProblem(
-            f"Foundation snapshot output escapes the owner root: {relative}"
-        ) from exc
-    return target
-
-
-def _foundation_snapshot_projection(
-    root: Path,
-    relative: str,
-    assignment: str,
-) -> tuple[Path, str, dict[str, object], int, int, str, os.stat_result]:
-    path = _foundation_snapshot_owned_file(root, relative)
-    try:
-        source = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
-        raise ValidationProblem(
-            f"Foundation snapshot output is not readable UTF-8: {relative}"
-        ) from exc
-    lines = source.splitlines(keepends=True)
-    begin_marker = _foundation_snapshot_marker("BEGIN")
-    end_marker = _foundation_snapshot_marker("END")
-    begin = [index for index, line in enumerate(lines) if line.strip() == begin_marker]
-    end = [index for index, line in enumerate(lines) if line.strip() == end_marker]
-    if len(begin) != 1 or len(end) != 1 or begin[0] >= end[0]:
-        raise ValidationProblem(
-            f"Foundation snapshot owner markers are missing or ambiguous: {relative}"
-        )
-    start_index, end_index = begin[0], end[0]
-    begin_line = lines[start_index].rstrip("\r\n")
-    end_line = lines[end_index].rstrip("\r\n")
-    indent = begin_line[: -len(begin_marker)]
-    if end_line != f"{indent}{end_marker}":
-        raise ValidationProblem(
-            f"Foundation snapshot owner marker indentation differs: {relative}"
-        )
-    body_lines: list[str] = []
-    for line in lines[start_index + 1 : end_index]:
-        if line.strip() and not line.startswith(indent):
-            raise ValidationProblem(
-                f"Foundation snapshot owned block indentation differs: {relative}"
-            )
-        body_lines.append(line[len(indent) :] if line.strip() else line)
-    try:
-        parsed = ast.parse("".join(body_lines), filename=relative)
-    except SyntaxError as exc:
-        raise ValidationProblem(
-            f"Foundation snapshot owned block is not valid Python: {relative}"
-        ) from exc
-    if (
-        len(parsed.body) != 1
-        or not isinstance(parsed.body[0], ast.Assign)
-        or len(parsed.body[0].targets) != 1
-        or not isinstance(parsed.body[0].targets[0], ast.Name)
-        or parsed.body[0].targets[0].id != assignment
-    ):
-        raise ValidationProblem(
-            f"Foundation snapshot owned block assignment is invalid: {relative}"
-        )
-    try:
-        snapshot = ast.literal_eval(parsed.body[0].value)
-    except (ValueError, TypeError) as exc:
-        raise ValidationProblem(
-            f"Foundation snapshot owned block must be a literal mapping: {relative}"
-        ) from exc
-    normalized = _validate_foundation_snapshot_shape(
-        snapshot,
-        context=f"{relative}:{assignment}",
-    )
-    return (
-        path,
-        source,
-        normalized,
-        start_index,
-        end_index,
-        indent,
-        path.stat(follow_symlinks=False),
-    )
-
-
-def _render_foundation_snapshot_block(
-    assignment: str,
-    snapshot: dict[str, object],
-    *,
-    indent: str,
-) -> str:
-    normalized = _validate_foundation_snapshot_shape(
-        snapshot,
-        context="generated Foundation derivation snapshot",
-    )
-    lines = [
-        f"{indent}{_foundation_snapshot_marker('BEGIN')}",
-        f"{indent}{assignment} = {{",
-    ]
-    for field in FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
-        value = normalized[field]
-        rendered = json.dumps(value) if isinstance(value, str) else repr(value)
-        lines.append(f'{indent}    "{field}": {rendered},')
-    lines.extend(
-        [
-            f"{indent}}}",
-            f"{indent}{_foundation_snapshot_marker('END')}",
-        ]
-    )
-    return "\n".join(lines) + "\n"
-
-
-def _current_foundation_derivation_snapshot(
-    snapshot_date: str,
-) -> dict[str, object]:
-    evaluated_on = _foundation_snapshot_date(snapshot_date)
-    root_content = _collect_root_content(evaluation_date=evaluated_on)
-    documents = [
-        document
-        for document in root_content["documents"]
-        if document.get("layer") == "foundation-capability"
-        and document.get("document_part") == "body"
-    ]
-    snapshot = foundation_derivation_snapshot_from_documents(documents)
-    snapshot["date"] = snapshot_date
-    return _validate_foundation_snapshot_shape(
-        snapshot,
-        context="current Foundation derivation snapshot",
-    )
-
-
-def _atomic_replace_foundation_snapshot_outputs(
-    replacements: list[tuple[Path, str, str, os.stat_result]],
-) -> None:
-    staged: list[tuple[Path, Path, Path, str, str, tuple[int, int]]] = []
-    replaced: list[tuple[Path, Path, str, str, tuple[int, int]]] = []
-
-    def stage_source(
-        path: Path,
-        source: str,
-        metadata: os.stat_result,
-        *,
-        purpose: str,
-    ) -> Path:
-        descriptor, temporary_name = tempfile.mkstemp(
-            dir=path.parent,
-            prefix=f".{path.name}.foundation-snapshot.{purpose}.",
-            suffix=".tmp",
-        )
-        temporary = Path(temporary_name)
-        try:
-            with os.fdopen(descriptor, "wb") as stream:
-                os.fchmod(stream.fileno(), stat.S_IMODE(metadata.st_mode))
-                stream.write(source.encode("utf-8"))
-                stream.flush()
-                os.fsync(stream.fileno())
-        except BaseException:
-            try:
-                temporary.unlink()
-            except FileNotFoundError:
-                pass
-            raise
-        return temporary
-
-    try:
-        for path, old_source, new_source, metadata in replacements:
-            temporary = stage_source(path, new_source, metadata, purpose="new")
-            try:
-                rollback = stage_source(
-                    path,
-                    old_source,
-                    metadata,
-                    purpose="rollback",
-                )
-            except BaseException:
-                temporary.unlink(missing_ok=True)
-                raise
-            temporary_metadata = temporary.stat(follow_symlinks=False)
-            temporary_identity = (
-                temporary_metadata.st_dev,
-                temporary_metadata.st_ino,
-            )
-            staged.append(
-                (
-                    path,
-                    temporary,
-                    rollback,
-                    old_source,
-                    new_source,
-                    temporary_identity,
-                )
-            )
-        for path, old_source, _new_source, metadata in replacements:
-            current = path.stat(follow_symlinks=False)
-            identity = (metadata.st_dev, metadata.st_ino, metadata.st_mode, metadata.st_nlink)
-            current_identity = (
-                current.st_dev,
-                current.st_ino,
-                current.st_mode,
-                current.st_nlink,
-            )
-            if current_identity != identity or path.read_text(encoding="utf-8") != old_source:
-                raise ValidationProblem(
-                    f"Foundation snapshot output changed after preflight: {path}"
-                )
-        for (
-            path,
-            temporary,
-            rollback,
-            old_source,
-            new_source,
-            temporary_identity,
-        ) in staged:
-            current_temporary = temporary.stat(follow_symlinks=False)
-            if (
-                not stat.S_ISREG(current_temporary.st_mode)
-                or current_temporary.st_nlink != 1
-                or (current_temporary.st_dev, current_temporary.st_ino)
-                != temporary_identity
-            ):
-                raise OSError(
-                    "Foundation snapshot staged target identity changed before commit"
-                )
-            os.replace(temporary, path)
-            replaced.append(
-                (
-                    path,
-                    rollback,
-                    old_source,
-                    new_source,
-                    temporary_identity,
-                )
-            )
-            committed = path.stat(follow_symlinks=False)
-            if (committed.st_dev, committed.st_ino) != temporary_identity:
-                raise OSError(
-                    "Foundation snapshot committed target identity changed "
-                    f"after replacement: {path}"
-                )
-        for path, _rollback, _old_source, new_source, _identity in replaced:
-            if path.read_text(encoding="utf-8") != new_source:
-                raise OSError(
-                    f"Foundation snapshot final verification failed: {path}"
-                )
-    except (OSError, UnicodeError) as exc:
-        rollback_errors: list[str] = []
-        for path, rollback, old_source, _new_source, identity in reversed(replaced):
-            try:
-                current = path.stat(follow_symlinks=False)
-                if (
-                    not stat.S_ISREG(current.st_mode)
-                    or current.st_nlink != 1
-                    or (current.st_dev, current.st_ino) != identity
-                ):
-                    raise OSError(
-                        "Foundation snapshot rollback conflict: committed target "
-                        "identity changed (possible concurrent atomic replacement)"
-                    )
-                os.replace(rollback, path)
-                if path.read_text(encoding="utf-8") != old_source:
-                    raise OSError("Foundation snapshot rollback verification failed")
-            except (OSError, UnicodeError) as rollback_exc:
-                rollback_errors.append(f"{path}: {rollback_exc}")
-        detail = f"Foundation snapshot atomic replacement failed: {exc}"
-        if rollback_errors:
-            detail += "; rollback failed: " + "; ".join(rollback_errors)
-        raise ValidationProblem(
-            detail
-        ) from exc
-    finally:
-        for (
-            _path,
-            temporary,
-            rollback,
-            _old_source,
-            _new_source,
-            _temporary_identity,
-        ) in staged:
-            for candidate in (temporary, rollback):
-                try:
-                    candidate.unlink()
-                except FileNotFoundError:
-                    pass
-
-
-def _synchronize_foundation_derivation_snapshot(
-    *,
-    root: Path,
-    snapshot_date: str,
-    write: bool,
-) -> tuple[list[str], list[str]]:
-    projections: list[
-        tuple[Path, str, dict[str, object], int, int, str, os.stat_result]
-    ] = []
-    errors: list[str] = []
-    for relative, assignment in FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS:
-        try:
-            projections.append(
-                _foundation_snapshot_projection(root, relative, assignment)
-            )
-        except ValidationProblem as exc:
-            errors.append(str(exc))
-    if errors:
-        return [], errors
-    if projections[0][2] != projections[1][2]:
-        return [], ["Foundation derivation snapshot owned projections disagree"]
-    try:
-        expected = _current_foundation_derivation_snapshot(snapshot_date)
-    except ValidationProblem as exc:
-        return [], [str(exc)]
-
-    rendered: list[tuple[str, Path, str, str, os.stat_result]] = []
-    for (relative, assignment), projection in zip(
-        FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS,
-        projections,
-        strict=True,
-    ):
-        path, source, _snapshot, start, end, indent, metadata = projection
-        lines = source.splitlines(keepends=True)
-        replacement = _render_foundation_snapshot_block(
-            assignment,
-            expected,
-            indent=indent,
-        )
-        new_source = "".join(lines[:start]) + replacement + "".join(lines[end + 1 :])
-        rendered.append((relative, path, source, new_source, metadata))
-    drift = [relative for relative, _path, old, new, _metadata in rendered if old != new]
-    if not write or not drift:
-        return drift, []
-    try:
-        _atomic_replace_foundation_snapshot_outputs(
-            [
-                (path, old, new, metadata)
-                for _relative, path, old, new, metadata in rendered
-                if old != new
-            ]
-        )
-    except ValidationProblem as exc:
-        return [], [str(exc)]
-    return drift, []
-
-# Descriptions are discovery metadata and are therefore closer to always-loaded
-# context than a targeted reference. The hard limit is enforced by
-# validate-skill-content-size.py; the lower limit remains an authoring advisory.
 DESCRIPTION_BUDGETS = {
     "control-skill": {"recommended": 220, "hard": 300},
     "professional-skill": {"recommended": 220, "hard": 300},
@@ -1487,13 +897,16 @@ EXACT_DUPLICATE_MIN_LINES = 3
 EXACT_DUPLICATE_MIN_TOKENS = 36
 TEMPLATE_YAML_MIN_FIELDS = 6
 TEMPLATE_OUTPUT_MIN_FIELDS = 4
-SEMANTIC_ADVISORY_SCHEMA_VERSION = 7
-SEMANTIC_DISPOSITION_SCHEMA_VERSION = 2
+SEMANTIC_ADVISORY_SCHEMA_VERSION = 8
+SEMANTIC_DISPOSITION_SCHEMA_VERSION = 3
+REFERENCE_SEMANTIC_SELECTOR_VERSION = "reference-semantic-source-selector-v2"
+REFERENCE_SEMANTIC_CANDIDATE_ID_VERSION = "reference-semantic-stable-candidate-identity-v2"
+REFERENCE_SEMANTIC_EVIDENCE_VERSION = "reference-semantic-candidate-evidence-v2"
 SEMANTIC_DISPOSITION_FIELDS = (
     "candidate_id",
     "finding",
     "path",
-    "fingerprint",
+    "source_selector",
     "skill_owner",
     "priority",
     "disposition",
@@ -1503,6 +916,7 @@ SEMANTIC_DISPOSITION_FIELDS = (
     "evidence",
     "mitigation",
     "review_after",
+    "record_fingerprint",
 )
 SEMANTIC_DISPOSITIONS = frozenset(
     {
@@ -1562,6 +976,24 @@ SEMANTIC_EXCEPTION_GENERIC_TOKENS = {
     "waiver",
 }
 SEMANTIC_DISPOSITION_WILDCARD_RE = re.compile(r"[*?\[\]{}!]")
+SEMANTIC_DISPOSITION_LEGACY_KEY = "semantic_disposition_legacy_evidence"
+SEMANTIC_DISPOSITION_LEGACY_SCHEMA_VERSION = 1
+SEMANTIC_DISPOSITION_LEGACY_SOURCE_COMMIT = (
+    "3f3998a61f58593f6f13fc3406abd9dca395cc23"
+)
+SEMANTIC_DISPOSITION_LEGACY_REVIEW_ID = (
+    "semantic-disposition-20260830-srt24-secure-r1"
+)
+SEMANTIC_DISPOSITION_LEGACY_ARTIFACT_SHA256 = {
+    "config": "5ce542a6d8519654b31c0f7aadfaad53849c5f26b6f6afb2bc8e5ed070fc8615",
+    "audit": "650840d2aec52900ce44ec0c2c811d6de372d17c9c6a16925462276c05b01a1b",
+    "attestation": "8d18ae1cf8a9d48c3744617d81ccd6182de562d4a017852e6c340e3fb71ab511",
+}
+# Filled by the immutable historical migration fixture below. This digest binds
+# the closed legacy subset; it is not a snapshot of editable repository state.
+SEMANTIC_DISPOSITION_LEGACY_ENTRIES_SHA256 = (
+    "4c75ba84e77c12c4a92898c49911025ce848d57cc53d7b0776be70b99af84ed4"
+)
 _USE_CONFIG_DISPOSITIONS = object()
 SEMANTIC_FINDINGS = (
     "unconditional_absolute_candidate",
@@ -1573,12 +1005,142 @@ SEMANTIC_GROUP_FINDINGS = frozenset(
     {"exact_normalized_duplicate_block", "templated_block_candidate"}
 )
 
+
+def _validate_semantic_disposition_legacy_evidence(data: object) -> list[str]:
+    source = _repository_relative_path(SKILL_CONTENT_EXCEPTIONS_FILE)
+    if not isinstance(data, dict):
+        return [f"{source}: must be a mapping"]
+    legacy = data.get(SEMANTIC_DISPOSITION_LEGACY_KEY)
+    if not isinstance(legacy, dict):
+        return [f"{source}: missing {SEMANTIC_DISPOSITION_LEGACY_KEY} mapping"]
+    required = {
+        "schema_version", "source_commit", "review_id", "artifact_sha256",
+        "entries_sha256", "entries",
+    }
+    errors: list[str] = []
+    if set(legacy) != required:
+        errors.append(
+            f"{source}: {SEMANTIC_DISPOSITION_LEGACY_KEY} fields are invalid"
+        )
+        return errors
+    if legacy.get("schema_version") != SEMANTIC_DISPOSITION_LEGACY_SCHEMA_VERSION:
+        errors.append(
+            f"{source}: {SEMANTIC_DISPOSITION_LEGACY_KEY}.schema_version must equal 1"
+        )
+    if legacy.get("source_commit") != SEMANTIC_DISPOSITION_LEGACY_SOURCE_COMMIT:
+        errors.append(f"{source}: legacy source_commit is not the immutable anchor")
+    if legacy.get("review_id") != SEMANTIC_DISPOSITION_LEGACY_REVIEW_ID:
+        errors.append(f"{source}: legacy review_id is not the immutable anchor")
+    if legacy.get("artifact_sha256") != SEMANTIC_DISPOSITION_LEGACY_ARTIFACT_SHA256:
+        errors.append(f"{source}: legacy artifact digests do not match the immutable anchors")
+    entries = legacy.get("entries")
+    if not isinstance(entries, list):
+        errors.append(f"{source}: legacy entries must be a list")
+        return errors
+    if len(entries) != 19:
+        errors.append(f"{source}: legacy evidence must contain exactly 19 historical records")
+    keys: list[tuple[str, str]] = []
+    for index, item in enumerate(entries):
+        label = f"{SEMANTIC_DISPOSITION_LEGACY_KEY}.entries[{index}]"
+        if not isinstance(item, dict) or set(item) != {"axis", "record"}:
+            errors.append(f"{label}: must contain exactly axis and record")
+            continue
+        axis = item.get("axis")
+        record = item.get("record")
+        if axis not in {"root", "reference"} or not isinstance(record, dict):
+            errors.append(f"{label}: axis or historical record is invalid")
+            continue
+        candidate_id = record.get("candidate_id")
+        if not isinstance(candidate_id, str) or not re.fullmatch(r"[0-9a-f]{64}", candidate_id):
+            errors.append(f"{label}: historical candidate_id must be lowercase sha256")
+            continue
+        keys.append((axis, candidate_id))
+    if keys != sorted(keys):
+        errors.append(f"{source}: legacy evidence entries must be canonically sorted")
+    if len(keys) != len(set(keys)):
+        errors.append(f"{source}: duplicate legacy semantic candidate identity")
+    calculated = _expert_panel_contracts.canonical_json_sha256(entries)
+    if (
+        legacy.get("entries_sha256") != calculated
+        or calculated != SEMANTIC_DISPOSITION_LEGACY_ENTRIES_SHA256
+    ):
+        errors.append(f"{source}: legacy evidence entries fail immutable digest validation")
+    return errors
+
+
+def _semantic_active_config_migration_errors(data: object) -> list[str]:
+    """Reject mixed, partial, duplicated, or tampered active schema migration."""
+
+    source = _repository_relative_path(SKILL_CONTENT_EXCEPTIONS_FILE)
+    if not isinstance(data, dict):
+        return [f"{source}: must be a mapping"]
+    errors: list[str] = []
+    contracts = (
+        (
+            "root",
+            ROOT_SEMANTIC_DISPOSITION_KEY,
+            ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
+            _validate_root_semantic_source_selector,
+        ),
+        (
+            "reference",
+            "reference_semantic_dispositions",
+            SEMANTIC_DISPOSITION_SCHEMA_VERSION,
+            _validate_reference_semantic_source_selector,
+        ),
+    )
+    for axis, key, version, selector_validator in contracts:
+        contract = data.get(key)
+        if not isinstance(contract, dict) or set(contract) != {"schema_version", "entries"}:
+            errors.append(f"{source}: {key} migration shape is invalid")
+            continue
+        if contract.get("schema_version") != version:
+            errors.append(f"{source}: {key}.schema_version must equal {version}")
+        entries = contract.get("entries")
+        if not isinstance(entries, list):
+            errors.append(f"{source}: {key}.entries must be a list")
+            continue
+        candidate_ids: list[str] = []
+        for index, entry in enumerate(entries):
+            label = f"{key}.entries[{index}]"
+            if not isinstance(entry, dict):
+                errors.append(f"{source}: {label} must be a mapping")
+                continue
+            candidate_id = entry.get("candidate_id")
+            if not isinstance(candidate_id, str) or not re.fullmatch(
+                r"[0-9a-f]{64}", candidate_id
+            ):
+                errors.append(f"{source}: {label}.candidate_id is invalid")
+            else:
+                candidate_ids.append(candidate_id)
+            try:
+                selector_validator(entry.get("source_selector"))
+            except (TypeError, ValueError):
+                errors.append(f"{source}: {label}.source_selector is invalid")
+            try:
+                record_fingerprint = _semantic_disposition_record_fingerprint(
+                    axis, entry
+                )
+            except ValueError:
+                record_fingerprint = None
+            if entry.get("record_fingerprint") != record_fingerprint:
+                errors.append(f"{source}: {label}.record_fingerprint is invalid")
+        if len(candidate_ids) != len(set(candidate_ids)):
+            errors.append(f"{source}: {key} has duplicate candidate identities")
+    if errors:
+        errors.append(
+            f"{source}: semantic disposition active migration is invalid; all active entries are rejected"
+        )
+    return errors
+
 # Root content has a different risk model from selectively loaded References.
 # These families deliberately focus on policy/mechanism leakage and handbook
 # density; Reference duplication/preface rules are not reused here.
 ROOT_CONTENT_SCHEMA_VERSION = 9
-ROOT_SEMANTIC_SCHEMA_VERSION = 6
-ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION = 7
+ROOT_SEMANTIC_SCHEMA_VERSION = 7
+ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION = 8
+ROOT_SEMANTIC_SELECTOR_VERSION = "root-semantic-source-selector-v3"
+ROOT_SEMANTIC_CANDIDATE_ID_VERSION = "root-semantic-stable-candidate-identity-v3"
 
 def _effective_evaluation_date(evaluation_date: date | None = None) -> date:
     """Resolve one non-future date for a complete public invocation."""
@@ -1615,7 +1177,7 @@ ROOT_SEMANTIC_DISPOSITION_FIELDS = (
     "finding",
     "path",
     "document_part",
-    "fingerprint",
+    "source_selector",
     "skill_owner",
     "priority",
     "disposition",
@@ -1625,6 +1187,7 @@ ROOT_SEMANTIC_DISPOSITION_FIELDS = (
     "evidence",
     "mitigation",
     "review_after",
+    "record_fingerprint",
 )
 ROOT_SEMANTIC_EVIDENCE_FIELDS = frozenset(
     {"occurrence_fingerprint", "context_fingerprint", "rationale"}
@@ -2217,7 +1780,15 @@ def _pattern_count(patterns: tuple[str, ...], text: str) -> int:
 
 
 def _front_window_text(body: str) -> str:
-    return _unfenced_text(body.splitlines()[:THRESHOLDS["front_window_lines"]])
+    units = _expert_panel_contracts.readability_normalized_logical_units(
+        body,
+        exclude_fenced=True,
+        strip_frontmatter=False,
+    )
+    return "\n".join(
+        str(unit["text"])
+        for unit in units[: THRESHOLDS["front_window_lines"]]
+    )
 
 
 def _front_loaded_action_score(body: str) -> int:
@@ -3893,26 +3464,160 @@ def _semantic_fingerprint(finding: str, sentence: str) -> str:
     return hashlib.sha256(f"{finding}\0{normalized}".encode("utf-8")).hexdigest()
 
 
-def _semantic_candidate_id(finding: str, scope: str, fingerprint: str) -> str:
-    expected_scope = "group" if finding in SEMANTIC_GROUP_FINDINGS else scope
-    if finding not in SEMANTIC_FINDINGS:
-        raise ValueError("semantic candidate finding is not declared")
-    if finding in SEMANTIC_GROUP_FINDINGS:
-        if scope != "group":
-            raise ValueError("semantic group candidate scope must equal 'group'")
-    elif not _is_canonical_semantic_path(scope):
-        raise ValueError("semantic sentence candidate scope must be a canonical relative POSIX path")
-    if not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
-        raise ValueError("semantic candidate fingerprint must be lowercase sha256")
-    payload = (
-        "reference-semantic-candidate-v1\0"
-        + finding
-        + "\0"
-        + expected_scope
-        + "\0"
-        + fingerprint
+def _canonical_semantic_hash(contract: str, value: object) -> str:
+    try:
+        encoded = json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise ValueError("semantic binding must be canonical JSON") from exc
+    return hashlib.sha256(contract.encode("utf-8") + b"\0" + encoded).hexdigest()
+
+
+def _semantic_selector_contexts(occurrence: dict) -> list[str]:
+    contexts = occurrence.get("semantic_contexts")
+    if not isinstance(contexts, list) or not all(
+        isinstance(item, str) and item.strip() for item in contexts
+    ):
+        raise ValueError("semantic source selector contexts must be non-blank strings")
+    selected = sorted(
+        {
+            item
+            for item in contexts
+            if item.startswith(
+                ("heading:", "reference-kind:", "table-header:", "unit-kind:")
+            )
+        }
     )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return selected or ["document-root"]
+
+
+def _semantic_marker_for_finding(occurrence: dict, finding: str) -> dict | None:
+    marker = occurrence.get("semantic_marker")
+    if marker is None:
+        return None
+    if not isinstance(marker, dict):
+        raise ValueError("semantic occurrence marker must be a mapping")
+    return marker if marker.get("finding") == finding else None
+
+
+def _reference_semantic_source_selector(
+    *, finding: str, path: str, owner: str, occurrence: dict
+) -> dict:
+    if finding not in SEMANTIC_FINDINGS or finding in SEMANTIC_GROUP_FINDINGS:
+        raise ValueError("reference sentence selector finding is invalid")
+    if not _is_canonical_semantic_path(path):
+        raise ValueError(
+            "semantic sentence candidate path must be a canonical relative POSIX path"
+        )
+    if not isinstance(owner, str) or not owner.strip():
+        raise ValueError("semantic sentence candidate owner must be non-blank")
+    marker = _semantic_marker_for_finding(occurrence, finding)
+    if marker is not None:
+        rule_id = marker.get("rule_id")
+        if not isinstance(rule_id, str) or not rule_id.startswith(f"{owner}/"):
+            raise ValueError("semantic marker rule identity is invalid for owner")
+        return {
+            "selector_version": REFERENCE_SEMANTIC_SELECTOR_VERSION,
+            "selector_kind": "authored-rule",
+            "owner": owner,
+            "finding": finding,
+            "path": path,
+            "document_part": "reference",
+            "rule_identity": rule_id,
+        }
+    return {
+        "selector_version": REFERENCE_SEMANTIC_SELECTOR_VERSION,
+        "selector_kind": "source-rule",
+        "owner": owner,
+        "finding": finding,
+        "path": path,
+        "semantic_section": _semantic_selector_contexts(occurrence),
+        "rule_identity": finding,
+    }
+
+
+def _reference_semantic_group_source_selector(
+    *, finding: str, shape_identity: str
+) -> dict:
+    if finding not in SEMANTIC_GROUP_FINDINGS:
+        raise ValueError("semantic group selector finding is invalid")
+    if not isinstance(shape_identity, str) or not re.fullmatch(
+        r"[0-9a-f]{64}", shape_identity
+    ):
+        raise ValueError("semantic group shape identity must be lowercase sha256")
+    return {
+        "selector_version": REFERENCE_SEMANTIC_SELECTOR_VERSION,
+        "selector_kind": "cross-source-shape",
+        "finding": finding,
+        "scope": "group",
+        "rule_identity": finding,
+        "shape_identity": shape_identity,
+    }
+
+
+def _validate_reference_semantic_source_selector(value: object) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError("reference semantic source_selector must be a mapping")
+    kind = value.get("selector_kind")
+    if kind == "source-rule":
+        fields = {
+            "selector_version", "selector_kind", "owner", "finding", "path",
+            "semantic_section", "rule_identity",
+        }
+        if set(value) != fields:
+            raise ValueError("reference semantic source-rule selector fields are invalid")
+        occurrence = {"semantic_contexts": value.get("semantic_section")}
+        expected = _reference_semantic_source_selector(
+            finding=value.get("finding"),
+            path=value.get("path"),
+            owner=value.get("owner"),
+            occurrence=occurrence,
+        )
+    elif kind == "authored-rule":
+        fields = {
+            "selector_version", "selector_kind", "owner", "finding", "path",
+            "document_part", "rule_identity",
+        }
+        if set(value) != fields or value.get("document_part") != "reference":
+            raise ValueError("reference semantic authored-rule selector fields are invalid")
+        expected = _reference_semantic_source_selector(
+            finding=value.get("finding"),
+            path=value.get("path"),
+            owner=value.get("owner"),
+            occurrence={
+                "semantic_marker": {
+                    "finding": value.get("finding"),
+                    "rule_id": value.get("rule_identity"),
+                }
+            },
+        )
+    elif kind == "cross-source-shape":
+        fields = {
+            "selector_version", "selector_kind", "finding", "scope",
+            "rule_identity", "shape_identity",
+        }
+        if set(value) != fields or value.get("scope") != "group":
+            raise ValueError("reference semantic group selector fields are invalid")
+        expected = _reference_semantic_group_source_selector(
+            finding=value.get("finding"), shape_identity=value.get("shape_identity")
+        )
+    else:
+        raise ValueError("reference semantic source_selector kind is invalid")
+    if value != expected:
+        raise ValueError("reference semantic source_selector is not canonical")
+    return expected
+
+
+def _semantic_candidate_id(source_selector: object) -> str:
+    selector = _validate_reference_semantic_source_selector(source_selector)
+    return _canonical_semantic_hash(
+        REFERENCE_SEMANTIC_CANDIDATE_ID_VERSION, selector
+    )
 
 
 def _semantic_candidate_sort_key(item: object) -> tuple[str, str, str, str]:
@@ -3922,12 +3627,16 @@ def _semantic_candidate_sort_key(item: object) -> tuple[str, str, str, str]:
         return ("", "", "", "")
     return tuple(
         str(item.get(field, ""))
-        for field in ("finding", "fingerprint", "path", "preview")
+        for field in ("finding", "candidate_id", "path", "preview")
     )
 
 
+def _semantic_disposition_record_fingerprint(axis: str, entry: object) -> str:
+    return _expert_panel_contracts.semantic_disposition_record_fingerprint(axis, entry)
+
+
 def _semantic_evidence_fingerprint(occurrences: list[dict]) -> str:
-    membership: list[tuple[str, str]] = []
+    membership: list[tuple[str, str, str, str]] = []
     for occurrence in occurrences:
         path = occurrence.get("path")
         owner = occurrence.get("owner")
@@ -3937,10 +3646,26 @@ def _semantic_evidence_fingerprint(occurrences: list[dict]) -> str:
             )
         if not isinstance(owner, str) or not owner.strip():
             raise ValueError("semantic evidence occurrence owner must be non-blank")
-        membership.append((path, owner))
+        occurrence_id = occurrence.get("semantic_occurrence_id")
+        if occurrence_id is not None and not isinstance(occurrence_id, str):
+            raise ValueError("semantic evidence occurrence-id must be text")
+        context_identity = ""
+        if occurrence_id:
+            contexts = occurrence.get("semantic_contexts") or []
+            if not isinstance(contexts, list) or not all(
+                isinstance(item, str) for item in contexts
+            ):
+                raise ValueError("semantic marker evidence contexts must be text")
+            context_identity = _canonical_semantic_hash(
+                "reference-semantic-marker-context-v1", sorted(contexts)
+            )
+        membership.append((path, owner, occurrence_id or "", context_identity))
     membership.sort()
     payload = "reference-semantic-evidence-v1\0" + "\0".join(
-        f"{path}\0{owner}" for path, owner in membership
+        f"{path}\0{owner}"
+        + (f"\0occurrence:{occurrence_id}" if occurrence_id else "")
+        + (f"\0context:{context_identity}" if context_identity else "")
+        for path, owner, occurrence_id, context_identity in membership
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -3993,6 +3718,61 @@ def _is_canonical_semantic_path(value: object) -> bool:
         and re.match(r"^[A-Za-z]:/", value) is None
         and all(part not in {"", ".", ".."} for part in value.split("/"))
     )
+
+
+def _prepare_semantic_documents(documents: list[dict], *, axis: str) -> list[dict]:
+    """Project semantic markers out of visible content and validate their scope."""
+
+    prepared: list[dict] = []
+    marker_inventory: list[dict[str, object]] = []
+    for raw_document in documents:
+        document = dict(raw_document)
+        if document.get("semantic_projection_applied"):
+            markers = [dict(item) for item in document.get("semantic_markers", [])]
+        else:
+            projection = _validation_utils.semantic_identity_projection(
+                str(document["text"]),
+                owner=str(document["owner"]),
+                axis=axis,
+            )
+            document["text"] = projection["visible_text"]
+            if "governed_text" in document:
+                document["governed_text"] = _validation_utils.strip_semantic_identity_markers(
+                    str(document["governed_text"])
+                )
+            offset = int(document.get("line_offset", 0) or 0)
+            markers = [
+                {
+                    **dict(item),
+                    "marker_line": int(item["marker_line"]) + offset,
+                    "bound_line": int(item["bound_line"]) + offset,
+                }
+                for item in projection["markers"]
+            ]
+        document["semantic_markers"] = markers
+        document["semantic_projection_applied"] = True
+        prepared.append(document)
+        marker_inventory.append(
+            {
+                "path": str(document["path"]),
+                "owner": str(document["owner"]),
+                "axis": axis,
+                "markers": markers,
+            }
+        )
+    _validation_utils.validate_semantic_identity_marker_inventory(marker_inventory)
+    return prepared
+
+
+def _semantic_marker_for_line(document: dict, line: int) -> dict | None:
+    matches = [
+        item
+        for item in document.get("semantic_markers", [])
+        if isinstance(item, dict) and item.get("bound_line") == line
+    ]
+    if len(matches) > 1:
+        raise ValueError(f"ambiguous semantic marker binding at {document['path']}:{line}")
+    return matches[0] if matches else None
 
 
 def _semantic_sentence_slices(text: str) -> list[tuple[int, int, str]]:
@@ -4160,6 +3940,7 @@ def _semantic_sentence_occurrences(
                 "start": min(covered_lines) + line_offset,
                 "end": max(covered_lines) + line_offset,
             }
+            marker = _semantic_marker_for_line(document, line_range["start"])
             occurrences.append(
                 {
                     "path": str(document["path"]),
@@ -4169,6 +3950,13 @@ def _semantic_sentence_occurrences(
                     "lines": line_range,
                     "sentence": sentence,
                     **({"semantic_contexts": sorted(contexts)} if contexts else {}),
+                    **(
+                        {
+                            "semantic_marker": dict(marker),
+                        }
+                        if marker is not None
+                        else {}
+                    ),
                 }
             )
     return occurrences
@@ -4579,6 +4367,13 @@ def _exact_block_occurrences(documents: list[dict]) -> list[dict]:
                 normalized_heading = _normalize_owner_text(
                     decision_titles[-1], str(document["owner"]), structural=False
                 )
+                shape_identity = _canonical_semantic_hash(
+                    "reference-semantic-exact-section-shape-v1",
+                    {
+                        "block_kind": "normalized-decision-block",
+                        "semantic_heading": normalized_heading,
+                    },
+                )
                 normalized = "heading: " + normalized_heading + "\n" + "\n".join(
                     normalized_lines
                 )
@@ -4592,6 +4387,7 @@ def _exact_block_occurrences(documents: list[dict]) -> list[dict]:
                             "content_fingerprint": _semantic_occurrence_content_fingerprint(
                                 "\n".join(normalized_content_lines)
                             ),
+                            "shape_identity": shape_identity,
                             "path": str(document["path"]),
                             "layer": str(document["layer"]),
                             "owner": str(document["owner"]),
@@ -4649,6 +4445,12 @@ def _group_duplicate_occurrences(
         if len(paths) < 2 or (require_distinct_owners and len(owners) < 2):
             continue
         canonical = rows[0]
+        shape_identities = {item.get("shape_identity") for item in rows}
+        if len(shape_identities) != 1:
+            raise ValueError("semantic group evidence has ambiguous shape identity")
+        source_selector = _reference_semantic_group_source_selector(
+            finding=finding, shape_identity=str(next(iter(shape_identities)))
+        )
         occurrence_rows = [
             {
                 key: item[key]
@@ -4661,6 +4463,7 @@ def _group_duplicate_occurrences(
                     "lines",
                     "tokens",
                     "preview",
+                    "shape_identity",
                 )
             }
             for item in rows
@@ -4671,9 +4474,8 @@ def _group_duplicate_occurrences(
                 "finding": finding,
                 "fingerprint": fingerprint,
                 "scope": "group",
-                "candidate_id": _semantic_candidate_id(
-                    finding, "group", fingerprint
-                ),
+                "source_selector": source_selector,
+                "candidate_id": _semantic_candidate_id(source_selector),
                 "path": "group",
                 "layer": "group",
                 "owner": "group",
@@ -4736,6 +4538,10 @@ def _yaml_template_occurrences(document: dict) -> list[dict]:
         unique_paths = sorted(set(paths))
         if len(unique_paths) >= TEMPLATE_YAML_MIN_FIELDS:
             structure = "yaml-key-path-shape\n" + "\n".join(unique_paths)
+            shape_identity = _canonical_semantic_hash(
+                "reference-semantic-template-shape-v1",
+                {"shape_kind": "yaml-key-path-shape", "structure": structure},
+            )
             normalized_values: list[str] = []
             for body_line in lines[index + 1 : end]:
                 key_match = YAML_KEY_RE.match(body_line)
@@ -4763,6 +4569,7 @@ def _yaml_template_occurrences(document: dict) -> list[dict]:
                     "content_fingerprint": _semantic_occurrence_content_fingerprint(
                         "\n".join(normalized_values)
                     ),
+                    "shape_identity": shape_identity,
                     "shape_kind": "yaml-key-path-shape",
                     "path": str(document["path"]),
                     "layer": str(document["layer"]),
@@ -4829,6 +4636,10 @@ def _markdown_template_occurrences(document: dict) -> list[dict]:
             structure = f"markdown-table-schema:{kind}\n" + "\n".join(
                 normalized_headers
             )
+            shape_identity = _canonical_semantic_hash(
+                "reference-semantic-template-shape-v1",
+                {"shape_kind": "markdown-table-schema", "structure": structure},
+            )
             normalized_rows = [
                 " | ".join(
                     _normalize_duplicate_line(cell, str(document["owner"]))
@@ -4845,6 +4656,7 @@ def _markdown_template_occurrences(document: dict) -> list[dict]:
                     "content_fingerprint": _semantic_occurrence_content_fingerprint(
                         "\n".join(normalized_rows)
                     ),
+                    "shape_identity": shape_identity,
                     "shape_kind": "markdown-table-schema",
                     "path": str(document["path"]),
                     "layer": str(document["layer"]),
@@ -4886,6 +4698,10 @@ def _markdown_template_occurrences(document: dict) -> list[dict]:
             structure = f"markdown-output-fields:{kind}\n" + "\n".join(
                 normalized_fields
             )
+            shape_identity = _canonical_semantic_hash(
+                "reference-semantic-template-shape-v1",
+                {"shape_kind": "markdown-output-fields", "structure": structure},
+            )
             normalized_bodies = [
                 _normalize_duplicate_line(
                     lines[index][SCHEMA_FIELD_RE.match(lines[index]).end() :],
@@ -4901,6 +4717,7 @@ def _markdown_template_occurrences(document: dict) -> list[dict]:
                     "content_fingerprint": _semantic_occurrence_content_fingerprint(
                         "\n".join(normalized_bodies)
                     ),
+                    "shape_identity": shape_identity,
                     "shape_kind": "markdown-output-fields",
                     "path": str(document["path"]),
                     "layer": str(document["layer"]),
@@ -4955,21 +4772,38 @@ def _duplicate_semantic_candidates(documents: list[dict]) -> list[dict]:
         template_occurrences,
         require_distinct_owners=True,
     )
-    return exact_candidates + templated_candidates
+    candidates = exact_candidates + templated_candidates
+    identities: dict[str, dict] = {}
+    for candidate in candidates:
+        candidate_id = str(candidate["candidate_id"])
+        if candidate_id in identities:
+            raise ValueError(
+                "semantic group stable selector collision: distinct evidence groups "
+                f"resolve to {candidate_id}"
+            )
+        identities[candidate_id] = candidate
+    return candidates
 
 
 def _fold_sentence_semantic_candidates(rows: list[dict]) -> list[dict]:
-    """Fold line-sensitive sentence hits into stable path-scoped candidates."""
+    """Fold sentence hits into content-independent section-scoped candidates."""
 
-    grouped: dict[tuple[str, str, str], list[dict]] = defaultdict(list)
+    grouped: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
         if not _is_canonical_semantic_path(row.get("path")):
             raise ValueError(
                 "semantic sentence occurrence path must be a canonical relative POSIX path"
             )
-        grouped[(row["finding"], row["path"], row["fingerprint"])].append(row)
+        source_selector = _reference_semantic_source_selector(
+            finding=row["finding"],
+            path=row["path"],
+            owner=row["owner"],
+            occurrence=row,
+        )
+        row["source_selector"] = source_selector
+        grouped[_semantic_candidate_id(source_selector)].append(row)
     candidates: list[dict] = []
-    for (finding, path, fingerprint), occurrences in sorted(grouped.items()):
+    for candidate_id, occurrences in sorted(grouped.items()):
         occurrences = sorted(
             occurrences,
             key=lambda item: (
@@ -4979,6 +4813,11 @@ def _fold_sentence_semantic_candidates(rows: list[dict]) -> list[dict]:
             ),
         )
         canonical = occurrences[0]
+        finding = canonical["finding"]
+        path = canonical["path"]
+        source_selector = canonical["source_selector"]
+        if any(item["source_selector"] != source_selector for item in occurrences):
+            raise ValueError("semantic sentence stable selector collision")
         occurrence_rows: list[dict] = []
         for occurrence in occurrences:
             row = {
@@ -4990,11 +4829,17 @@ def _fold_sentence_semantic_candidates(rows: list[dict]) -> list[dict]:
                 "signals": list(occurrence["signals"]),
                 "preview": occurrence["preview"],
                 "detector_status": occurrence["detector_status"],
+                "content_fingerprint": _semantic_occurrence_content_fingerprint(
+                    occurrence["normalized_content"]
+                ),
             }
             if occurrence.get("downgrade_reason"):
                 row["downgrade_reason"] = occurrence["downgrade_reason"]
             if occurrence.get("semantic_contexts"):
                 row["semantic_contexts"] = list(occurrence["semantic_contexts"])
+            marker = _semantic_marker_for_finding(occurrence, finding)
+            if marker is not None:
+                row["semantic_occurrence_id"] = marker["occurrence_id"]
             occurrence_rows.append(row)
         detector_status = (
             "candidate"
@@ -5010,9 +4855,13 @@ def _fold_sentence_semantic_candidates(rows: list[dict]) -> list[dict]:
         )
         candidate = {
             "finding": finding,
-            "fingerprint": fingerprint,
+            "fingerprint": _canonical_semantic_hash(
+                f"{REFERENCE_SEMANTIC_EVIDENCE_VERSION}:text",
+                sorted(item["content_fingerprint"] for item in occurrence_rows),
+            ),
             "scope": path,
-            "candidate_id": _semantic_candidate_id(finding, path, fingerprint),
+            "source_selector": source_selector,
+            "candidate_id": candidate_id,
             "path": path,
             "layer": canonical["layer"],
             "owner": canonical["owner"],
@@ -5026,8 +4875,8 @@ def _fold_sentence_semantic_candidates(rows: list[dict]) -> list[dict]:
             "detector_status": detector_status,
             "occurrence_count": len(occurrence_rows),
             "occurrences": occurrence_rows,
-            "evidence_fingerprint": None,
-            "content_fingerprint": None,
+            "evidence_fingerprint": _semantic_evidence_fingerprint(occurrence_rows),
+            "content_fingerprint": _semantic_content_fingerprint(occurrence_rows),
         }
         if downgrade_reasons:
             candidate["downgrade_reasons"] = downgrade_reasons
@@ -5049,6 +4898,8 @@ def _load_reference_semantic_dispositions() -> tuple[dict, list[str]]:
         return {"schema_version": None, "entries": []}, [str(exc)]
     if not isinstance(data, dict):
         return {"schema_version": None, "entries": []}, [f"{source}: must be a mapping"]
+    legacy_errors = _validate_semantic_disposition_legacy_evidence(data)
+    migration_errors = _semantic_active_config_migration_errors(data)
     if "reference_semantic_exceptions" in data:
         return {"schema_version": None, "entries": []}, [
             f"{source}: legacy reference_semantic_exceptions is forbidden"
@@ -5062,7 +4913,7 @@ def _load_reference_semantic_dispositions() -> tuple[dict, list[str]]:
         return {"schema_version": None, "entries": []}, [
             f"{source}: reference_semantic_dispositions must be a mapping"
         ]
-    errors: list[str] = []
+    errors: list[str] = [*legacy_errors, *migration_errors]
     if set(contract) != {"schema_version", "entries"}:
         errors.append(
             f"{source}: reference_semantic_dispositions must contain exactly schema_version and entries"
@@ -5078,7 +4929,10 @@ def _load_reference_semantic_dispositions() -> tuple[dict, list[str]]:
             f"{source}: reference_semantic_dispositions.entries must be a list"
         )
         entries = []
-    return {"schema_version": schema_version, "entries": entries}, errors
+    return {
+        "schema_version": schema_version,
+        "entries": [] if errors else entries,
+    }, errors
 
 
 def _validate_reference_semantic_dispositions(
@@ -5095,6 +4949,7 @@ def _validate_reference_semantic_dispositions(
     normalized_entries: list[dict] = []
     matched_candidate_by_entry: dict[int, int] = {}
     errors: list[str] = []
+    migration_invalid = False
     seen_ids: set[str] = set()
     candidate_by_id: dict[str, int] = {}
     for candidate_index, candidate in enumerate(candidates):
@@ -5110,23 +4965,20 @@ def _validate_reference_semantic_dispositions(
                 f"semantic candidate[{candidate_index}]: candidate_id must be lowercase sha256"
             )
             continue
-        valid_scope = (
-            expected_scope == "group"
-            if finding in SEMANTIC_GROUP_FINDINGS
-            else _is_canonical_semantic_path(expected_scope)
-        )
         try:
-            expected_candidate_id = _semantic_candidate_id(
-                finding, expected_scope, fingerprint
+            source_selector = _validate_reference_semantic_source_selector(
+                candidate.get("source_selector")
             )
+            expected_candidate_id = _semantic_candidate_id(source_selector)
         except (TypeError, ValueError):
+            source_selector = None
             expected_candidate_id = None
         if (
             finding not in SEMANTIC_FINDINGS
             or not isinstance(fingerprint, str)
             or not re.fullmatch(r"[0-9a-f]{64}", fingerprint)
-            or not valid_scope
             or candidate.get("scope") != expected_scope
+            or source_selector is None
             or candidate_id != expected_candidate_id
         ):
             errors.append(
@@ -5137,8 +4989,7 @@ def _validate_reference_semantic_dispositions(
         try:
             expected_evidence = (
                 _semantic_evidence_fingerprint(occurrences)
-                if finding in SEMANTIC_GROUP_FINDINGS
-                and isinstance(occurrences, list)
+                if isinstance(occurrences, list)
                 else None
             )
         except ValueError as exc:
@@ -5152,8 +5003,7 @@ def _validate_reference_semantic_dispositions(
         try:
             expected_content = (
                 _semantic_content_fingerprint(occurrences)
-                if finding in SEMANTIC_GROUP_FINDINGS
-                and isinstance(occurrences, list)
+                if isinstance(occurrences, list)
                 else None
             )
         except ValueError as exc:
@@ -5200,6 +5050,7 @@ def _validate_reference_semantic_dispositions(
         context = f"reference_semantic_dispositions.entries[{index}]"
         if not isinstance(raw_entry, dict):
             errors.append(f"{context}: must be a mapping")
+            migration_invalid = True
             continue
         unexpected = sorted(set(raw_entry) - set(SEMANTIC_DISPOSITION_FIELDS))
         missing = [
@@ -5207,8 +5058,10 @@ def _validate_reference_semantic_dispositions(
         ]
         if unexpected:
             errors.append(f"{context}: unknown field(s): {', '.join(unexpected)}")
+            migration_invalid = True
         if missing:
             errors.append(f"{context}: missing field(s): {', '.join(missing)}")
+            migration_invalid = True
             continue
         entry: dict[str, Any] = {}
         invalid = False
@@ -5216,7 +5069,6 @@ def _validate_reference_semantic_dispositions(
             "candidate_id",
             "finding",
             "path",
-            "fingerprint",
             "skill_owner",
             "priority",
             "disposition",
@@ -5224,6 +5076,7 @@ def _validate_reference_semantic_dispositions(
             "authority_or_condition",
             "decision_owner",
             "mitigation",
+            "record_fingerprint",
         )
         for field in string_fields:
             value = raw_entry.get(field)
@@ -5279,6 +5132,16 @@ def _validate_reference_semantic_dispositions(
                 "rationale": rationale.strip() if isinstance(rationale, str) else "",
             }
         entry["evidence"] = normalized_evidence
+        source_selector = raw_entry.get("source_selector")
+        try:
+            entry["source_selector"] = _validate_reference_semantic_source_selector(
+                source_selector
+            )
+        except ValueError as exc:
+            errors.append(f"{context}: {exc}")
+            entry["source_selector"] = source_selector
+            invalid = True
+            migration_invalid = True
         review_after_raw = raw_entry.get("review_after")
         entry["review_after"] = review_after_raw
         if invalid:
@@ -5295,7 +5158,7 @@ def _validate_reference_semantic_dispositions(
             errors.append(f"{context}: path must not contain wildcard or glob syntax")
         if entry["finding"] not in SEMANTIC_FINDINGS:
             errors.append(f"{context}: finding is not a declared semantic family")
-        for field in ("candidate_id", "fingerprint"):
+        for field in ("candidate_id", "record_fingerprint"):
             if not re.fullmatch(r"[0-9a-f]{64}", entry[field]):
                 errors.append(f"{context}: {field} must be lowercase sha256")
         if entry["priority"] not in SEMANTIC_PRIORITIES:
@@ -5335,20 +5198,27 @@ def _validate_reference_semantic_dispositions(
             )
 
         candidate_id = entry["candidate_id"]
-        entry_scope = (
-            "group" if entry["finding"] in SEMANTIC_GROUP_FINDINGS else entry["path"]
-        )
         try:
-            expected_entry_id = _semantic_candidate_id(
-                entry["finding"], entry_scope, entry["fingerprint"]
-            )
+            expected_entry_id = _semantic_candidate_id(entry["source_selector"])
         except (TypeError, ValueError):
             expected_entry_id = None
         if candidate_id != expected_entry_id:
             errors.append(f"{context}: candidate_id does not match stable identity inputs")
+            migration_invalid = True
         if candidate_id in seen_ids:
             errors.append(f"{context}: duplicate semantic disposition candidate_id")
+            migration_invalid = True
         seen_ids.add(candidate_id)
+        try:
+            expected_record_fingerprint = _semantic_disposition_record_fingerprint(
+                "reference", entry
+            )
+        except ValueError:
+            expected_record_fingerprint = None
+        if entry["record_fingerprint"] != expected_record_fingerprint:
+            errors.append(
+                f"{context}: record_fingerprint does not match disposition record"
+            )
         candidate_index = candidate_by_id.get(candidate_id)
         if candidate_index is None:
             metadata_matches = [
@@ -5356,7 +5226,7 @@ def _validate_reference_semantic_dispositions(
                 for candidate in candidates
                 if candidate.get("finding") == entry["finding"]
                 and candidate.get("path") == entry["path"]
-                and candidate.get("fingerprint") == entry["fingerprint"]
+                and candidate.get("source_selector") == entry["source_selector"]
             ]
             if metadata_matches:
                 errors.append(f"{context}: candidate_id does not match candidate metadata")
@@ -5364,12 +5234,10 @@ def _validate_reference_semantic_dispositions(
                 errors.append(f"{context}: stale semantic disposition entry")
         else:
             candidate = candidates[candidate_index]
-            if candidate.get("detector_status") != "candidate":
-                errors.append(f"{context}: disposition targets a detector-downgraded candidate")
             expected = {
                 "finding": candidate.get("finding"),
                 "path": candidate.get("path"),
-                "fingerprint": candidate.get("fingerprint"),
+                "source_selector": candidate.get("source_selector"),
                 "skill_owner": candidate.get("skill_owner"),
             }
             for field, expected_value in expected.items():
@@ -5378,28 +5246,23 @@ def _validate_reference_semantic_dispositions(
                         f"{context}: {field} does not match current candidate"
                     )
             candidate_occurrences = candidate.get("occurrences")
-            expected_evidence = (
-                _semantic_evidence_fingerprint(candidate_occurrences)
-                if candidate.get("finding") in SEMANTIC_GROUP_FINDINGS
-                and isinstance(candidate_occurrences, list)
-                else None
-            )
-            if entry["evidence"]["fingerprint"] != expected_evidence:
-                errors.append(
-                    f"{context}: evidence.fingerprint does not match current candidate membership"
-                )
-            expected_content = (
-                _semantic_content_fingerprint(candidate_occurrences)
-                if candidate.get("finding") in SEMANTIC_GROUP_FINDINGS
-                and isinstance(candidate_occurrences, list)
-                else None
-            )
-            if entry["evidence"]["content_fingerprint"] != expected_content:
-                errors.append(
-                    f"{context}: evidence.content_fingerprint does not match current candidate content"
-                )
-            matched_candidate_by_entry[index] = candidate_index
+            expected_evidence = _semantic_evidence_fingerprint(candidate_occurrences)
+            expected_content = _semantic_content_fingerprint(candidate_occurrences)
+            if (
+                candidate.get("detector_status") == "candidate"
+                and
+                entry["evidence"]["fingerprint"] == expected_evidence
+                and entry["evidence"]["content_fingerprint"] == expected_content
+                and entry["record_fingerprint"] == expected_record_fingerprint
+            ):
+                matched_candidate_by_entry[index] = candidate_index
         normalized_entries.append(entry)
+
+    if migration_invalid:
+        errors.append(
+            "reference semantic disposition migration is invalid; all entries were rejected"
+        )
+        matched_candidate_by_entry = {}
 
     if require_applied:
         common_errors, surface_errors = _reference_disposition_error_attribution(
@@ -5427,6 +5290,7 @@ def _validate_reference_semantic_dispositions(
             )
         }
         matched_candidates = set(applicable_matches.values())
+        configured_ids = set(normalized_by_id)
         for candidate_index, candidate in enumerate(candidates):
             if candidate_index in matched_candidates:
                 entry = normalized_by_id.get(str(candidate.get("candidate_id", "")))
@@ -5464,11 +5328,18 @@ def _validate_reference_semantic_dispositions(
                 else SEMANTIC_DEFAULT_PRIORITIES.get(str(candidate.get("finding")))
             )
             expected_status = (
-                "detector-downgraded"
-                if candidate.get("detector_status") == "downgraded"
-                else "untriaged"
+                "needs-confirmation"
+                if str(candidate.get("candidate_id", "")) in configured_ids
+                else (
+                    "detector-downgraded"
+                    if candidate.get("detector_status") == "downgraded"
+                    else "untriaged"
+                )
             )
-            expected_unresolved = candidate.get("detector_status") != "downgraded"
+            expected_unresolved = (
+                expected_status == "needs-confirmation"
+                or candidate.get("detector_status") != "downgraded"
+            )
             if (
                 candidate.get("disposition") is not None
                 or candidate.get("disposition_record") is not None
@@ -5486,6 +5357,7 @@ def _validate_reference_semantic_dispositions(
 
 def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
     """Collect the pure, canonically ordered Reference detector projection."""
+    documents = _prepare_semantic_documents(documents, axis="reference")
     for index, document in enumerate(documents):
         if not isinstance(document, dict) or not _is_canonical_semantic_path(
             document.get("path")
@@ -5497,6 +5369,7 @@ def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
     for document in sorted(documents, key=lambda item: str(item["path"])):
         for occurrence in _semantic_sentence_occurrences(document):
             sentence = occurrence.pop("sentence")
+            emitted_findings: set[str] = set()
             semantic_contexts = set(occurrence.get("semantic_contexts") or ())
             reference_kind = str(document.get("kind", "")).strip()
             if reference_kind:
@@ -5551,6 +5424,7 @@ def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
                         "tokens": count_o200k_base_tokens(sentence),
                         "signals": absolute,
                         "preview": sentence[:280],
+                        "normalized_content": _semantic_normalize_sentence(sentence),
                         "detector_status": (
                             "downgraded" if downgrade_reason else "candidate"
                         ),
@@ -5561,6 +5435,7 @@ def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
                         ),
                     }
                 )
+                emitted_findings.add(finding)
 
             fixed = _fixed_number_signals(sentence)
             if fixed:
@@ -5569,14 +5444,40 @@ def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
                     {
                         "finding": finding,
                         "fingerprint": _semantic_fingerprint(finding, sentence),
-                        **{
-                            key: value
-                            for key, value in occurrence.items()
-                            if key != "semantic_contexts"
-                        },
+                        **occurrence,
                         "tokens": count_o200k_base_tokens(sentence),
                         "signals": fixed,
                         "preview": sentence[:280],
+                        "normalized_content": _semantic_normalize_sentence(sentence),
+                        "detector_status": "candidate",
+                    }
+                )
+                emitted_findings.add(finding)
+
+            marker = occurrence.get("semantic_marker")
+            declared_finding = (
+                marker.get("finding") if isinstance(marker, dict) else None
+            )
+            if (
+                declared_finding in {
+                    "unconditional_absolute_candidate",
+                    "fixed_number_candidate",
+                }
+                and declared_finding not in emitted_findings
+            ):
+                sentence_rows.append(
+                    {
+                        "finding": declared_finding,
+                        "fingerprint": _semantic_fingerprint(
+                            declared_finding, sentence
+                        ),
+                        **occurrence,
+                        "tokens": count_o200k_base_tokens(sentence),
+                        "signals": [],
+                        "preview": sentence[:280],
+                        "normalized_content": _semantic_normalize_sentence(sentence),
+                        # An authored marker is itself a review-routing declaration;
+                        # detector non-match is mutable evidence, not disappearance.
                         "detector_status": "candidate",
                     }
                 )
@@ -5700,6 +5601,21 @@ def _collect_reference_semantic_advisories(
         )
         applied_count += 1
 
+    configured_ids = set(normalized_by_id)
+    applied_ids = {
+        str(candidates[index].get("candidate_id"))
+        for index in disposition_matches.values()
+    }
+    for candidate in candidates:
+        candidate_id = str(candidate.get("candidate_id", ""))
+        if (
+            candidate_id in configured_ids
+            and candidate_id not in applied_ids
+        ):
+            candidate["governance_status"] = "needs-confirmation"
+            candidate["unresolved"] = True
+            candidate["resolved"] = False
+
     def disposition_counts(rows: list[dict]) -> dict[str, int]:
         return {
             "raw": len(rows),
@@ -5708,6 +5624,9 @@ def _collect_reference_semantic_advisories(
             ),
             "untriaged": sum(
                 item["governance_status"] == "untriaged" for item in rows
+            ),
+            "needs_confirmation": sum(
+                item["governance_status"] == "needs-confirmation" for item in rows
             ),
             "rewrite": sum(item["disposition"] == "rewrite" for item in rows),
             "valid_contextual_rule": sum(
@@ -5768,6 +5687,7 @@ def _collect_reference_semantic_advisories(
                 "detector_downgraded"
             ],
             "untriaged_candidates": all_counts["untriaged"],
+            "needs_confirmation_candidates": all_counts["needs_confirmation"],
             "rewrite_candidates": all_counts["rewrite"],
             "valid_contextual_rule_candidates": all_counts[
                 "valid_contextual_rule"
@@ -5837,27 +5757,127 @@ def _collect_reference_semantic_advisories(
     }
 
 
-def _root_semantic_candidate_id(
+def _root_semantic_section_identity(
+    document: dict,
+    lines: dict[str, int],
+    context_labels: list[str] | tuple[str, ...] | set[str] = (),
+) -> list[str]:
+    labels = sorted(
+        {
+            str(item)
+            for item in context_labels
+            if isinstance(item, str) and item.startswith("heading:")
+        }
+    )
+    if labels:
+        return labels
+    body = str(document.get("governed_text", document["text"]))
+    offset = int(document.get("line_offset", 0) or 0)
+    local_index = max(0, int(lines["start"]) - offset - 1)
+    headings = [
+        f"heading:{_semantic_context_label(title)}"
+        for title in _heading_contexts(body).get(local_index, [])
+    ]
+    return headings or ["document-root"]
+
+
+def _root_semantic_source_selector(
+    *,
     finding: str,
     path: str,
     document_part: str,
-    fingerprint: str,
-) -> str:
+    owner: str,
+    semantic_section: list[str],
+    rule_identity: str | None = None,
+) -> dict:
     if finding not in ROOT_SEMANTIC_FINDINGS:
         raise ValueError("root semantic candidate finding is not declared")
     if not _is_canonical_semantic_path(path):
         raise ValueError("root semantic candidate path must be canonical")
     if document_part not in {"body", "description", "control-prompt"}:
         raise ValueError("root semantic document_part is not declared")
-    if not re.fullmatch(r"[0-9a-f]{64}", fingerprint):
-        raise ValueError("root semantic fingerprint must be lowercase sha256")
-    # Source lines are deliberately excluded: inserting unrelated lines does not
-    # churn candidate IDs. Disposition evidence separately binds the exact
-    # occurrence multiset and its section/local context.
-    payload = (
-        f"root-semantic-candidate-v2\0{finding}\0{path}\0{document_part}\0{fingerprint}"
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    if not isinstance(owner, str) or not owner.strip():
+        raise ValueError("root semantic candidate owner must be non-blank")
+    if (
+        not isinstance(semantic_section, list)
+        or semantic_section != sorted(set(semantic_section))
+        or not semantic_section
+        or not all(
+            isinstance(item, str)
+            and (item == "document-root" or item.startswith("heading:"))
+            for item in semantic_section
+        )
+    ):
+        raise ValueError("root semantic section identity is invalid")
+    identity = finding if rule_identity is None else rule_identity
+    if identity != finding:
+        if not isinstance(identity, str) or not identity.startswith(f"{owner}/"):
+            raise ValueError("root semantic marker rule identity is invalid for owner")
+        return {
+            "selector_version": ROOT_SEMANTIC_SELECTOR_VERSION,
+            "selector_kind": "authored-rule",
+            "owner": owner,
+            "finding": finding,
+            "path": path,
+            "document_part": document_part,
+            "rule_identity": identity,
+        }
+    return {
+        "selector_version": ROOT_SEMANTIC_SELECTOR_VERSION,
+        "selector_kind": "source-rule",
+        "owner": owner,
+        "finding": finding,
+        "path": path,
+        "document_part": document_part,
+        "semantic_section": semantic_section,
+        "rule_identity": identity,
+    }
+
+
+def _validate_root_semantic_source_selector(value: object) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError("root semantic source_selector must be a mapping")
+    kind = value.get("selector_kind")
+    if kind == "source-rule":
+        fields = {
+            "selector_version", "selector_kind", "owner", "finding", "path",
+            "document_part", "semantic_section", "rule_identity",
+        }
+        if set(value) != fields:
+            raise ValueError("root semantic source-rule selector fields are invalid")
+        expected = _root_semantic_source_selector(
+            finding=value.get("finding"),
+            path=value.get("path"),
+            document_part=value.get("document_part"),
+            owner=value.get("owner"),
+            semantic_section=value.get("semantic_section"),
+            rule_identity=value.get("rule_identity"),
+        )
+    elif kind == "authored-rule":
+        fields = {
+            "selector_version", "selector_kind", "owner", "finding", "path",
+            "document_part", "rule_identity",
+        }
+        if set(value) != fields:
+            raise ValueError("root semantic authored-rule selector fields are invalid")
+        expected = _root_semantic_source_selector(
+            finding=value.get("finding"),
+            path=value.get("path"),
+            document_part=value.get("document_part"),
+            owner=value.get("owner"),
+            semantic_section=["document-root"],
+            rule_identity=value.get("rule_identity"),
+        )
+    else:
+        raise ValueError("root semantic source_selector kind is invalid")
+    if value != expected:
+        raise ValueError("root semantic source_selector is not canonical")
+    return expected
+
+
+def _root_semantic_candidate_id(source_selector: object) -> str:
+    selector = _validate_root_semantic_source_selector(source_selector)
+    return _canonical_semantic_hash(ROOT_SEMANTIC_CANDIDATE_ID_VERSION, selector)
 
 
 def _root_candidate_sort_key(item: object) -> tuple[str, str, str, str]:
@@ -5865,7 +5885,7 @@ def _root_candidate_sort_key(item: object) -> tuple[str, str, str, str]:
         return ("", "", "", "")
     return tuple(
         str(item.get(field, ""))
-        for field in ("finding", "path", "document_part", "fingerprint")
+        for field in ("finding", "path", "document_part", "candidate_id")
     )
 
 
@@ -5875,11 +5895,14 @@ def _root_occurrence_fingerprint(occurrences: list[dict]) -> str:
             str(item["path"]),
             str(item["owner"]),
             str(item["document_part"]),
+            str(item.get("semantic_occurrence_id", "")),
         )
         for item in occurrences
     )
     payload = "root-semantic-occurrences-v1\0" + "\0".join(
-        f"{path}\0{owner}\0{part}" for path, owner, part in membership
+        f"{path}\0{owner}\0{part}"
+        + (f"\0occurrence:{occurrence_id}" if occurrence_id else "")
+        for path, owner, part, occurrence_id in membership
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -5930,9 +5953,24 @@ def _root_candidate(
     *,
     context_labels: list[str] | tuple[str, ...] | set[str] = (),
 ) -> dict:
-    fingerprint = _semantic_fingerprint(finding, text)
     path = str(document["path"])
     document_part = str(document.get("document_part", "body"))
+    marker = _semantic_marker_for_line(document, int(lines["start"]))
+    if marker is not None and marker.get("finding") != finding:
+        marker = None
+    source_selector = _root_semantic_source_selector(
+        finding=finding,
+        path=path,
+        document_part=document_part,
+        owner=str(document["owner"]),
+        semantic_section=_root_semantic_section_identity(
+            document, lines, context_labels
+        ),
+        rule_identity=(str(marker["rule_id"]) if marker is not None else None),
+    )
+    occurrence_content_fingerprint = _semantic_occurrence_content_fingerprint(
+        _semantic_normalize_sentence(text)
+    )
     occurrence = {
         "path": path,
         "layer": str(document["layer"]),
@@ -5945,13 +5983,21 @@ def _root_candidate(
         "context_fingerprint": _root_local_context_fingerprint(
             document, lines, context_labels
         ),
+        "content_fingerprint": occurrence_content_fingerprint,
+        **(
+            {"semantic_occurrence_id": marker["occurrence_id"]}
+            if marker is not None
+            else {}
+        ),
     }
     return {
         "finding": finding,
-        "fingerprint": fingerprint,
-        "candidate_id": _root_semantic_candidate_id(
-            finding, path, document_part, fingerprint
+        "fingerprint": _canonical_semantic_hash(
+            "root-semantic-candidate-text-evidence-v2",
+            [occurrence_content_fingerprint],
         ),
+        "source_selector": source_selector,
+        "candidate_id": _root_semantic_candidate_id(source_selector),
         "path": path,
         "document_part": document_part,
         "layer": str(document["layer"]),
@@ -5973,19 +6019,17 @@ def _root_candidate(
 
 
 def _fold_root_candidates(rows: list[dict]) -> list[dict]:
-    grouped: dict[tuple[str, str, str, str], list[dict]] = defaultdict(list)
+    grouped: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
-        grouped[
-            (
-                row["finding"],
-                row["path"],
-                row["document_part"],
-                row["fingerprint"],
-            )
-        ].append(row)
+        grouped[row["candidate_id"]].append(row)
     result: list[dict] = []
-    for _key, candidates in sorted(grouped.items()):
+    for candidate_id, candidates in sorted(grouped.items()):
         canonical = candidates[0]
+        if any(
+            item["source_selector"] != canonical["source_selector"]
+            for item in candidates
+        ):
+            raise ValueError(f"root semantic stable selector collision: {candidate_id}")
         occurrences = sorted(
             [item["occurrences"][0] for item in candidates],
             key=lambda item: (item["lines"]["start"], item["lines"]["end"]),
@@ -5999,6 +6043,10 @@ def _fold_root_candidates(rows: list[dict]) -> list[dict]:
         canonical["occurrence_fingerprint"] = _root_occurrence_fingerprint(occurrences)
         canonical["context_fingerprint"] = _root_context_membership_fingerprint(
             occurrences
+        )
+        canonical["fingerprint"] = _canonical_semantic_hash(
+            "root-semantic-candidate-text-evidence-v2",
+            sorted(item["content_fingerprint"] for item in occurrences),
         )
         result.append(canonical)
     return sorted(result, key=_root_candidate_sort_key)
@@ -6033,7 +6081,7 @@ def _root_semantic_dispositions_from_data(
         entries = []
     return {
         "schema_version": contract.get("schema_version"),
-        "entries": entries,
+        "entries": [] if errors else entries,
     }, errors
 
 
@@ -6043,7 +6091,12 @@ def _load_root_semantic_dispositions() -> tuple[dict, list[str]]:
         data = load_yaml_file(SKILL_CONTENT_EXCEPTIONS_FILE)
     except ValidationProblem as exc:
         return {"schema_version": None, "entries": []}, [str(exc)]
-    return _root_semantic_dispositions_from_data(data, source=source)
+    contract, errors = _root_semantic_dispositions_from_data(data, source=source)
+    errors.extend(_validate_semantic_disposition_legacy_evidence(data))
+    errors.extend(_semantic_active_config_migration_errors(data))
+    if errors:
+        contract["entries"] = []
+    return contract, errors
 
 
 def _root_rationale_is_generic(value: str) -> bool:
@@ -6070,6 +6123,7 @@ def _validate_root_semantic_dispositions(
     normalized: list[dict] = []
     matches: dict[int, int] = {}
     errors: list[str] = []
+    migration_invalid = False
     ids = [item.get("candidate_id") if isinstance(item, dict) else None for item in entries]
     if all(isinstance(item, str) for item in ids) and ids != sorted(ids):
         errors.append(f"{ROOT_SEMANTIC_DISPOSITION_KEY}.entries must be sorted by candidate_id")
@@ -6079,6 +6133,7 @@ def _validate_root_semantic_dispositions(
         label = f"{ROOT_SEMANTIC_DISPOSITION_KEY}.entries[{index}]"
         if not isinstance(raw, dict):
             errors.append(f"{label}: must be a mapping")
+            migration_invalid = True
             continue
         if set(raw) != required:
             missing = sorted(required - set(raw))
@@ -6087,19 +6142,28 @@ def _validate_root_semantic_dispositions(
                 errors.append(f"{label}: missing field(s): {', '.join(missing)}")
             if unknown:
                 errors.append(f"{label}: unknown field(s): {', '.join(unknown)}")
+            migration_invalid = True
             continue
         entry = {key: raw[key] for key in ROOT_SEMANTIC_DISPOSITION_FIELDS}
         normalized.append(entry)
         for field in (
-            "candidate_id", "finding", "path", "document_part", "fingerprint", "skill_owner",
+            "candidate_id", "finding", "path", "document_part", "skill_owner",
             "priority", "disposition", "reason", "authority_or_condition",
-            "decision_owner", "mitigation",
+            "decision_owner", "mitigation", "record_fingerprint",
         ):
             if not isinstance(entry[field], str) or not entry[field].strip():
                 errors.append(f"{label}: {field} must be a non-blank string")
         if not all(isinstance(entry[field], str) and entry[field].strip() for field in (
-            "candidate_id", "finding", "path", "document_part", "fingerprint", "priority", "disposition"
+            "candidate_id", "finding", "path", "document_part", "priority", "disposition", "record_fingerprint"
         )):
+            continue
+        try:
+            entry["source_selector"] = _validate_root_semantic_source_selector(
+                entry["source_selector"]
+            )
+        except ValueError as exc:
+            errors.append(f"{label}: {exc}")
+            migration_invalid = True
             continue
         if entry["finding"] not in ROOT_SEMANTIC_FINDINGS:
             errors.append(f"{label}: finding is not a declared root semantic family")
@@ -6108,7 +6172,7 @@ def _validate_root_semantic_dispositions(
             errors.append(f"{label}: path must be a canonical relative POSIX path")
         if entry["document_part"] not in {"body", "description", "control-prompt"}:
             errors.append(f"{label}: document_part is not declared")
-        for field in ("candidate_id", "fingerprint"):
+        for field in ("candidate_id", "record_fingerprint"):
             if not re.fullmatch(r"[0-9a-f]{64}", entry[field]):
                 errors.append(f"{label}: {field} must be lowercase sha256")
         if entry["priority"] != ROOT_SEMANTIC_DEFAULT_PRIORITIES[entry["finding"]]:
@@ -6152,37 +6216,48 @@ def _validate_root_semantic_dispositions(
         elif review_after is not None:
             errors.append(f"{label}: review_after must be null unless time-bounded-exception")
         try:
-            expected_id = _root_semantic_candidate_id(
-                entry["finding"], entry["path"], entry["document_part"],
-                entry["fingerprint"]
-            )
+            expected_id = _root_semantic_candidate_id(entry["source_selector"])
         except (TypeError, ValueError):
             expected_id = None
         if entry["candidate_id"] != expected_id:
             errors.append(f"{label}: candidate_id does not match stable identity inputs")
+            migration_invalid = True
         if entry["candidate_id"] in seen:
             errors.append(f"{label}: duplicate candidate_id")
+            migration_invalid = True
         seen.add(entry["candidate_id"])
+        try:
+            expected_record_fingerprint = _semantic_disposition_record_fingerprint(
+                "root", entry
+            )
+        except ValueError:
+            expected_record_fingerprint = None
+        if entry["record_fingerprint"] != expected_record_fingerprint:
+            errors.append(f"{label}: record_fingerprint does not match disposition record")
         candidate_index = candidate_by_id.get(entry["candidate_id"])
         if candidate_index is None:
             errors.append(f"{label}: stale root semantic disposition entry")
             continue
         candidate = candidates[candidate_index]
         for field in (
-            "finding", "path", "document_part", "fingerprint", "skill_owner"
+            "finding", "path", "document_part", "source_selector", "skill_owner"
         ):
             if entry[field] != candidate[field]:
                 errors.append(f"{label}: {field} does not match current candidate")
-        if isinstance(evidence, dict):
+        evidence_matches = isinstance(evidence, dict) and all(
+            evidence.get(evidence_field) == candidate.get(candidate_field)
             for evidence_field, candidate_field in (
                 ("occurrence_fingerprint", "occurrence_fingerprint"),
                 ("context_fingerprint", "context_fingerprint"),
-            ):
-                if evidence.get(evidence_field) != candidate.get(candidate_field):
-                    errors.append(
-                        f"{label}: evidence.{evidence_field} does not match current candidate"
-                    )
-        matches[index] = candidate_index
+            )
+        )
+        if evidence_matches and entry["record_fingerprint"] == expected_record_fingerprint:
+            matches[index] = candidate_index
+    if migration_invalid:
+        errors.append(
+            "root semantic disposition migration is invalid; all entries were rejected"
+        )
+        matches = {}
     if require_applied:
         common_errors, surface_errors = _root_disposition_error_attribution(
             errors,
@@ -6209,6 +6284,7 @@ def _validate_root_semantic_dispositions(
             )
         }
         matched_candidates = set(applicable_matches.values())
+        configured_ids = set(normalized_by_id)
         for candidate_index, candidate in enumerate(candidates):
             if candidate_index in matched_candidates:
                 entry = normalized_by_id.get(str(candidate.get("candidate_id", "")))
@@ -6238,11 +6314,16 @@ def _validate_root_semantic_dispositions(
             expected_priority = ROOT_SEMANTIC_DEFAULT_PRIORITIES.get(
                 str(candidate.get("finding"))
             )
+            expected_status = (
+                "needs-confirmation"
+                if str(candidate.get("candidate_id", "")) in configured_ids
+                else "untriaged"
+            )
             if (
                 candidate.get("disposition") is not None
                 or candidate.get("disposition_record") is not None
                 or candidate.get("priority") != expected_priority
-                or candidate.get("governance_status") != "untriaged"
+                or candidate.get("governance_status") != expected_status
                 or candidate.get("resolved") is not False
                 or candidate.get("unresolved") is not True
             ):
@@ -6272,22 +6353,49 @@ def _root_skill_documents(
             metadata, raw_frontmatter, body = parse_frontmatter(path)
             owner = str(metadata.get("name") or path.parent.name)
             relative_path = _repository_relative_path(path)
+            semantic_projection = _validation_utils.semantic_identity_projection(
+                raw_source,
+                owner=owner,
+                axis="root",
+            )
+            semantic_markers = [dict(item) for item in semantic_projection["markers"]]
+            visible_body = _validation_utils.semantic_identity_projection(
+                body,
+                owner=owner,
+                axis="root",
+            )["visible_text"]
+            governed_source = strip_frontmatter_body_targeted_reference_projection(
+                body,
+                raw_source,
+            )
             body_document = {
                 "path": relative_path,
                 "layer": kind,
                 "owner": owner,
                 "kind": kind,
-                "text": body,
+                "text": visible_body,
+                "raw_text": body,
                 # Registry-authored JIT load/skip records remain part of the
                 # source fingerprint and readability surface. Blank only the
                 # exact canonical projection for authored-content budgets and
                 # semantic-disposition detection.
-                "governed_text": strip_frontmatter_body_targeted_reference_projection(
-                    body,
-                    raw_source,
+                "governed_text": _validation_utils.semantic_identity_projection(
+                    governed_source,
+                    owner=owner,
+                    axis="root",
+                )["visible_text"],
+                "budget_text": _validation_utils.strip_semantic_identity_markers(
+                    governed_source
                 ),
                 "line_offset": len(raw_frontmatter.splitlines()) + 2,
                 "document_part": "body",
+                "semantic_markers": [
+                    marker
+                    for marker in semantic_markers
+                    if int(marker["bound_line"])
+                    > len(raw_frontmatter.splitlines()) + 2
+                ],
+                "semantic_projection_applied": True,
             }
             if kind == "foundation-capability":
                 contract = foundation_contracts.get(owner)
@@ -6314,10 +6422,18 @@ def _root_skill_documents(
                         "owner": owner,
                         "kind": kind,
                         "text": description.strip(),
+                        "raw_text": description.strip(),
+                        "budget_text": description.strip(),
                         # raw frontmatter starts on physical line 2. The semantic
                         # extractor adds one for its local first line.
                         "line_offset": description_index + 1,
                         "document_part": "description",
+                        "semantic_markers": [
+                            marker
+                            for marker in semantic_markers
+                            if int(marker["bound_line"]) == description_index + 2
+                        ],
+                        "semantic_projection_applied": True,
                     }
                 )
     for kind, path in ROOT_AGENT_DOCUMENTS:
@@ -6327,15 +6443,28 @@ def _root_skill_documents(
             source="local",
             expect_directory=False,
         )
+        raw_source = path.read_text(encoding="utf-8")
+        owner = path.stem
+        semantic_projection = _validation_utils.semantic_identity_projection(
+            raw_source,
+            owner=owner,
+            axis="root",
+        )
         documents.append(
             {
                 "path": _repository_relative_path(path),
                 "layer": kind,
-                "owner": path.stem,
+                "owner": owner,
                 "kind": kind,
-                "text": path.read_text(encoding="utf-8"),
+                "text": semantic_projection["visible_text"],
+                "raw_text": raw_source,
+                "budget_text": _validation_utils.strip_semantic_identity_markers(
+                    raw_source
+                ),
                 "line_offset": 0,
                 "document_part": "control-prompt",
+                "semantic_markers": semantic_projection["markers"],
+                "semantic_projection_applied": True,
             }
         )
     return sorted(
@@ -6797,6 +6926,61 @@ def _root_document_candidates(document: dict) -> list[dict]:
                 )
             )
     return rows
+
+
+def _root_authored_marker_candidates(
+    document: dict, detected: list[dict]
+) -> list[dict]:
+    """Keep declared authored rules visible when their detector no longer hits."""
+
+    present = {
+        (
+            str(candidate["finding"]),
+            str(candidate["source_selector"].get("rule_identity", "")),
+        )
+        for candidate in detected
+        if candidate.get("source_selector", {}).get("selector_kind")
+        == "authored-rule"
+    }
+    logical = _semantic_sentence_occurrences(
+        document, include_negative_examples=True
+    )
+    synthesized: list[dict] = []
+    for marker in document.get("semantic_markers", []):
+        key = (str(marker.get("finding", "")), str(marker.get("rule_id", "")))
+        if key in present:
+            continue
+        matches = [
+            occurrence
+            for occurrence in logical
+            if isinstance(occurrence.get("semantic_marker"), dict)
+            and occurrence["semantic_marker"].get("occurrence_id")
+            == marker.get("occurrence_id")
+        ]
+        if not matches:
+            raise ValueError(
+                "semantic marker does not bind a root logical unit: "
+                f"{document['path']}:{marker.get('marker_line')}"
+            )
+        for occurrence in matches:
+            synthesized.append(
+                _root_candidate(
+                    str(marker["finding"]),
+                    document,
+                    str(occurrence.pop("sentence")),
+                    dict(occurrence["lines"]),
+                    [],
+                    context_labels=occurrence.get("semantic_contexts") or (),
+                )
+            )
+    return synthesized
+
+
+def _root_document_semantic_candidates(document: dict) -> list[dict]:
+    detected = _root_sentence_candidates(document) + _root_document_candidates(
+        document
+    )
+    return detected + _root_authored_marker_candidates(document, detected)
 
 
 def _root_document_id(path: str, document_part: str) -> str:
@@ -7897,13 +8081,12 @@ def _collect_root_semantic_advisories(
     disposition_entries: object = _USE_CONFIG_DISPOSITIONS,
     evaluation_date: date | None = None,
 ) -> dict:
+    documents = _prepare_semantic_documents(documents, axis="root")
     candidates = _fold_root_candidates(
         [
             candidate
             for document in documents
-            for candidate in (
-                _root_sentence_candidates(document) + _root_document_candidates(document)
-            )
+            for candidate in _root_document_semantic_candidates(document)
         ]
     )
     evaluated_on = (
@@ -7975,12 +8158,23 @@ def _collect_root_semantic_advisories(
             if candidate["resolved"] else "unresolved-rewrite"
         )
         applied += 1
+    configured_ids = set(normalized_by_id)
+    applied_ids = {
+        str(candidates[index].get("candidate_id")) for index in matches.values()
+    }
+    for candidate in candidates:
+        candidate_id = str(candidate.get("candidate_id", ""))
+        if candidate_id in configured_ids and candidate_id not in applied_ids:
+            candidate["governance_status"] = "needs-confirmation"
+            candidate["unresolved"] = True
+            candidate["resolved"] = False
     by_finding = {}
     for finding in ROOT_SEMANTIC_FINDINGS:
         rows = [item for item in candidates if item["finding"] == finding]
         by_finding[finding] = {
             "raw": len(rows),
             "untriaged": sum(item["governance_status"] == "untriaged" for item in rows),
+            "needs_confirmation": sum(item["governance_status"] == "needs-confirmation" for item in rows),
             "rewrite": sum(item["disposition"] == "rewrite" for item in rows),
             "resolved": sum(bool(item["resolved"]) for item in rows),
             "unresolved": sum(bool(item["unresolved"]) for item in rows),
@@ -8001,6 +8195,7 @@ def _collect_root_semantic_advisories(
         "summary": {
             "raw_candidates": len(candidates),
             "untriaged_candidates": sum(item["governance_status"] == "untriaged" for item in candidates),
+            "needs_confirmation_candidates": sum(item["governance_status"] == "needs-confirmation" for item in candidates),
             "rewrite_candidates": sum(item["disposition"] == "rewrite" for item in candidates),
             "resolved_candidates": sum(item["resolved"] for item in candidates),
             "unresolved_candidates": unresolved,
@@ -8193,8 +8388,8 @@ def _collect_root_content(
         "domain_over_hard_tokens": [],
     }
     for document in documents:
-        body = str(document.get("governed_text", document["text"]))
-        source_body = str(document["text"])
+        body = str(document.get("budget_text", document.get("governed_text", document["text"])))
+        source_body = str(document.get("raw_text", document["text"]))
         row = {
             "path": document["path"],
             "document_part": document["document_part"],
@@ -8344,7 +8539,6 @@ def _collect_root_content(
         evaluation_date=effective_evaluation_date,
     )
     surface_validation = _root_surface_validation(document_rows, advisories, semantic)
-    foundation_derivation_snapshot = dict(FOUNDATION_DERIVATION_SNAPSHOT)
     return {
         "schema_version": ROOT_CONTENT_SCHEMA_VERSION,
         "source_fingerprint": {
@@ -8424,6 +8618,9 @@ def _collect_root_content(
                 advisories["domain_over_hard_tokens"]
             ),
             "semantic_raw_candidates": semantic["summary"]["raw_candidates"],
+            "semantic_needs_confirmation_candidates": semantic["summary"][
+                "needs_confirmation_candidates"
+            ],
             "semantic_unresolved_candidates": semantic["summary"]["unresolved_candidates"],
             "semantic_p0_p1_unresolved": semantic["summary"]["strict_unresolved"]["p0_p1_candidates"],
             "semantic_fixed_number_unresolved": semantic["summary"]["strict_unresolved"]["fixed_number_candidates"],
@@ -8466,12 +8663,7 @@ def _collect_root_content(
                 )
                 for content_class in sorted(FOUNDATION_CONTENT_CLASSES)
             },
-            "derivation_snapshot": foundation_derivation_snapshot,
-            "rule_contract": (
-                "Count every High-Value Rules list item, including nested items; "
-                "every rule needs substantive decision, condition, risk, evidence, "
-                "or authority semantics."
-            ),
+            "rule_contract": FOUNDATION_RULE_CONTRACT,
         },
         "semantic_advisories": semantic,
         "surface_validation": surface_validation,
@@ -9228,6 +9420,7 @@ def _collect_ai_readability(documents: list[dict] | None = None) -> dict:
         )
         band_counts = {"review-as-complex": 0, "tighten": 0, "hard-fail": 0}
         compound_count = 0
+        finding_occurrences: dict[tuple[str, str], int] = defaultdict(int)
         for finding in raw_findings:
             sentence = str(finding["sentence"])
             source_span = finding.get("source_span")
@@ -9243,30 +9436,29 @@ def _collect_ai_readability(documents: list[dict] | None = None) -> dict:
             sentence_fingerprint = hashlib.sha256(
                 ("ai-readability-sentence-v1\0" + sentence).encode("utf-8")
             ).hexdigest()
-            finding_id = hashlib.sha256(
-                (
-                    "ai-readability-finding-v2\0ai-readability-v1\0"
-                    + document_id
-                    + "\0"
-                    + str(finding["kind"])
-                    + "\0"
-                    + str(band or "")
-                    + "\0"
-                    + str(finding.get("words") or "")
-                    + "\0"
-                    + sentence_fingerprint
-                    + "\0"
-                    + str(source_span.get("start_line"))
-                    + "\0"
-                    + str(source_span.get("end_line"))
-                    + "\0"
-                    + str(source_span.get("start_offset"))
-                    + "\0"
-                    + str(source_span.get("end_offset"))
-                    + "\0"
-                    + str(source_span.get("sha256"))
-                ).encode("utf-8")
-            ).hexdigest()
+            try:
+                normalized_sentence = (
+                    _expert_panel_contracts.readability_normalized_visible_text(
+                        sentence
+                    )
+                )
+                occurrence_key = (
+                    str(finding["kind"]),
+                    normalized_sentence,
+                )
+                finding_occurrences[occurrence_key] += 1
+                finding_id = (
+                    _expert_panel_contracts.readability_stable_finding_id(
+                        document_id=document_id,
+                        kind=str(finding["kind"]),
+                        sentence=sentence,
+                        occurrence=finding_occurrences[occurrence_key],
+                    )
+                )
+            except ValueError as exc:
+                raise ValidationProblem(
+                    f"AI-readability finding identity is invalid: {document_id}"
+                ) from exc
             findings.append(
                 {
                     "finding_id": finding_id,
@@ -10080,11 +10272,26 @@ def _collect_reference_content(
         registry_texts,
     )
     preface_contract_errors.extend(fingerprint_errors)
+    visible_markdown: dict[str, str] = {}
+    marker_projections: dict[str, dict[str, object]] = {}
+    for item in indexed:
+        raw_markdown = physical_markdown.get(str(item["path"]))
+        if raw_markdown is None:
+            continue
+        projection = _validation_utils.semantic_identity_projection(
+            raw_markdown,
+            owner=str(item["owner"]),
+            axis="reference",
+        )
+        visible_markdown[str(item["path"])] = (
+            _validation_utils.strip_semantic_identity_markers(raw_markdown)
+        )
+        marker_projections[str(item["path"])] = projection
 
     references: list[ReferenceMetrics] = []
     for item in indexed:
         physical_item = physical_by_path.get(item["path"])
-        markdown = physical_markdown.get(item["path"], "")
+        markdown = visible_markdown.get(item["path"], "")
         structural_facts = (
             _markdown_structural_facts(
                 markdown,
@@ -10257,10 +10464,12 @@ def _collect_reference_content(
                 "owner": item.owner,
                 "path": item.path,
                 "kind": item.advisory_kind or item.kind,
-                "text": physical_markdown[item.path],
+                "text": marker_projections[item.path]["visible_text"],
+                "semantic_markers": marker_projections[item.path]["markers"],
+                "semantic_projection_applied": True,
             }
             for item in references
-            if item.exists and item.path in physical_markdown
+            if item.exists and item.path in visible_markdown
         ],
         evaluation_date=effective_evaluation_date,
     )
@@ -10390,6 +10599,9 @@ def _collect_reference_content(
             ],
             "semantic_untriaged_candidates": semantic_summary[
                 "untriaged_candidates"
+            ],
+            "semantic_needs_confirmation_candidates": semantic_summary[
+                "needs_confirmation_candidates"
             ],
             "semantic_rewrite_candidates": semantic_summary["rewrite_candidates"],
             "semantic_resolved_candidates": semantic_summary[
@@ -11041,7 +11253,7 @@ def _score(metrics: SkillMetrics, sections: list[Section], body: str) -> None:
         efficiency -= penalty
         metrics.findings.append(
             f"front-loaded action score {metrics.front_loaded_action_score}/100; "
-            f"first {THRESHOLDS['front_window_lines']} lines need first moves, "
+            f"first {THRESHOLDS['front_window_lines']} logical units need first moves, "
             "stop conditions, gotchas, verification, or domain actions"
         )
     if metrics.control_boilerplate_density >= THRESHOLDS["control_boilerplate_density_high"]:
@@ -11336,6 +11548,8 @@ def audit(evaluation_date: date | None = None) -> dict:
             body = raw_source
             _metadata = {}
             body_is_frontmatter_fragment = False
+        owner = str(_metadata.get("name") or path.parent.name)
+        body = _validation_utils.strip_semantic_identity_markers(body)
         sections = parse_sections(body)
         metrics = _base_metrics(
             kind,
@@ -12431,63 +12645,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
     return args
 
 
-def _foundation_snapshot_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        prog=f"audit-skill-content.py {FOUNDATION_DERIVATION_SNAPSHOT_MODE}",
-        description=(
-            "Check or refresh the two owned Foundation derivation snapshot "
-            "projections from current authored Foundation bodies."
-        ),
-    )
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--check", action="store_true")
-    action.add_argument("--write", action="store_true")
-    parser.add_argument(
-        "--date",
-        required=True,
-        help="Explicit deterministic snapshot date in YYYY-MM-DD form.",
-    )
-    return parser.parse_args(argv)
-
-
-def _foundation_snapshot_main(argv: list[str]) -> int:
-    args = _foundation_snapshot_args(argv)
-    drift, errors = _synchronize_foundation_derivation_snapshot(
-        root=ROOT,
-        snapshot_date=args.date,
-        write=args.write,
-    )
-    if errors:
-        for error in errors:
-            print(f"audit-skill-content: ERROR: {error}", file=sys.stderr)
-        return 1
-    if drift and args.check:
-        print(
-            "audit-skill-content: ERROR: Foundation derivation snapshot is "
-            f"stale in {', '.join(drift)}; rerun with --write",
-            file=sys.stderr,
-        )
-        return 1
-    if args.write:
-        print(
-            "audit-skill-content: Foundation derivation snapshot updated; "
-            f"changed={len(drift)}"
-        )
-    else:
-        print(
-            "audit-skill-content: Foundation derivation snapshot owned "
-            "projections are current"
-        )
-    return 0
-
-
 def main(argv: list[str] | None = None) -> int:
     effective_argv = [] if argv is None else argv
-    if (
-        effective_argv
-        and effective_argv[0] == FOUNDATION_DERIVATION_SNAPSHOT_MODE
-    ):
-        return _foundation_snapshot_main(effective_argv[1:])
     args = _args(effective_argv)
     effective_evaluation_date = _effective_evaluation_date()
     try:

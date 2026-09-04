@@ -258,6 +258,14 @@ current source contracts directly. Evaluation tests load their owned artifacts
 and apply the existing schema, status, count, error, and cross-report
 invariants. Build consumers additionally compare each manifest's
 `authoritative_build_inputs` snapshot with the current narrow build input set.
+Before creating that snapshot or touching staging, cleanup, reset, package, or
+managed-output paths, `build.py` validates one source-only v2 semantic-marker
+inventory. It derives owners from the four registries, covers the control
+prompt, every Skill root, and every physical source Reference, and delegates
+parsing plus cross-document rule/occurrence collision checks to
+`validation_utils.py`. This preflight does not import the content auditor or
+read tracked reports. Runtime stripping and leakage rejection remain a second
+defense after rendering.
 Mutating a consumed field, required file, authoritative build input, or expected
 Skill count fails the owning consumer. Arbitrary extra fields that no consumer
 reads are explicitly outside this proof. These checks do not replay producers
@@ -321,6 +329,15 @@ Professional Completeness schema 3 are defined only in [Skill content
 governance](SKILL_CONTENT_GOVERNANCE.md#validation). Validation operators use
 their strict commands and reported blockers; this document does not redefine
 packet, ballot, reviewer-assignment, carry, storage, or cost semantics.
+Semantic disposition uses content-independent versioned selectors for stable
+candidate identity and separate current-evidence fingerprints. Same-selector
+evidence drift is reported as `needs-confirmation`; selector drift creates a new
+identity. Raw source SHA-256 remains provenance and tamper/build-freshness
+evidence, not the candidate identity. A v2 source-only semantic marker declares
+its closed finding and stable rule: owner, finding, path, document part, and rule
+form identity, while the discovered heading and detector match remain evidence.
+The marker is ignored by judgment projections and removed from built Runtime
+Markdown.
 Current Professional evidence uses the v3 review/carry contract: packets bind
 one package material and one review unit per target, compact storage
 deduplicates dependency materials in one catalog, and each finding names only

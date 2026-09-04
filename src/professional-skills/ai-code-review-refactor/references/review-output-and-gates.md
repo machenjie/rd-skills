@@ -27,4 +27,4 @@ Return in this order:
 5. When recurrence evidence is credible, bind required same-pattern scope and exclusions to its mechanism.
 6. Blocking findings require repair, fresh relevant validation, and independent re-review of the latest diff.
 7. When assigned expertise or evidence is insufficient, hand off the triggered owner and proof; never load a gate by default.
-8. Bound approval to inspected diff/files/contracts/paths; list partial scope and exclude unsupported production-safety or broad-equivalence claims.
+8. Bind approval to the inspected diff, files, contracts, and paths; list partial scope and exclude unsupported production-safety or broad-equivalence claims.

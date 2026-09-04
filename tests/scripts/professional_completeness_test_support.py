@@ -35,6 +35,7 @@ def _catalog(
     roots: dict[str, str] | None = None,
     references: dict[str, str] | None = None,
     registry_markers: dict[str, str] | None = None,
+    responsibility_overrides: dict[str, dict[str, object]] | None = None,
     expertise: dict[str, list[str]] | None = None,
     layers: dict[str, str] | None = None,
     required: dict[str, list[str]] | None = None,
@@ -44,6 +45,7 @@ def _catalog(
     roots = roots or {}
     references = references or {}
     registry_markers = registry_markers or {}
+    responsibility_overrides = responsibility_overrides or {}
     expertise = expertise or {}
     layers = layers or {}
     required = required or {"b": ["d"], "c": ["a"]}
@@ -81,9 +83,23 @@ def _catalog(
         ]
         responsibility = {
             "marker": registry_markers.get(skill_id, "baseline-registry"),
+            "role_support": ["task-agent"],
             "trigger_signals": [f"trigger {skill_id}"],
+            "anti_trigger_signals": [f"exclude {skill_id}"],
+            "required_inputs": [f"input {skill_id}"],
             "output_contract": [f"output {skill_id}"],
+            "escalation_signals": [f"constraint {skill_id}"],
+            "layer3_candidates": [],
+            "used_by": [],
+            "boundary_signals": [f"boundary {skill_id}"],
+            "group": "fixture",
+            "content_class": "professional",
+            "delivery_scope": "targeted",
+            "task_routable": True,
         }
+        responsibility.update(
+            copy.deepcopy(responsibility_overrides.get(skill_id, {}))
+        )
         registry_row = {
             "name": skill_id,
             "responsibility_contract": responsibility,

@@ -23,7 +23,7 @@ Protect cache correctness, scope isolation, freshness, failure behavior, and sou
 ## High-Value Rules
 
 - Name the source of truth, owner, acceptable staleness, value/key version, and tenant/user/permission scope before caching; cache loss must not silently change correctness or expose another scope.
-- Model process/pod/region topology, key popularity, expiry distribution, cold start, miss rate, and origin capacity. Single-flight, leases, jitter, early refresh, stale serving, negative caching, warm-up, or origin limiting are candidates selected from that evidence.
+- Model process/pod/region topology, key popularity, expiry distribution, cold start, miss rate, and origin capacity. Single-flight, leases, jitter, early refresh, stale serving, negative caching, warm-up, or origin limiting are candidates selected from the available evidence.
 - Define freshness-required invalidation at the actual write or commit boundary.
 - Define cache-down, refresh-failure, stale-data, eviction, and source-overload behavior.
 - Require explicit durability and recovery proof for write-behind.

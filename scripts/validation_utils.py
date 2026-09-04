@@ -70,6 +70,300 @@ MARKDOWN_ANY_LIST_ITEM_RE = re.compile(
     r"^(?P<indent>[ \t]*)(?P<marker>[-*+]|\d+[.)])"
     r"(?P<spacing>[ \t]+)(?P<text>.+?)\s*$"
 )
+SEMANTIC_ID_COMPONENT_PATTERN = r"[a-z][a-z0-9]*(?:[._/-][a-z0-9]+)*"
+SEMANTIC_ID_COMPONENT_RE = re.compile(rf"^{SEMANTIC_ID_COMPONENT_PATTERN}$")
+SEMANTIC_ID_FINDINGS_BY_AXIS = {
+    "reference": frozenset(
+        {
+            "unconditional_absolute_candidate",
+            "fixed_number_candidate",
+            "exact_normalized_duplicate_block",
+            "templated_block_candidate",
+        }
+    ),
+    "root": frozenset(
+        {
+            "unconditional_mechanism_candidate",
+            "fixed_duration_threshold_status_candidate",
+            "fixed_vendor_tool_candidate",
+            "mandatory_artifact_candidate",
+            "tutorial_explanatory_density_candidate",
+            "long_root_example_candidate",
+            "context_free_organization_policy_candidate",
+        }
+    ),
+}
+SEMANTIC_ID_GROUP_FINDINGS = frozenset(
+    {"exact_normalized_duplicate_block", "templated_block_candidate"}
+)
+SEMANTIC_ID_MARKER_HTML_RE = re.compile(
+    rf"^\s*<!-- rd-semantic-id:v2 finding=(?P<finding>{SEMANTIC_ID_COMPONENT_PATTERN}) "
+    rf"rule=(?P<rule>{SEMANTIC_ID_COMPONENT_PATTERN}) "
+    rf"occurrence=(?P<occurrence>{SEMANTIC_ID_COMPONENT_PATTERN}) -->\s*$"
+)
+SEMANTIC_ID_MARKER_YAML_RE = re.compile(
+    rf"^\s*# rd-semantic-id:v2 finding=(?P<finding>{SEMANTIC_ID_COMPONENT_PATTERN}) "
+    rf"rule=(?P<rule>{SEMANTIC_ID_COMPONENT_PATTERN}) "
+    rf"occurrence=(?P<occurrence>{SEMANTIC_ID_COMPONENT_PATTERN})\s*$"
+)
+# Build-time stripping retains the retired v1 form only as a leakage guard for
+# historical/synthetic inputs. Semantic collection accepts v2 exclusively.
+SEMANTIC_ID_LEGACY_MARKER_HTML_RE = re.compile(
+    rf"^\s*<!-- rd-semantic-id:v1 rule={SEMANTIC_ID_COMPONENT_PATTERN} "
+    rf"occurrence={SEMANTIC_ID_COMPONENT_PATTERN} -->\s*$"
+)
+SEMANTIC_ID_LEGACY_MARKER_YAML_RE = re.compile(
+    rf"^\s*# rd-semantic-id:v1 rule={SEMANTIC_ID_COMPONENT_PATTERN} "
+    rf"occurrence={SEMANTIC_ID_COMPONENT_PATTERN}\s*$"
+)
+SEMANTIC_ID_MAX_LENGTH = 96
+
+
+def semantic_identity_projection(
+    source: str,
+    *,
+    owner: str,
+    axis: str,
+) -> dict[str, object]:
+    """Return marker-free visible text plus strict source-owned semantic markers.
+
+    Marker lines are replaced by blank lines so all downstream source locations
+    remain physical-source locations. The original source remains the provenance
+    and build-freshness input; callers explicitly choose this projection only for
+    authored-content semantics.
+    """
+
+    if not isinstance(source, str):
+        raise ValueError("semantic marker source must be text")
+    if axis not in {"root", "reference"}:
+        raise ValueError("semantic marker axis must be root or reference")
+    if (
+        not isinstance(owner, str)
+        or not SEMANTIC_ID_COMPONENT_RE.fullmatch(owner)
+        or len(owner) > SEMANTIC_ID_MAX_LENGTH
+    ):
+        raise ValueError("semantic marker owner is invalid")
+
+    kept = source.splitlines(keepends=True)
+    plain_lines = source.splitlines()
+    markers: list[dict[str, object]] = []
+    marker_indices: set[int] = set()
+    in_frontmatter = bool(plain_lines and plain_lines[0].strip() == "---")
+    frontmatter_closed = not in_frontmatter
+    fence: str | None = None
+
+    for index, line in enumerate(plain_lines):
+        stripped = line.strip()
+        if index > 0 and in_frontmatter and stripped == "---":
+            in_frontmatter = False
+            frontmatter_closed = True
+            continue
+        fence_match = re.match(r"^\s*(```+|~~~+)", line)
+        if not in_frontmatter and fence_match:
+            token = fence_match.group(1)
+            if fence is None:
+                fence = token[0]
+            elif token[0] == fence:
+                fence = None
+        if "rd-semantic-id:" not in line:
+            continue
+        html = SEMANTIC_ID_MARKER_HTML_RE.fullmatch(line)
+        yaml_marker = SEMANTIC_ID_MARKER_YAML_RE.fullmatch(line)
+        match = html or yaml_marker
+        if match is None:
+            raise ValueError(f"semantic marker line {index + 1} is malformed")
+        if fence is not None:
+            raise ValueError(f"semantic marker line {index + 1} is inside a fence")
+        if yaml_marker is not None and not in_frontmatter:
+            raise ValueError(
+                f"semantic marker line {index + 1} uses frontmatter form outside frontmatter"
+            )
+        if html is not None and not frontmatter_closed:
+            raise ValueError(
+                f"semantic marker line {index + 1} uses Markdown form inside frontmatter"
+            )
+        rule_id = match.group("rule")
+        occurrence_id = match.group("occurrence")
+        finding = match.group("finding")
+        if finding not in SEMANTIC_ID_FINDINGS_BY_AXIS[axis]:
+            raise ValueError(
+                f"semantic marker line {index + 1} finding is not declared for {axis}"
+            )
+        if any(
+            len(value) > SEMANTIC_ID_MAX_LENGTH
+            for value in (finding, rule_id, occurrence_id)
+        ):
+            raise ValueError(f"semantic marker line {index + 1} exceeds 96 characters")
+        expected_prefix = (
+            "group/"
+            if finding in SEMANTIC_ID_GROUP_FINDINGS
+            else f"{owner}/"
+        )
+        if not rule_id.startswith(expected_prefix):
+            raise ValueError(
+                f"semantic marker line {index + 1} rule-id has invalid owner prefix"
+            )
+        bound = index + 1
+        while bound < len(plain_lines) and not plain_lines[bound].strip():
+            bound += 1
+        if bound >= len(plain_lines):
+            raise ValueError(f"semantic marker line {index + 1} is orphaned")
+        if "rd-semantic-id:" in plain_lines[bound]:
+            raise ValueError(f"semantic marker line {index + 1} has ambiguous binding")
+        markers.append(
+            {
+                "axis": axis,
+                "finding": finding,
+                "rule_id": rule_id,
+                "occurrence_id": occurrence_id,
+                "marker_line": index + 1,
+                "bound_line": bound + 1,
+            }
+        )
+        marker_indices.add(index)
+
+    for index in marker_indices:
+        ending = "\r\n" if kept[index].endswith("\r\n") else "\n" if kept[index].endswith("\n") else ""
+        kept[index] = ending
+    return {"visible_text": "".join(kept), "markers": markers}
+
+
+def validate_semantic_identity_marker_inventory(
+    records: list[dict[str, object]],
+) -> None:
+    """Validate one closed, already-parsed semantic marker inventory.
+
+    Callers obtain ``markers`` only from :func:`semantic_identity_projection`;
+    this second stage owns cross-document occurrence and rule collisions.
+    """
+
+    if not isinstance(records, list):
+        raise ValueError("semantic marker inventory must be a list")
+    occurrence_sources: dict[tuple[str, str], tuple[str, int]] = {}
+    rule_sources: dict[tuple[str, str], list[tuple[str, str, str, int]]] = {}
+    for record_index, record in enumerate(records):
+        label = f"semantic marker inventory[{record_index}]"
+        if not isinstance(record, dict) or set(record) != {
+            "path", "owner", "axis", "markers"
+        }:
+            raise ValueError(f"{label} fields are invalid")
+        path = record.get("path")
+        owner = record.get("owner")
+        axis = record.get("axis")
+        markers = record.get("markers")
+        if (
+            not isinstance(path, str)
+            or not path
+            or "\\" in path
+            or path.startswith("/")
+            or any(part in {"", ".", ".."} for part in path.split("/"))
+        ):
+            raise ValueError(f"{label}.path must be canonical relative POSIX")
+        if (
+            not isinstance(owner, str)
+            or not SEMANTIC_ID_COMPONENT_RE.fullmatch(owner)
+            or len(owner) > SEMANTIC_ID_MAX_LENGTH
+        ):
+            raise ValueError(f"{label}.owner is invalid")
+        if axis not in SEMANTIC_ID_FINDINGS_BY_AXIS:
+            raise ValueError(f"{label}.axis is invalid")
+        if not isinstance(markers, list):
+            raise ValueError(f"{label}.markers must be a list")
+        prior_marker_line = 0
+        bound_lines: set[int] = set()
+        for marker_index, marker in enumerate(markers):
+            marker_label = f"{label}.markers[{marker_index}]"
+            if not isinstance(marker, dict) or set(marker) != {
+                "axis", "finding", "rule_id", "occurrence_id",
+                "marker_line", "bound_line",
+            }:
+                raise ValueError(f"{marker_label} fields are invalid")
+            finding = marker.get("finding")
+            rule_id = marker.get("rule_id")
+            occurrence_id = marker.get("occurrence_id")
+            marker_line = marker.get("marker_line")
+            bound_line = marker.get("bound_line")
+            if marker.get("axis") != axis:
+                raise ValueError(f"{marker_label}.axis does not match its source")
+            if finding not in SEMANTIC_ID_FINDINGS_BY_AXIS[axis]:
+                raise ValueError(f"{marker_label}.finding is not declared")
+            if any(
+                not isinstance(value, str)
+                or not SEMANTIC_ID_COMPONENT_RE.fullmatch(value)
+                or len(value) > SEMANTIC_ID_MAX_LENGTH
+                for value in (rule_id, occurrence_id)
+            ):
+                raise ValueError(f"{marker_label} identity is invalid")
+            expected_prefix = (
+                "group/"
+                if finding in SEMANTIC_ID_GROUP_FINDINGS
+                else f"{owner}/"
+            )
+            if not rule_id.startswith(expected_prefix):
+                raise ValueError(f"{marker_label} rule-id has invalid owner prefix")
+            if (
+                type(marker_line) is not int
+                or type(bound_line) is not int
+                or marker_line <= prior_marker_line
+                or bound_line <= marker_line
+            ):
+                raise ValueError(f"{marker_label} has invalid or orphaned binding")
+            if bound_line in bound_lines:
+                raise ValueError(f"{marker_label} has ambiguous binding")
+            prior_marker_line = marker_line
+            bound_lines.add(bound_line)
+
+            occurrence_key = (str(axis), str(occurrence_id))
+            source = (path, marker_line)
+            if occurrence_key in occurrence_sources:
+                previous = occurrence_sources[occurrence_key]
+                raise ValueError(
+                    "duplicate semantic marker occurrence-id for "
+                    f"{axis}: {occurrence_id} ({previous[0]}, {path})"
+                )
+            occurrence_sources[occurrence_key] = source
+            rule_sources.setdefault((str(axis), str(rule_id)), []).append(
+                (
+                    str(finding),
+                    "group" if str(rule_id).startswith("group/") else owner,
+                    path,
+                    marker_line,
+                )
+            )
+
+    for (axis, rule_id), sources in sorted(rule_sources.items()):
+        if len(sources) <= 1:
+            continue
+        if not rule_id.startswith("group/"):
+            raise ValueError(f"semantic marker rule-id collision for {axis}: {rule_id}")
+        selector_scopes = {
+            (finding, owner_or_group)
+            for finding, owner_or_group, _path, _line in sources
+        }
+        if len(selector_scopes) != 1:
+            raise ValueError(
+                f"semantic grouped marker selector collision for {axis}: {rule_id}"
+            )
+
+
+def strip_semantic_identity_markers(source: str) -> str:
+    """Strip well-formed semantic marker lines from a built artifact."""
+
+    lines = source.splitlines(keepends=True)
+    output: list[str] = []
+    for line in lines:
+        plain = line.rstrip("\r\n")
+        if "rd-semantic-id:" not in plain:
+            output.append(line)
+            continue
+        if not (
+            SEMANTIC_ID_MARKER_HTML_RE.fullmatch(plain)
+            or SEMANTIC_ID_MARKER_YAML_RE.fullmatch(plain)
+            or SEMANTIC_ID_LEGACY_MARKER_HTML_RE.fullmatch(plain)
+            or SEMANTIC_ID_LEGACY_MARKER_YAML_RE.fullmatch(plain)
+        ):
+            raise ValueError("built source contains a malformed semantic marker")
+    return "".join(output)
 
 
 def report_output_paths(

@@ -1,6 +1,6 @@
 # Contract Testing Evidence Patterns
 
-These records bound compatibility claims to named providers, consumers, versions, and observed behavior.
+These records bound compatibility claims to the named providers, consumers, versions, and observed behavior.
 
 ## Current Claim Records
 
@@ -11,7 +11,7 @@ These records bound compatibility claims to named providers, consumers, versions
 
 ## Proof Limits
 
-Limit schema checks to configured structure/reader-writer rules; generated proof to exercised versions/calls; captures to observed cases; provider checks to named expectations. Disclose unknown consumers, semantic/error/authorization gaps, unavailable environments, traffic/rate behavior, rollout gaps, residual owner, and next gate.
+Limit schema checks to the configured structure/reader-writer rules; generated proof to the exercised versions/calls; captures to the observed cases; provider checks to the named expectations. Disclose unknown consumers, semantic/error/authorization gaps, unavailable environments, traffic/rate behavior, rollout gaps, residual owner, and next gate.
 
 ## Anti-Patterns
 

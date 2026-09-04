@@ -25,7 +25,7 @@ Load this reference only when a review needs detailed finding taxonomy, severity
 | **Low** | Localized concern without demonstrated operational consequence. | Advisory unless current policy says otherwise. |
 | **Non-finding** | Named high-risk surface checked with no supported defect. | Record explicitly with proof limits. |
 
-Severity follows reachable consequence, exposure, reversibility, evidence
+Derive severity from reachable consequence, exposure, reversibility, evidence
 confidence, and current policy. Tests affect reachability confidence; they do
 not set severity alone.
 

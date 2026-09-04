@@ -1078,11 +1078,27 @@ def _current_evidence_authority(root: Path) -> dict[str, Any]:
         exceptions.get("root_semantic_dispositions"),
         "root_semantic_dispositions",
     )
-    if root_dispositions.get("schema_version") != 7 or "lifecycle" in (
+    if root_dispositions.get("schema_version") != 8 or "lifecycle" in (
         root_dispositions
     ):
         raise ValidationProblem(
-            "root_semantic_dispositions must use lifecycle-free schema 7"
+            "root_semantic_dispositions must use lifecycle-free stable-selector schema 8"
+        )
+    reference_dispositions = _mapping(
+        exceptions.get("reference_semantic_dispositions"),
+        "reference_semantic_dispositions",
+    )
+    if reference_dispositions.get("schema_version") != 3:
+        raise ValidationProblem(
+            "reference_semantic_dispositions must use stable-selector schema 3"
+        )
+    legacy_evidence = _mapping(
+        exceptions.get("semantic_disposition_legacy_evidence"),
+        "semantic_disposition_legacy_evidence",
+    )
+    if legacy_evidence.get("schema_version") != 1:
+        raise ValidationProblem(
+            "semantic_disposition_legacy_evidence must use immutable schema 1"
         )
     review_config = _mapping(
         load_yaml_file(root / "config/professionalism-release-review.yaml"),

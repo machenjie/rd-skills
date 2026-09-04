@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import importlib.util
 import hashlib
 import io
@@ -219,6 +220,9 @@ def _semantic_advisories(candidates=None) -> dict:
                 item["governance_status"] == "detector-downgraded" for item in rows
             ),
             "untriaged": sum(item["governance_status"] == "untriaged" for item in rows),
+            "needs_confirmation": sum(
+                item["governance_status"] == "needs-confirmation" for item in rows
+            ),
             "rewrite": sum(item.get("disposition") == "rewrite" for item in rows),
             "valid_contextual_rule": sum(item.get("disposition") == "valid-contextual-rule" for item in rows),
             "false_positive": sum(item.get("disposition") == "false-positive" for item in rows),
@@ -235,13 +239,14 @@ def _semantic_advisories(candidates=None) -> dict:
     }
     entries = [item["disposition_record"] for item in candidates if item.get("disposition_record")]
     return {
-        "schema_version": 7,
+        "schema_version": 8,
         "detector_contract": dict(_reference_detector_contract_fixture()),
         "finding_families": list(families),
         "summary": {
             "raw_candidates": totals["raw"],
             "detector_downgraded_candidates": totals["detector_downgraded"],
             "untriaged_candidates": totals["untriaged"],
+            "needs_confirmation_candidates": totals["needs_confirmation"],
             "rewrite_candidates": totals["rewrite"],
             "valid_contextual_rule_candidates": totals["valid_contextual_rule"],
             "false_positive_candidates": totals["false_positive"],
@@ -294,7 +299,7 @@ def _semantic_advisories(candidates=None) -> dict:
         },
         "candidates": candidates,
         "disposition_contract": {
-            "schema_version": 2,
+            "schema_version": 3,
             "source": "config/skill-content-exceptions.yaml",
             "configured_count": len(entries),
             "applied_count": len(entries),
@@ -466,7 +471,7 @@ def _canonical_root_content_fixture() -> str:
             "finding": candidate["finding"],
             "path": candidate["path"],
             "document_part": candidate["document_part"],
-            "fingerprint": candidate["fingerprint"],
+            "source_selector": copy.deepcopy(candidate["source_selector"]),
             "skill_owner": candidate["skill_owner"],
             "priority": auditor.ROOT_SEMANTIC_DEFAULT_PRIORITIES[
                 candidate["finding"]
@@ -482,13 +487,17 @@ def _canonical_root_content_fixture() -> str:
             },
             "mitigation": "Rebuild the synthetic fixture after source or detector changes.",
             "review_after": None,
+            "record_fingerprint": "",
         }
+        entry["record_fingerprint"] = (
+            auditor._semantic_disposition_record_fingerprint("root", entry)
+        )
         entries.append(entry)
         candidate.update(
             {
                 "priority": entry["priority"],
                 "disposition": entry["disposition"],
-                "disposition_record": entry,
+                "disposition_record": copy.deepcopy(entry),
                 "resolved": True,
                 "unresolved": False,
                 "governance_status": "resolved-valid-contextual-rule",
@@ -501,6 +510,7 @@ def _canonical_root_content_fixture() -> str:
         by_finding[finding] = {
             "raw": len(rows),
             "untriaged": 0,
+            "needs_confirmation": 0,
             "rewrite": 0,
             "resolved": len(rows),
             "unresolved": 0,
@@ -511,6 +521,7 @@ def _canonical_root_content_fixture() -> str:
     semantic["summary"] = {
         "raw_candidates": len(entries),
         "untriaged_candidates": 0,
+        "needs_confirmation_candidates": 0,
         "rewrite_candidates": 0,
         "resolved_candidates": len(entries),
         "unresolved_candidates": 0,
@@ -539,6 +550,7 @@ def _canonical_root_content_fixture() -> str:
     summary.update(
         {
             "semantic_raw_candidates": len(entries),
+            "semantic_needs_confirmation_candidates": 0,
             "semantic_unresolved_candidates": 0,
             "semantic_p0_p1_unresolved": 0,
             "semantic_fixed_number_unresolved": 0,
@@ -558,11 +570,11 @@ def _root_content_fixture() -> dict:
 
 
 def _reference_disposition(candidate: dict, value: str) -> dict:
-    return {
+    entry = {
         "candidate_id": candidate["candidate_id"],
         "finding": candidate["finding"],
         "path": candidate["path"],
-        "fingerprint": candidate["fingerprint"],
+        "source_selector": copy.deepcopy(candidate["source_selector"]),
         "skill_owner": candidate["skill_owner"],
         "priority": candidate["priority"],
         "disposition": value,
@@ -576,7 +588,15 @@ def _reference_disposition(candidate: dict, value: str) -> dict:
         },
         "mitigation": "Re-evaluate the rule when its source contract changes.",
         "review_after": None,
+        "record_fingerprint": "",
     }
+    entry["record_fingerprint"] = (
+        _load_regression_module()
+        .expert_panel.panel_contracts.semantic_disposition_record_fingerprint(
+            "reference", entry
+        )
+    )
+    return entry
 
 
 def _release_review_config(
@@ -1862,6 +1882,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 "semantic_raw_candidates",
                 "semantic_detector_downgraded_candidates",
                 "semantic_untriaged_candidates",
+                "semantic_needs_confirmation_candidates",
                 "semantic_rewrite_candidates",
                 "semantic_resolved_candidates",
                 "semantic_unresolved_candidates",
@@ -1895,7 +1916,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         self.assertFalse(summary["structural_strict_ready"])
         self.assertTrue(summary["semantic_triage_complete"])
         self.assertFalse(summary["strict_ready"])
-        self.assertEqual(7, summary["semantic_schema_version"])
+        self.assertEqual(8, summary["semantic_schema_version"])
         self.assertEqual(
             [
                 "unconditional_absolute_candidate",
@@ -2102,6 +2123,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 "semantic_finding_families",
                 "semantic_raw_candidates",
                 "semantic_untriaged_candidates",
+                "semantic_needs_confirmation_candidates",
                 "semantic_rewrite_candidates",
                 "semantic_resolved_candidates",
                 "semantic_unresolved_candidates",
@@ -2173,20 +2195,24 @@ class DeterministicReportContractTests(unittest.TestCase):
                 fresh_root_content=fresh,
             )
 
-    def test_root_semantic_triage_failure_is_a_regression_blocker(self) -> None:
+    def test_root_needs_confirmation_is_a_regression_blocker(self) -> None:
         fixture = _root_content_fixture()
         summary = self.regression._root_content_summary(
             {"root_content": fixture}, fresh_root_content=fixture
         )
         summary["semantic_triage_complete"] = False
         summary["strict_ready"] = False
-        summary["semantic_untriaged_candidates"] = 1
+        summary["semantic_needs_confirmation_candidates"] = 1
         summary["semantic_p0_p1_unresolved_candidates"] = 1
         blockers, _advisories = self.regression._root_content_findings(summary)
         self.assertEqual(
             {"root-content-strict-gate", "root-semantic-triage-gate"},
             {item.category for item in blockers},
         )
+        semantic = next(
+            item for item in blockers if item.category == "root-semantic-triage-gate"
+        )
+        self.assertIn("needs_confirmation=1", semantic.message)
 
     def test_root_strict_blocker_enters_release_authoring_gate(self) -> None:
         reports = self.regression._reports(ROOT / "reports")
@@ -2224,6 +2250,14 @@ class DeterministicReportContractTests(unittest.TestCase):
             "by_surface": {},
         }
         expert_review = _incomplete_expert_review_fixture()
+        coverage_summary = {
+            "status": "pass",
+            "required_skill_count": 1,
+            "pass_count": 1,
+            "fail_count": 0,
+            "not_required_count": 0,
+            "failing_skills": [],
+        }
         locked_cost_fixture = json.loads(
             (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
@@ -2253,6 +2287,10 @@ class DeterministicReportContractTests(unittest.TestCase):
             self.regression,
             "_expert_reviews",
             return_value=expert_review,
+        ), mock.patch.object(
+            self.regression,
+            "_coverage_gate_summary",
+            return_value=coverage_summary,
         ):
             returncode = self.regression.main(
                 ["--reports-dir", raw, "--strict", "--report-only"]
@@ -2774,6 +2812,13 @@ class DeterministicReportContractTests(unittest.TestCase):
             {"root_content": release_root},
             fresh_root_content=release_root,
         )
+        release_reference_summary = {
+            "source_fingerprint": "a" * 64,
+            "strict_ready_basis": "reference-strict-v4",
+            "structural_strict_ready": True,
+            "semantic_triage_complete": True,
+            "strict_ready": True,
+        }
         expert_review = _incomplete_expert_review_fixture()
         with tempfile.TemporaryDirectory() as raw, mock.patch.object(
             self.regression, "_reports", return_value=reports
@@ -2788,7 +2833,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         ), mock.patch.object(
             self.regression,
             "_reference_content_summary",
-            return_value=tracked["reference_content_summary"],
+            return_value=release_reference_summary,
         ), mock.patch.object(
             self.regression,
             "_root_content_summary",
@@ -2913,6 +2958,13 @@ class DeterministicReportContractTests(unittest.TestCase):
             {"root_content": release_root},
             fresh_root_content=release_root,
         )
+        release_reference_summary = {
+            "source_fingerprint": "a" * 64,
+            "strict_ready_basis": "reference-strict-v4",
+            "structural_strict_ready": True,
+            "semantic_triage_complete": True,
+            "strict_ready": True,
+        }
 
         with tempfile.TemporaryDirectory() as raw, mock.patch.object(
             self.regression, "_reports", return_value=reports
@@ -2927,7 +2979,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         ), mock.patch.object(
             self.regression,
             "_reference_content_summary",
-            return_value=tracked["reference_content_summary"],
+            return_value=release_reference_summary,
         ), mock.patch.object(
             self.regression,
             "_root_content_summary",
@@ -3518,26 +3570,49 @@ class DeterministicReportContractTests(unittest.TestCase):
             self.assertNotIn("not a CI release gate", markdown)
 
     def test_coverage_matrix_is_fresh_and_policy_gated(self) -> None:
-        report = json.loads(
-            (ROOT / "reports/professional-coverage-matrix.json").read_text(
-                encoding="utf-8"
+        evaluator = self.regression._load_coverage_evaluator()
+        with tempfile.TemporaryDirectory() as raw:
+            policy = Path(raw) / "release-review.yaml"
+            policy.write_text(
+                "decisions:\n"
+                "  - id: synthetic-professional-coverage\n"
+                "    kind: professional-coverage-gate\n"
+                "    schema_version: 1\n"
+                "    requirements:\n"
+                "      synthetic-skill:\n"
+                "        - registered\n",
+                encoding="utf-8",
             )
-        )
-        summary = self.regression._coverage_gate_summary(
-            report,
-            ROOT / "config/professionalism-release-review.yaml",
-        )
-        self.assertEqual("pass", summary["status"])
-        self.assertEqual(10, summary["required_skill_count"])
-        self.assertEqual(0, summary["fail_count"])
+            result = evaluator.SkillResult(
+                name="synthetic-skill",
+                kind="professional",
+                path="synthetic/SKILL.md",
+                status="pass",
+                authoring_score=100,
+                required_sections=[],
+            )
+            report = evaluator.build_coverage_matrix(policy, results=[result])
+            with mock.patch.object(
+                self.regression,
+                "validate_capability_coverage_matrix",
+                return_value=[],
+            ), mock.patch.object(
+                evaluator,
+                "build_coverage_matrix",
+                return_value=report,
+            ):
+                summary = self.regression._coverage_gate_summary(report, policy)
+                self.assertEqual("pass", summary["status"])
+                self.assertEqual(
+                    len(report["rows"]),
+                    summary["required_skill_count"],
+                )
+                self.assertEqual([], summary["failing_skills"])
 
-        stale = json.loads(json.dumps(report))
-        stale["coverage_policy"]["fingerprint"]["value"] = "0" * 64
-        with self.assertRaisesRegex(ValueError, "stale or non-canonical"):
-            self.regression._coverage_gate_summary(
-                stale,
-                ROOT / "config/professionalism-release-review.yaml",
-            )
+                tampered = json.loads(json.dumps(report))
+                tampered["coverage_policy"]["fingerprint"]["value"] = "0" * 64
+                with self.assertRaisesRegex(ValueError, "stale or non-canonical"):
+                    self.regression._coverage_gate_summary(tampered, policy)
 
     def test_benchmark_report_is_fresh(self) -> None:
         report = json.loads(

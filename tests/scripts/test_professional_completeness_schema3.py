@@ -83,7 +83,8 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
         for authority in (
             "package_material_binding",
             "review_unit_binding",
-            "direct dependency material bindings",
+            "direct dependency semantic bindings",
+            "artifact-integrity evidence only",
             "origin_review_id",
             "origin_commit",
             "origin_verdict_digest",
@@ -133,7 +134,8 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
         for authority in (
             "package_material_binding",
             "review_unit_binding",
-            "direct dependency material bindings",
+            "direct dependency semantic bindings",
+            "artifact-integrity evidence only",
             "origin_review_id",
             "origin_commit",
             "origin_verdict_digest",
