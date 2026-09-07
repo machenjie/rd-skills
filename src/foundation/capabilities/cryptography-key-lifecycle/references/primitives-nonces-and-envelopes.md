@@ -26,10 +26,10 @@ Select one policy-approved construction and self-describing envelope whose authe
 
 ## Verification
 
-- Run authoritative library/provider vectors for the exact construction.
-- Where uniqueness is required, detect duplicate nonce allocation across concurrency, restart, restore, and retained-key scope; otherwise exercise the construction's approved repeat/reuse cases and documented bounds.
-- Modify each envelope field, ciphertext, tag, nonce, AAD field, and key/version identifier.
-- Cross-read the supported writer/reader matrix and reject malformed or unsupported envelopes.
+- Run authoritative vectors for the exact construction.
+- When uniqueness is required, detect duplicate nonce allocation across concurrency, restart, restore, and retained-key scope; otherwise exercise approved reuse cases and bounds.
+- Modify envelope fields, ciphertext, tag, nonce, AAD, and key/version identifiers.
+- Cross-read supported writers/readers; reject malformed or unsupported envelopes.
 
 ## Primary Sources
 
@@ -43,4 +43,12 @@ Official sources were accessed on 2026-07-26.
 
 ## Proof Limits
 
-Standards do not select an organization's approved construction or prove a library integration. Nonce uniqueness is not a universal requirement across all approved constructions; the selected construction and policy define the required uniqueness, permitted reuse, and misuse-resistance limits. AWS envelope behavior is product-specific. GCM guidance is under revision; use the cited final plus current policy and qualified review, never draft status as approval.
+Use policy and evidence, not standards alone, to select construction and library integration. Derive nonce uniqueness, permitted reuse, and misuse-resistance bounds from the construction and policy. Treat AWS envelope behavior as product-specific. Because GCM guidance is under revision, combine its cited final with current policy and qualified review.
+
+## Failure And Validation Evidence
+
+- Nonce handling violates the selected construction's uniqueness, reuse, or misuse-resistance contract.
+- An unauthenticated mode permits undetected modification.
+- Wrong AAD or context accepts data across boundaries.
+- Key and data versions mismatch.
+- Test valid decrypt and altered ciphertext, tag, AAD, nonce, key identity, and version.

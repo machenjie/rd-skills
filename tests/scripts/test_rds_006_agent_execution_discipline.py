@@ -28,7 +28,7 @@ AI_REVIEW_FILE = ROOT / "src/professional-skills/ai-code-review-refactor/SKILL.m
 PROFESSIONAL_REGISTRY = ROOT / "src/registry/professional-skills.yaml"
 CORE_EXECUTION_CONTRACT = (
     ROOT
-    / "src/control-skills/engineering-control-plane/references/execution-level-contract.md"
+    / "src/control-prompts/main-control-agent.md"
 )
 CORE_CONTRACTS = ROOT / "src/control-model/core-contracts.json"
 LIGHTWEIGHT_EVALUATOR = ROOT / "scripts/eval-agent-lightweight.py"
@@ -223,16 +223,14 @@ class AgentExecutionDisciplineContractTests(unittest.TestCase):
         normalized_source = re.sub(r"\s+", " ", source)
         self.assertNotIn("agent-execution-discipline", source)
         self.assertNotIn("twice-failed route", source)
-        self.assertIn("missing or stale evidence", source)
-        self.assertIn("blocking finding", source)
-        self.assertIn("core `retry_policy`", source)
-        self.assertIn("return control to the main agent", normalized_source)
-        self.assertIn("report the review blocked", normalized_source)
-        self.assertIn(
-            '"unchanged_retry_after_limit":"return-to-main-or-block"',
-            self.core_execution_contract,
-        )
-        self.assertIn("`regression-testing`", source)
+        self.assertIn("inaccessible diff", source)
+        self.assertIn("stale evidence", source)
+        self.assertIn("reachable failure path", source)
+        self.assertNotIn("core `retry_policy`", source)
+        self.assertIn("record out-of-boundary risk as unreviewed without expanding authority", normalized_source)
+        self.assertIn("block on inaccessible diff", normalized_source)
+        self.assertIn("two same-path failures", self.core_execution_contract)
+        self.assertNotIn("`regression-testing`", source)
 
         candidates = self.ai_review_entry["layer3_candidates"]
         self.assertIn("regression-testing", candidates)
@@ -249,15 +247,13 @@ class AgentExecutionDisciplineContractTests(unittest.TestCase):
         )
         self.assertNotIn("agent-execution-discipline", source)
         self.assertIn(
-            "context-boundary questions to `task-context-selection`",
+            "context-boundary decisions remain outside this capability",
             source,
         )
         for term in (
-            "completion",
-            "execution-level",
+            "implementation-first",
             "retry",
             "review",
-            "`src/control-model/core-contracts.json`",
             "`scripts/eval-agent-lightweight.py`",
             "`scripts/eval-pressure-behavior.py`",
         ):
@@ -267,14 +263,9 @@ class AgentExecutionDisciplineContractTests(unittest.TestCase):
         for path in (CORE_CONTRACTS, LIGHTWEIGHT_EVALUATOR, PRESSURE_EVALUATOR):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
-        for key in (
-            '"completion_state"',
-            '"execution_level_contract"',
-            '"retry_policy"',
-            '"review_discipline_contract"',
-        ):
-            with self.subTest(key=key):
-                self.assertIn(key, self.core_contracts)
+        for term in ("validation", "current", "evidence"):
+            self.assertIn(term, self.core_execution_contract.casefold())
+
 
 
 if __name__ == "__main__":

@@ -17,27 +17,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when loading, em
 
 ## Skill Role
 
-Define user-visible interaction states, transition triggers, authoritative outcomes, uncertainty, available actions, recovery, accessibility signaling, and evidence. Exclude backend lifecycle and authorization policy.
+Own states, transitions, recovery, accessibility signals, and evidence; exclude backend lifecycle and authorization policy.
 
 ## High-Value Rules
 
-- **Derive states from product and operation semantics.** Name observable distinctions that change message, action, risk, or recovery rather than imposing a fixed generic state list.
-- **Keep empty, denied, missing, failed, pending, and complete distinct.** Map each state to current authority, disclosure limits, user meaning, and allowed next action so one condition cannot masquerade as another.
-- **Preserve unknown outcomes.** A timeout, disconnect, cancellation request, or lost response does not prove the authoritative operation stopped; offer reconciliation or safe retry according to the side-effect contract.
-- **Coordinate optimistic state with authoritative state.** Define provisional ownership, server rejection, conflicting updates, rollback or reconciliation, duplicate action prevention, and the message shown when local and durable outcomes diverge.
-- **Make unavailable actions understandable and operable.** Distinguish permission, prerequisite, in-progress, unavailable dependency, policy, and unsupported state, then preserve focus, explanation, and an accessible recovery path where one exists.
-- **Model asynchronous and partial completion.** Represent accepted, queued, processing, partially applied, completed, failed, and compensated outcomes only where the backend contract exposes them, including refresh and stale-view behavior.
-- **Prove transitions and forbidden states.** Exercise task-relevant success, denial, empty, retry, timeout, stale response, navigation, refresh, and assistive-technology signals against current frontend and service evidence.
+- Derive task-relevant observable states from current product and operation semantics.
+- Keep unknown, partial, optimistic, and durable outcomes distinct until authority and reconciliation evidence close them.
+- Load only the named state family whose decision problem is active.
 
 ## Anti-Patterns
 
-- Show success from request acceptance, optimistic mutation, or local completion before the authoritative effect is known.
-- Collapse permission denial, absence, filtering, and load failure into a single empty or error treatment that leaks or misstates state.
-- Disable an action without an owned reason or recovery path, or let a late response overwrite newer user intent.
+- Do not substitute local success or a transport result for authoritative interaction-state evidence.
 
 ## Stop Conditions
 
-Escalate when authoritative outcome or disclosure policy is unknown, repeat action can duplicate consequential effects, optimistic recovery can lose data, or asynchronous work lacks a completion source. Also escalate when late responses cannot be ordered or accessible state and recovery cannot be verified.
+Stop on unknown outcome or authority, unsafe repeat, data-losing recovery, unowned completion, unordered response, or unverified accessible recovery.
 
 ## Output Contract
 
@@ -47,6 +41,10 @@ Escalate when authoritative outcome or disclosure policy is unknown, repeat acti
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | State machine, accessibility, background-refresh, or timeout semantics need calibration | No interactive state or transition changes | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
+| [state semantics benchmark anchors](references/state-semantics-benchmark-anchors.md) | benchmark-pattern | State semantics need benchmark anchors from current operation and product evidence | Current operation semantics already fix the observable state distinctions | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
+| [state distinction and outcome](references/state-distinction-and-outcome-patterns.md) | benchmark-pattern | Unknown, partial, optimistic, or durable outcomes need comparison | Current authority already fixes outcome distinctions and user actions | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
+| [state derivation and recovery decisions](references/state-derivation-and-recovery-decisions.md) | targeted | State derivation, retry, cancellation, or recovery decisions remain open | Current backend contract fixes transitions, repeat safety, and recovery | analysis-agent, task-agent, review-agent | decision-record, failure-decision, residual-risk |
+| [state transition and backend evidence](references/state-transition-and-backend-evidence.md) | evidence-pattern | Transition or backend-alignment claims need current evidence | No transition or backend-alignment claim awaits validation | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |
+| [state accessibility evidence](references/state-accessibility-evidence.md) | evidence-pattern | Accessibility signals for changed states need current evidence | No changed state accessibility claim awaits validation | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |
+| [state evidence freshness and tool boundary](references/state-evidence-freshness-and-tool-boundary.md) | evidence-pattern | State evidence freshness, tool boundary, or proof limit remains open | Current source and validation already bind the state evidence and tool boundary | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |
 | [checklist](references/checklist.md) | decision-checklist | UI states span loading, denial, partial success, rollback, or recovery | No loading, denial, rollback, or recovery state changes | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | State claims require fresh backend, story, ARIA, and transition proof | No state-completeness or accessibility claim awaits validation | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |

@@ -8,7 +8,7 @@
 
 ## Tool Permission Boundary
 
-Classify commands as read-only (`systemctl status`, `journalctl`, `ps`, `ss`, `lsof`, `cat /proc`, `stat`) or state-mutating (`systemctl restart`, package install/remove, sysctl write, chmod/chown, mount, kill`). State the sandbox and rollback for state-mutating commands.
+Classify commands as read-only (`systemctl status`, `journalctl`, `ps`, `ss`, `lsof`, `cat /proc`, `stat`) or state-mutating (`systemctl restart`, package install/remove, sysctl write, chmod/chown, mount, kill`). State actual authority, isolation, the selected recovery path, and irreversible limits for state-mutating commands.
 
 ## Handoff Shape
 
@@ -24,4 +24,4 @@ Linux Systems Usage Record
 
 ## Blocking Conditions
 
-Block completion when a service runs as root without justification, shutdown behavior is unknown, resource limits are not mapped, secret files are broadly readable, or a package/service mutation lacks rollback.
+Block completion when a service runs as root without justification, shutdown behavior is unknown, resource limits are not mapped, secret files are broadly readable, or a package/service mutation lacks accepted recovery or an explicitly owned irreversible boundary.

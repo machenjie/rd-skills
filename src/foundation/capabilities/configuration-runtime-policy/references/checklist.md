@@ -10,3 +10,12 @@
 - Name rollout, rollback, kill-switch, re-enable, cleanup, and operator runbook path.
 - Route secrets, credential-bearing values, public frontend exposure, auth, tenant, data visibility, logging redaction, and fail-open defaults to the correct gate.
 - Map changed keys and variants to validator commands, reports, artifact paths, exit codes, skipped combinations, freshness, residual risk, and next owner.
+
+## Anti-Patterns
+
+- Treating build-, deploy-, and runtime-time configuration as interchangeable hides when behavior can change.
+- Leaving precedence implicit makes code, file, environment, CLI, remote, tenant, experiment, and operator values nondeterministic.
+- Using test-friendly defaults in production silently changes safety behavior.
+- Publishing hot reloads before validation exposes partial or invalid state.
+- Creating untyped or ownerless flags leaves obsolete branches and unverifiable rollout state.
+- Packing unrelated strategies into one mode parameter creates an unbounded policy registry.

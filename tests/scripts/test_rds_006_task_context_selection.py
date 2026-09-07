@@ -170,9 +170,9 @@ class TaskContextSelectionContractTests(unittest.TestCase):
         self.assertEqual([], self.entry["used_by"])
         self.assertEqual("dev-only", self.entry["delivery_scope"])
 
-    def test_direct_benchmark_route_remains_available(self) -> None:
+    def test_benchmark_keeps_context_decisions_outside_its_authority(self) -> None:
         self.assertIn(
-            "context-boundary questions to `task-context-selection`",
+            "context-boundary decisions remain outside this capability's authority",
             self.benchmark,
         )
 

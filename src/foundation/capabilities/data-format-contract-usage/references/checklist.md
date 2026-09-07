@@ -12,6 +12,6 @@
 - Exercise malformed input, escaping, `ANY`/`NA`, normalization, match/non-match, version, and bind-unbind-bind round-trip fixtures; state inspected forms, commands, proof limits, and residual risk.
 - Record generated artifact policy: source spec, generator version/config, output path, committed/ignored decision, and drift command.
 - Define fixtures: positive, negative, golden, parser differential, malformed hostile input, old-reader/new-writer, old-data/new-reader, and absent/null/default/unknown-field cases as needed.
-- Route security review for untrusted parser input, unsafe loaders, XXE, formula cells, duplicate-key privilege decisions, deserialization, or unbounded payloads.
+- For changed parser trust, unsafe loading, XXE, formula execution, duplicate-key authority, deserialization, or resource bounds, trace the actual security or privacy consequence. Return unresolved control or proof needs to Main for the security owner.
 - Validate with the smallest command or artifact that can fail for the changed format boundary, then state what it proves and does not prove.
 - Treat repository inspection, prior task evidence, old examples, previous parser output, and generated artifacts as selectors only until current source/schema/parser evidence confirms them.

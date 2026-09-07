@@ -1,6 +1,5 @@
 id: ota-ab-rollback
 category: iot
-complexity: L5
 focus:
   - OTA update lifecycle
   - A/B rollback

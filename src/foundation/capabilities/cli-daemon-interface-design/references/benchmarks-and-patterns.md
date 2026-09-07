@@ -8,7 +8,7 @@ Load this reference when command grammar, machine output, exit/retry semantics, 
 | --- | --- | --- |
 | Human one-shot | Discoverable grammar/help and recoverable diagnostics. | Help/examples, invalid arguments, target/context display, and exit behavior. |
 | Automation command | Stable structured/porcelain output and classified failure. | Schema/golden plus a real parser/consumer fixture with stderr separated. |
-| Destructive operator tool | Explicit target, preview/no-write boundary, confirmation or policy gate, idempotent status/repair. | Wrong-target rejection, no-mutation preview, partial rerun, audit, rollback/compensation. |
+| Destructive operator tool | Explicit target, preview/no-write boundary, confirmation or policy gate, idempotency/rerun behavior. | Wrong-target rejection, applicable no-mutation preview, partial-rerun behavior, audit, and accepted recovery or explicit irreversible limits. |
 | Stream | Record framing/schema, ordering, partial-output, backpressure, and cancel behavior. | For the bounded stream fixture or test run, parse each emitted record and exercise interruption or terminal behavior; disclose untested record variants, production volume, and backpressure. |
 | Daemon/service | Startup, readiness, liveness, reload, drain, signal, lock, child, and cleanup semantics. | Supervisor/platform config plus relevant lifecycle/signal tests. |
 | TUI/wizard | Keyboard/cancel/resize/terminal restoration and a non-interactive contract. | TTY and non-TTY/CI behavior without a hanging prompt. |
@@ -45,5 +45,5 @@ Reject human tables parsed as an undeclared API, progress on machine stdout, ret
 
 Route shell mechanics to `shell-cli-professional-usage` and config lifecycle to `configuration-runtime-policy`.
 Route output consumers to `contract-testing` or `consumer-impact-analysis`.
-Route secrets or privilege to `security-privacy-gate` and daemon operations to `reliability-observability-gate`.
+Route secrets or privilege to `security-privacy-gate`. Return unresolved reliability, recovery, or observability judgments from daemon operations to Main for `reliability-observability-gate`.
 Route production mutation or release commands to `delivery-release-gate`.

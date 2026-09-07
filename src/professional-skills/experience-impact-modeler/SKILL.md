@@ -50,7 +50,8 @@ accessibility behavior, and recovery expectations.
 
 - Stop implementation planning when actor, entry/exit path, state matrix, content decision, accessibility obligation, permission/denial path, or breakpoint behavior is implicit.
 - Stop form or modal closure when focus destination, keyboard path, screen-reader announcement, validation timing, disabled state, and input preservation are missing.
-- Stop analytics or experiment closure when exposure, assignment, event taxonomy, dashboard migration, guardrail, SRM check, or rollback owner is unknown.
+- Stop analytics or experiment closure when required event, metric, or consumer evidence is missing.
+- Require exposure, assignment, SRM, dashboard migration, guardrails, and rollback ownership only for the actual instrumentation, assignment, or release decisions that use them.
 - Stop destructive/sensitive-flow closure when consequence copy, confirmation, denial path, audit/receipt, recovery/undo, or server-side enforcement owner is absent.
 
 ## Output Contract

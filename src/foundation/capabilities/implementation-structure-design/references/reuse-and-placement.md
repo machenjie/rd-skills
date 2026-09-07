@@ -1,5 +1,7 @@
 # Reuse And Placement Evidence
 
+- Reuse only when semantics, authority, failure, lifecycle, and evolution match; similarity is insufficient.
+
 These decision patterns compare repository-local reuse, owner-private placement, deliberate separate implementation, and generated-source authority by semantics, ownership, failure, lifecycle, evolution, and current consumers.
 
 ## Search Scope
@@ -17,7 +19,7 @@ These decision patterns compare repository-local reuse, owner-private placement,
 | Direct reuse | The current owner already provides the required semantics and failure contract. | Callers would inherit unrelated behavior, authority, or lifecycle. |
 | Owner-local extension | New behavior remains cohesive and existing callers stay compatible. | Modes, flags, or unrelated branches split the responsibility. |
 | Owner-private composition or adapter | The accepted owner stays intact and a real protocol, shape, or dependency-direction mismatch needs translation. | The wrapper relays calls, hides ownership, exports a new contract, or creates a cycle. |
-| Private extraction | Current duplication or mixed responsibility has a named owner and behavior boundary. | Extraction exists for tests, speculative reuse, or line-count reduction. |
+| Private extraction | Current duplication, mixed responsibility, or a necessary behavior-proof seam has a named owner and production-preserving boundary. | Extraction exposes private orchestration solely for tests, lacks a current responsibility or behavior-proof need, or serves speculative reuse or line count. Necessary seams remain owner-private and preserve production defaults and public boundaries. |
 | Owner-private new structure | Current owner-local invariants, failures, lifecycle, or cleanup survive reuse and co-location comparison. | The surface is exported, shared, cross-owner, speculative, or justified by convenience. |
 | Deliberate separate implementation or copy | Semantics, authority, failure behavior, lifecycle, or evolution differ enough that reuse would couple distinct owners. | Only naming, syntax, or line shape differs. |
 

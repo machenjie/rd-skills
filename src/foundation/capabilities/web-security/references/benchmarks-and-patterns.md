@@ -1,25 +1,31 @@
 # Web Security Benchmarks And Patterns
 
-Load this reference when current route evidence leaves multiple render, browser-state, fetch, upload, navigation, cross-origin, embedding, response-policy, or protected-route patterns viable. Do not load it to copy a vulnerability taxonomy or fixed control catalog.
+Load when multiple web-boundary patterns remain viable; never as a vulnerability catalog.
 
 ## Web Boundary Decisions
 
-| Decision | Compare | Required proof |
+| Decision | Compare | Proof |
 | --- | --- | --- |
-| Rendering sink | Framework-safe construction, context-specific encoding, inert representation, or removal of untrusted interpretation | Final browser context, helper contract, hostile value, context-switch path, and response transform |
-| Browser state change | Explicit request authority, trusted origin or request binding, step-up owned elsewhere, or a flow that carries no ambient authority | Credential attachment behavior, navigation path, session context, retries, enforcement point, and denied cross-site case |
-| Server-side connection | Current network-policy decision, intermediary fetch service, bounded connection class, or removal of caller influence | Input-owner accepted representation, canonical form, and response bounds plus name/address resolution-to-connect, redirects, egress authority, failure behavior, diagnostics, and owner |
-| Upload storage and publication | Reject before storage, transform, isolate, inspect, store privately, or publish through a bounded representation | Input-owner byte/parser bounds plus storage identity, tenant binding, inspection/transformation state, active-content behavior, permission-owner publication decision, publication-state transition, and serving context |
-| Navigation and browser policy | Same-site navigation, bounded external destination, cross-origin read/write, framed experience, or no browser exposure | Client contract, destination authority, credential behavior, effective response policy, intermediary transform, and bypass case |
-| Protected route handoff | Existing authenticated-subject context plus resource/action decision owned by the permission boundary | Route-to-decision trace, subject provenance, object or tenant scope, wrong-subject case, denial contract, and audit owner |
-| Closure and residual scope | Repair, containment, deployment proof, explicit non-applicability, or residual-risk handoff | Final-edit source, hostile or denied case, sibling scan, effective deployed artifact when relevant, proof limit, and owner |
+| Render | Safe construction, contextual encoding, inert/no interpretation. | Final context/helper, hostile/context-switch path, response transform. |
+| State change | Request authority, trusted origin/binding, owned step-up, no ambient authority. | Credentials/navigation/session/retry/enforcement; denied cross-site. |
+| Server connection | Network policy, intermediary fetch, bounded class, no caller influence. | Accepted/canonical input, bounds, resolution-to-connect, redirects, egress, failure, diagnostics owner. |
+| Upload/publication | Reject/transform/isolate/inspect/private/bounded publish. | Byte/parser bounds, storage/tenant identity, inspection, active content, permission, transition, serving. |
+| Navigation/policy | Same-site, bounded external, cross-origin, framed, no exposure. | Client/destination authority, credentials, effective policy/transform, bypass. |
+| Protected route | Authenticated subject plus permission-owned resource/action. | Trace/provenance, object/tenant scope, wrong subject, denial, audit owner. |
+| Closure | Repair, containment, deployment proof, non-applicability, residual handoff. | Final source, hostile/denied case, sibling scan, relevant artifact, limit, owner. |
 
 ## Selection Guardrails
 
-- Select route-to-sink web-specific mechanisms from the actual browser or server path, selected boundary, authority, and failure contract; a shared label can require different behavior across frameworks, clients, proxies, and network environments.
-- Keep input source, accepted representation, canonical form, structural/resource constraints, and external-response bounds with `input-validation`; authenticated-subject authority/derivation/propagation/handoff with `authentication-authorization`; credential/session/token lifecycle/replay/recovery/assurance/compromise with `authentication-security`; and subject-resource-action policy with `permission-boundary-modeling`.
-- Keep cross-graph protected outcomes, abuse-path reachability/prioritization, and candidate control placement with `threat-modeling`; this Skill proves correctness and bypass resistance of the selected web mechanism from route to sink. Re-evaluate framework, middleware, proxy, generated route, redirect, resolver, cache, storage, and serving behavior when it can change that sink or boundary.
+- Select from the current browser/server path, boundary, authority, and failure contract.
+- Apply framework-, client-, proxy-, and network-specific behavior behind shared labels.
+- Route input source/representation/canonical form/constraints/response bounds to `input-validation`.
+- Route subject authority/derivation/propagation/handoff to `authentication-authorization`.
+- Route credential/session/token lifecycle/replay/recovery/assurance/compromise to `authentication-security`.
+- Route subject-resource-action policy to `permission-boundary-modeling`.
+- Route cross-graph outcomes/reachability/prioritization/control placement to `threat-modeling`.
+- Prove route-to-sink correctness/bypass resistance in `web-security`.
+- Re-evaluate framework, middleware, proxy, route, redirect, resolver, cache, storage, or serving changes affecting the sink/boundary.
 
 ## Proof Limits
 
-Scoped source, tests, browser artifacts, and deployment configuration prove their named routes, clients, intermediaries, environments, and time boundary. They do not establish undiscovered routes, production resolver or egress state, external consumers, proxy overrides, browser variants, live attacker behavior, or downstream permission policy unless independently verified.
+Named source, tests, browser artifacts, and deployment configuration prove only inspected routes, clients, intermediaries, environments, and time. They exclude undiscovered routes, production resolver/egress state, external consumers, proxy overrides, browser variants, live attackers, and downstream permission policy without independent evidence.

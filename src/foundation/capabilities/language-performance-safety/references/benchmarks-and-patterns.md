@@ -7,7 +7,7 @@ Use this reference when `language-performance-safety` needs deeper tool selectio
 | Risk signal | Preferred evidence | Avoid |
 | --- | --- | --- |
 | CPU hot path or parser/serializer cost | CPU profile, trace, flame graph, representative benchmark/load run, and before/after metric | Microbenchmark-only approval when caller frequency is unknown |
-| Allocation or GC pressure | Allocation profile, heap diff, bytes/op, allocs/op, retained heap, GC log, RSS soak trend | GC flag tuning without allocation or retention reduction |
+| Allocation or GC pressure | Allocation profile, heap diff, bytes/op, allocs/op, retained heap, GC log, RSS soak trend | GC tuning without a measured bottleneck, objective, and verified latency, capacity, memory, and correctness tradeoffs |
 | Event-loop or scheduler blocking | Event-loop lag, async profiler, thread dump, bounded executor proof, cancellation test, and load/stress result | Moving work blindly between threads without queue and timeout bounds |
 | Lock, worker, pool, or queue saturation | Contention profile, pool wait metric, queue depth, Little's Law sizing, saturation alert, and rejection/defer behavior | Pool size guessed from CPU count or local developer data |
 | Input growth, fan-out, or buffer expansion | Count/byte ceiling, streaming/chunking/page rule, oversized-input test, backpressure metric, and downstream capacity | Preallocation from untrusted length/page/count fields |

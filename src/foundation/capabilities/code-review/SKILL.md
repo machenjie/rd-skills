@@ -17,28 +17,25 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when code needs 
 
 ## Skill Role
 
-Inspect a bounded code change for correctness, contract preservation, security and reliability effects, test adequacy, maintainability, and actionable findings. Exclude implementation and release authority.
+Inspect a bounded latest diff for consequential correctness, contract, security,
+reliability, evidence, and maintainability defects. Exclude mutation, rerouting,
+and release authority.
 
 ## High-Value Rules
 
-- **Resolve the review surface.** Identify the Current Task Boundary, latest diff, all changed files, and reachable caller, consumer, sibling, or configuration impact before judging local lines.
-- **Trace consequential paths end to end.** Follow input, validation, authority, state mutation, external effect, failure, cleanup, and observable output far enough to test whether the change preserves its claims.
-- **Check invariants and boundary behavior.** Inspect missing, invalid, denied, duplicate, concurrent, partial, stale, timeout, cancellation, and rollback outcomes that are reachable for the changed mechanism.
-- **Verify APIs and assumptions from source.** Confirm symbols, signatures, versions, defaults, configuration, framework behavior, and generated contracts rather than accepting plausible names or comments.
-- **Evaluate proof against the failure mechanism.** Require focused evidence for the changed behavior and consequential negative outcomes; broad green status or coverage alone does not close an unexercised risk.
-- **Classify relation before severity.** Use `current-task` for accepted repair, `scope-blocker` for Main-to-analysis routing, or non-blocking `adjacent` with residual risk and a next step.
-- **Preserve analysis decisions.** Caller, consumer, sibling, and configuration reads are evidence without repair authority; findings cannot redefine Brief decisions or write scope.
-- **Separate defects from optional improvement.** Report behavior, safety, contract, or maintainability risks that affect the change; keep style preference and unrelated redesign outside the blocking verdict.
+- Resolve the Current Task Boundary, latest diff, changed files, and reachable consumers before judging lines.
+- Trace consequential input, authority, mutation, effect, failure, cleanup, and output paths.
+- Verify source APIs and assumptions.
+- Match evidence to the failure mechanism and classify `current-task`, `scope-blocker`, or `adjacent` before severity.
+- Preserve Brief authority and separate actionable defects from optional improvement.
 
 ## Anti-Patterns
 
-- Review only edited lines while indirect consumers, configuration, generated code, or side effects carry the real regression.
-- Raise speculative findings without a reachable path, violated contract, or falsifiable consequence.
-- Accept a large refactor, mock-only proof, retry-to-green result, or suppression as evidence that the named defect is absent.
+- Local success substituted for evidence of the code review contract.
 
 ## Stop Conditions
 
-Escalate when the review surface is unresolved, critical behavior or authority is externally owned, runtime semantics are unavailable, or a consequential path lacks admissible evidence. Also escalate when the change crosses security, privacy, money, destructive data, public compatibility, concurrency, or production reliability boundaries that need specialist review.
+Stop when the requested review lacks its bounded surface, required authority, consequential semantics, or supporting evidence. For a concrete unresolved security, privacy, money, destructive-data, compatibility, concurrency, or production question, return the specialist need to Main; the risk label alone is not a stop condition.
 
 ## Output Contract
 

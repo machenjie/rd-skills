@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import subprocess
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from pathlib import Path
@@ -22,6 +23,7 @@ from typing import Any
 
 from validation_utils import (
     AFFECTED_CONTEXT_ENV,
+    AFFECTED_SOURCE_REPOSITORY_ENV,
     CORE_CONTRACTS,
     ValidationProblem,
     empty_markdown_headings,
@@ -134,7 +136,6 @@ def main(argv: list[str] | None = None) -> int:
     try:
         review_skill_ids = professional_review_skill_ids(
             professional_entries,
-            CORE_CONTRACTS["review_discipline_contract"]["professional_risk_matrix"],
         )
     except ValidationProblem as exc:
         print(f"eval-skill-professionalism: ERROR: {exc}", file=sys.stderr)
@@ -171,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "error_count": len(errors),
         "warning_count": len(warnings),
-        "professional_review_risk_matrix": {
+        "professional_review_expertise": {
             "selector": "professional-skills.yaml role_support contains review-agent",
             "covered_skill_count": len(review_skill_ids),
             "covered_skill_ids": list(review_skill_ids),
@@ -334,6 +335,26 @@ def _full_execution_scope(
     }
 
 
+def _baseline_matches_selected_commit(raw: bytes, relative: str) -> bool:
+    """Read fixed evidence from the captured Git object, never live source."""
+
+    context = parse_affected_professionalism_context(os.environ.get(AFFECTED_CONTEXT_ENV))
+    source = os.environ.get(AFFECTED_SOURCE_REPOSITORY_ENV)
+    if context is None or not source or not Path(source).is_absolute():
+        return False
+    if relative != "evals/expert-panel/professional-completeness.json":
+        return False
+    try:
+        result = subprocess.run(
+            ["git", "-C", source, "show", f"{context['head_sha']}:{relative}"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+            env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
+        )
+    except OSError:
+        return False
+    return result.returncode == 0 and result.stdout == raw
+
+
 def _affected_review_plan(
     release_review_config: Path,
     *,
@@ -444,6 +465,21 @@ def _affected_review_plan(
             validation_root=ROOT,
         )
     except (OSError, ValueError) as exc:
+        relative = module.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+        if (
+            module.attestation_currentness_drift(exc)
+            and _baseline_matches_selected_commit(bound.raw, relative)
+            and module.reviewer_manifest.recheck_bound_file(
+                bound, label="affected Professional fixed baseline"
+            ) == bound.raw
+        ):
+            bindings = module.professional_carry.professional_review_bindings(
+                module._professional_package_targets(root=ROOT)
+            )
+            return _stale_baseline_no_carry_plan(
+                bindings=bindings, direct_package_ids=direct_package_ids,
+                baseline_decision=relative,
+            )
         raise ValidationProblem(f"affected Professional baseline is invalid: {exc}") from exc
     plan = packet.get("review_plan")
     if not isinstance(plan, dict):

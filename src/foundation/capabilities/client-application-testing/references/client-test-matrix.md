@@ -1,46 +1,38 @@
 # Installed-Client Test Matrix
 
-Use this reference to select client-specific tests from the changed behavior and supported target matrix. It does not replace the general quality strategy or platform test documentation.
-
-Official pages in this reference were recorded as accessed on 2026-07-24.
+Load for installed-client lifecycle, OS, environment, artifact, or accessibility risk; exclude strategy or platform instructions.
 
 ## Risk Matrix
 
-| Risk family | Distinct cases to consider | Strong observable oracle |
-|---|---|---|
-| Lifecycle | Background and return, UI recreation, process death, relaunch, crash, low memory | Visible task continuity, durable state, released resources, no duplicate effect |
-| Permission | Initial denial, partial grant, later revocation, process termination, settings return | Capability stops safely, stale access is cleared, recovery remains available |
-| Connectivity | Offline launch, mid-operation loss, reconnect, duplicate delivery, unknown response | Honest pending state, authoritative reconciliation, bounded retry |
-| External activation | Cold and warm deep link, notification, malformed input, wrong account, missing target | Exactly one intended destination or explicit recoverable rejection |
-| Artifact state | Fresh install, upgrade, incompatible stored data, logout, account switch, uninstall | Intended preserve, migrate, quarantine, or clear behavior |
-| Environment | Device class, operating-system version, architecture, display size, low memory | Same accepted behavior or documented target-specific branch |
-| Presentation | Locale, timezone, text direction, font scaling, high contrast, reduced motion | Complete meaning and operation without clipping or stale formatting |
-| Assistive technology | Screen reader, keyboard or switch path, focus, announcements, automation tree | User-observable completion with correct semantic and focus transitions |
+- Lifecycle: background/return, recreation, process death, relaunch, crash, low memory -> continuity, durable state, resource release, no duplicate.
+- Permission: denial, partial grant, revocation, process termination, settings return -> safe stop, stale-access removal, recovery.
+- Connectivity: offline launch, mid-operation loss, reconnect, duplicate delivery, unknown response -> honest pending, reconciliation, bounded retry.
+- Activation: cold/warm deep link, notification, malformed input, wrong account, missing target -> one destination or recoverable rejection.
+- Artifact: install, upgrade, incompatible data, logout, account switch, uninstall -> intended preserve/migrate/quarantine/clear.
+- Environment: device class, OS, architecture, display size, low memory -> accepted behavior or documented target branch.
+- Presentation: locale, timezone, direction, font scale, contrast, reduced motion -> operable meaning without clipping/stale formatting.
+- Assistive technology: screen reader, keyboard/switch, focus, announcements, automation tree -> correct completion semantics/focus.
 
 ## Selection Rules
 
-- Map each changed failure mechanism to the lowest capable test boundary and retain an application or device test when the operating system owns the transition.
-- Exercise the actual installable or release-equivalent artifact when packaging, architecture, optimization, entitlement, or upgrade behavior can differ from a debug process.
-- Record every excluded operating-system, device, architecture, locale, accessibility setting, or destructive install state as unverified scope.
-- Keep test hooks bounded to observation or controllable conditions; they must not replace production lifecycle, permission, network, or activation behavior.
-- Reset application data, accounts, server fixtures, notifications, network conditions, permissions, clocks, and device settings after each applicable case.
+- Map each failure to the lowest capable boundary; retain device coverage for OS transitions.
+- Use release-equivalent artifacts for packaging, architecture, optimization, entitlement, or upgrade.
+- Record excluded OS/device/architecture/locale/accessibility/destructive-install dimensions as unverified.
+- Require hooks to observe/control conditions without replacing production lifecycle, permission, network, or activation behavior.
+- Reset app data/accounts/server fixtures/notifications/network/permissions/clocks/device settings.
 
 ## Primary Sources
 
-- [Android testing strategies](https://developer.android.com/training/testing/fundamentals/strategies)
-- [Android test your app's activities](https://developer.android.com/guide/components/activities/testing)
-- [Android app compatibility](https://developer.android.com/guide/app-compatibility)
-- [Android runtime permissions](https://developer.android.com/training/permissions/requesting)
-- [Apple XCTest](https://developer.apple.com/documentation/xctest)
-- [Microsoft test Windows App SDK applications](https://learn.microsoft.com/en-us/windows/apps/develop/testing/)
-- [Microsoft Windows accessibility testing](https://learn.microsoft.com/en-us/windows/apps/design/accessibility/accessibility-testing)
+Accessed 2026-07-24: [Android strategy](https://developer.android.com/training/testing/fundamentals/strategies), [activities](https://developer.android.com/guide/components/activities/testing), [compatibility](https://developer.android.com/guide/app-compatibility), [permissions](https://developer.android.com/training/permissions/requesting), [XCTest](https://developer.apple.com/documentation/xctest), [Windows App SDK](https://learn.microsoft.com/en-us/windows/apps/develop/testing/), and [Windows accessibility](https://learn.microsoft.com/en-us/windows/apps/design/accessibility/accessibility-testing).
 
-## Version And Inference Limits
+## Proof Limits
 
-These are rolling platform pages. They do not establish the repository's SDK, toolchain, device inventory, operating-system support policy, test-runner capability, or release artifact.
-
-Android activity recreation does not prove full process-death restoration. XCTest, Android instrumentation, Windows UI Automation, simulators, and emulators prove only the environments and paths exercised. No listed tool proves production reliability, every device configuration, accessibility conformance, store acceptance, or release readiness.
+Current pages establish no repository SDK/toolchain, devices, support, runner, or release artifact. Recreation is not process-death proof. XCTest, instrumentation, UI Automation, simulators, and emulators prove exercised paths only—not production reliability, every device, accessibility conformance, store acceptance, or release readiness.
 
 ## Required Record
 
-Return the changed client risk, selected cases and environments, artifact type, observable oracle, cleanup, skipped dimensions, command or manual evidence, and the claims that remain unproven.
+Record risk, matrix, artifact, oracle, cleanup, exclusions, command/manual evidence, and unproved claims.
+
+## Anti-Patterns
+
+- Reject recreation-as-process-death, one-target-as-supported-matrix, and screenshot/tree-only oracles.

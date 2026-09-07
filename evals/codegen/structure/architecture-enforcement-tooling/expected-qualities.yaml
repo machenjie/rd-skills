@@ -1,6 +1,5 @@
 id: architecture-enforcement-tooling
 category: structure
-complexity: L3
 focus:
   - enforceable architecture rules
   - import and dependency checks

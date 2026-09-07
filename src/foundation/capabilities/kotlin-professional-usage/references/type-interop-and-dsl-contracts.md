@@ -45,3 +45,8 @@ Official pages in this reference were recorded as accessed on 2026-07-24.
 ## Required Record
 
 - Record each changed type/delegate boundary, owner and get/set output, actual caller/runtime evidence, selected representation, invalid behavior, compatibility limit, and residual risk.
+
+## Anti-Patterns
+
+- `!!`, a platform type, or a generated annotation is treated as runtime null proof.
+- Data-class `copy`, a value wrapper, sealed `when`, or `remember` is treated as deep immutability, stable ABI, future exhaustiveness, or durable state.

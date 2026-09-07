@@ -1,6 +1,5 @@
 id: model-boundary-mapping
 category: structure
-complexity: L3
 focus:
   - DTO domain persistence separation
   - mapper ownership

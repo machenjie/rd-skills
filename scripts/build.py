@@ -22,8 +22,15 @@ from validation_utils import (
     CORE_CONTRACTS_PATH,
     NAME_RE,
     PROFILE_CONTRACT_MODEL,
+    PROFESSIONAL_BUILT_KERNEL_HEADINGS,
     PROMPT_CONTRACT_MODEL,
     REGISTRY_SCHEMA_VERSIONS,
+    RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM,
+    RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT,
+    RUNTIME_ASSET_INLINE_IDENTITY_VERSION,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+    RUNTIME_ASSET_METADATA_EXCLUSIONS,
     ROLE_CONTRACT_MODEL,
     TARGETED_REFERENCE_TABLE_COLUMNS,
     ValidationProblem,
@@ -31,16 +38,23 @@ from validation_utils import (
     foundation_content_class_errors,
     foundation_ownership_errors,
     foundation_registry_field_errors,
-    execution_level_runtime_reference_errors,
+    layer3_selector_authority,
+    layer3_selector_normalized_control_projections,
+    layer3_selector_runtime_decision_envelope,
     load_yaml_file,
     parse_frontmatter,
-    prompt_projection_errors,
     reference_contracts,
     reference_type_for_path,
     required_expertise_tag_errors,
     render_compact_markdown_table,
     render_targeted_reference_section,
     role_contract_map_errors,
+    runtime_asset_bundle_metadata_errors,
+    runtime_asset_build_identity,
+    runtime_asset_build_identity_bytes,
+    semantic_identity_projection,
+    strip_semantic_identity_markers,
+    validate_semantic_identity_marker_inventory,
 )
 
 
@@ -60,21 +74,41 @@ MAX_ZIP_FILES = 500
 MAX_ZIP_BYTES = 5 * 1024 * 1024
 MAX_ZIP_FILE_BYTES = 2 * 1024 * 1024
 MAX_RENDERED_PROFESSIONAL_BODY_LINES = 120
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_PROFILE = "recommended"
+RETIRED_PROFILES = ("full", "dev")
+LEGACY_HOOK_ROOTS = (
+    "codex/project/.codex",
+    "codex/user/.codex",
+    "claude/project/.claude",
+    "claude/user/.claude",
+    "copilot/project/.github",
+    "copilot/user/.copilot",
+)
+LEGACY_HOOK_FILE_NAMES = (
+    ".changeforge-hook-manifest.json",
+    "hooks.json",
+    "settings.changeforge-hooks.fragment.json",
+    "changeforge-route-preflight.md",
+    "changeforge-professional-contract.md",
+)
+EXPECTED_RUNTIME_COUNTS = {
+    "control": 1,
+    "professional": 25,
+    "foundation": 150,
+    "domain": 13,
+}
 LAYER3_PROJECTION_SECTIONS = {
     "foundation": (
         ("Skill Role", "Decision Boundary"),
         ("High-Value Rules", "High-Value Rules"),
         ("Anti-Patterns", "Anti-Patterns"),
         ("Stop Conditions", "Stop Conditions"),
-        ("Targeted References", "Targeted References"),
     ),
     "domain": (
         ("Role", "Decision Boundary"),
         ("Professional Decision Rules", "Professional Decision Rules"),
         ("High-Value Gotchas", "High-Value Gotchas"),
         ("Stop / Escalation Conditions", "Stop / Escalation Conditions"),
-        ("Targeted References", "Targeted References"),
     ),
 }
 LAYER3_PROJECTION_FORBIDDEN_HEADINGS = frozenset(
@@ -86,7 +120,17 @@ LAYER3_PROJECTION_FORBIDDEN_HEADINGS = frozenset(
         "Execution Checklist",
         "When To Use",
         "Do Not Use",
+        "Targeted References",
     }
+)
+# Built Foundation roots start after the selector receipt and bounded assignment.
+# Source Inputs and Output Contract remain authoring authority; the Task capsule
+# and staged required-output receipts carry those values without repetition.
+FOUNDATION_BUILT_KERNEL_HEADINGS = (
+    "Skill Role",
+    "High-Value Rules",
+    "Anti-Patterns",
+    "Stop Conditions",
 )
 ENFORCEMENT_STATUSES = (
     "native-enforced",
@@ -95,6 +139,7 @@ ENFORCEMENT_STATUSES = (
     "unsupported",
 )
 ENFORCEMENT_HOSTS = ("codex", "claude", "copilot", "cline", "openai-api")
+COPILOT_SURFACES = ("copilot-cli", "copilot-vscode", "copilot-coding-agent")
 ENFORCEMENT_CAPABILITIES = (
     "tool_allowlist",
     "workspace_write_protection",
@@ -107,18 +152,7 @@ HOST_ENFORCEMENT_CAPABILITIES = (
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 )
-GENERIC_CAPABILITY_CONTRACT = CORE_CONTRACTS["review_discipline_contract"][
-    "generic_capability_contract"
-]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
-DECISION_CAPABILITY_STATES = tuple(GENERIC_CAPABILITY_CONTRACT["states"])
-HOST_MODE_VALUES = {
-    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
-    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
-}
-NATIVE_DIFF_SAFEGUARDS = ("--no-pager", "--no-ext-diff", "--no-textconv")
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
     "claude": "native-enforced",
@@ -201,18 +235,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build hookless rd-skills Skills and Agent Profiles."
     )
-    parser.add_argument("--profile", choices=PROFILES, default="recommended")
-    args = parser.parse_args()
+    parser.parse_args()
 
     try:
-        result = build_profile(args.profile)
+        result = build_profile(RUNTIME_PROFILE)
     except BuildError as exc:
         print(f"build: ERROR: {exc}", file=sys.stderr)
         return 1
 
     print(
-        "build: built hookless profile "
-        f"{args.profile} with {result['top_level_count']} standard Skill(s), "
+        "build: built hookless runtime with "
+        f"{result['top_level_count']} standard Skill(s), "
         f"{result['compiled_layer3_reference_count']} compiled Layer 3 reference(s), "
         f"{result['agent_profile_count']} Agent Profile(s), and "
         f"{result['zip_count']} OpenAI API zip(s)."
@@ -221,13 +254,13 @@ def main() -> int:
 
 
 def build_profile(profile: str) -> dict[str, Any]:
-    if profile not in PROFILES:
+    if profile != RUNTIME_PROFILE:
         raise BuildError(f"unsupported profile: {profile}")
 
     # Nothing below this preflight may mutate a managed output. In particular,
     # the build also writes hosted-runtime zips, so their path chain must be
     # checked before the first profile reset rather than at packaging time.
-    _preflight_static_paths(profile)
+    _preflight_static_paths()
     registries = _load_registries()
     _preflight_registry_entries(registries)
     items = {
@@ -235,33 +268,43 @@ def build_profile(profile: str) -> dict[str, Any]:
         for layer, entries in registries.items()
     }
     _validate_global_skill_names(items)
+    _preflight_semantic_marker_inventory(registries)
     profiles = _load_agent_profiles()
     enforcement = _load_host_enforcement()
-    top_level = _top_level_items(profile, items)
-    _preflight_build_plan(profile, top_level, items, profiles, enforcement)
+    top_level = _top_level_items(items)
     try:
         source_snapshot = authoritative_build_input_snapshot(ROOT)
     except (OSError, ValueError) as exc:
         raise BuildError(f"cannot snapshot authoritative build inputs: {exc}") from exc
-
-    _clean_legacy_dist_artifacts()
-    compiled_names = _build_skill_roots(
-        profile,
+    selector_projections, reference_partitions = _selector_projection_assets()
+    _preflight_build_plan(
         top_level,
         items,
         profiles,
         enforcement,
         source_snapshot,
+        selector_projections,
+        reference_partitions,
+    )
+
+    _cleanup_legacy_managed_outputs()
+    compiled_names = _build_skill_roots(
+        top_level,
+        items,
+        profiles,
+        enforcement,
+        source_snapshot,
+        selector_projections,
+        reference_partitions,
     )
     _build_agent_profiles(profiles, enforcement)
-    _reset_dir(OPENAI_ZIP_DIR / profile)
-    _cleanup_legacy_zip_layout()
+    _reset_dir(OPENAI_ZIP_DIR / RUNTIME_PROFILE)
     zip_count = _package_openai_zips(
-        UNIVERSAL_SKILLS_ROOT / profile,
-        OPENAI_ZIP_DIR / profile,
+        UNIVERSAL_SKILLS_ROOT / RUNTIME_PROFILE,
+        OPENAI_ZIP_DIR / RUNTIME_PROFILE,
     )
     return {
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "top_level_count": len(top_level),
         "compiled_layer3_reference_count": len(compiled_names),
         "agent_profile_count": len(profiles),
@@ -269,7 +312,7 @@ def build_profile(profile: str) -> dict[str, Any]:
     }
 
 
-def _preflight_static_paths(profile: str) -> None:
+def _preflight_static_paths() -> None:
     """Validate every static input and managed output path before mutation."""
     source_directories = [SRC_DIR, REGISTRY_DIR, *LAYER_SOURCE_ROOTS.values()]
     source_files = [
@@ -297,18 +340,13 @@ def _preflight_static_paths(profile: str) -> None:
         prompt_text = prompt_bytes.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise BuildError("authoritative control prompt must be UTF-8") from exc
-    projection_errors = prompt_projection_errors(
-        prompt_text,
-        CORE_CONTRACTS,
-        document_bytes=prompt_bytes,
-    )
-    if projection_errors:
-        raise BuildError(
-            "authoritative control prompt projection is stale: "
-            + "; ".join(projection_errors)
-        )
+    try:
+        visible_prompt_text = strip_semantic_identity_markers(prompt_text)
+    except ValueError as exc:
+        raise BuildError("authoritative control prompt has malformed semantic identity markers") from exc
 
-    managed_outputs = _managed_output_paths(profile)
+
+    managed_outputs = _managed_output_paths()
     _require_within(DIST_DIR, ROOT, "managed dist root")
     _reject_symlink_chain(DIST_DIR, ROOT, "managed dist root")
     if DIST_DIR.exists():
@@ -318,6 +356,35 @@ def _preflight_static_paths(profile: str) -> None:
     for output in managed_outputs:
         _require_within(output, DIST_DIR, "managed output")
         _reject_symlink_chain(output, ROOT, "managed output")
+
+    for managed_root in _managed_profile_roots():
+        if managed_root.exists() and (
+            managed_root.is_symlink() or not managed_root.is_dir()
+        ):
+            raise BuildError(
+                f"managed profile root {_display_path(managed_root)} must be a regular directory"
+            )
+    for retired in _retired_profile_output_paths():
+        if retired.exists() and (retired.is_symlink() or not retired.is_dir()):
+            raise BuildError(
+                f"retired profile output {_display_path(retired)} must be a regular directory"
+            )
+    for legacy in _legacy_managed_directory_paths():
+        if legacy.exists() and (legacy.is_symlink() or not legacy.is_dir()):
+            raise BuildError(
+                f"legacy managed directory {_display_path(legacy)} must be a regular directory"
+            )
+    for legacy in _legacy_managed_file_paths():
+        if legacy.exists() and (legacy.is_symlink() or not legacy.is_file()):
+            raise BuildError(
+                f"legacy managed file {_display_path(legacy)} must be a regular file"
+            )
+    for legacy_zip in _legacy_root_zip_paths():
+        _require_within(legacy_zip, OPENAI_ZIP_DIR, "legacy root zip")
+        if legacy_zip.is_symlink() or not legacy_zip.is_file():
+            raise BuildError(
+                f"legacy root zip {_display_path(legacy_zip)} must be a regular file"
+            )
 
     # Build inputs and managed output must never contain one another, even if a
     # test or embedding caller overrides the default roots.
@@ -329,14 +396,59 @@ def _preflight_static_paths(profile: str) -> None:
             )
 
 
-def _managed_output_paths(profile: str) -> list[Path]:
+def _managed_profile_roots() -> tuple[Path, ...]:
+    return (UNIVERSAL_SKILLS_ROOT, *AGENT_SKILL_ROOTS, OPENAI_ZIP_DIR)
+
+
+def _retired_profile_output_paths() -> tuple[Path, ...]:
+    return tuple(
+        root / profile
+        for root in _managed_profile_roots()
+        for profile in RETIRED_PROFILES
+    )
+
+
+def _legacy_managed_directory_paths() -> tuple[Path, ...]:
+    hook_roots = tuple(
+        DIST_DIR.joinpath(*PurePosixPath(relative).parts)
+        for relative in LEGACY_HOOK_ROOTS
+    )
+    return (
+        *(root / "hooks" for root in hook_roots),
+        DIST_DIR / "universal" / "bootstrap",
+        DIST_DIR / "copilot" / "project" / ".github" / "copilot" / "agents",
+    )
+
+
+def _legacy_managed_file_paths() -> tuple[Path, ...]:
+    return tuple(
+        DIST_DIR.joinpath(*PurePosixPath(relative).parts) / name
+        for relative in LEGACY_HOOK_ROOTS
+        for name in LEGACY_HOOK_FILE_NAMES
+    )
+
+
+def _legacy_root_zip_paths() -> tuple[Path, ...]:
+    if not OPENAI_ZIP_DIR.is_dir():
+        return ()
+    return tuple(
+        path
+        for path in sorted(OPENAI_ZIP_DIR.iterdir())
+        if path.suffix == ".zip"
+    )
+
+
+def _managed_output_paths() -> list[Path]:
     return [
         DIST_DIR,
-        UNIVERSAL_SKILLS_ROOT / profile,
-        *(root / profile for root in AGENT_SKILL_ROOTS),
+        *_managed_profile_roots(),
+        UNIVERSAL_SKILLS_ROOT / RUNTIME_PROFILE,
+        *(root / RUNTIME_PROFILE for root in AGENT_SKILL_ROOTS),
         *(target for _platform, target in AGENT_PROFILE_OUTPUTS),
-        OPENAI_ZIP_DIR,
-        OPENAI_ZIP_DIR / profile,
+        OPENAI_ZIP_DIR / RUNTIME_PROFILE,
+        *_retired_profile_output_paths(),
+        *_legacy_managed_directory_paths(),
+        *_legacy_managed_file_paths(),
     ]
 
 
@@ -397,6 +509,61 @@ def _preflight_registry_entries(
                     )
 
 
+def _preflight_semantic_marker_inventory(
+    registries: dict[str, list[dict[str, Any]]],
+) -> None:
+    """Validate every source marker before snapshots or managed mutations."""
+
+    sources: list[tuple[Path, str, str]] = [
+        (CONTROL_PROMPT_SOURCE, CONTROL_PROMPT_SOURCE.stem, "root")
+    ]
+    for layer in REGISTRY_SPECS:
+        for entry in registries.get(layer, []):
+            owner = _required_string(entry, "name", f"{layer} marker inventory")
+            relative = PurePosixPath(
+                _required_string(entry, "path", f"{layer} marker inventory")
+            )
+            skill_root = ROOT.joinpath(*relative.parts)
+            sources.append((skill_root / "SKILL.md", owner, "root"))
+            references = skill_root / "references"
+            if references.is_dir():
+                sources.extend(
+                    (path, owner, "reference")
+                    for path in sorted(references.rglob("*.md"))
+                )
+
+    inventory: list[dict[str, object]] = []
+    for path, owner, axis in sources:
+        try:
+            source = path.read_bytes().decode("utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise BuildError(
+                f"semantic marker source {_display_path(path)} must be readable UTF-8"
+            ) from exc
+        try:
+            projection = semantic_identity_projection(
+                source,
+                owner=owner,
+                axis=axis,
+            )
+        except ValueError as exc:
+            raise BuildError(
+                f"semantic marker inventory {_display_path(path)}: {exc}"
+            ) from exc
+        inventory.append(
+            {
+                "path": _display_path(path),
+                "owner": owner,
+                "axis": axis,
+                "markers": projection["markers"],
+            }
+        )
+    try:
+        validate_semantic_identity_marker_inventory(inventory)
+    except ValueError as exc:
+        raise BuildError(f"semantic marker inventory: {exc}") from exc
+
+
 def _validate_global_skill_names(items: dict[str, list[SkillItem]]) -> None:
     owners: dict[str, str] = {}
     for layer, layer_items in items.items():
@@ -410,12 +577,36 @@ def _validate_global_skill_names(items: dict[str, list[SkillItem]]) -> None:
 
 
 def _preflight_build_plan(
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
+    source_snapshot: dict[str, object],
+    selector_projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
 ) -> None:
+    runtime_version = _source_version()
+    build_identity = _runtime_build_identity(source_snapshot)
+    observed_counts = {layer: len(layer_items) for layer, layer_items in items.items()}
+    if observed_counts != EXPECTED_RUNTIME_COUNTS:
+        raise BuildError(
+            "source inventory must contain exactly "
+            + ", ".join(
+                f"{count} {layer}" for layer, count in EXPECTED_RUNTIME_COUNTS.items()
+            )
+            + f" Skill(s); found {observed_counts}"
+        )
+    expected_top_level = (
+        EXPECTED_RUNTIME_COUNTS["control"]
+        + EXPECTED_RUNTIME_COUNTS["professional"]
+    )
+    if len(top_level) != expected_top_level or any(
+        item.layer not in {"control", "professional"} for item in top_level
+    ):
+        raise BuildError(
+            "runtime must contain exactly "
+            f"{expected_top_level} top-level Control and Professional Skills"
+        )
     _validate_built_control_reference_reachability(top_level)
     layer3 = {item.name: item for item in [*items["foundation"], *items["domain"]]}
     domain_names = {item.name for item in items["domain"]}
@@ -451,19 +642,42 @@ def _preflight_build_plan(
             if item.layer == "control" and item.name == "engineering-control-plane":
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
+            elif item.layer == "professional":
+                _write_compact_professional_projection(
+                    destination,
+                    item,
+                    runtime_version=runtime_version,
+                    build_identity=build_identity,
+                )
             else:
-                _write_targeted_reference_contracts(destination, item)
+                _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
-                    profile,
                     item,
                     domain_names,
                     product_foundation_names,
                 )
                 if selected:
-                    _write_layer3_references(destination, selected, layer3)
-                _append_layer3_entrypoint(destination, profile)
+                    _write_layer3_references(
+                        destination, selected, layer3, build_identity
+                    )
+                _append_layer3_entrypoint(destination)
+                _write_professional_runtime_selector_closure(
+                    destination,
+                    item.name,
+                    selector_projections,
+                    reference_partitions,
+                    build_identity,
+                )
+                _strip_runtime_semantic_markers(destination)
+                _write_and_validate_runtime_bundle_metadata(
+                    destination,
+                    item.name,
+                    source_snapshot,
+                )
                 _validate_rendered_professional_body(destination / "SKILL.md")
+            else:
+                _strip_runtime_semantic_markers(destination)
             _validate_zip_source(destination)
 
     # Renderer failures are likewise configuration failures and must happen
@@ -692,31 +906,22 @@ def _required_string(entry: dict[str, Any], field: str, context: str) -> str:
 
 
 def _top_level_items(
-    profile: str,
     items: dict[str, list[SkillItem]],
 ) -> list[SkillItem]:
-    if profile == "recommended":
-        return [*items["control"], *items["professional"]]
-    if profile == "full":
-        return [*items["control"], *items["professional"], *items["domain"]]
-    if profile == "dev":
-        return [
-            *items["control"],
-            *items["professional"],
-            *items["foundation"],
-            *items["domain"],
-        ]
-    raise BuildError(f"unsupported profile: {profile}")
+    return [*items["control"], *items["professional"]]
 
 
 def _build_skill_roots(
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
     source_snapshot: dict[str, object],
+    selector_projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
 ) -> set[str]:
+    runtime_version = _source_version()
+    build_identity = _runtime_build_identity(source_snapshot)
     layer3 = {
         item.name: item for item in [*items["foundation"], *items["domain"]]
     }
@@ -728,41 +933,67 @@ def _build_skill_roots(
     }
     all_compiled: set[str] = set()
     for root in (UNIVERSAL_SKILLS_ROOT, *AGENT_SKILL_ROOTS):
-        profile_root = root / profile
+        profile_root = root / RUNTIME_PROFILE
         _reset_dir(profile_root)
         compiled_by_skill: dict[str, list[str]] = {}
+        runtime_asset_bindings: dict[str, dict[str, str]] = {}
         for item in top_level:
             destination = profile_root / item.name
             _copy_skill_tree(item.path, destination)
             if item.layer == "control" and item.name == "engineering-control-plane":
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
+            elif item.layer == "professional":
+                _write_compact_professional_projection(
+                    destination,
+                    item,
+                    runtime_version=runtime_version,
+                    build_identity=build_identity,
+                )
             else:
-                _write_targeted_reference_contracts(destination, item)
+                _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
-                    profile,
                     item,
                     domain_names,
                     product_foundation_names,
                 )
                 compiled = (
-                    _write_layer3_references(destination, selected, layer3)
+                    _write_layer3_references(
+                        destination, selected, layer3, build_identity
+                    )
                     if selected
                     else []
                 )
-                _append_layer3_entrypoint(destination, profile)
+                _append_layer3_entrypoint(destination)
+                _write_professional_runtime_selector_closure(
+                    destination,
+                    item.name,
+                    selector_projections,
+                    reference_partitions,
+                    build_identity,
+                )
+                _strip_runtime_semantic_markers(destination)
+                runtime_asset_bindings[item.name] = (
+                    _write_and_validate_runtime_bundle_metadata(
+                        destination,
+                        item.name,
+                        source_snapshot,
+                    )
+                )
                 compiled_by_skill[item.name] = compiled
                 all_compiled.update(compiled)
+            else:
+                _strip_runtime_semantic_markers(destination)
         _write_build_manifest(
             profile_root,
-            profile,
             top_level,
             items,
             compiled_by_skill,
             profiles,
             enforcement,
             source_snapshot,
+            runtime_asset_bindings,
         )
     return all_compiled
 
@@ -774,7 +1005,6 @@ def _layer3_names_for_professional(
 
 
 def _compiled_layer3_names(
-    profile: str,
     professional: SkillItem,
     domain_names: set[str],
     product_foundation_names: set[str],
@@ -785,13 +1015,7 @@ def _compiled_layer3_names(
         for name in _layer3_names_for_professional(professional)
         if name in allowed
     ]
-    if profile == "recommended":
-        return candidates
-    if profile == "full":
-        return [name for name in candidates if name not in domain_names]
-    if profile == "dev":
-        return []
-    raise BuildError(f"unsupported profile: {profile}")
+    return candidates
 
 
 def _copy_control_prompt(destination: Path) -> None:
@@ -800,26 +1024,13 @@ def _copy_control_prompt(destination: Path) -> None:
     references = destination / "references"
     references.mkdir(parents=True, exist_ok=True)
     shutil.copy2(CONTROL_PROMPT_SOURCE, references / "main-control-agent.md")
-    runtime_metadata = CORE_CONTRACTS["execution_level_contract"]["projection"][
-        "runtime_reference"
-    ]
-    runtime_source = ROOT / runtime_metadata["path"]
-    runtime_target = references / PurePosixPath(runtime_metadata["path"]).name
-    if not runtime_source.is_file() or not runtime_target.is_file():
-        raise BuildError("missing execution-level runtime Reference")
-    if runtime_target.read_bytes() != runtime_source.read_bytes():
-        raise BuildError("built execution-level runtime Reference is not an exact source copy")
-    runtime_errors = execution_level_runtime_reference_errors(
-        runtime_target.read_text(encoding="utf-8")
-    )
-    if runtime_errors:
-        raise BuildError("; ".join(runtime_errors))
 
 
 def _write_layer3_references(
     destination: Path,
     selected_names: list[str],
     layer3: dict[str, SkillItem],
+    build_identity: str,
 ) -> list[str]:
     root = destination / "references" / "layer3"
     if root.exists():
@@ -843,7 +1054,7 @@ def _write_layer3_references(
         compiled.append(name)
         target = root / f"{name}.md"
         target.write_text(
-            _render_layer3_reference(item),
+            _render_layer3_reference(item, build_identity),
             encoding="utf-8",
         )
         _copy_layer3_assets(item, root / name)
@@ -855,74 +1066,436 @@ def _write_layer3_references(
     return compiled
 
 
-def _append_layer3_entrypoint(destination: Path, profile: str) -> None:
-    """Describe only the current build's Layer 3 delivery at the Skill root."""
+def _append_layer3_entrypoint(destination: Path) -> None:
+    """Describe the runtime's targeted Layer 3 delivery at the Skill root."""
     skill_file = destination / "SKILL.md"
     if not skill_file.is_file():
         raise BuildError(f"{destination.relative_to(ROOT)} is missing root SKILL.md")
     source = skill_file.read_text(encoding="utf-8").rstrip()
     compiled_index = destination / "references" / "layer3" / "index.md"
-    if profile == "recommended":
-        delivery = [
-            "This build compiles assigned Foundation and Domain guidance into this",
-            "Professional Skill's `references/layer3/` directory.",
-        ]
-    elif profile == "full":
-        delivery = [
-            "This build compiles assigned Foundation guidance into this Professional",
-            "Skill's `references/layer3/` directory and delivers Domain guidance as",
-            "top-level Skills.",
-        ]
-    elif profile == "dev":
-        delivery = [
-            "This build delivers assigned Foundation and Domain guidance as top-level",
-            "Skills; it does not compile Layer 3 references into this Professional Skill.",
-        ]
-    else:
-        raise BuildError(f"unsupported profile: {profile}")
-    if compiled_index.is_file():
-        delivery.extend(
-            [
-                "Open each capsule-named compiled item directly at",
-                "`references/layer3/<name>.md`. Never preload Layer 3 or open the",
-                "[Layer 3 index](references/layer3/index.md) during task execution. The",
-                "index exists only for build validation and human discovery.",
-            ]
-        )
-    elif profile == "recommended":
-        delivery.extend(
-            [
-                "This Skill has no assigned compiled Layer 3 guidance. Never preload Layer 3",
-                "or open a Layer 3 index or catalog.",
-            ]
-        )
-    if profile == "full":
-        delivery.extend(
-            [
-                "Load each capsule-named Domain item as a top-level Skill.",
-                "Never preload Layer 3 or open a Layer 3 index or catalog.",
-            ]
-        )
-    elif profile == "dev":
-        delivery.extend(
-            [
-                "Load each capsule-named Foundation or Domain item as a top-level Skill.",
-                "Never preload Layer 3 or open a Layer 3 index or catalog.",
-            ]
-        )
+    delivery = (
+        "Foundation and Domain items are compiled at "
+        "`references/layer3/<name>.md`."
+        if compiled_index.is_file()
+        else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+    )
     entrypoint = "\n".join(
         [
-            GENERATED_MARKER,
-            "",
             "## Layer 3 Delivery",
             "",
-            *delivery,
+            delivery,
         ]
     )
     skill_file.write_text(f"{source}\n\n{entrypoint}\n", encoding="utf-8")
 
 
-def _render_layer3_reference(item: SkillItem) -> str:
+def _write_control_layer3_selector_projections(destination: Path) -> None:
+    """Render one Control-local declarative selector view per Professional."""
+
+    projections, reference_partitions = _selector_projection_assets()
+    root = destination / "references" / "selectors"
+    partition_root = destination / "references" / "reference-records"
+    if root.exists():
+        shutil.rmtree(root)
+    if partition_root.exists():
+        shutil.rmtree(partition_root)
+    root.mkdir(parents=True, exist_ok=True)
+    partition_root.mkdir(parents=True, exist_ok=True)
+    for filename, payload in projections.items():
+        _write_canonical_json(root / filename, payload, trailing_newline=True)
+    for filename, payload in reference_partitions.items():
+        _write_canonical_json(partition_root / filename, payload, trailing_newline=True)
+
+
+def _selector_projection_assets() -> tuple[
+    dict[str, dict[str, Any]], dict[str, dict[str, Any]]
+]:
+    """Derive every selector byte source from the existing Registry authority."""
+
+    foundation = load_yaml_file(REGISTRY_DIR / "foundation-skills.yaml")
+    professional_data = load_yaml_file(REGISTRY_DIR / "professional-skills.yaml")
+    domain = load_yaml_file(REGISTRY_DIR / "domain-skills.yaml")
+    try:
+        authority = layer3_selector_authority(
+            foundation,
+            professional_data,
+            domain,
+            context="build Control selector authority",
+        )
+        projections, reference_partitions = (
+            layer3_selector_normalized_control_projections(authority)
+        )
+    except ValidationProblem as exc:
+        raise BuildError(str(exc)) from exc
+    return projections, reference_partitions
+
+
+def _write_canonical_json(
+    path: Path,
+    payload: dict[str, Any],
+    *,
+    trailing_newline: bool,
+) -> bytes:
+    serialized = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ) + ("\n" if trailing_newline else "")
+    raw = serialized.encode("utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+    return raw
+
+
+def _runtime_build_identity(source_snapshot: dict[str, object]) -> str:
+    try:
+        return runtime_asset_build_identity(source_snapshot.get("sha256"))
+    except ValueError as exc:
+        raise BuildError("authoritative build input snapshot lacks a full SHA-256")
+
+
+
+def _rewrite_runtime_reference_partition_path(
+    value: object,
+    path_template: str = "../reference-records/{owner_skill}.json",
+) -> None:
+    """Rewrite generated selector copies to their Professional-local fixed path."""
+
+    if isinstance(value, dict):
+        partition = value.get("reference_records_partition")
+        if isinstance(partition, dict) and "path_template" in partition:
+            partition["path_template"] = path_template
+        for child in value.values():
+            _rewrite_runtime_reference_partition_path(child, path_template)
+    elif isinstance(value, list):
+        for child in value:
+            _rewrite_runtime_reference_partition_path(child, path_template)
+
+
+def _project_runtime_reference_record_path(
+    record: object,
+    professional: str,
+) -> str:
+    """Project one source-relative Registry path to its final Runtime path."""
+
+    if not isinstance(record, dict):
+        raise BuildError(f"{professional}: Runtime Reference record is malformed")
+    owner = record.get("owner_skill")
+    layer = record.get("owner_layer")
+    source_path = record.get("path")
+    if (
+        not isinstance(owner, str)
+        or NAME_RE.fullmatch(owner) is None
+        or not isinstance(source_path, str)
+    ):
+        raise BuildError(f"{professional}: Runtime Reference record identity is malformed")
+    source = PurePosixPath(source_path)
+    if (
+        source.is_absolute()
+        or source.parts[:1] != ("references",)
+        or len(source.parts) != 2
+        or "\\" in source_path
+        or source.as_posix() != source_path
+        or any(part in {"", ".", ".."} for part in source.parts)
+    ):
+        raise BuildError(
+            f"{professional}:{owner}: Authoring Reference path is not one exact "
+            "source-relative references/<file>.md path"
+        )
+    if layer == "professional":
+        if owner != professional:
+            raise BuildError(
+                f"{professional}: Professional Reference owner {owner!r} is not local"
+            )
+        projected = source
+    elif layer in {"foundation", "domain"}:
+        projected = PurePosixPath("references", "layer3", owner, *source.parts)
+    else:
+        raise BuildError(
+            f"{professional}:{owner}: Runtime Reference owner layer is invalid"
+        )
+    return projected.as_posix()
+
+
+def _project_runtime_reference_partition(
+    payload: object,
+    professional: str,
+    build_identity: str,
+) -> dict[str, Any]:
+    """Return one Professional-local partition without changing source authority."""
+
+    if not isinstance(payload, dict):
+        raise BuildError(f"{professional}: Runtime Reference partition is malformed")
+    partition = json.loads(json.dumps(payload))
+    if partition.get("professional_skill") != professional:
+        raise BuildError(
+            f"{professional}: Runtime Reference partition Professional binding differs"
+        )
+    records = partition.get("reference_records")
+    if not isinstance(records, list):
+        raise BuildError(
+            f"{professional}: Runtime Reference partition records are malformed"
+        )
+    for record in records:
+        projected = _project_runtime_reference_record_path(record, professional)
+        assert isinstance(record, dict)
+        record["path"] = projected
+    records_bytes = (
+        json.dumps(
+            records,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+    partition["records_sha256"] = hashlib.sha256(records_bytes).hexdigest()
+    partition["build"] = build_identity
+    return partition
+
+
+def _write_professional_runtime_selector_closure(
+    destination: Path,
+    professional: str,
+    projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
+    build_identity: str,
+) -> None:
+    """Write one complete Professional-local selector dependency closure."""
+
+    runtime_root = destination / "references" / "runtime"
+    envelope_key = f"{professional}.json"
+    envelope_source = projections.get(envelope_key)
+    complete_key = f"{professional}/complete.json"
+    complete_source = projections.get(complete_key)
+    if not isinstance(envelope_source, dict):
+        raise BuildError(f"{professional}: selector projection is missing")
+
+    if envelope_source.get("contract") != "changeforge.layer3-selector-decision-envelope/v1":
+        if complete_source is not None:
+            raise BuildError(f"{professional}: direct selector has an unexpected complete projection")
+        selector = json.loads(json.dumps(envelope_source))
+        selector["build"] = build_identity
+        _rewrite_runtime_reference_partition_path(
+            selector, "reference-records/{owner_skill}.json"
+        )
+        _write_canonical_json(
+            runtime_root / "selector.json", selector, trailing_newline=True
+        )
+        prefix = f"{professional}/"
+        partitions = {
+            key.removeprefix(prefix): value
+            for key, value in reference_partitions.items()
+            if key.startswith(prefix)
+        }
+        if not partitions:
+            raise BuildError(f"{professional}: reference-record partition closure is missing")
+        for filename, payload in sorted(partitions.items()):
+            partition = _project_runtime_reference_partition(
+                payload,
+                professional,
+                build_identity,
+            )
+            _write_canonical_json(
+                runtime_root / "reference-records" / filename,
+                partition,
+                trailing_newline=True,
+            )
+        return
+    if not isinstance(complete_source, dict):
+        raise BuildError(f"{professional}: selector complete projection is missing")
+
+    try:
+        envelope = layer3_selector_runtime_decision_envelope(
+            envelope_source,
+            projections,
+            build_identity=build_identity,
+        )
+    except ValidationProblem as exc:
+        raise BuildError(
+            f"{professional}: selector source provenance is malformed"
+        ) from exc
+    complete = json.loads(json.dumps(complete_source))
+    complete["build"] = build_identity
+    complete_binding = envelope.get("complete")
+    if not isinstance(complete_binding, dict):
+        raise BuildError(f"{professional}: selector complete binding is malformed")
+    complete_binding["path"] = "selectors/complete.json"
+    _rewrite_runtime_reference_partition_path(complete)
+    complete_bytes = (
+        json.dumps(complete, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
+    complete_binding["sha256"] = hashlib.sha256(complete_bytes).hexdigest()
+
+    decisions = envelope.get("decisions")
+    if not isinstance(decisions, list):
+        raise BuildError(f"{professional}: selector decisions are malformed")
+    for decision in decisions:
+        if not isinstance(decision, dict):
+            raise BuildError(f"{professional}: selector decision binding is malformed")
+        old_path = decision.get("path")
+        if not isinstance(old_path, str) or not old_path.startswith(f"{professional}/"):
+            raise BuildError(f"{professional}: selector decision path is not localizable")
+        filename = old_path.removeprefix(f"{professional}/")
+        shard_source = projections.get(old_path)
+        if not isinstance(shard_source, dict):
+            raise BuildError(f"{professional}: selector decision {old_path!r} is missing")
+        shard = json.loads(json.dumps(shard_source))
+        shard["build"] = build_identity
+        projection = shard.get("projection")
+        if not isinstance(projection, dict):
+            raise BuildError(f"{professional}: selector decision projection is malformed")
+        projection["build"] = build_identity
+        _rewrite_runtime_reference_partition_path(shard)
+        shard_bytes = _write_canonical_json(
+            runtime_root / "selectors" / filename,
+            shard,
+            trailing_newline=True,
+        )
+        decision["path"] = f"selectors/{filename}"
+        decision["sha256"] = hashlib.sha256(shard_bytes).hexdigest()
+
+    _write_canonical_json(
+        runtime_root / "selectors" / "complete.json",
+        complete,
+        trailing_newline=True,
+    )
+    _write_canonical_json(
+        runtime_root / "selector.json", envelope, trailing_newline=True
+    )
+
+    prefix = f"{professional}/"
+    partitions = {
+        key.removeprefix(prefix): value
+        for key, value in reference_partitions.items()
+        if key.startswith(prefix)
+    }
+    if not partitions:
+        raise BuildError(f"{professional}: reference-record partition closure is missing")
+    for filename, payload in sorted(partitions.items()):
+        partition = _project_runtime_reference_partition(
+            payload,
+            professional,
+            build_identity,
+        )
+        _write_canonical_json(
+            runtime_root / "reference-records" / filename,
+            partition,
+            trailing_newline=True,
+        )
+
+
+def _runtime_delivery_asset_kind(path: str) -> str:
+    if path == "SKILL.md":
+        return "professional-entrypoint"
+    if path == "references/runtime/selector.json":
+        return "selector-envelope"
+    if path == "references/runtime/selectors/complete.json":
+        return "selector-complete"
+    if path.startswith("references/runtime/selectors/"):
+        return "selector-decision"
+    if path.startswith("references/runtime/reference-records/"):
+        return "reference-records"
+    if path.startswith("references/layer3/"):
+        return "layer3-delivery"
+    return "professional-reference"
+
+
+def _write_and_validate_runtime_bundle_metadata(
+    destination: Path,
+    professional: str,
+    source_snapshot: dict[str, object],
+) -> dict[str, object]:
+    """Emit and verify the sole metadata file and inline Runtime bindings."""
+
+    runtime_version = _source_version()
+    full_digest = source_snapshot.get("sha256")
+    build_identity = _runtime_build_identity(source_snapshot)
+    integrity_path = destination / RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+
+    excluded = {integrity_path}
+    delivery_assets = {
+        path.relative_to(destination).as_posix(): path.read_bytes()
+        for path in sorted(destination.rglob("*"))
+        if path.is_file() and path not in excluded
+    }
+    manifest = {
+        "contract": RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT,
+        "schema_version": 1,
+        "runtime_version": runtime_version,
+        "build_identity": build_identity,
+        "professional_skill": professional,
+        "assets": [
+            {
+                "path": path,
+                "kind": _runtime_delivery_asset_kind(path),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "size": len(payload),
+            }
+            for path, payload in sorted(delivery_assets.items())
+        ],
+        "integrity_manifest_sha256": "",
+    }
+    semantics = {
+        key: value
+        for key, value in manifest.items()
+        if key != "integrity_manifest_sha256"
+    }
+    manifest["integrity_manifest_sha256"] = hashlib.sha256(
+        json.dumps(
+            semantics,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    integrity_bytes = _write_canonical_json(
+        integrity_path, manifest, trailing_newline=False
+    )
+    binding = {
+        "professional_skill": professional,
+        "runtime_version": runtime_version,
+        "authoritative_build_inputs_sha256": full_digest,
+        "build_identity_algorithm": RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM,
+        "build_identity": build_identity,
+        "inline_identity_contract": RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT,
+        "inline_identity_version": RUNTIME_ASSET_INLINE_IDENTITY_VERSION,
+        "integrity_manifest_path": RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+        "integrity_manifest_full_bytes_sha256": hashlib.sha256(
+            integrity_bytes
+        ).hexdigest(),
+    }
+    errors = runtime_asset_bundle_metadata_errors(
+        integrity_bytes,
+        delivery_assets,
+        binding,
+        expected_source_version=runtime_version,
+        expected_authoritative_build_inputs_sha256=full_digest,
+        expected_professional_skill=professional,
+    )
+    if errors:
+        raise BuildError(f"{professional}: Runtime bundle is invalid: {'; '.join(errors)}")
+    if RUNTIME_ASSET_METADATA_EXCLUSIONS != (
+        RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+    ):
+        raise BuildError("Runtime metadata exclusion contract is not the sole manifest")
+    return binding
+
+
+def _render_layer3_reference(
+    item: SkillItem,
+    build_identity: str | None = None,
+) -> str:
+    if build_identity is None:
+        build_identity = _runtime_build_identity(
+            authoritative_build_input_snapshot(ROOT)
+        )
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise BuildError("Layer 3 Runtime build marker is malformed") from exc
     body = _render_targeted_reference_section(
         item.body.strip(),
         _item_reference_contracts(item.registry, item.name, item.name),
@@ -932,7 +1505,7 @@ def _render_layer3_reference(item: SkillItem) -> str:
     body = _rewrite_layer3_links(body, item.name)
     return "\n".join(
         [
-            GENERATED_MARKER,
+            f"<!-- Build: {build_identity} -->",
             "",
             f"<!-- Layer: {item.layer}; source: {item.path.relative_to(ROOT)} -->",
             "",
@@ -1005,7 +1578,6 @@ def _project_layer3_reference(item: SkillItem, markdown: str) -> str:
                 f"{source_heading!r} section, found {len(values)}"
             )
         output.extend(["", f"## {projected_heading}", "", values[0]])
-
     projected = "\n".join(output).rstrip() + "\n"
     _projected_h1, projected_sections = _markdown_heading_sections(projected)
     projected_headings = list(projected_sections)
@@ -1049,6 +1621,148 @@ def _write_targeted_reference_contracts(destination: Path, item: SkillItem) -> N
         item.name,
     )
     skill_file.write_text(rendered, encoding="utf-8")
+
+
+def _write_compact_professional_projection(
+    destination: Path,
+    item: SkillItem,
+    *,
+    runtime_version: str | None = None,
+    build_identity: str | None = None,
+) -> None:
+    """Emit the built-only always-loaded Professional kernel.
+
+    The complete authoring root and its Reference Contract remain source
+    authority. Built roots retain only the sections that every invocation must
+    load; role-filtered named Reference records are delivered through the
+    Control selector projection generated from the same registry row.
+    """
+
+    _write_compact_skill_root_projection(
+        destination,
+        item,
+        headings=PROFESSIONAL_BUILT_KERNEL_HEADINGS,
+        selector_name=item.name,
+        runtime_version=runtime_version,
+        build_identity=build_identity,
+    )
+
+
+def _write_compact_layer3_root_projection(
+    destination: Path,
+    item: SkillItem,
+) -> None:
+    """Emit one built-only Foundation or Domain always-loaded kernel."""
+
+    headings = (
+        FOUNDATION_BUILT_KERNEL_HEADINGS
+        if item.layer == "foundation"
+        else PROFESSIONAL_BUILT_KERNEL_HEADINGS
+        if item.layer == "domain"
+        else None
+    )
+    if headings is None:
+        raise BuildError(
+            f"{item.name}: compact Layer 3 root projection does not support "
+            f"layer {item.layer!r}"
+        )
+    _write_compact_skill_root_projection(
+        destination,
+        item,
+        headings=headings,
+        selector_name=None,
+        runtime_version=None,
+        build_identity=None,
+        source_only_headings=("Output Contract",),
+    )
+
+
+def _write_compact_skill_root_projection(
+    destination: Path,
+    item: SkillItem,
+    *,
+    headings: tuple[str, ...],
+    selector_name: str | None,
+    runtime_version: str | None,
+    build_identity: str | None,
+    optional_headings: frozenset[str] = frozenset(),
+    source_only_headings: tuple[str, ...] = (),
+) -> None:
+    """Project one complete source root to its built runtime kernel."""
+
+    skill_file = destination / "SKILL.md"
+    if not skill_file.is_file():
+        raise BuildError(f"{_display_path(destination)} is missing root SKILL.md")
+    try:
+        _metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
+    except ValidationProblem as exc:
+        raise BuildError(str(exc)) from exc
+    h1_titles, sections = _markdown_heading_sections(body)
+    if len(h1_titles) != 1:
+        raise BuildError(
+            f"{item.name}: compact Professional projection requires exactly one H1"
+        )
+    targeted = sections.get("Targeted References", [])
+    if len(targeted) != 1 or not targeted[0]:
+        raise BuildError(
+            f"{item.name}: compact Professional projection requires the complete "
+            "source Targeted References authority"
+        )
+    for heading in source_only_headings:
+        values = sections.get(heading, [])
+        if len(values) != 1 or not values[0]:
+            raise BuildError(
+                f"{item.name}: compact Professional projection requires exactly "
+                f"one non-empty {heading!r} section"
+            )
+    output = ["---", raw_frontmatter, "---", "", f"# {h1_titles[0]}"]
+    for heading in headings:
+        values = sections.get(heading, [])
+        if not values and heading in optional_headings:
+            continue
+        if len(values) != 1 or not values[0]:
+            raise BuildError(
+                f"{item.name}: compact Professional projection requires exactly "
+                f"one non-empty {heading!r} section"
+            )
+        output.extend(["", f"## {heading}", "", values[0]])
+    if selector_name is not None:
+        output.extend(
+            _compact_jit_reference_delivery_lines(
+                selector_name,
+                runtime_version=runtime_version,
+                build_identity=build_identity,
+            )
+        )
+    output.append("")
+    skill_file.write_text("\n".join(output), encoding="utf-8")
+
+
+def _compact_jit_reference_delivery_lines(
+    selector_name: str | None,
+    *,
+    runtime_version: str | None = None,
+    build_identity: str | None = None,
+) -> list[str]:
+    """Return the built-only selector anchor; authority stays in its JSON row."""
+
+    if selector_name is None:
+        return []
+    if runtime_version is None or build_identity is None:
+        snapshot = authoritative_build_input_snapshot(ROOT)
+        runtime_version = _source_version()
+        build_identity = _runtime_build_identity(snapshot)
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise BuildError("Professional Runtime build marker is malformed") from exc
+    return [
+        "",
+        "## JIT Reference Delivery",
+        "",
+        "JIT: `references/runtime/selector.json`; "
+        f"Runtime: `{runtime_version}/{build_identity}`.",
+    ]
 
 
 def _write_compact_control_projection(destination: Path, item: SkillItem) -> None:
@@ -1200,47 +1914,6 @@ def _load_agent_profiles() -> list[dict[str, Any]]:
     return normalized
 
 
-def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
-    """Project adapter metadata to generic capability facts."""
-
-    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES[:-1]
-    diff_supported = entry.get("diff_input_mode") in {"native", "supplied-artifact"}
-    validation_supported = entry.get("validation_mode") in {
-        "native-read-only",
-        "task-no-edit",
-    }
-    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES[:-1]
-    supported = "supported"
-    unsupported = "unsupported"
-    return {
-        "bounded-source-read": supported if profile_supported else unsupported,
-        "workspace-mutation": supported if profile_supported else unsupported,
-        "non-mutating-validation": supported if validation_supported else unsupported,
-        "exact-change-evidence-read": supported if diff_supported else unsupported,
-        "exact-change-evidence-export": supported if diff_supported else unsupported,
-        "reviewer-accessible-change-reference": supported if diff_supported else unsupported,
-        "workspace-state-observation": supported if observation_supported else unsupported,
-    }
-
-
-def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
-    groups = {
-        state: [
-            field
-            for field in DECISION_CAPABILITY_FIELDS
-            if capabilities[field] == state
-        ]
-        for state in DECISION_CAPABILITY_STATES
-    }
-    return (
-        "Current capability facts: supported "
-        + ("/".join(groups["supported"]) or "none")
-        + "; unsupported "
-        + ("/".join(groups["unsupported"]) or "none")
-        + "."
-    )
-
-
 def _load_host_enforcement() -> dict[str, Any]:
     if not HOST_ENFORCEMENT_SOURCE.is_file():
         raise BuildError(f"missing {HOST_ENFORCEMENT_SOURCE.relative_to(ROOT)}")
@@ -1248,24 +1921,20 @@ def _load_host_enforcement() -> dict[str, Any]:
         data = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise BuildError(f"invalid host enforcement JSON: {exc}") from exc
-    if not isinstance(data, dict) or data.get("schema_version") != 4:
-        raise BuildError("host enforcement matrix must use schema_version 4")
+    if not isinstance(data, dict) or data.get("schema_version") != 5:
+        raise BuildError("host enforcement matrix must use schema_version 5")
     if set(data) != {
         "schema_version",
         "source_summary",
         "status_values",
-        "mode_values",
+        "host_surfaces",
         "hosts",
     }:
-        raise BuildError("host enforcement matrix fields must match schema v4")
+        raise BuildError("host enforcement matrix fields must match schema v5")
     if tuple(data.get("status_values") or ()) != ENFORCEMENT_STATUSES:
         raise BuildError("host enforcement status_values must match the fixed status enum")
     if not isinstance(data.get("source_summary"), str) or not data["source_summary"].strip():
         raise BuildError("host enforcement matrix requires source_summary")
-    if data.get("mode_values") != {
-        field: list(values) for field, values in HOST_MODE_VALUES.items()
-    }:
-        raise BuildError("host enforcement mode_values must match the adapter contract")
     hosts = data.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(ENFORCEMENT_HOSTS):
         raise BuildError("host enforcement matrix must contain exactly the supported hosts")
@@ -1273,31 +1942,13 @@ def _load_host_enforcement() -> dict[str, Any]:
     for host, entry in hosts.items():
         expected_fields = {
             *HOST_ENFORCEMENT_CAPABILITIES,
-            "diff_input_mode",
-            "validation_mode",
-            "native_diff_safeguards",
             "roles",
         }
         if not isinstance(entry, dict) or set(entry) != expected_fields:
-            raise BuildError(f"{host}: host enforcement fields must match schema v4")
+            raise BuildError(f"{host}: host enforcement fields must match schema v5")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise BuildError(f"{host}: invalid {capability} enforcement")
-        diff_input_mode = entry.get("diff_input_mode")
-        validation_mode = entry.get("validation_mode")
-        utility_no_edit = entry.get("utility_no_edit")
-        if diff_input_mode not in HOST_MODE_VALUES["diff_input_mode"]:
-            raise BuildError(f"{host}: invalid diff_input_mode")
-        if validation_mode not in HOST_MODE_VALUES["validation_mode"]:
-            raise BuildError(f"{host}: invalid validation_mode")
-        if tuple(_normalized_decision_capabilities(entry)) != DECISION_CAPABILITY_FIELDS:
-            raise BuildError(f"{host}: normalized decision capabilities drift from Core")
-        if utility_no_edit not in ENFORCEMENT_STATUSES:
-            raise BuildError(f"{host}: invalid utility_no_edit enforcement")
-        safeguards = entry.get("native_diff_safeguards")
-        expected_safeguards = list(NATIVE_DIFF_SAFEGUARDS) if diff_input_mode == "native" else []
-        if safeguards != expected_safeguards:
-            raise BuildError(f"{host}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != expected_roles:
             raise BuildError(f"{host}: enforcement roles must be the four static profiles")
@@ -1311,7 +1962,7 @@ def _load_host_enforcement() -> dict[str, Any]:
             }
             if set(role_entry) != expected_role_fields:
                 raise BuildError(
-                    f"{host}:{role}: enforcement fields must match schema v3"
+                    f"{host}:{role}: enforcement fields must match schema v5"
                 )
             for capability in ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
@@ -1352,14 +2003,52 @@ def _load_host_enforcement() -> dict[str, Any]:
         raise BuildError(
             "claude:analysis-agent must expose only the native read and Web read tools"
         )
-    if hosts["copilot"]["roles"]["analysis-agent"]["rendered_tools"] != [
-        "read",
-        "search",
-        "web",
-    ]:
-        raise BuildError(
-            "copilot:analysis-agent must expose only read, search, and web"
-        )
+    surfaces = data.get("host_surfaces")
+    if not isinstance(surfaces, dict) or tuple(surfaces) != COPILOT_SURFACES:
+        raise BuildError("host enforcement must declare the three Copilot surfaces")
+    expected_surface_tools = {
+        "copilot-cli": ["read", "search"],
+        "copilot-vscode": ["read", "search", "web"],
+        "copilot-coding-agent": ["read", "search"],
+    }
+    for surface, expected_analysis_tools in expected_surface_tools.items():
+        entry = surfaces[surface]
+        if not isinstance(entry, dict) or set(entry) != {
+            "delivery_family",
+            "profile_interpretation",
+            "roles",
+        }:
+            raise BuildError(f"{surface}: Host Surface fields are invalid")
+        if entry.get("delivery_family") != "copilot":
+            raise BuildError(f"{surface}: delivery family must remain copilot")
+        if not isinstance(entry.get("profile_interpretation"), str) or not entry[
+            "profile_interpretation"
+        ].strip():
+            raise BuildError(f"{surface}: profile interpretation is required")
+        surface_roles = entry.get("roles")
+        if not isinstance(surface_roles, dict) or set(surface_roles) != expected_roles:
+            raise BuildError(f"{surface}: roles must be the four static profiles")
+        for role, role_entry in surface_roles.items():
+            if not isinstance(role_entry, dict) or set(role_entry) != {
+                "rendered_tools",
+                "external_source_read",
+            }:
+                raise BuildError(f"{surface}:{role}: Host Surface role fields are invalid")
+            tools = role_entry["rendered_tools"]
+            if not isinstance(tools, list) or any(
+                not isinstance(tool, str) or not tool for tool in tools
+            ):
+                raise BuildError(f"{surface}:{role}: rendered tools must be a string list")
+            if role_entry["external_source_read"] not in ENFORCEMENT_STATUSES:
+                raise BuildError(f"{surface}:{role}: external read declaration is invalid")
+            if role != "analysis-agent" and role_entry["external_source_read"] != "unsupported":
+                raise BuildError(f"{surface}:{role}: external read must remain unsupported")
+        if surface_roles["analysis-agent"]["rendered_tools"] != expected_analysis_tools:
+            raise BuildError(f"{surface}: analysis tools do not match the surface ceiling")
+    if hosts["copilot"]["roles"]["analysis-agent"]["rendered_tools"] != _copilot_portable_tools(
+        data, "analysis-agent"
+    ):
+        raise BuildError("copilot:analysis-agent must equal the portable surface union")
     for host in ("claude", "copilot"):
         review = hosts[host]["roles"]["review-agent"]
         if review["read_only_command_semantics"] != "unsupported":
@@ -1443,22 +2132,20 @@ def _profile_instructions(
             raise BuildError(f"missing profile prompt {prompt_path}")
         instructions = f"{instructions}\n\n{path.read_text(encoding='utf-8').strip()}"
     tools = ", ".join(_string_list(profile.get("tools")))
-    capability_projection = ""
-    if host is not None and profile.get("name") == "main-control-agent":
-        matrix = enforcement or _load_host_enforcement()
-        host_entry = matrix["hosts"][host]
-        capability_facts = _normalized_decision_capabilities(host_entry)
-        capability_projection = "\n\n" + _render_decision_capability_facts(capability_facts)
-    elif host is not None and profile.get("name") == "analysis-agent":
-        matrix = enforcement or _load_host_enforcement()
-        mode = matrix["hosts"][host]["roles"]["analysis-agent"][
-            "external_source_read"
-        ]
-        capability_projection = (
-            "\n\nCurrent external-read mode: "
-            f"external_source_read={mode}."
-        )
-    return f"{instructions}\n\nDeclared tool boundary: {tools}.{capability_projection}"
+    return f"{instructions}\n\nDeclared tool boundary: {tools}."
+
+
+def _copilot_portable_tools(matrix: dict[str, Any], role: str) -> list[str]:
+    """Return the stable shared-file union across independent Copilot surfaces."""
+
+    tools: list[str] = []
+    for surface in COPILOT_SURFACES:
+        for tool in matrix["host_surfaces"][surface]["roles"][role][
+            "rendered_tools"
+        ]:
+            if tool not in tools:
+                tools.append(tool)
+    return tools
 
 
 def _validate_rendered_prompt_embedding(
@@ -1528,7 +2215,7 @@ def _render_copilot_profile(
     profile: dict[str, Any], enforcement: dict[str, Any] | None = None
 ) -> str:
     matrix = enforcement or _load_host_enforcement()
-    tools = matrix["hosts"]["copilot"]["roles"][profile["name"]]["rendered_tools"]
+    tools = _copilot_portable_tools(matrix, profile["name"])
     rendered = json.dumps(list(dict.fromkeys(tools)), separators=(",", ":"))
     model_invocation = (
         "disable-model-invocation: true\n"
@@ -1549,13 +2236,13 @@ def _render_copilot_profile(
 
 def _write_build_manifest(
     profile_root: Path,
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     compiled_by_skill: dict[str, list[str]],
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
     source_snapshot: dict[str, object],
+    runtime_asset_bindings: dict[str, dict[str, str]],
 ) -> None:
     foundation_names = {item.name for item in items["foundation"]}
     compiled_foundation_skills = sorted(
@@ -1568,9 +2255,10 @@ def _write_build_manifest(
     )
     manifest = {
         "architecture": "hookless-control-plane-v1",
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "source_version": _source_version(),
         "authoritative_build_inputs": source_snapshot,
+        "runtime_asset_bindings": runtime_asset_bindings,
         "top_level_skills": [item.name for item in top_level],
         "control_skills": [item.name for item in items["control"]],
         "professional_skills": [item.name for item in items["professional"]],
@@ -1583,14 +2271,8 @@ def _write_build_manifest(
         "domain_skills": [item.name for item in items["domain"]],
         "compiled_layer3_format": COMPILED_LAYER3_FORMAT,
         "compiled_layer3_references": compiled_by_skill,
-        "foundation_mode": (
-            "top-level"
-            if profile == "dev"
-            else "targeted-product-references"
-        ),
-        "domain_mode": (
-            "targeted-references" if profile == "recommended" else "top-level"
-        ),
+        "foundation_mode": "targeted-product-references",
+        "domain_mode": "targeted-references",
         "agent_profiles": [profile_entry["name"] for profile_entry in profiles],
         "agent_profile_sha256": _agent_profile_digests(profiles, enforcement),
         "agent_profile_enforcement": enforcement["hosts"],
@@ -1637,52 +2319,50 @@ def _copy_skill_tree(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination, ignore=ignore)
 
 
+def _strip_runtime_semantic_markers(destination: Path) -> None:
+    """Remove source-only semantic identity markers from built Markdown."""
+
+    for path in sorted(destination.rglob("*.md")):
+        source = path.read_text(encoding="utf-8")
+        try:
+            rendered = strip_semantic_identity_markers(source)
+        except ValueError as exc:
+            raise BuildError(
+                f"{_display_path(path)} contains a malformed semantic identity marker"
+            ) from exc
+        if "rd-semantic-id:" in rendered:
+            raise BuildError(
+                f"{_display_path(path)} contains a malformed semantic identity marker"
+            )
+        if rendered != source:
+            path.write_text(rendered, encoding="utf-8")
+
+
 def _reset_dir(path: Path) -> None:
     if path.exists():
         shutil.rmtree(path)
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _clean_legacy_dist_artifacts() -> None:
-    if not DIST_DIR.exists():
-        return
-    directory_names = {
-        ".changeforge-packs",
-        ".changeforge-control",
-        "hooks",
-        "runtime_governance",
-    }
-    file_names = {
-        ".changeforge-hook-manifest.json",
-        "changeforge-hooks.json",
-        "settings.changeforge-hooks.fragment.json",
-        "hooks.json",
-        "changeforge-route-preflight.md",
-        "changeforge-professional-contract.md",
-    }
-    for path in sorted(DIST_DIR.rglob("*"), key=lambda value: len(value.parts), reverse=True):
-        if path.is_dir() and path.name in directory_names:
-            shutil.rmtree(path)
-            continue
-        if not path.is_file():
-            continue
-        if path.name in file_names or path.name.startswith("changeforge_") and path.suffix == ".py":
-            path.unlink()
-    universal_bootstrap = DIST_DIR / "universal" / "bootstrap"
-    if universal_bootstrap.exists():
-        shutil.rmtree(universal_bootstrap)
-    legacy_copilot_profiles = DIST_DIR / "copilot" / "project" / ".github" / "copilot" / "agents"
-    if legacy_copilot_profiles.exists():
-        shutil.rmtree(legacy_copilot_profiles)
+def _cleanup_legacy_managed_outputs() -> None:
+    """Converge only the fully preflighted, previously managed output allowlist."""
 
-
-def _cleanup_legacy_zip_layout() -> None:
-    OPENAI_ZIP_DIR.mkdir(parents=True, exist_ok=True)
-    for path in OPENAI_ZIP_DIR.iterdir():
-        if path.is_file() and path.suffix == ".zip":
-            path.unlink()
-        elif path.is_dir() and path.name not in PROFILES:
-            shutil.rmtree(path)
+    directories = (
+        *_retired_profile_output_paths(),
+        *_legacy_managed_directory_paths(),
+    )
+    files = (*_legacy_managed_file_paths(), *_legacy_root_zip_paths())
+    try:
+        for path in sorted(directories, key=lambda value: len(value.parts), reverse=True):
+            if path.exists():
+                shutil.rmtree(path)
+        for path in files:
+            if path.exists():
+                path.unlink()
+    except OSError as exc:
+        raise BuildError(
+            f"cannot remove legacy managed output {_display_path(path)}: {exc}"
+        ) from exc
 
 
 def _package_openai_zips(source_root: Path, zip_root: Path) -> int:

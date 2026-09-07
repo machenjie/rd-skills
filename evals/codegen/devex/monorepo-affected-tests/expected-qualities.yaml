@@ -1,51 +1,8 @@
-id: monorepo-affected-tests
-category: devex
-complexity: L4
-focus:
-  - affected test selection
-  - module graph accuracy
-  - build cache safety
-  - CI fallback
-route_hints:
-  work_path: direct-task
-  agent_profile: task-agent
-  primary_skill: integration-change-builder
-  layer3_skills:
-    - contract-testing
-  review_skill: ai-code-review-refactor
-release_contract:
-  case_id: devex/monorepo-affected-tests
-  control_path: direct
-  primary_skill: integration-change-builder
-  task_skill: null
-  review_skill: ai-code-review-refactor
-  tasks:
-    - task_id: graph-selection
-      skill: integration-change-builder
-      review_skill: ai-code-review-refactor
-    - task_id: cache-and-explanations
-      skill: integration-change-builder
-      review_skill: ai-code-review-refactor
-    - task_id: integrate-parallel-slices
-      skill: integration-change-builder
-      review_skill: ai-code-review-refactor
-expected_outcomes:
-  - Changed shared packages select downstream test suites.
-  - Lockfile and generated contract changes invalidate affected test caches.
-  - Unknown paths fall back to a broader safe test set.
-  - CI output explains selected and skipped tests.
-required_qualities:
-  - Module graph edges include generated and runtime dependencies.
-  - Tests cover direct, transitive, lockfile, generated, and unknown path cases.
-  - Cache keys include dependency graph and tool version inputs.
-  - Periodic full suite fallback is documented.
-forbidden_shortcuts:
-  - Selecting tests only from direct file path prefixes.
-  - Ignoring lockfile or generated contract changes in cache keys.
-  - Skipping all tests for unknown paths.
-  - Providing no explanation for why a test was skipped.
-evidence:
-  - Graph selection tests for direct and transitive changes.
-  - Cache key assertions for lockfile and generated inputs.
-  - CI dry run output fixture.
-  - Documentation of full suite fallback cadence.
+id: "monorepo-affected-tests"
+category: "devex"
+focus: ["affected test selection", "module graph accuracy", "build cache safety", "CI fallback"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "integration-change-builder", "layer3_skills": ["contract-testing"], "review_skill": null}
+expected_outcomes: ["Changed shared packages select downstream test suites.", "Lockfile and generated contract changes invalidate affected test caches.", "Unknown paths fall back to a broader safe test set.", "CI output explains selected and skipped tests."]
+required_qualities: ["Module graph edges include generated and runtime dependencies.", "Tests cover direct, transitive, lockfile, generated, and unknown path cases.", "Cache keys include dependency graph and tool version inputs.", "Periodic full suite fallback is documented."]
+forbidden_shortcuts: ["Selecting tests only from direct file path prefixes.", "Ignoring lockfile or generated contract changes in cache keys.", "Skipping all tests for unknown paths.", "Providing no explanation for why a test was skipped."]
+evidence: ["Graph selection tests for direct and transitive changes.", "Cache key assertions for lockfile and generated inputs.", "CI dry run output fixture.", "Documentation of full suite fallback cadence."]

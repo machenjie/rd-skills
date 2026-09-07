@@ -9,7 +9,7 @@ Use this reference when `data-side-effect-flow-tracing` needs more depth than th
 - Unit of work and source-of-truth cache discipline: writes, cache, and events need explicit order.
 - Idempotent side-effect design: when an operation can be retried or replayed, define duplicate behavior for each reachable effect and record unknown semantics for externally owned effects.
 - Saga compensation: multi-step durable effects need forward recovery or explicit irreversible risk.
-- OpenTelemetry and audit logging: observability should record behavior without changing business outcome or leaking sensitive data.
+- Diagnostic telemetry should record behavior without changing business outcomes or leaking sensitive data. Protected audit records follow their accepted owner's durability, failure, and transaction-coupling contract.
 
 ## Side-Effect Classification Matrix
 
@@ -21,7 +21,7 @@ Use this reference when `data-side-effect-flow-tracing` needs more depth than th
 | External IO/webhook | Adapter, timeout, retry stance, idempotency, reconciliation. | Provider failure or duplicate delivery affects money/data/permissions. |
 | File/storage IO | Writer owner, cleanup, retention, rollback/reconciliation. | DB rollback can orphan objects or expose private data. |
 | Nondeterministic read | Clock/random/env/flag boundary, injection, replay/audit impact. | Business logic becomes flaky or non-auditable. |
-| Observability | Field list, redaction, exporter failure, no-business-outcome guarantee. | Logs/metrics/traces can mutate state or leak sensitive data. |
+| Diagnostics and audit | Field list, redaction, exporter failure, and diagnostic non-authority; protected audit durability and transaction coupling follow the accepted audit contract. | A sink can change business outcomes, lose required audit records, or leak sensitive data. |
 
 ## Ordering Pattern
 
@@ -41,7 +41,7 @@ Use the actual local order. Deviations are allowed only when the owner states th
 | Event before commit. | Consumers observe rolled-back state. | Publish after commit or use outbox. |
 | Cache invalidated before failed persistence. | Fresh cache hides missing durable state. | Tie cache order to commit and source of truth. |
 | Retry repeats non-idempotent write. | Duplicate charge, event, file, or provider action. | Define idempotency key and duplicate response. |
-| Logger callback swallows error. | Observability changes business result. | Keep exporter failure non-authoritative. |
+| Logger callback overrides an error or drops required audit evidence. | Diagnostics change the business result or protected audit obligations are lost. | Keep diagnostic exporter failure non-authoritative; preserve the accepted audit owner's failure and durability policy. |
 | Stale prior evidence proves flow safety. | Current wrappers or generated clients drifted. | Re-read current source, tests, graph, and validation output. |
 
 ## Handoff Boundaries

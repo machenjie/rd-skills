@@ -7,6 +7,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Decision Boundary
 
+- Define behavior parity separately from UI parity.
 - Define behavior parity as equivalent user outcome, state transition,
   authorization, recovery, and failure semantics for the supported target set.
 - Define UI parity separately; allow platform-native layout, input, window,

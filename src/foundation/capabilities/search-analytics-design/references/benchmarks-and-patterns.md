@@ -32,11 +32,11 @@ After cutover, monitor lag, errors, drift, result or metric deltas, capacity, an
 
 When closure uses repository inspection, limit search or analytics claims to inspected mappings and consumers. Treat production behavior as unverified until named live or owner evidence covers it. Synthetic corpus and load tests do not prove real traffic or decision accuracy. State these limits and owners.
 
-Reject engine-by-fashion, global facet counts, UI-only permissions, and in-place analyzer changes without rebuild evidence. Also reject metrics without grain/dedupe, deletion postponed to periodic reindex, manual-only drift checks, and derived state presented as authoritative without revalidation.
+Reject engine-by-fashion, global facet counts, UI-only permissions, and analyzer changes without current token/index compatibility and judged-query evidence, including rebuild proof when existing indexed terms require it. Also reject metrics without grain/dedupe, deletion postponed to periodic reindex, manual-only drift checks, and derived state presented as authoritative without revalidation.
 
 Route relational query alternatives to `indexing-query-optimization` and source ownership to `data-model-design`.
 Route non-relational primary design to `nosql-database`.
 Route model/embedding selection, evaluation, and lifecycle acceptance to `ai-product-extension`; keep corpus, retrieval, permissions, freshness, and fallback integration here.
 Route ingestion and replay to `message-queue-design` or `data-side-effect-flow-tracing`.
 Route actual data/index/model cutover, backfill, and deployment execution to `data-migration-design` and `delivery-release-gate`; AI lifecycle acceptance does not transfer that execution authority.
-Route privacy to `security-privacy-gate` and lag, drift, or capacity to `reliability-observability-gate`.
+Route privacy to `security-privacy-gate`. Return unresolved runtime reliability, capacity, recovery, or observability decisions involving lag, drift, or capacity to Main for `reliability-observability-gate`.

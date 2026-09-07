@@ -41,7 +41,7 @@ Is the dependency selected by config?
 
 | Anti-pattern | Failure | Safer treatment |
 | --- | --- | --- |
-| Per-operation client construction. | Socket churn, token churn, pool starvation, and slow hot paths. | Long-lived client at narrowest safe owner. |
+| Per-operation construction of resources whose accepted lifetime requires reuse. | Socket churn, token churn, pool starvation, and slow hot paths. | Reuse at the narrowest safe scope; preserve required operation-local state and cleanup. |
 | Business logic uses service locator. | Hidden graph, cycles, and untestable behavior. | Constructor/factory/provider seam. |
 | Mutable singleton stores request or tenant state. | Cross-request leakage and races. | Request/job scope or synchronized owner with reset and cleanup. |
 | Lazy lookup hides cycle. | Circular ownership appears only in production. | Fix graph direction or bound lazy behavior with exit plan. |
@@ -52,7 +52,8 @@ Is the dependency selected by config?
 
 - Use `implementation-structure-design` when file, object, function, factory, or facade placement is primary.
 - Use `configuration-runtime-policy` when provider, mode, region, tenant, flag, or environment selects the graph.
-- Use `language-performance-safety` and `reliability-observability-gate` for resource cleanup, pool sizing, event loops, and production lifecycle readiness.
+- Use `language-performance-safety` for resource cleanup, pool sizing, and event-loop contracts.
+- Return unresolved reliability, recovery, or observability judgments, including production lifecycle readiness, to Main for `reliability-observability-gate`.
 - Use `testability-seam-design` and `quality-test-gate` for fake/stub/mock strategy and validation depth.
 - Use `architecture-impact-reviewer` or `module-boundary-design` when dependency direction or module boundaries change.
 - Use `security-privacy-gate` when credentials, tenants, auth clients, or secrets can cross trust boundaries.

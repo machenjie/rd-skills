@@ -26,7 +26,7 @@ Design versioned transfer contracts that decouple API, event, form, SDK, view, a
 - **Null, absent, empty, and defaulted are different states.** For each nullable or optional field, specify whether `null`, missing, empty string/list/object, and default value mean clear, no-op, unknown, not-applicable, or zero-content.
 - **Required and optional are semantic decisions.** Required means the DTO cannot be interpreted without the field. Optional fields still need absence semantics, examples, and compatibility rules.
 - **Serialization format drives field conventions.** JSON and GraphQL normally use `camelCase`; Protobuf uses `snake_case`; XML/SOAP may use `PascalCase`. Mixed conventions in one DTO require a migration rationale.
-- **Field types must be exact enough for the risk.** Money uses exact decimals or scaled integers with explicit ISO or non-ISO currency/asset identity and an authoritative scale/exponent source. Precision, rounding, overflow, and validation stay explicit; datetimes use RFC 3339/ISO 8601 UTC, identifiers remain stable and opaque, and enums document unknown handling.
+- **Field types must be exact enough for the risk.** Money uses exact decimals or scaled integers with ISO/non-ISO currency or asset identity, authoritative scale, and explicit precision, rounding, overflow, and validation. Time fields preserve instant, future local date/time with zone/DST policy, or date-only meaning; identifiers stay stable/opaque and enums define unknown handling.
 - **Schema evolution is compatibility-first.** Add optional fields safely; treat removal, rename, type change, optional-to-required, validation tightening, and semantic change as breaking until proven otherwise.
 - **Sensitive and permission-dependent fields are explicit.** Define allowed consumers, redaction or filtering, and denied-case validation for tenant, permission, PII, financial, health, token, and audit fields.
 
@@ -37,7 +37,7 @@ Design versioned transfer contracts that decouple API, event, form, SDK, view, a
 
 ## Stop Conditions
 
-Escalate public or unknown consumers, permission/tenant/sensitive/mutation-bearing fields, PATCH nullability changes, enum growth without unknown handling, new required fields, unversioned meaning changes, persistence leakage, stale generation, or unproved consumer absence.
+Escalate public or unknown consumers when missing evidence prevents an owned bounded compatibility judgment. Also escalate unresolved permission/tenant/sensitive/mutation-bearing fields, PATCH nullability changes, enum growth without unknown handling, new required fields, unversioned meaning changes, persistence leakage, stale generation, or unproved consumer absence.
 
 ## Output Contract
 

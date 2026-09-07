@@ -6,6 +6,9 @@ This standard extends the [base standard](SKILL_AUTHORING_BASE_STANDARD.md).
 
 A Foundation Skill solves one reusable, high-value engineering decision such as transaction boundaries, concurrency control, error handling, test isolation, placement, security coding, or observability. It is a compact decision aid, not a language tutorial or broad handbook.
 
+Foundation is a capability modifier, never a Primary Route owner or Runtime
+top-level Skill.
+
 ## Scope
 
 - One decision problem per Skill.
@@ -77,18 +80,20 @@ outcomes survived.
 Every Foundation registry entry declares exactly one `delivery_scope`:
 
 - `product` solves a normal engineering decision, has at least one task-routable
-  Professional owner, and may be compiled into normal profiles;
-- `authoring-only` is a durable rd-skills authoring capability but is exposed
-  only as a top-level Skill in `dev`;
+  Professional owner, and may be compiled behind that owner's selector;
+- `authoring-only` is a durable rd-skills authoring capability retained in
+  source and internal validation only;
 - `dev-only` supports internal authoring, evaluation, or control-plane
-  maintenance and is exposed only as a top-level Skill in `dev`.
+  maintenance and remains source/internal-validation content only.
 
-Normal profiles compile only `product` Foundation Skills selected by a
-Professional task route. The development profile exposes all Foundation Skills
-at the top level. For every `product` entry, `used_by` must exactly equal the
+The Runtime compiles only `product` Foundation Skills selected by a
+Professional task route. No Foundation scope is exposed at the Host top level.
+For every `product` entry, `used_by` must exactly equal the
 Professional Skills that name it in `layer3_candidates`; their supported Agent
 Profiles must intersect. `authoring-only` and `dev-only` entries have no
-Professional owner and must not enter a normal task candidate list.
+Professional owner and must not enter a Runtime task candidate list. Complete
+all-Foundation projection is permitted only in cleaned test-temporary storage,
+never in `dist`, packages, or Host discovery.
 
 Never ask an agent to load all Foundation Skills. Never hide a task's primary ownership inside a Foundation Skill.
 

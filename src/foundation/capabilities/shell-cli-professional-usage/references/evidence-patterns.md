@@ -5,7 +5,7 @@ Use this reference when shell/CLI closure depends on current or prior evidence, 
 
 | Shell/CLI claim | Minimum evidence | What it proves | What it does not prove |
 | --- | --- | --- | --- |
-| Destructive command is guarded | Current script path, target selector, dry-run output, apply flag/confirmation rule, rollback note, and target-guard test | The inspected command path blocks the named wrong-target case before mutation | Every production context, shell environment, or operator mistake is covered |
+| Destructive command is guarded | Current script path, target selector, dry-run output when supported, apply flag/confirmation rule, rollback note, and target-guard test | The inspected command path blocks the named wrong-target case before mutation | Every production context, shell environment, or operator mistake is covered |
 | Output contract is safe | stdout schema or sample, stderr diagnostic sample, exit-code table, and parser/golden-output test | The inspected consumer can distinguish data, diagnostics, and failures | All downstream parsers or historic output consumers are compatible |
 | Quoting and path handling are robust | ShellCheck result, hostile filename fixture, null-delimiter or quoted-array proof, temp/trap cleanup, and rerun test | The inspected path handles representative whitespace/glob/temp/rerun hazards | Every filesystem, locale, or external command behavior is covered |
 | Secret handling is contained | no-secret-in-argv review, tracing boundary, redacted log sample, temp-file mode, and retention statement | The named secret path avoids obvious process-list/log/artifact exposure | External tool logging, kernel audit, or third-party retention is fully proven |

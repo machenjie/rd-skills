@@ -92,7 +92,7 @@ Release reports keep content readiness as separate evidence surfaces:
 | Root structure | `root_content_summary.structural_strict_ready`, basis `root-strict-v5` | governed Foundation, Professional, and Domain root budgets plus Foundation decision density |
 | Semantic triage | scoped `semantic_triage_complete` fields | every candidate classified or dispositioned; rewrite may remain unresolved |
 | Readability review | `content_readiness.expert.readability` | three independent ballots, current Root/Reference/readability fingerprints, and zero tracked tightening |
-| Professional completeness | `content_readiness.expert.professional_completeness` | schema-3 exact carry; fresh Skills receive two qualified domain votes plus one architecture vote, carried Skills bind authenticated direct fresh origins, all 189 effective packages have zero corrections/disagreements, and contract/plan/provenance/storage/cost are current |
+| Professional completeness | `content_readiness.expert.professional_completeness` | schema-3 exact carry; fresh Skills receive two qualified domain votes plus one architecture vote, carried Skills bind authenticated direct fresh origins, all 188 effective packages have zero corrections/disagreements, and contract/plan/provenance/storage/cost are current |
 | Aggregate | `content_readiness.aggregate` | independent structural, triage, readability, and professional-completeness axes |
 
 Reference and Root structural or triage failure blocks the authoring gate.
@@ -111,7 +111,7 @@ attestation, is replaced rather than appended, and must be tracked,
 decisions remain only under ignored `.rd-skills/expert-panel/<run-id>/` or an
 optional CI/Release artifact. Canonical fixed-attestation paths, not Readability
 or Professional policy config, select Expert Panel evidence; the formal target
-remains all 189 non-Control packages. Formal release requires a current
+remains all 188 non-Control packages. Formal release requires a current
 Semantic application bound to the exact fixed-attestation bytes. These fixed
 attestations do not prove that the final local formal gate passed. Replace an
 attestation only after source, detector, binding,
@@ -694,7 +694,7 @@ release-review-required depth warnings have explicit accepted release review dec
 professional benchmarks pass
 professionalism regression passes
 readability review is schema-2 panel-majority-current with zero tracked tightening, unresolved detector false positives, or actionability rewrite requirements
-professional completeness is schema-3 panel-majority-current for all 189 effective packages; fresh packages have source-bound two-domain-plus-one-architecture evidence, carried packages bind authenticated direct fresh origins, the contract/plan/bindings/provenance/storage/cost are current, and correction/unresolved counts are zero
+professional completeness is schema-3 panel-majority-current for all 188 effective packages; fresh packages have source-bound two-domain-plus-one-architecture evidence, carried packages bind authenticated direct fresh origins, the contract/plan/bindings/provenance/storage/cost are current, and correction/unresolved counts are zero
 efficiency edits did not reduce professional depth
 release report separates professionalism, activation, context efficiency, and benchmark scores
 ```

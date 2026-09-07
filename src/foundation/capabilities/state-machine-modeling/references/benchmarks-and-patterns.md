@@ -19,12 +19,12 @@ Use a simple transition table and one enforcing authority by default. Hierarchic
 
 - For each modeled object and current-scope transition path, route state changes through the authoritative domain or policy transition contract. Deny origins or targets absent from that contract. Record unsearched producers and migration scripts as proof limits.
 - Persist the transition and outbox or audit fact atomically when both must agree.
-- Run irreversible external effects after commit through an idempotent boundary or a documented proven alternative.
+- Run irreversible external effects after commit through an idempotent boundary or a documented proven alternative. For an accepted remote-success-before-commit sequence, prove effect identity and the applicable rollback, replay, cancellation, or reconciliation path across the failure window.
 - When an in-progress state can fail or stall, distinguish each applicable failure and recovery outcome.
 - Give recovery an authorized transition, repair command, compensation, or owned runbook instead of relying only on direct database editing.
 - For state-machine behavior changed by the current task, test applicable initial/terminal states and the changed valid transitions; select invalid origin/actor/guard, stale-version/duplicate-trigger, timeout/recovery, side-effect-ordering, and stored-state-compatibility cases from the affected lifecycle risk.
 - Source inspection proves only the entry points searched; local tests do not prove every producer, real scheduler/broker timing, production interleaving, or mixed-version rollout. Name those limits and owners.
 
-Reject scattered status assignments, side effects before commit, copied graphs from a similar object, new values without compatibility handling, and recovery paths without authorization/audit.
+Reject scattered status assignments, pre-commit effects without an accepted identity and recovery contract, copied graphs from a similar object, new values without compatibility handling, and recovery paths without authorization/audit.
 
 Route business rules to `business-rule-extraction` and permission guards to `permission-boundary-modeling`. Route commit/effect ordering to `transaction-consistency` or `data-side-effect-flow-tracing`, durable events to `domain-event-modeling`, and async recovery to `async-job-design`. Route migration to `data-migration-design` and executable coverage to `test-strategy` or `quality-test-gate`.

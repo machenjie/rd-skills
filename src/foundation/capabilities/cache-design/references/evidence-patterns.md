@@ -27,7 +27,8 @@ Use this reference when cache closure depends on current source, prior claims, v
 ## Tool Permission Boundary
 
 - Cache writes, flushes, purges, and CDN invalidations require an authorized namespace, bounded key or rate scope, stop condition, and a rebuild or rollback path.
-- For production cache telemetry or diagnostics, prefer metadata, redact sensitive cached values, and qualify cache-health conclusions with tiers, replicas, or stale objects outside the observation scope.
+- For production cache telemetry or diagnostics, prefer metadata and redact sensitive cached values.
+- Qualify cache-health conclusions by naming tiers, replicas, and stale objects outside the observation scope.
 
 ## Handoff Evidence Shape
 

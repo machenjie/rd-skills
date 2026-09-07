@@ -37,7 +37,7 @@ Define actor goal, authority, trigger, preconditions, success and alternative pa
 
 ## Stop Conditions
 
-Escalate when actor authority, business goal, system boundary, authoritative rule, consequential side effect, or termination guarantee is ambiguous. Also escalate when external owners cannot confirm a material path, or failure could affect money, permission, safety, regulated data, or irreversible operations.
+Escalate when actor authority, business goal, system boundary, authoritative rule, consequential side effect, or termination guarantee is ambiguous. Also escalate when external owners cannot confirm a material path, or a consequential money, permission, safety, privacy, or irreversible-effect decision has unresolved evidence or a required policy judgment.
 
 ## Output Contract
 

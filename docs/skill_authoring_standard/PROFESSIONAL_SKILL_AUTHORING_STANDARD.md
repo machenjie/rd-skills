@@ -31,10 +31,12 @@ The current contract stores one package-material binding and one review-unit
 binding per target, deduplicates dependency materials in one compact catalog,
 and stores only dependency IDs per finding. Legacy source/package/review-binding
 aliases and earlier schema-3 contract fingerprints are audit-only; a contract
-change requires a full-fresh 189-Skill review.
+change requires a full-fresh 188-Skill review.
 
 ## Required Design
 
+- Demonstrate a stable independent Primary Route and distinct task ownership;
+  otherwise extend an existing owner.
 - Name one primary consuming Profile or a tightly bounded set of roles.
 - Define positive and negative routing conditions.
 - Require source-backed facts rather than guessed ownership or behavior.
@@ -61,15 +63,36 @@ physical `line_count`, governed `governed_line_count`, and canonical Registry
 
 ## Layer 3 Loading
 
-Name only plausible candidates in the registry. Load a candidate only when the current task triggers its decision problem. A Direct Task normally uses zero to three Layer 3 Skills. Higher-risk work may use more only when each addition maps to a concrete risk.
+Name only plausible candidates in the registry. Load a candidate only when the
+current task triggers its decision problem. Layer 3 selection is an ordered
+unique list of zero to three items. More than three items or any duplicate fails
+closed; never truncate the selection. Higher risk changes which Layer 3 items
+are selected, not the maximum count. Foundation and modifier-only Domain items
+remain behind the Professional selector and never become Runtime top-level
+Skills. Task and Review consume Main's fixed Primary Route instead of rerunning
+global routing.
 
 ## Role Separation
 
-Analysis Skills produce source-backed acceptance, owner, impact, placement, validation, rollback, and the First Executable Slice. Implementation Skills change one bounded scope and validate it. Implementation Review Skills inspect the actual diff and all changed files; pre-implementation Review Skills inspect the bounded artifact, criteria, and supporting evidence. Neither repairs findings. A single root may support more than one role only when its decision contract is genuinely shared and the registry states that support.
+Analysis Skills answer the assigned source-backed question and state proof limits.
+Implementation preparation includes ownership, constraints, placement, validation,
+and rollback only where relevant to the decision; a diagnosis-only or source-answer
+request does not require an implementation plan or First Executable Slice.
+Implementation Skills inspect and change one bounded scope, then validate it.
+When independent Review is selected, implementation Review Skills inspect the
+actual diff and all changed files; pre-implementation Review Skills inspect the
+bounded artifact, criteria, and supporting evidence. Neither repairs findings.
+A single root may support more than one role only when its decision contract is
+shared and the registry states that support.
 
 ## References
 
-Move deep technology matrices, failure catalogs, and specialized checklists to targeted references. Keep the root compact enough to load on every routed task. Do not repeat the control prompt, full task contract, or complete Layer 3 bodies.
+Move deep technology matrices, failure catalogs, framework/library/protocol
+details, and specialized checklists to targeted references. Keep the root
+compact enough to load on every routed task. Prefer an existing Targeted
+Reference, Foundation/Domain owner, or Professional owner before creating a new
+Professional Skill. Do not repeat the control prompt, full task contract, or
+complete Layer 3 bodies.
 
 ## Review Questions
 

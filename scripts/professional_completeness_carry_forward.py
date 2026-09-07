@@ -11,12 +11,19 @@ from __future__ import annotations
 
 import copy
 import hashlib
+from importlib import metadata as importlib_metadata
 import json
 import re
+import unicodedata
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 import expert_panel_contracts as panel_contracts
+
+try:
+    from markdown_it import MarkdownIt
+except ImportError:  # pragma: no cover - exercised through the fail-closed seam
+    MarkdownIt = None
 
 ACCEPTED_PROFESSIONAL_DISPOSITION = (
     panel_contracts.PROFESSIONAL_ACCEPTED_DISPOSITION
@@ -37,6 +44,24 @@ _MATERIAL_RECORD_FIELDS = set(
 _ADJACENCY_REVIEW_BINDING_FIELDS = set(
     panel_contracts.PROFESSIONAL_ADJACENCY_REVIEW_BINDING_FIELDS
 )
+_RESPONSIBILITY_FIELDS = set(
+    panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_FIELDS
+)
+_RESPONSIBILITY_REQUIRED_LIST_FIELDS = set(
+    panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_REQUIRED_LIST_FIELDS
+)
+_RESPONSIBILITY_OPTIONAL_LIST_FIELDS = set(
+    panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS
+)
+_CURRENTNESS_PROJECTION_VERSION = (
+    panel_contracts.PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION
+)
+_REGISTRY_AUTHORITY_REQUIRED_FIELDS = set(
+    panel_contracts.PROFESSIONAL_REGISTRY_AUTHORITY_REQUIRED_FIELDS
+)
+_REFERENCE_AUTHORITY_FIELDS = set(
+    panel_contracts.PROFESSIONAL_REFERENCE_AUTHORITY_FIELDS
+)
 _FRESH_ADJACENCY_CONTEXT_FIELDS = {
     "algorithm",
     "declared_skills",
@@ -48,6 +73,10 @@ _FRESH_ADJACENCY_CONTEXT_FIELDS = {
 _TARGET_BINDING_FIELDS = set(
     panel_contracts.PROFESSIONAL_TARGET_BINDING_FIELDS
 )
+_HISTORICAL_TARGET_BINDING_FIELDS = _TARGET_BINDING_FIELDS - {
+    "registry_authority",
+    "reference_authority",
+}
 _SNAPSHOT_TARGET_FIELDS = set(
     panel_contracts.PROFESSIONAL_SNAPSHOT_TARGET_FIELDS
 )
@@ -89,6 +118,7 @@ _DISCOVERY_BOUNDARY_FIELDS = {
     "skill_id",
     "layer",
     "responsibility_contract",
+    "reference_authority",
     "required_expertise_tags",
     "material_fingerprint",
 }
@@ -117,6 +147,37 @@ _PROFESSIONAL_EVIDENCE_METRIC_KEYS = {
 
 class ProfessionalCarryForwardError(ValueError):
     """Raised when an internal carry or capsule projection is not canonical."""
+
+
+class _HistoricalContentBindingCatalog(dict[str, dict[str, Any]]):
+    """Invocation-local adapter for immutable pre-semantic review artifacts."""
+
+
+class ProfessionalReviewerAddedRequiredRelationshipDrift(
+    ProfessionalCarryForwardError
+):
+    """Reviewer-added candidates became required after all authority checks."""
+
+    def __init__(self, overlaps: Mapping[str, Sequence[str]]) -> None:
+        canonical = tuple(
+            (
+                skill_id,
+                tuple(sorted(set(candidate_ids))),
+            )
+            for skill_id, candidate_ids in sorted(overlaps.items())
+            if candidate_ids
+        )
+        if not canonical:
+            raise ValueError("Professional relationship drift must be non-empty")
+        self.overlaps = canonical
+        rendered = "; ".join(
+            f"{skill_id}={','.join(candidate_ids)}"
+            for skill_id, candidate_ids in canonical
+        )
+        super().__init__(
+            "Professional reviewer-added candidates overlap current required "
+            f"relationships: {rendered}"
+        )
 
 
 def canonical_json_bytes(value: object) -> bytes:
@@ -239,6 +300,11 @@ def professional_own_material_binding(
 ) -> dict[str, Any]:
     """Project exactly the target's root and indexed Reference material."""
 
+    if "root" not in target and isinstance(target.get("own_material"), Mapping):
+        return _canonical_own_material_binding(
+            target["own_material"],
+            label=str(target.get("skill_id", "target")),
+        )
     return _canonical_own_material_binding(
         {
             "root": target.get("root"),
@@ -283,35 +349,6 @@ def _canonical_own_material_binding(
     return {"root": root, "indexed_references": references}
 
 
-def professional_registry_responsibility_binding(
-    target: Mapping[str, Any],
-) -> dict[str, Any]:
-    """Project the Registry path and embedded responsibility contract."""
-
-    registry = target.get("registry")
-    if not isinstance(registry, dict) or set(registry) not in (
-        {"path", "responsibility_contract"},
-        {"path", "entry_fingerprint", "responsibility_contract"},
-    ):
-        raise ProfessionalCarryForwardError(
-            "target.registry must contain the canonical Registry binding"
-        )
-    if not _is_canonical_repository_path(registry.get("path")):
-        raise ProfessionalCarryForwardError(
-            "target.registry.path must be non-empty"
-        )
-    if not isinstance(registry.get("responsibility_contract"), dict):
-        raise ProfessionalCarryForwardError(
-            "target.registry.responsibility_contract must be an object"
-        )
-    return {
-        "path": registry["path"],
-        "responsibility_contract": copy.deepcopy(
-            registry["responsibility_contract"]
-        ),
-    }
-
-
 def professional_required_expertise_binding(
     target: Mapping[str, Any],
 ) -> list[str]:
@@ -321,6 +358,892 @@ def professional_required_expertise_binding(
         target.get("required_expertise_tags"),
         label="target.required_expertise_tags",
     )
+
+
+def _normalize_horizontal_text(value: str) -> str:
+    value = unicodedata.normalize(
+        "NFC", value.replace("\r\n", "\n").replace("\r", "\n")
+    )
+    return "\n".join(
+        re.sub(r"[ \t\f\v]+", " ", line).strip()
+        for line in value.split("\n")
+    ).strip("\n")
+
+
+def _normalize_structured_authority(value: object, *, label: str) -> Any:
+    """Normalize only deterministic presentation in validated structured data."""
+
+    if value is None or type(value) in {bool, int}:
+        return value
+    if isinstance(value, str):
+        return _normalize_horizontal_text(value)
+    if isinstance(value, list):
+        return [
+            _normalize_structured_authority(
+                item, label=f"{label}[{index}]"
+            )
+            for index, item in enumerate(value)
+        ]
+    if isinstance(value, Mapping):
+        normalized: dict[str, Any] = {}
+        for key, item in value.items():
+            if not isinstance(key, str) or not key:
+                raise ProfessionalCarryForwardError(
+                    f"{label} keys must be non-empty text"
+                )
+            normalized_key = unicodedata.normalize("NFC", key)
+            if normalized_key in normalized:
+                raise ProfessionalCarryForwardError(
+                    f"{label} keys collide after Unicode NFC normalization"
+                )
+            normalized[normalized_key] = _normalize_structured_authority(
+                item, label=f"{label}.{normalized_key}"
+            )
+        return normalized
+    raise ProfessionalCarryForwardError(
+        f"{label} must contain only canonical JSON values"
+    )
+
+
+def _required_string_list(
+    value: object, *, label: str, allow_empty: bool
+) -> list[str]:
+    if not isinstance(value, list) or (
+        not allow_empty and not value
+    ):
+        raise ProfessionalCarryForwardError(
+            f"{label} must be {'a' if allow_empty else 'a non-empty'} string array"
+        )
+    if not all(isinstance(item, str) and item.strip() for item in value):
+        raise ProfessionalCarryForwardError(
+            f"{label} must contain non-empty strings"
+        )
+    if len(value) != len(set(value)):
+        raise ProfessionalCarryForwardError(
+            f"{label} must not contain duplicates"
+        )
+    return list(value)
+
+
+def professional_reference_authority_binding(
+    target: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    """Return ordered exact Reference Contract v2 currentness authority."""
+
+    value = target.get("reference_authority")
+    if not isinstance(value, list):
+        raise ProfessionalCarryForwardError(
+            "target.reference_authority must be an array"
+        )
+    records: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for index, raw in enumerate(value):
+        label = f"target.reference_authority[{index}]"
+        if not isinstance(raw, Mapping) or set(raw) != _REFERENCE_AUTHORITY_FIELDS:
+            raise ProfessionalCarryForwardError(
+                f"{label} must contain one exact Reference Contract v2 record"
+            )
+        path = raw.get("path")
+        if not _is_canonical_repository_path(path):
+            raise ProfessionalCarryForwardError(
+                f"{label}.path must be repository-relative"
+            )
+        if path in seen_paths:
+            raise ProfessionalCarryForwardError(
+                f"{label}.path duplicates {path!r}"
+            )
+        seen_paths.add(str(path))
+        for field in ("type", "load_when", "do_not_load_when"):
+            field_value = raw.get(field)
+            if (
+                not isinstance(field_value, str)
+                or not field_value.strip()
+                or "\n" in field_value
+                or "\r" in field_value
+            ):
+                raise ProfessionalCarryForwardError(
+                    f"{label}.{field} must be non-empty single-line text"
+                )
+        for field in ("required_by", "required_output"):
+            _required_string_list(
+                raw.get(field), label=f"{label}.{field}", allow_empty=False
+            )
+        records.append(
+            _normalize_structured_authority(raw, label=label)
+        )
+    return records
+
+
+def _responsibility_from_registry_authority(
+    authority: Mapping[str, Any],
+) -> dict[str, Any]:
+    responsibility: dict[str, Any] = {}
+    for field in sorted(_RESPONSIBILITY_REQUIRED_LIST_FIELDS):
+        responsibility[field] = _required_string_list(
+            authority.get(field),
+            label=f"target.registry_authority.{field}",
+            allow_empty=False,
+        )
+    for field in sorted(_RESPONSIBILITY_OPTIONAL_LIST_FIELDS):
+        responsibility[field] = _required_string_list(
+            authority.get(field, []),
+            label=f"target.registry_authority.{field}",
+            allow_empty=True,
+        )
+    for field in ("group", "content_class", "delivery_scope"):
+        value = authority.get(field)
+        if value is not None and (
+            not isinstance(value, str) or not value.strip()
+        ):
+            raise ProfessionalCarryForwardError(
+                f"target.registry_authority.{field} must be text or null"
+            )
+        responsibility[field] = value
+    task_routable = authority.get("task_routable")
+    if task_routable is not None and type(task_routable) is not bool:
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority.task_routable must be boolean or null"
+        )
+    responsibility["task_routable"] = task_routable
+    if set(responsibility) != _RESPONSIBILITY_FIELDS:
+        raise ProfessionalCarryForwardError(
+            "target Registry responsibility authority is incomplete"
+        )
+    return _normalize_structured_authority(
+        responsibility, label="target.registry_authority.responsibility"
+    )
+
+
+def professional_registry_authority_binding(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Return the complete canonical Registry row used by currentness."""
+
+    raw = target.get("registry_authority")
+    if not isinstance(raw, Mapping):
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority must be a complete Registry row"
+        )
+    missing = sorted(_REGISTRY_AUTHORITY_REQUIRED_FIELDS - set(raw))
+    if missing:
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority lacks required fields: "
+            + ", ".join(missing)
+        )
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
+    )
+    if raw.get("name") != skill_id:
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority.name must match target.skill_id"
+        )
+    if not _is_canonical_repository_path(raw.get("path")):
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority.path must be repository-relative"
+        )
+    expertise = professional_required_expertise_binding(target)
+    if raw.get("required_expertise_tags") != expertise:
+        raise ProfessionalCarryForwardError(
+            "target Registry and target expertise authority drift"
+        )
+    reference_authority = professional_reference_authority_binding(target)
+    normalized = _normalize_structured_authority(
+        raw, label="target.registry_authority"
+    )
+    if normalized.get("reference_index") != reference_authority:
+        raise ProfessionalCarryForwardError(
+            "target Registry reference_index and reference_authority drift"
+        )
+
+    own = professional_own_material_binding(target)
+    registry_directory = PurePosixPath(str(normalized["path"]))
+    expected_paths = [
+        (registry_directory / reference["path"]).as_posix()
+        for reference in reference_authority
+    ]
+    material_paths = [
+        reference["path"] for reference in own["indexed_references"]
+    ]
+    if sorted(expected_paths) != material_paths:
+        raise ProfessionalCarryForwardError(
+            "target Reference authority and indexed material coverage drift"
+        )
+
+    registry = target.get("registry")
+    if not isinstance(registry, Mapping) or set(registry) not in (
+        {"path", "responsibility_contract"},
+        {"path", "entry_fingerprint", "responsibility_contract"},
+    ):
+        raise ProfessionalCarryForwardError(
+            "target.registry must contain the compatibility Registry binding"
+        )
+    if not _is_canonical_repository_path(registry.get("path")):
+        raise ProfessionalCarryForwardError(
+            "target.registry.path must be repository-relative"
+        )
+    responsibility = _responsibility_from_registry_authority(normalized)
+    compatibility = registry.get("responsibility_contract")
+    if not isinstance(compatibility, Mapping):
+        raise ProfessionalCarryForwardError(
+            "target.registry.responsibility_contract must be an object"
+        )
+    if _normalize_structured_authority(
+        compatibility,
+        label="target.registry.responsibility_contract",
+    ) != responsibility:
+        raise ProfessionalCarryForwardError(
+            "target Registry responsibility compatibility projection drift"
+        )
+    return normalized
+
+
+def professional_registry_responsibility_binding(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Derive the compatibility Registry view from complete authority."""
+
+    authority = professional_registry_authority_binding(target)
+    registry = target["registry"]
+    return {
+        "path": registry["path"],
+        "responsibility_contract": _responsibility_from_registry_authority(
+            authority
+        ),
+    }
+
+
+_AUTHENTICATED_SOURCE_COMMENT_RE = re.compile(
+    r"^<!--\s*(?:"
+    r"rd-semantic-id:v2\s+finding=[a-z0-9_]+\s+"
+    r"rule=[a-z0-9][a-z0-9/-]*\s+occurrence=[a-z0-9][a-z0-9-]*"
+    r"|(?:BEGIN|END)\s+CHANGEFORGE\s+[A-Za-z0-9][A-Za-z0-9 _:/.-]*"
+    r"|[a-z0-9-]+-contract:[BE]"
+    r")\s*-->[ \t]*$"
+)
+
+
+def _frontmatter_scalar(value: str) -> str | None:
+    value = value.strip()
+    if not value:
+        return None
+    if value.startswith('"') and value.endswith('"'):
+        try:
+            decoded = json.loads(value)
+        except (TypeError, ValueError):
+            return None
+        return decoded if isinstance(decoded, str) else None
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1].replace("''", "'")
+    if value[:1] in "[{&*!>|" or value.startswith(("!!", "<<:")):
+        return None
+    return value
+
+
+def _structured_frontmatter_projection(
+    lines: Sequence[str],
+) -> dict[str, Any] | None:
+    allowed_fields = {"name", "description"}
+    values: dict[str, str] = {}
+    for raw_line in lines:
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if raw_line[:1].isspace():
+            return None
+        match = re.fullmatch(
+            r"([A-Za-z_][A-Za-z0-9_-]*)[ \t]*:[ \t]*(.*)",
+            raw_line,
+        )
+        if (
+            match is None
+            or match.group(1) not in allowed_fields
+            or match.group(1) in values
+        ):
+            return None
+        scalar = _frontmatter_scalar(match.group(2))
+        if scalar is None:
+            return None
+        values[match.group(1)] = _normalize_horizontal_text(scalar)
+    return values if values else None
+
+
+_MARKDOWN_DISTRIBUTION_VERSIONS = {
+    "markdown-it-py": "4.2.0",
+    "mdurl": "0.1.2",
+}
+
+
+def _verified_professional_markdown_parser() -> Any:
+    for distribution, expected in _MARKDOWN_DISTRIBUTION_VERSIONS.items():
+        try:
+            actual = importlib_metadata.version(distribution)
+        except importlib_metadata.PackageNotFoundError as exc:
+            raise ProfessionalCarryForwardError(
+                f"Professional currentness requires {distribution}=={expected}"
+            ) from exc
+        if actual != expected:
+            raise ProfessionalCarryForwardError(
+                "Professional currentness requires "
+                f"{distribution}=={expected}; found {actual}"
+            )
+    if MarkdownIt is None:
+        raise ProfessionalCarryForwardError(
+            "Professional currentness requires markdown-it-py==4.2.0"
+        )
+    return MarkdownIt(
+        "commonmark",
+        {
+            "html": True,
+            "linkify": False,
+            "typographer": False,
+            "breaks": False,
+        },
+    ).enable("table")
+
+
+def _parse_professional_markdown(value: str) -> tuple[list[Any], dict[str, Any]]:
+    parser = _verified_professional_markdown_parser()
+    environment: dict[str, Any] = {}
+    try:
+        tokens = parser.parse(value, environment)
+    except Exception as exc:
+        raise ProfessionalCarryForwardError(
+            "Professional currentness Markdown parsing failed closed"
+        ) from exc
+    return tokens, environment
+
+
+def _empty_token_attrs(token: Any) -> bool:
+    return getattr(token, "attrs", None) in (None, {})
+
+
+def _plain_token_state(token: Any, *, nesting: int, block: bool) -> bool:
+    return (
+        getattr(token, "nesting", None) == nesting
+        and getattr(token, "block", None) is block
+        and getattr(token, "meta", None) == {}
+        and _empty_token_attrs(token)
+        and isinstance(getattr(token, "level", None), int)
+        and isinstance(getattr(token, "hidden", None), bool)
+    )
+
+
+def _canonical_token_attrs(
+    token: Any, *, required: set[str], allowed: set[str]
+) -> list[list[str]] | None:
+    attrs = getattr(token, "attrs", None)
+    if not isinstance(attrs, Mapping) or not required <= set(attrs) <= allowed:
+        return None
+    if not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in attrs.items()
+    ):
+        return None
+    return [[key, attrs[key]] for key in sorted(attrs)]
+
+
+def _append_inline_fragment(
+    target: list[dict[str, Any]], fragment: dict[str, Any]
+) -> None:
+    if fragment["type"] == "space" and target and target[-1]["type"] == "space":
+        return
+    if fragment["type"] == "text" and target and target[-1]["type"] == "text":
+        target[-1]["value"] += fragment["value"]
+        return
+    target.append(fragment)
+
+
+def _append_text_fragments(target: list[dict[str, Any]], value: str) -> None:
+    for fragment in re.split(r"([ \t\f\v]+)", unicodedata.normalize("NFC", value)):
+        if not fragment:
+            continue
+        if re.fullmatch(r"[ \t\f\v]+", fragment):
+            _append_inline_fragment(target, {"type": "space"})
+        else:
+            _append_inline_fragment(target, {"type": "text", "value": fragment})
+
+
+def _project_inline_tokens(tokens: object) -> list[dict[str, Any]] | None:
+    if not isinstance(tokens, list):
+        return None
+    root: list[dict[str, Any]] = []
+    containers: list[list[dict[str, Any]]] = [root]
+    stack: list[tuple[str, str, str]] = []
+    for token in tokens:
+        token_type = getattr(token, "type", None)
+        level = getattr(token, "level", None)
+        if (
+            getattr(token, "meta", None) != {}
+            or getattr(token, "block", None) is not False
+        ):
+            return None
+        if (
+            getattr(token, "map", None) is not None
+            or getattr(token, "hidden", None) is not False
+        ):
+            return None
+        if token_type == "text":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+                or not isinstance(getattr(token, "content", None), str)
+            ):
+                return None
+            _append_text_fragments(containers[-1], token.content)
+            continue
+        if token_type == "softbreak":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(containers[-1], {"type": "space"})
+            continue
+        if token_type == "hardbreak":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+            ):
+                return None
+            _append_inline_fragment(containers[-1], {"type": "hardbreak"})
+            continue
+        if token_type == "code_inline":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or not isinstance(getattr(token, "content", None), str)
+                or re.fullmatch(r"`+", getattr(token, "markup", "")) is None
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(
+                containers[-1], {"type": "inline-code", "value": token.content}
+            )
+            continue
+        if token_type in {"em_open", "strong_open"}:
+            expected_markup = {"em_open": {"*", "_"}, "strong_open": {"**", "__"}}
+            if (
+                not _plain_token_state(token, nesting=1, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "markup", None) not in expected_markup[token_type]
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            stack.append((token_type.removesuffix("_open"), token.markup, "format"))
+            continue
+        if token_type in {"em_close", "strong_close"}:
+            expected_kind = token_type.removesuffix("_close")
+            if (
+                not stack
+                or stack[-1][0] != expected_kind
+                or stack[-1][2] != "format"
+                or not _plain_token_state(token, nesting=-1, block=False)
+                or level != len(stack) - 1
+                or getattr(token, "markup", None) != stack[-1][1]
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            stack.pop()
+            continue
+        if token_type == "link_open":
+            attrs = _canonical_token_attrs(
+                token, required={"href"}, allowed={"href", "title"}
+            )
+            markup = getattr(token, "markup", None)
+            info = getattr(token, "info", None)
+            kind = "autolink" if (markup, info) == ("autolink", "auto") else "direct"
+            if kind == "direct" and (markup, info) != ("", ""):
+                return None
+            if (
+                attrs is None
+                or getattr(token, "nesting", None) != 1
+                or level != len(stack)
+                or getattr(token, "block", None) is not False
+                or getattr(token, "meta", None) != {}
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "map", None) is not None
+                or getattr(token, "hidden", None) is not False
+            ):
+                return None
+            node = {"type": "link", "kind": kind, "attrs": attrs, "children": []}
+            containers[-1].append(node)
+            containers.append(node["children"])
+            stack.append(("link", f"{markup}\0{info}", "container"))
+            continue
+        if token_type == "link_close":
+            markup = getattr(token, "markup", None)
+            info = getattr(token, "info", None)
+            if (
+                not stack
+                or stack[-1][0] != "link"
+                or stack[-1][2] != "container"
+                or stack[-1][1] != f"{markup}\0{info}"
+                or not _plain_token_state(token, nesting=-1, block=False)
+                or level != len(stack) - 1
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+            ):
+                return None
+            stack.pop()
+            containers.pop()
+            continue
+        if token_type == "image":
+            attrs = _canonical_token_attrs(
+                token, required={"src", "alt"}, allowed={"src", "alt", "title"}
+            )
+            children = _project_inline_tokens(getattr(token, "children", None))
+            if (
+                attrs is None
+                or children is None
+                or getattr(token, "nesting", None) != 0
+                or level != len(stack)
+                or getattr(token, "block", None) is not False
+                or getattr(token, "meta", None) != {}
+                or getattr(token, "map", None) is not None
+                or getattr(token, "hidden", None) is not False
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(
+                containers[-1],
+                {"type": "image", "attrs": attrs, "children": children},
+            )
+            continue
+        return None
+    if stack or len(containers) != 1:
+        return None
+    return root
+
+
+def _block_open_projection(token: Any) -> tuple[str, dict[str, Any]] | None:
+    token_type = getattr(token, "type", None)
+    if not _plain_token_state(token, nesting=1, block=True):
+        return None
+    if (
+        getattr(token, "children", None) is not None
+        or getattr(token, "content", None) != ""
+    ):
+        return None
+    if getattr(token, "info", None) != "":
+        return None
+    if (
+        token_type == "paragraph_open"
+        and getattr(token, "tag", None) == "p"
+        and getattr(token, "markup", None) == ""
+    ):
+        return "paragraph", {"type": "paragraph", "children": []}
+    if token_type == "heading_open" and re.fullmatch(
+        r"h[1-6]", getattr(token, "tag", "")
+    ):
+        level = int(token.tag[1:])
+        markup = getattr(token, "markup", None)
+        if not (
+            (isinstance(markup, str) and markup == "#" * level)
+            or (markup == "=" and level == 1)
+            or (markup == "-" and level == 2)
+        ):
+            return None
+        return "heading", {
+            "type": "heading",
+            "level": level,
+            "children": [],
+        }
+    if (
+        token_type == "blockquote_open"
+        and getattr(token, "tag", None) == "blockquote"
+        and getattr(token, "markup", None) == ">"
+    ):
+        return "blockquote", {"type": "blockquote", "children": []}
+    if (
+        token_type == "bullet_list_open"
+        and getattr(token, "tag", None) == "ul"
+        and getattr(token, "markup", None) in {"-", "+", "*"}
+    ):
+        return "bullet_list", {"type": "bullet-list", "children": []}
+    if (
+        token_type == "list_item_open"
+        and getattr(token, "tag", None) == "li"
+        and getattr(token, "markup", None) in {"-", "+", "*"}
+    ):
+        return "list_item", {"type": "list-item", "children": []}
+    return None
+
+
+def _project_professional_markdown_tokens(
+    tokens: object, environment: object
+) -> dict[str, Any] | None:
+    if not isinstance(tokens, list) or environment != {}:
+        return None
+    document = {"type": "document", "children": []}
+    containers: list[tuple[str, list[dict[str, Any]]]] = [
+        ("document", document["children"])
+    ]
+    for token in tokens:
+        token_type = getattr(token, "type", None)
+        depth = len(containers) - 1
+        opened = _block_open_projection(token)
+        if opened is not None:
+            kind, node = opened
+            parent = containers[-1][0]
+            allowed_parent = (
+                parent == "bullet_list"
+                if kind == "list_item"
+                else parent in {"document", "blockquote", "list_item"}
+            )
+            if not allowed_parent or token.level != depth:
+                return None
+            containers[-1][1].append(node)
+            containers.append((kind, node["children"]))
+            continue
+        close_kinds = {
+            "paragraph_close": "paragraph",
+            "heading_close": "heading",
+            "blockquote_close": "blockquote",
+            "bullet_list_close": "bullet_list",
+            "list_item_close": "list_item",
+        }
+        if token_type in close_kinds:
+            expected = close_kinds[token_type]
+            if (
+                len(containers) == 1
+                or containers[-1][0] != expected
+                or not _plain_token_state(token, nesting=-1, block=True)
+                or token.level != depth - 1
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            containers.pop()
+            continue
+        if token_type == "inline":
+            if (
+                containers[-1][0] not in {"paragraph", "heading"}
+                or containers[-1][1]
+                or not _plain_token_state(token, nesting=0, block=True)
+                or token.level != depth
+                or getattr(token, "tag", None) != ""
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            inline = _project_inline_tokens(getattr(token, "children", None))
+            if inline is None:
+                return None
+            containers[-1][1].append({"type": "inline", "children": inline})
+            continue
+        if token_type in {"fence", "code_block", "hr"}:
+            if (
+                containers[-1][0] not in {"document", "blockquote", "list_item"}
+                or not _plain_token_state(token, nesting=0, block=True)
+                or token.level != depth
+                or getattr(token, "children", None) is not None
+            ):
+                return None
+            if token_type == "fence":
+                if (
+                    getattr(token, "tag", None) != "code"
+                    or re.fullmatch(
+                        r"(?:`{3,}|~{3,})", getattr(token, "markup", "")
+                    )
+                    is None
+                    or not isinstance(getattr(token, "info", None), str)
+                    or not isinstance(getattr(token, "content", None), str)
+                ):
+                    return None
+                node = {
+                    "type": "fenced-code",
+                    "info": token.info,
+                    "content": token.content,
+                }
+            elif token_type == "code_block":
+                if (
+                    getattr(token, "tag", None) != "code"
+                    or getattr(token, "markup", None) != ""
+                    or getattr(token, "info", None) != ""
+                    or not isinstance(getattr(token, "content", None), str)
+                ):
+                    return None
+                node = {"type": "indented-code", "content": token.content}
+            else:
+                if (
+                    getattr(token, "tag", None) != "hr"
+                    or not isinstance(getattr(token, "markup", None), str)
+                    or getattr(token, "info", None) != ""
+                    or getattr(token, "content", None) != ""
+                ):
+                    return None
+                node = {"type": "thematic-break"}
+            containers[-1][1].append(node)
+            continue
+        return None
+    if len(containers) != 1:
+        return None
+    return document
+
+
+def _remove_authenticated_source_markers(
+    value: str, tokens: Sequence[Any]
+) -> str:
+    marker_lines: set[int] = set()
+    for token in tokens:
+        token_map = getattr(token, "map", None)
+        content = getattr(token, "content", None)
+        if (
+            getattr(token, "type", None) == "html_block"
+            and getattr(token, "level", None) == 0
+            and getattr(token, "nesting", None) == 0
+            and getattr(token, "block", None) is True
+            and getattr(token, "meta", None) == {}
+            and _empty_token_attrs(token)
+            and isinstance(token_map, list)
+            and len(token_map) == 2
+            and token_map[1] == token_map[0] + 1
+            and isinstance(content, str)
+            and _AUTHENTICATED_SOURCE_COMMENT_RE.fullmatch(
+                content[:-1] if content.endswith("\n") else content
+            )
+        ):
+            marker_lines.add(token_map[0])
+    if not marker_lines:
+        return value
+    return "".join(
+        line
+        for index, line in enumerate(value.splitlines(keepends=True))
+        if index not in marker_lines
+    )
+
+
+def _opaque_document(value: str) -> dict[str, Any]:
+    return {"type": "opaque-document", "value": value}
+
+
+def _parse_after_authenticated_marker_removal(
+    value: str,
+) -> tuple[str, list[Any], dict[str, Any]]:
+    initial_tokens, _initial_environment = _parse_professional_markdown(value)
+    retained = _remove_authenticated_source_markers(value, initial_tokens)
+    tokens, environment = _parse_professional_markdown(retained)
+    return retained, tokens, environment
+
+
+def professional_markdown_currentness_projection(
+    markdown: str,
+) -> list[dict[str, Any]]:
+    """Project a closed CommonMark token subset without prose inference."""
+
+    if not isinstance(markdown, str):
+        raise ProfessionalCarryForwardError(
+            "Professional material content must be text"
+        )
+    normalized = unicodedata.normalize(
+        "NFC", markdown.replace("\r\n", "\n").replace("\r", "\n")
+    )
+    projection: list[dict[str, Any]] = []
+    source_lines = normalized.splitlines(keepends=True)
+    body = normalized
+
+    if source_lines and source_lines[0].rstrip("\n") == "---":
+        end = next(
+            (
+                position
+                for position in range(1, len(source_lines))
+                if source_lines[position].rstrip("\n") == "---"
+            ),
+            None,
+        )
+        if end is None:
+            retained, _tokens, _environment = (
+                _parse_after_authenticated_marker_removal(normalized)
+            )
+            return [_opaque_document(retained)]
+        frontmatter_lines = [
+            line.rstrip("\n") for line in source_lines[1:end]
+        ]
+        structured = _structured_frontmatter_projection(frontmatter_lines)
+        if structured is None:
+            retained, _tokens, _environment = (
+                _parse_after_authenticated_marker_removal(normalized)
+            )
+            return [_opaque_document(retained)]
+        projection.append({"type": "frontmatter", "value": structured})
+        body = "".join(source_lines[end + 1 :])
+
+    body, tokens, environment = _parse_after_authenticated_marker_removal(
+        body
+    )
+    document = _project_professional_markdown_tokens(tokens, environment)
+    if document is None:
+        projection.append(_opaque_document(body))
+    else:
+        projection.append(document)
+    return projection
+
+
+def professional_material_currentness_projection(
+    record: object, *, label: str
+) -> dict[str, Any]:
+    material = _canonical_material_record(record, label=label)
+    return {
+        "path": material["path"],
+        "markdown": professional_markdown_currentness_projection(
+            material["content"]
+        ),
+    }
+
+
+def professional_candidate_currentness_projection(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Project only conservative package material used for currentness."""
+
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
+    )
+    layer = _require_skill_id(
+        target.get("layer"), label=f"{skill_id}.layer"
+    )
+    own = professional_own_material_binding(target)
+    registry_authority = professional_registry_authority_binding(target)
+    reference_authority = professional_reference_authority_binding(target)
+    expertise = professional_required_expertise_binding(target)
+    return {
+        "contract_version": _CURRENTNESS_PROJECTION_VERSION,
+        "skill_id": skill_id,
+        "layer": layer,
+        "materials": {
+            "root": professional_material_currentness_projection(
+                own["root"], label=f"{skill_id}.root"
+            ),
+            "indexed_references": [
+                professional_material_currentness_projection(
+                    reference,
+                    label=f"{skill_id}.indexed_references[{index}]",
+                )
+                for index, reference in enumerate(
+                    own["indexed_references"]
+                )
+            ],
+        },
+        "registry_authority": registry_authority,
+        "reference_authority": reference_authority,
+        "required_expertise_tags": expertise,
+    }
 
 
 def professional_adjacency_review_binding(
@@ -444,12 +1367,58 @@ def professional_candidate_material_binding(
 
     skill_id = _require_skill_id(target.get("skill_id"), label="target.skill_id")
     layer = _require_skill_id(target.get("layer"), label=f"{skill_id}.layer")
+    professional_registry_authority_binding(target)
+    professional_reference_authority_binding(target)
     return {
         "skill_id": skill_id,
         "layer": layer,
         "own_material": professional_own_material_binding(target),
         "registry": professional_registry_responsibility_binding(target),
+        "registry_authority": copy.deepcopy(target["registry_authority"]),
+        "reference_authority": copy.deepcopy(target["reference_authority"]),
         "required_expertise_tags": professional_required_expertise_binding(target),
+    }
+
+
+def _historical_candidate_material_binding(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Reproduce the exact pre-currentness raw material projection."""
+
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
+    )
+    layer = _require_skill_id(
+        target.get("layer"), label=f"{skill_id}.layer"
+    )
+    registry = target.get("registry")
+    if not isinstance(registry, dict) or set(registry) not in (
+        {"path", "responsibility_contract"},
+        {"path", "entry_fingerprint", "responsibility_contract"},
+    ):
+        raise ProfessionalCarryForwardError(
+            "historical target.registry fields are invalid"
+        )
+    if not _is_canonical_repository_path(registry.get("path")):
+        raise ProfessionalCarryForwardError(
+            "historical target.registry.path must be repository-relative"
+        )
+    responsibility = registry.get("responsibility_contract")
+    if not isinstance(responsibility, dict):
+        raise ProfessionalCarryForwardError(
+            "historical target responsibility contract must be an object"
+        )
+    return {
+        "skill_id": skill_id,
+        "layer": layer,
+        "own_material": professional_own_material_binding(target),
+        "registry": {
+            "path": registry["path"],
+            "responsibility_contract": copy.deepcopy(responsibility),
+        },
+        "required_expertise_tags": professional_required_expertise_binding(
+            target
+        ),
     }
 
 
@@ -482,22 +1451,36 @@ def _canonical_target_index(
 def professional_review_bindings(
     targets: Sequence[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Build canonical per-target review and one-hop material bindings."""
+    """Build separate raw-content and conservative currentness bindings."""
 
     target_index = _canonical_target_index(targets)
     candidate_materials = {
         skill_id: professional_candidate_material_binding(target)
         for skill_id, target in target_index.items()
     }
-    candidate_fingerprints = {
+    content_fingerprints = {
         skill_id: canonical_json_sha256(material)
         for skill_id, material in candidate_materials.items()
+    }
+    candidate_currentness_projections = {
+        skill_id: professional_candidate_currentness_projection(target)
+        for skill_id, target in target_index.items()
+    }
+    candidate_fingerprints = {
+        skill_id: canonical_json_sha256(binding)
+        for skill_id, binding in candidate_currentness_projections.items()
     }
     bindings: dict[str, dict[str, Any]] = {}
     for skill_id in sorted(target_index):
         target = target_index[skill_id]
         own_material = candidate_materials[skill_id]["own_material"]
         registry = candidate_materials[skill_id]["registry"]
+        registry_authority = candidate_materials[skill_id][
+            "registry_authority"
+        ]
+        reference_authority = candidate_materials[skill_id][
+            "reference_authority"
+        ]
         expertise = candidate_materials[skill_id]["required_expertise_tags"]
         adjacency = professional_adjacency_review_binding(target)
         required_ids = adjacency["required_candidate_ids"]
@@ -516,13 +1499,85 @@ def professional_review_bindings(
             "layer": candidate_materials[skill_id]["layer"],
             "own_material": own_material,
             "registry": registry,
+            "registry_authority": registry_authority,
+            "reference_authority": reference_authority,
             "required_expertise_tags": expertise,
             "adjacency": adjacency,
+            "content_fingerprint": content_fingerprints[skill_id],
             "package_material_binding": candidate_fingerprints[skill_id],
             "dependency_material_bindings": dependency_material_bindings,
         }
-        binding["review_unit_binding"] = canonical_json_sha256(binding)
+        binding["review_unit_binding"] = canonical_json_sha256(
+            {
+                "skill_id": skill_id,
+                "layer": binding["layer"],
+                "package_material_binding": binding[
+                    "package_material_binding"
+                ],
+                "dependency_material_bindings": binding[
+                    "dependency_material_bindings"
+                ],
+                "adjacency": binding["adjacency"],
+            }
+        )
         bindings[skill_id] = binding
+    _validate_binding_catalog(bindings)
+    return bindings
+
+
+def professional_historical_content_review_bindings(
+    targets: Sequence[dict[str, Any]],
+) -> Mapping[str, dict[str, Any]]:
+    """Reproduce the retired raw-content binding for historical validation.
+
+    New packets and carry plans must use :func:`professional_review_bindings`.
+    This adapter exists only so immutable schema-3 evidence created before the
+    semantic binding migration remains auditable without authorizing carry.
+    """
+
+    target_index = _canonical_target_index(targets)
+    candidate_materials = {
+        skill_id: _historical_candidate_material_binding(target)
+        for skill_id, target in target_index.items()
+    }
+    candidate_fingerprints = {
+        skill_id: canonical_json_sha256(material)
+        for skill_id, material in candidate_materials.items()
+    }
+    bindings: _HistoricalContentBindingCatalog = (
+        _HistoricalContentBindingCatalog()
+    )
+    for skill_id in sorted(target_index):
+        target = target_index[skill_id]
+        material = candidate_materials[skill_id]
+        adjacency = professional_adjacency_review_binding(target)
+        required_ids = adjacency["required_candidate_ids"]
+        unknown = sorted(set(required_ids) - set(target_index))
+        if unknown:
+            raise ProfessionalCarryForwardError(
+                f"{skill_id} requires unknown adjacency candidates: "
+                + ", ".join(unknown)
+            )
+        legacy_projection = {
+            "skill_id": skill_id,
+            "layer": material["layer"],
+            "own_material": material["own_material"],
+            "registry": material["registry"],
+            "required_expertise_tags": material[
+                "required_expertise_tags"
+            ],
+            "adjacency": adjacency,
+            "package_material_binding": candidate_fingerprints[skill_id],
+            "dependency_material_bindings": {
+                candidate_id: candidate_fingerprints[candidate_id]
+                for candidate_id in required_ids
+            },
+        }
+        bindings[skill_id] = {
+            **legacy_projection,
+            "content_fingerprint": candidate_fingerprints[skill_id],
+            "review_unit_binding": canonical_json_sha256(legacy_projection),
+        }
     _validate_binding_catalog(bindings)
     return bindings
 
@@ -538,9 +1593,15 @@ def _validate_binding_catalog(
         raise ProfessionalCarryForwardError(
             "professional bindings must be Skill-sorted"
         )
+    historical_content = isinstance(bindings, _HistoricalContentBindingCatalog)
     candidate_fingerprints: dict[str, str] = {}
     for key, binding in bindings.items():
-        if not isinstance(binding, dict) or set(binding) != _TARGET_BINDING_FIELDS:
+        expected_fields = (
+            _HISTORICAL_TARGET_BINDING_FIELDS
+            if historical_content
+            else _TARGET_BINDING_FIELDS
+        )
+        if not isinstance(binding, dict) or set(binding) != expected_fields:
             raise ProfessionalCarryForwardError(
                 f"binding {key} fields are not canonical"
             )
@@ -551,27 +1612,79 @@ def _validate_binding_catalog(
         own = _canonical_own_material_binding(
             binding.get("own_material"), label=f"binding {key}"
         )
-        registry = professional_registry_responsibility_binding(binding)
+        registry = (
+            _historical_candidate_material_binding(binding)["registry"]
+            if historical_content
+            else professional_registry_responsibility_binding(binding)
+        )
         expertise = professional_required_expertise_binding(binding)
         adjacency = _canonical_adjacency_review_binding(
             binding.get("adjacency")
         )
-        candidate_projection = {
+        content_projection: dict[str, Any] = {
             "skill_id": key,
             "layer": binding["layer"],
             "own_material": own,
             "registry": registry,
             "required_expertise_tags": expertise,
         }
-        candidate_fingerprint = canonical_json_sha256(candidate_projection)
+        if not historical_content:
+            professional_registry_authority_binding(binding)
+            professional_reference_authority_binding(binding)
+            content_projection["registry_authority"] = copy.deepcopy(
+                binding["registry_authority"]
+            )
+            content_projection["reference_authority"] = copy.deepcopy(
+                binding["reference_authority"]
+            )
+        if binding.get("content_fingerprint") != canonical_json_sha256(
+            content_projection
+        ):
+            raise ProfessionalCarryForwardError(
+                f"binding {key}.content_fingerprint is stale"
+            )
+        currentness_projection = (
+            None
+            if historical_content
+            else professional_candidate_currentness_projection(binding)
+        )
+        candidate_fingerprint = (
+            binding["content_fingerprint"]
+            if historical_content
+            else canonical_json_sha256(currentness_projection)
+        )
         if binding.get("package_material_binding") != candidate_fingerprint:
             raise ProfessionalCarryForwardError(
                 f"binding {key}.package_material_binding is stale"
             )
         candidate_fingerprints[key] = candidate_fingerprint
-        without_fingerprint = dict(binding)
-        review_fingerprint = without_fingerprint.pop("review_unit_binding")
-        if review_fingerprint != canonical_json_sha256(without_fingerprint):
+        review_fingerprint = binding["review_unit_binding"]
+        review_projection = (
+            {
+                field: copy.deepcopy(binding[field])
+                for field in (
+                    "skill_id",
+                    "layer",
+                    "own_material",
+                    "registry",
+                    "required_expertise_tags",
+                    "adjacency",
+                    "package_material_binding",
+                    "dependency_material_bindings",
+                )
+            }
+            if historical_content
+            else {
+                "skill_id": key,
+                "layer": binding["layer"],
+                "package_material_binding": candidate_fingerprint,
+                "dependency_material_bindings": binding[
+                    "dependency_material_bindings"
+                ],
+                "adjacency": adjacency,
+            }
+        )
+        if review_fingerprint != canonical_json_sha256(review_projection):
             raise ProfessionalCarryForwardError(
                 f"binding {key}.review_unit_binding is stale"
             )
@@ -603,7 +1716,7 @@ def professional_carry_snapshot(
     *,
     review_contract_fingerprint: str,
 ) -> dict[str, Any]:
-    """Create the compact exact baseline consumed by the pure carry plan."""
+    """Create the material-only compact baseline consumed by carry planning."""
 
     _validate_binding_catalog(bindings)
     contract = _require_sha256(
@@ -638,11 +1751,12 @@ def professional_current_authority(
         raise ProfessionalCarryForwardError(
             "Professional current package authority coverage is stale"
         )
-    candidate_materials = {
+    candidate_material_bindings = {
         skill_id: binding["package_material_binding"]
         for skill_id, binding in bindings.items()
     }
     authority: dict[str, dict[str, Any]] = {}
+    relationship_overlaps: dict[str, tuple[str, ...]] = {}
     for skill_id, binding in bindings.items():
         claims = authenticated_claims[skill_id]
         if not isinstance(claims, dict) or set(claims) != {
@@ -664,16 +1778,15 @@ def professional_current_authority(
             claims["reviewer_added_candidate_ids_union"],
             label=f"{skill_id}.reviewer_added_candidate_ids_union",
         )
-        if set(reviewer_added_ids) & set(required_ids):
-            raise ProfessionalCarryForwardError(
-                f"{skill_id} reviewer-added candidates overlap required candidates"
-            )
         unknown_added = sorted(set(reviewer_added_ids) - set(bindings))
         if unknown_added:
             raise ProfessionalCarryForwardError(
                 f"{skill_id} reviewer-added candidates are unknown: "
                 + ", ".join(unknown_added)
             )
+        overlap = tuple(sorted(set(reviewer_added_ids) & set(required_ids)))
+        if overlap:
+            relationship_overlaps[skill_id] = overlap
         if (
             not isinstance(votes, dict)
             or len(votes) != panel_contracts.PROFESSIONAL_PANEL_SIZE
@@ -737,12 +1850,12 @@ def professional_current_authority(
             ],
             "required_candidate_ids": copy.deepcopy(required_ids),
             "required_candidate_material_bindings": {
-                candidate_id: candidate_materials[candidate_id]
+                candidate_id: candidate_material_bindings[candidate_id]
                 for candidate_id in required_ids
             },
             "reviewer_added_candidate_ids_union": reviewer_added_ids,
             "reviewer_added_candidate_material_bindings": {
-                candidate_id: candidate_materials[candidate_id]
+                candidate_id: candidate_material_bindings[candidate_id]
                 for candidate_id in reviewer_added_ids
             },
             "vote_authorities": copy.deepcopy(votes),
@@ -750,6 +1863,10 @@ def professional_current_authority(
             "evidence_metrics": copy.deepcopy(metrics),
             "origin": copy.deepcopy(origin),
         }
+    if relationship_overlaps:
+        raise ProfessionalReviewerAddedRequiredRelationshipDrift(
+            relationship_overlaps
+        )
     return authority
 
 
@@ -1219,12 +2336,14 @@ def plan_exact_professional_carry_forward(
     prior_snapshot: Mapping[str, Any] | None,
     prior_decision_dependencies: Mapping[str, dict[str, Any]] | None,
     review_contract_fingerprint: str,
+    prior_candidate_material_bindings: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     """Partition whole packages into deterministic fresh and carry sets.
 
-    The plan compares factual bindings only.  It never reads or propagates the
-    fresh/carry status of another target, so A material changing can invalidate
-    B when B reviewed A, but cannot invalidate C merely because C reviewed B.
+    The plan compares conservative material bindings only.  Raw content digests
+    remain artifact-integrity evidence.  It never propagates another target's
+    fresh/carry status, so A semantics can invalidate B when B reviewed A, but
+    cannot invalidate C merely because C reviewed B.
     """
 
     _validate_binding_catalog(current_bindings)
@@ -1234,6 +2353,23 @@ def plan_exact_professional_carry_forward(
     )
     prior_contract, prior_targets = _snapshot_targets(prior_snapshot)
     dependencies = _decision_dependencies(prior_decision_dependencies)
+    # Compact attestations retain candidate materials independently from the
+    # subset of targets eligible to carry. A candidate's stale review must not
+    # propagate through another target when the candidate material is intact.
+    if prior_candidate_material_bindings is None:
+        candidate_materials = {
+            skill_id: row["package_material_binding"]
+            for skill_id, row in (prior_targets or {}).items()
+        }
+    else:
+        if not isinstance(prior_candidate_material_bindings, Mapping):
+            raise ProfessionalCarryForwardError(
+                "prior candidate material bindings must be an object"
+            )
+        candidate_materials = dict(prior_candidate_material_bindings)
+        for skill_id, digest in candidate_materials.items():
+            _require_skill_id(skill_id, label="prior candidate material ID")
+            _require_sha256(digest, label=f"prior candidate material {skill_id}")
     reasons_by_target: dict[str, list[str]] = {}
 
     global_reason: str | None = None
@@ -1289,18 +2425,12 @@ def plan_exact_professional_carry_forward(
                     for candidate_id in dependency[
                         "reviewer_added_candidate_ids_union"
                     ]:
-                        prior_candidate = (
-                            prior_targets.get(candidate_id)
-                            if prior_targets is not None
-                            else None
-                        )
+                        prior_material = candidate_materials.get(candidate_id)
                         current_candidate = current_bindings.get(candidate_id)
                         if (
-                            prior_candidate is None
+                            prior_material is None
                             or current_candidate is None
-                            or prior_candidate.get(
-                                "package_material_binding"
-                            )
+                            or prior_material
                             != current_candidate.get(
                                 "package_material_binding"
                             )
@@ -1331,10 +2461,16 @@ def _candidate_projection_from_binding(
         "layer": binding["layer"],
         "own_material": copy.deepcopy(binding["own_material"]),
         "registry": copy.deepcopy(binding["registry"]),
+        "registry_authority": copy.deepcopy(
+            binding["registry_authority"]
+        ),
+        "reference_authority": copy.deepcopy(
+            binding["reference_authority"]
+        ),
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]
         ),
-        "material_fingerprint": binding["package_material_binding"],
+        "material_fingerprint": binding["content_fingerprint"],
     }
 
 
@@ -1347,10 +2483,13 @@ def _candidate_boundary_projection_from_binding(
         "responsibility_contract": copy.deepcopy(
             binding["registry"]["responsibility_contract"]
         ),
+        "reference_authority": copy.deepcopy(
+            binding["reference_authority"]
+        ),
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]
         ),
-        "material_fingerprint": binding["package_material_binding"],
+        "material_fingerprint": binding["content_fingerprint"],
     }
 
 
@@ -1433,7 +2572,7 @@ def _project_professional_discovery_capsule(
                     {
                         "skill_id": candidate_id,
                         "material_fingerprint": bindings[candidate_id][
-                            "package_material_binding"
+                            "content_fingerprint"
                         ],
                     }
                     for candidate_id in required_ids
@@ -1643,7 +2782,7 @@ def _normalize_capsule_inputs(
                     f"reviewer-added request {skill_id}->{candidate_id} ranking evidence is stale"
                 )
             if request["material_fingerprint"] != bindings[candidate_id][
-                "package_material_binding"
+                "content_fingerprint"
             ]:
                 raise ProfessionalCarryForwardError(
                     f"reviewer-added request {skill_id}->{candidate_id} material fingerprint is stale"
@@ -1684,7 +2823,7 @@ def _project_professional_review_capsule(
                     else None
                 ),
                 "material_fingerprint": bindings[candidate_id][
-                    "package_material_binding"
+                    "content_fingerprint"
                 ],
             }
             for candidate_id in candidate_ids

@@ -1,6 +1,6 @@
 # Skill Efficacy Benchmark Evidence Patterns
 
-Use this reference when closure depends on current source, a baseline/treatment comparison, validation freshness, generated reports, build-profile output, privacy boundaries, or explicit proof limits.
+Use this reference when closure depends on current source, a baseline/treatment comparison, validation freshness, generated reports, unique Runtime build output, privacy boundaries, or explicit proof limits.
 
 ## Evidence Classification
 
@@ -10,10 +10,11 @@ Use this reference when closure depends on current source, a baseline/treatment 
 | Generated report | Structural evidence from its generating command. | Live agent performance or user productivity proof. |
 | Prior task note | Lead to a recurring failure or stale validation risk. | Current truth without source confirmation. |
 | Observable action sequence | Order of edits, validations, failures, repairs, and re-runs. | Fresh proof when validation predates the last edit. |
+| Blind comparison artifacts | Physically separated packet, oracle, observations, verifier-owned captures, and post-capture reveal with identical controlled bindings and capture-byte/digest/provenance verification. | An OLD/NEW claim when labels or semantic answers leak, bindings differ, captures are missing/fake/copied, or reveal precedes capture. |
 | Baseline artifact | Comparison point for old behavior. | A representative population unless sampling is defined. |
 | Validator output | Evidence for the validator's declared scope after the final edit. | Evidence for unrun commands, external CI, or production behavior. |
 
-## Freshness And Build Profile Map
+## Freshness And Runtime Delivery Map
 
 | Changed item | Freshness trigger | Required validation evidence |
 | --- | --- | --- |
@@ -27,7 +28,7 @@ Use this reference when closure depends on current source, a baseline/treatment 
 ## Current Evidence Reconciliation
 
 - Confirm every prior note against current source, registries, reports, or validator output before using it as evidence.
-- Mark validation stale when any material source, reference, registry, Profile prompt, fixture, report, build output, or owner decision changes after the command.
+- Mark validation stale when any material source, reference, registry, Agent Profile prompt, fixture, report, Runtime build output, or owner decision changes after the command.
 - Preserve repaired failures as evidence only when a later validator covers the failed scope.
 - Treat a summary of prior validation as a locator; confirm the current result or rerun the command.
 
@@ -37,7 +38,7 @@ Use this reference when closure depends on current source, a baseline/treatment 
 | --- | --- |
 | Static validator passed | The validator passed for the checked fixture or report scope. |
 | Score improved | The score improved only for the evaluator dimensions measured by this report. |
-| Built references valid | Built profile Markdown links are valid after the current build. |
+| Built references valid | Built Runtime Markdown links are valid after the current build. |
 | Agent behavior improved | Allowed only with representative agent-run evidence, sampling limits, and caveats. |
 | Efficiency improved | Requires measured token, turn, or elapsed-time comparison; otherwise use `not_collected`. |
 | Safer closure | Requires a negative baseline or forbidden behavior that the treatment catches. |
@@ -47,7 +48,10 @@ Use this reference when closure depends on current source, a baseline/treatment 
 
 ## Result Decisions
 
-- Missing comparable baseline yields evidence class `structural-only`, final verdict `not_enough_evidence`, and no empirical-improvement score.
-- Return `not_enough_evidence` when treatment, metrics, validation, or caveat is missing.
-- Return `unknown` when evidence is valid but does not distinguish old and new behavior.
-- Return `improved` only when the treatment is better on a named metric and proof limits are explicit.
+- Missing comparable baseline or treatment makes the comparison incomplete, with no evidence class or efficacy claim.
+- A complete structural baseline/treatment comparison without live behavior has evidence class `structural_only` and verdict `not_enough_evidence`; only valid complete live evidence is `live_agent`.
+- Missing required metrics, validation, or caveats cannot support an efficacy claim; report the incomplete evidence.
+- Return `no_effect` when valid live evidence does not distinguish OLD and NEW behavior.
+- Return `hardening_only` only when both remain correct and the comparison proves a stronger contract without a behavior-improvement claim.
+- Return `regression` on any quality decrease, even when cost is lower.
+- Return `improved` only when live treatment behavior is better on a named metric, no quality metric regresses, and proof limits are explicit.

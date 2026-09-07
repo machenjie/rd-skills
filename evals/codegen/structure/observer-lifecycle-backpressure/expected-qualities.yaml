@@ -1,6 +1,5 @@
 id: observer-lifecycle-backpressure
 category: structure
-complexity: L4
 focus:
   - observer lifecycle
   - pubsub backpressure

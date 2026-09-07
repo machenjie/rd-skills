@@ -1,6 +1,5 @@
 id: rag-tenant-permission-filter
 category: ai
-complexity: L5
 focus:
   - RAG permission filtering
   - tenant isolation

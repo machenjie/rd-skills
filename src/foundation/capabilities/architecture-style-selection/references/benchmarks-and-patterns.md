@@ -27,7 +27,7 @@ Load this reference when a system-wide style, runtime boundary, migration path o
 
 | Added surface | Evidence needed |
 | --- | --- |
-| Runtime/deployable | Code/release/on-call owner, health/degradation/rollback, telemetry/runbook, capacity and cost. |
+| Runtime/deployable | Capable code/release owner; select on-call, health/degradation/rollback, telemetry/runbook, capacity, and cost evidence from service level, failure consequence, and platform policy. Record why unrelated controls do not apply. |
 | Data boundary | Single writer, migration/coexistence, consistency/reconciliation, backup/restore and privacy classification. |
 | Public/event contract | Consumer inventory, compatibility/versioning, schema/generated evidence and deprecation owner. |
 | Network/dependency | Latency/timeout/failure budget, identity/authorization, retry/idempotency and blast-radius behavior where required. |

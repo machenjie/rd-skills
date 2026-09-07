@@ -14,6 +14,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validation_utils.py"
+TEST_BUILD_IDENTITY = "AAECAwQFBgcICQoLDA0ODw"
 
 
 @contextlib.contextmanager
@@ -48,6 +49,313 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_semantic_v2_marker_contract_is_strict_and_invisible(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            source = (
+                "# Rules\n\n"
+                "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                "rule=example/recovery occurrence=recovery-main -->\n"
+                "- Every retry must preserve the operation identity.\n"
+            )
+            projection = module.semantic_identity_projection(
+                source,
+                owner="example",
+                axis="reference",
+            )
+            self.assertNotIn("rd-semantic-id", projection["visible_text"])
+            self.assertEqual(source.count("\n"), projection["visible_text"].count("\n"))
+            self.assertEqual(
+                "# Rules\n\n- Every retry must preserve the operation identity.\n",
+                module.strip_semantic_identity_markers(source),
+            )
+            self.assertEqual(
+                {
+                    "axis": "reference",
+                    "finding": "unconditional_absolute_candidate",
+                    "rule_id": "example/recovery",
+                    "occurrence_id": "recovery-main",
+                    "marker_line": 3,
+                    "bound_line": 4,
+                },
+                projection["markers"][0],
+            )
+
+            frontmatter = (
+                "---\n"
+                "name: example\n"
+                "# rd-semantic-id:v2 finding=unconditional_mechanism_candidate "
+                "rule=example/description occurrence=description-main\n"
+                "description: Every retry must preserve identity.\n"
+                "---\n"
+            )
+            parsed = module.semantic_identity_projection(
+                frontmatter,
+                owner="example",
+                axis="root",
+            )
+            self.assertEqual(4, parsed["markers"][0]["bound_line"])
+            self.assertNotIn("rd-semantic-id", parsed["visible_text"])
+
+            invalid = (
+                "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                "rule=wrong/recovery occurrence=main -->\n"
+                "- Every retry must preserve identity.\n"
+            )
+            with self.assertRaisesRegex(ValueError, "owner prefix"):
+                module.semantic_identity_projection(
+                    invalid,
+                    owner="example",
+                    axis="reference",
+                )
+            with self.assertRaisesRegex(ValueError, "orphan"):
+                module.semantic_identity_projection(
+                    "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                    "rule=example/recovery occurrence=main -->\n",
+                    owner="example",
+                    axis="reference",
+                )
+            with self.assertRaisesRegex(ValueError, "malformed"):
+                module.semantic_identity_projection(
+                    "<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate "
+                    "rule=example--recovery occurrence=main -->\n"
+                    "Rule.\n",
+                    owner="example",
+                    axis="reference",
+                )
+            for malformed in (
+                "<!-- rd-semantic-id:v1 rule=example/recovery occurrence=main -->\nRule.\n",
+                "<!-- rd-semantic-id:v2 finding=unknown_candidate "
+                "rule=example/recovery occurrence=main -->\nRule.\n",
+            ):
+                with self.subTest(marker=malformed):
+                    with self.assertRaisesRegex(ValueError, "malformed|finding"):
+                        module.semantic_identity_projection(
+                            malformed,
+                            owner="example",
+                            axis="reference",
+                        )
+
+    def test_semantic_v2_inventory_rejects_axis_collisions(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            def record(
+                path: str,
+                *,
+                rule: str,
+                occurrence: str,
+            ) -> dict[str, object]:
+                projection = module.semantic_identity_projection(
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule={rule} occurrence={occurrence} -->\n"
+                    "- Every retry retains current evidence.\n",
+                    owner="example",
+                    axis="reference",
+                )
+                return {
+                    "path": path,
+                    "owner": "example",
+                    "axis": "reference",
+                    "markers": projection["markers"],
+                }
+
+            module.validate_semantic_identity_marker_inventory(
+                [
+                    record(
+                        "src/example/references/one.md",
+                        rule="example/one",
+                        occurrence="one",
+                    )
+                ]
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate.*occurrence"):
+                module.validate_semantic_identity_marker_inventory(
+                    [
+                        record(
+                            "src/example/references/one.md",
+                            rule="example/one",
+                            occurrence="shared",
+                        ),
+                        record(
+                            "src/example/references/two.md",
+                            rule="example/two",
+                            occurrence="shared",
+                        ),
+                    ]
+                )
+            with self.assertRaisesRegex(ValueError, "rule-id collision"):
+                module.validate_semantic_identity_marker_inventory(
+                    [
+                        record(
+                            "src/example/references/one.md",
+                            rule="example/shared",
+                            occurrence="one",
+                        ),
+                        record(
+                            "src/example/references/two.md",
+                            rule="example/shared",
+                            occurrence="two",
+                        ),
+                    ]
+                )
+
+    def test_runtime_asset_build_identity_v2_vectors_and_canonical_decoder(
+        self,
+    ) -> None:
+        with _module_without_tiktoken() as (module, imports):
+            self.assertEqual(
+                "AAAAAAAAAAAAAAAAAAAAAA",
+                module.runtime_asset_build_identity("00" * 32),
+            )
+            self.assertEqual(
+                "_____________________w",
+                module.runtime_asset_build_identity("ff" * 32),
+            )
+            self.assertEqual(
+                "AAECAwQFBgcICQoLDA0ODw",
+                module.runtime_asset_build_identity(
+                    "000102030405060708090a0b0c0d0e0f"
+                    "101112131415161718191a1b1c1d1e1f"
+                ),
+            )
+            self.assertEqual(
+                bytes(range(16)),
+                module.runtime_asset_build_identity_bytes(
+                    "AAECAwQFBgcICQoLDA0ODw"
+                ),
+            )
+            self.assertEqual([], imports)
+
+            for malformed_digest in (
+                None,
+                b"00" * 32,
+                "0" * 63,
+                "0" * 65,
+                "A" * 64,
+                "g" * 64,
+                "0" * 63 + " ",
+            ):
+                with self.subTest(digest=malformed_digest):
+                    with self.assertRaises(ValueError):
+                        module.runtime_asset_build_identity(malformed_digest)
+
+            for malformed_identity in (
+                None,
+                b"A" * 22,
+                "0" * 32,
+                "A" * 21,
+                "A" * 23,
+                "A" * 21 + "B",
+                "A" * 21 + "+",
+                "A" * 21 + "/",
+                "A" * 21 + "=",
+                "A" * 21 + " ",
+            ):
+                with self.subTest(identity=malformed_identity):
+                    with self.assertRaises(ValueError):
+                        module.runtime_asset_build_identity_bytes(malformed_identity)
+
+    def test_runtime_selection_wrapper_requires_and_forwards_build_identity(
+        self,
+    ) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            with self.assertRaises(TypeError):
+                module.layer3_selector_runtime_selection(
+                    {},
+                    evidence_signals=["bounded signal"],
+                )
+            receipt = {"selected_layer3": ["configuration-runtime-policy"]}
+            with mock.patch.object(
+                module,
+                "layer3_selector_runtime_selection_receipt",
+                return_value=receipt,
+            ) as consumer:
+                selected = module.layer3_selector_runtime_selection(
+                    {"contract": "fixed projection"},
+                    evidence_signals=["bounded signal"],
+                    build_identity=TEST_BUILD_IDENTITY,
+                )
+            self.assertEqual(["configuration-runtime-policy"], selected)
+            consumer.assert_called_once_with(
+                {"contract": "fixed projection"},
+                evidence_signals=["bounded signal"],
+                build_identity=TEST_BUILD_IDENTITY,
+            )
+
+
+    def test_quality_cost_gate_is_core_owned_and_quality_first(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            core = copy.deepcopy(module.CORE_CONTRACTS)
+            gate = core["context_budget_contract"]["quality_cost_gate"]
+            self.assertFalse(
+                gate["candidate_total_not_greater_is_correctness_acceptance"]
+            )
+            self.assertTrue(gate["hard_ceiling_independent"])
+            self.assertFalse(gate["runtime_dependency"])
+            gate["candidate_total_not_greater_is_correctness_acceptance"] = True
+            self.assertTrue(module.validate_core_contracts(core))
+
+    def test_context_budget_taxonomy_and_rendered_categories_are_bijective(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            contract = module.CORE_CONTRACTS["context_budget_contract"]
+            mutations: list[tuple[str, dict[str, object]]] = []
+
+            swapped_entry = copy.deepcopy(contract)
+            swapped_entry["budget_classes"]["main"][
+                "category"
+            ] = "dispatch_composition"
+            mutations.append(("swapped-entry", swapped_entry))
+
+            missing = copy.deepcopy(contract)
+            missing["context_taxonomy"]["resident_runtime"]["classes"] = []
+            mutations.append(("missing", missing))
+
+            unknown = copy.deepcopy(contract)
+            unknown["context_taxonomy"]["dispatch_composition"]["classes"].append(
+                "unknown"
+            )
+            mutations.append(("unknown", unknown))
+
+            overlap = copy.deepcopy(contract)
+            overlap["context_taxonomy"]["dispatch_composition"]["classes"].append(
+                "main"
+            )
+            mutations.append(("overlap", overlap))
+
+            duplicate = copy.deepcopy(contract)
+            duplicate["context_taxonomy"]["resident_runtime"]["classes"].append(
+                "main"
+            )
+            mutations.append(("duplicate", duplicate))
+
+            authoring_leak = copy.deepcopy(contract)
+            authoring_leak["context_taxonomy"]["authoring"]["classes"].append(
+                "main"
+            )
+            mutations.append(("authoring-leak", authoring_leak))
+
+            dynamic_leak = copy.deepcopy(contract)
+            dynamic_leak["context_taxonomy"]["runtime_dynamic_context"][
+                "classes"
+            ].append("task")
+            mutations.append(("dynamic-leak", dynamic_leak))
+
+            swapped_taxonomy = copy.deepcopy(contract)
+            swapped_taxonomy["context_taxonomy"]["resident_runtime"][
+                "classes"
+            ].remove("main")
+            swapped_taxonomy["context_taxonomy"]["dispatch_composition"][
+                "classes"
+            ].append("main")
+            mutations.append(("swapped-taxonomy", swapped_taxonomy))
+
+            for label, mutation in mutations:
+                with self.subTest(label=label):
+                    with self.assertRaises(ValueError):
+                        module.derived_context_budget_limits(mutation)
+                    core = copy.deepcopy(module.CORE_CONTRACTS)
+                    core["context_budget_contract"] = mutation
+                    self.assertTrue(module.validate_core_contracts(core))
+
     def test_unit_dependency_audit_rejects_workspace_outputs_not_temp_fixture_text(self) -> None:
         with _module_without_tiktoken() as (module, _imports), tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -733,6 +1041,71 @@ class AiReadabilityContractTests(unittest.TestCase):
                             **values,
                         ),
                     )
+
+    def test_foundation_budget_contract_uses_synthetic_boundaries(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            for content_class, expected in (
+                (
+                    "compact",
+                    ((499, "TIGHTEN_BODY"), (500, "TIGHTEN_BODY"), (501, "BLOCK")),
+                ),
+                (
+                    "complex",
+                    ((599, "TIGHTEN_BODY"), (600, "TIGHTEN_BODY"), (601, "BLOCK")),
+                ),
+            ):
+                budget = module.foundation_content_budget(content_class)
+                for word_count, classification in expected:
+                    with self.subTest(
+                        content_class=content_class,
+                        dimension="words",
+                        word_count=word_count,
+                    ):
+                        self.assertEqual(
+                            classification,
+                            module.classify_content_budget(
+                                word_count=word_count,
+                                token_count=899,
+                                target_words=budget["target_words"],
+                                hard_words=budget["hard_words"],
+                                hard_tokens=module.FOUNDATION_CONTENT_HARD_TOKENS,
+                            ),
+                        )
+
+            compact = module.foundation_content_budget("compact")
+            for token_count, classification in (
+                (899, "KEEP"),
+                (900, "KEEP"),
+                (901, "BLOCK"),
+            ):
+                with self.subTest(dimension="tokens", token_count=token_count):
+                    self.assertEqual(
+                        classification,
+                        module.classify_content_budget(
+                            word_count=compact["target_words"],
+                            token_count=token_count,
+                            target_words=compact["target_words"],
+                            hard_words=compact["hard_words"],
+                            hard_tokens=module.FOUNDATION_CONTENT_HARD_TOKENS,
+                        ),
+                    )
+
+            with self.assertRaises(module.ValidationProblem):
+                module.foundation_content_budget("unknown")
+            with self.assertRaises(TypeError):
+                module.foundation_content_budget({"content_class": "compact"})
+            with self.assertRaisesRegex(
+                module.ValidationProblem,
+                "token target requires a token hard limit",
+            ):
+                module.classify_content_budget(
+                    word_count=400,
+                    token_count=801,
+                    target_words=400,
+                    hard_words=500,
+                    target_tokens=800,
+                    hard_tokens=None,
+                )
 
     def test_only_canonical_registry_projection_is_blankable_metadata(self) -> None:
         with _module_without_tiktoken() as (module, _imports):

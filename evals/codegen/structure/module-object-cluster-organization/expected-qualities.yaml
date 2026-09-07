@@ -1,6 +1,5 @@
 id: module-object-cluster-organization
 category: structure
-complexity: L3
 focus:
   - module internal composition
   - module object graph

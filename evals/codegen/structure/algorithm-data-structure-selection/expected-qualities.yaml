@@ -1,6 +1,5 @@
 id: algorithm-data-structure-selection
 category: structure
-complexity: L3
 focus:
   - input size and distribution
   - complexity and memory budget

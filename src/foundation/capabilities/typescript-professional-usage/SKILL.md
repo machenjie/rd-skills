@@ -23,13 +23,14 @@ Protect TypeScript runtime narrowing, structural-type limits, unsafe escapes, pr
 
 ## High-Value Rules
 
-- Treat external, persisted, versioned, generated, and cross-realm data as untrusted until an owned runtime parser establishes the accepted shape and maps invalid input to a caller-visible outcome.
+- Establish accepted runtime shape and compatibility from the actual producer, trust/version boundary, and current generation, storage, or prior parsing guarantees. Add owned runtime validation with an explicit invalid-input outcome where those guarantees leave a gap; TypeScript declarations alone prove neither safety nor runtime shape.
 - Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration.
 - Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger.
 - Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion.
 - Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units wherever conversion or comparison changes behavior.
 - Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target.
-- Verify public-type and generated-contract changes with named consumer compilation plus runtime version-skew cases; typecheck success remains scoped to the selected config, files, and module graph.
+- Verify public-type and generated-contract changes with named consumer compilation scoped to the selected config, files, and module graph.
+- Add runtime version-skew cases when the changed contract affects or can mismatch supported runtime behavior; source/emission evidence may establish an unchanged runtime boundary.
 
 ## Anti-Patterns
 
@@ -46,7 +47,7 @@ Protect TypeScript runtime narrowing, structural-type limits, unsafe escapes, pr
 
 ## Output Contract
 
-- TypeScript semantic decision with runtime boundary structural-type limit bounded escape async cancellation numeric behavior module emission public/generated compatibility proof limits and specialist routes
+- TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes.
 
 ## Targeted References
 

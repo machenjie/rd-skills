@@ -18,13 +18,14 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 try:
     from validation_utils import (
         SKILL_EXPERTISE_TAGS,
         ValidationProblem,
         load_yaml_file,
+        reference_contracts,
     )
 except ModuleNotFoundError:  # Support direct importlib loading in isolated tests.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -32,6 +33,7 @@ except ModuleNotFoundError:  # Support direct importlib loading in isolated test
         SKILL_EXPERTISE_TAGS,
         ValidationProblem,
         load_yaml_file,
+        reference_contracts,
     )
 
 try:
@@ -115,10 +117,10 @@ PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION = (
 PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH = (
     panel_contracts.PROFESSIONAL_MAXIMUM_PLAN_LINEAGE_DEPTH
 )
-PROFESSIONAL_PACKAGE_COUNT = 189
+PROFESSIONAL_PACKAGE_COUNT = 188
 PROFESSIONAL_LEGACY_PACKAGE_COUNT = 162
 PROFESSIONAL_CURRENT_LAYER_COUNTS = {
-    "professional": 26,
+    "professional": 25,
     "foundation": 150,
     "domain": 13,
 }
@@ -166,6 +168,10 @@ PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT = (
 PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT = (
     "725d3f2ca9f413b27a015c9aa36f4ae8099325266923555526b4d059c4d9f405"
 )
+PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT = (
+    "da14d27a602cc1bc26cd200d2cf9f4093800600a82a25cf64189a28f3c2c5daf"
+)
+PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION = "phrase-aware-v1"
 PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT = (
     panel_contracts.PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT
 )
@@ -492,6 +498,8 @@ PROFESSIONAL_V3_PACKET_TARGET_FIELDS = {
     "root",
     "indexed_references",
     "registry",
+    "registry_authority",
+    "reference_authority",
     "required_expertise_tags",
     "routing_adjacency",
     "review_binding",
@@ -786,6 +794,101 @@ class PanelReviewError(ValueError):
     """Raised when a panel artifact violates the closed voting contract."""
 
 
+class ProfessionalReviewerAddedRequiredPromotionDrift(PanelReviewError):
+    """A trusted reviewer-added candidate became required by current authority."""
+
+    def __init__(
+        self,
+        skill_id: str,
+        candidate_ids: Iterable[str],
+        *,
+        overlaps: dict[str, Iterable[str]] | None = None,
+    ) -> None:
+        self.skill_id = skill_id
+        self.candidate_ids = tuple(sorted(candidate_ids))
+        normalized_overlaps = overlaps or {skill_id: self.candidate_ids}
+        self.overlaps = tuple(
+            (
+                overlap_skill_id,
+                tuple(sorted(overlap_candidate_ids)),
+            )
+            for overlap_skill_id, overlap_candidate_ids in sorted(
+                normalized_overlaps.items()
+            )
+        )
+        super().__init__(
+            "Professional reviewer-added candidates became current required "
+            "candidates: "
+            + "; ".join(
+                f"{overlap_skill_id}={','.join(overlap_candidate_ids)}"
+                for overlap_skill_id, overlap_candidate_ids in self.overlaps
+            )
+        )
+
+
+def attestation_currentness_drift(exc: Exception) -> bool:
+    """Classify only external authority drift as non-structural staleness."""
+
+    message = str(exc)
+    if isinstance(
+        exc,
+        ProfessionalReviewerAddedRequiredPromotionDrift,
+    ):
+        return True
+    if isinstance(
+        exc,
+        panel_attestation.AttestationCurrentnessError,
+    ):
+        return message in {
+            "Readability detector contract binding is stale",
+            "Readability target manifest binding is stale",
+        }
+    if isinstance(exc, PanelReviewError):
+        if (
+            type(exc) is PanelReviewError
+            and message == "Professional current authority is invalid"
+        ):
+            cause = exc.__cause__
+            return bool(
+                type(cause)
+                is professional_carry.ProfessionalCarryForwardError
+                and str(cause)
+                == "Professional current package authority coverage is stale"
+            )
+        return message in {
+            "semantic attestation selector must match exactly one current authority",
+            "Professional attestation exact current binding is stale",
+            "Professional attestation target coverage is stale",
+            "Professional baseline attestation selector is stale",
+            "readability attestation exact current coverage or contract is stale",
+            "semantic attestation exact current candidate coverage is stale",
+            "semantic attestation application entries are stale",
+            "semantic fixed missing target lacks a rewrite majority",
+            "semantic fixed attestation omits a current candidate",
+            "semantic fixed detector contract is stale",
+            "semantic fixed rewrite target remains current",
+            "semantic fixed attestation disposition mismatch",
+        }
+    if isinstance(exc, panel_attestation.AttestationError):
+        return (
+            message
+            in {
+                "attestation source fingerprints are stale",
+                "attestation review contract fingerprint is stale",
+                "professional package fingerprints are stale",
+                "readability source or review binding coverage is stale",
+                "semantic candidate authority is incomplete",
+                "Semantic candidate binding is stale",
+                "semantic candidate fingerprints are stale",
+                "semantic candidate fingerprint coverage is stale",
+                "Professional current binding coverage is incomplete",
+            }
+            or message.startswith("Professional current binding for ")
+            or message.startswith("Professional dependency binding for ")
+        )
+    return False
+
+
 def _closed_validation_mode(value: object) -> str:
     if value not in VALIDATION_MODES:
         raise PanelReviewError(
@@ -1064,22 +1167,46 @@ def _adjacency_tokens(values: object) -> set[str]:
     return tokens
 
 
-def _negative_route_phrases(values: object) -> tuple[tuple[str, ...], ...]:
-    """Preserve registry phrase boundaries for high-confidence route conflicts."""
+def _negative_route_phrases(
+    values: object,
+    *,
+    match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
+) -> tuple[tuple[str, ...], ...]:
+    """Keep lexical gaps; retired token-set phrases are audit-only."""
 
     if not isinstance(values, list):
         return ()
-    phrases = {
-        tuple(
-            sorted(
+    if match_version == PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION:
+        phrases = {
+            tuple(sorted(
                 _adjacency_tokens(value)
                 - PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS
+            ))
+            for value in values
+            if isinstance(value, str)
+        }
+        phrases.discard(())
+        return tuple(sorted(phrases))
+    if match_version != PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION:
+        raise PanelReviewError("unsupported negative-route match version")
+    phrases = set()
+    excluded = (
+        PROFESSIONAL_ADJACENCY_STOP_WORDS
+        | PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS
+    )
+    for value in values:
+        if not isinstance(value, str):
+            continue
+        tokens: list[str] = []
+        for line in value.splitlines():
+            if tokens:
+                tokens.append("")
+            tokens.extend(
+                token if len(token) >= 3 and token not in excluded else ""
+                for token in re.findall(r"[a-z0-9]+", line.casefold())
             )
-        )
-        for value in values
-        if isinstance(value, str)
-    }
-    phrases.discard(())
+        if any(tokens):
+            phrases.add(tuple(tokens))
     return tuple(sorted(phrases))
 
 
@@ -1404,6 +1531,8 @@ def _professional_source_declared_skill_ids(
 
 def _professional_raw_adjacency_basis(
     target: dict[str, Any],
+    *,
+    negative_route_match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> dict[str, Any]:
     """Build relationship-independent features from embedded catalog content."""
 
@@ -1418,10 +1547,12 @@ def _professional_raw_adjacency_basis(
             responsibility["anti_trigger_signals"]
         ),
         "trigger_phrases": _negative_route_phrases(
-            responsibility["trigger_signals"]
+            responsibility["trigger_signals"],
+            match_version=negative_route_match_version,
         ),
         "anti_trigger_phrases": _negative_route_phrases(
-            responsibility["anti_trigger_signals"]
+            responsibility["anti_trigger_signals"],
+            match_version=negative_route_match_version,
         ),
         "outputs": _adjacency_tokens(responsibility["output_contract"]),
         "responsibility": _adjacency_tokens(
@@ -1440,9 +1571,12 @@ def _professional_catalog_adjacency_features(
     targets: list[dict[str, Any]],
     *,
     include_historical_alias: bool = False,
+    negative_route_match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     raw_bases = {
-        target["skill_id"]: _professional_raw_adjacency_basis(target)
+        target["skill_id"]: _professional_raw_adjacency_basis(
+            target, negative_route_match_version=negative_route_match_version
+        )
         for target in targets
     }
     document_frequencies: dict[str, dict[str, int]] = {}
@@ -1487,7 +1621,7 @@ def _professional_catalog_adjacency_features(
         "maximum_document_frequency": maximum,
         "negative_route_conflict_filtering": "phrase-aware-df-bypass",
         "negative_route_contract": {
-            "version": PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
+            "version": negative_route_match_version,
             "generic_tokens": sorted(PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS),
             "minimum_overlap_tokens": (
                 PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
@@ -1505,9 +1639,16 @@ def _professional_catalog_adjacency_features(
 def _professional_negative_route_conflicts(
     source: dict[str, Any],
     candidate: dict[str, Any],
+    *,
+    match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> list[str]:
-    """Return phrase-aware, rank-independent ownership conflicts."""
+    """Return versioned, rank-independent ownership phrase conflicts."""
 
+    if match_version not in {
+        PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
+        PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION,
+    }:
+        raise PanelReviewError("unsupported negative-route match version")
     matches: set[str] = set()
 
     def compare(
@@ -1517,21 +1658,41 @@ def _professional_negative_route_conflicts(
         prefix: str,
     ) -> None:
         for trigger_phrase in trigger_phrases:
-            trigger_tokens = set(trigger_phrase)
+            trigger_tokens = tuple(token for token in trigger_phrase if token)
             for anti_trigger_phrase in anti_trigger_phrases:
-                anti_trigger_tokens = set(anti_trigger_phrase)
-                overlap = sorted(trigger_tokens & anti_trigger_tokens)
+                anti_trigger_tokens = tuple(
+                    token for token in anti_trigger_phrase if token
+                )
                 exact_single = (
                     len(trigger_tokens) == 1
                     and trigger_tokens == anti_trigger_tokens
                 )
                 if (
-                    len(overlap)
-                    < PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
-                    and not exact_single
+                    match_version
+                    == PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
                 ):
+                    overlap = sorted(
+                        set(trigger_tokens) & set(anti_trigger_tokens)
+                    )
+                    if (
+                        len(overlap) >= PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
+                        or exact_single
+                    ):
+                        matches.add(prefix + "+".join(overlap))
                     continue
-                matches.add(prefix + "+".join(overlap))
+                if exact_single:
+                    matches.add(prefix + trigger_tokens[0])
+                overlap = (
+                    _professional_v3_ngrams(
+                        trigger_phrase, PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
+                    )
+                    & _professional_v3_ngrams(
+                        anti_trigger_phrase, PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
+                    )
+                )
+                for phrase in overlap:
+                    if all(phrase):
+                        matches.add(prefix + "+".join(phrase))
 
     compare(
         source["negative_route_trigger_phrases"],
@@ -1550,6 +1711,7 @@ def _professional_catalog_ranking(
     skill_id: str,
     *,
     bases: dict[str, dict[str, Any]],
+    negative_route_match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> list[dict[str, Any]]:
     source = bases[skill_id]
     ranking: list[dict[str, Any]] = []
@@ -1570,6 +1732,7 @@ def _professional_catalog_ranking(
             "negative-route-conflict": _professional_negative_route_conflicts(
                 source,
                 candidate,
+                match_version=negative_route_match_version,
             ),
         }
         signals = {
@@ -1595,12 +1758,17 @@ def _professional_catalog_ranking(
 
 
 def _professional_catalog_rankings(
-    *, bases: dict[str, dict[str, Any]]
+    *,
+    bases: dict[str, dict[str, Any]],
+    negative_route_match_version: str = PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> dict[str, list[dict[str, Any]]]:
     """Build every target-specific ordering in one catalog projection pass."""
 
     return {
-        skill_id: _professional_catalog_ranking(skill_id, bases=bases)
+        skill_id: _professional_catalog_ranking(
+            skill_id, bases=bases,
+            negative_route_match_version=negative_route_match_version,
+        )
         for skill_id in sorted(bases)
     }
 
@@ -1866,7 +2034,7 @@ def _professional_package_targets(
     root: Path = ROOT,
     historical_schema2: bool = False,
 ) -> list[dict[str, Any]]:
-    """Build the canonical 189-package completeness review surface."""
+    """Build the canonical current-package completeness review surface."""
 
     registry_rows: list[tuple[str, str, dict[str, Any]]] = []
     seen_names: set[str] = set()
@@ -1920,14 +2088,19 @@ def _professional_package_targets(
             root=root,
             label=f"{name} root Skill",
         )
-        raw_references = row.get("reference_index", [])
-        if not isinstance(raw_references, list):
-            raise PanelReviewError(f"{name}.reference_index must be an array")
+        try:
+            reference_authority = reference_contracts(
+                row.get("reference_index", []),
+                f"{registry_relative}:{name}.reference_index",
+                owner=name,
+            )
+        except ValidationProblem as exc:
+            raise PanelReviewError(
+                f"{name}.reference_index is not valid Reference authority"
+            ) from exc
         references: list[dict[str, Any]] = []
         reference_paths: set[str] = set()
-        for index, reference in enumerate(raw_references):
-            if not isinstance(reference, dict):
-                raise PanelReviewError(f"{name}.reference_index[{index}] is invalid")
+        for index, reference in enumerate(reference_authority):
             reference_relative = _non_blank(
                 reference.get("path"), label=f"{name}.reference_index[{index}].path"
             )
@@ -2003,15 +2176,42 @@ def _professional_package_targets(
             target["registry"]["entry_fingerprint"] = (
                 _canonical_json_sha256(row)
             )
+        else:
+            registry_authority = copy.deepcopy(row)
+            registry_authority["reference_index"] = copy.deepcopy(
+                reference_authority
+            )
+            target["registry_authority"] = registry_authority
+            target["reference_authority"] = copy.deepcopy(
+                reference_authority
+            )
+            try:
+                professional_carry.professional_registry_authority_binding(
+                    target
+                )
+            except professional_carry.ProfessionalCarryForwardError as exc:
+                raise PanelReviewError(
+                    f"{name} Registry/Reference authority does not cover its "
+                    "indexed material exactly once"
+                ) from exc
         targets.append(target)
     targets.sort(key=lambda item: item["skill_id"])
+    negative_route_match_version = (
+        PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+        if historical_schema2
+        else PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
+    )
     adjacency_bases, document_frequency_filter = (
         _professional_catalog_adjacency_features(
             targets,
             include_historical_alias=historical_schema2,
+            negative_route_match_version=negative_route_match_version,
         )
     )
-    catalog_rankings = _professional_catalog_rankings(bases=adjacency_bases)
+    catalog_rankings = _professional_catalog_rankings(
+        bases=adjacency_bases,
+        negative_route_match_version=negative_route_match_version,
+    )
     for target in targets:
         name = target["skill_id"]
         registry_declared_skills = sorted(direct_relationships[name])
@@ -2167,39 +2367,42 @@ def _semantic_candidate_current_binding(
 ) -> dict[str, Any]:
     """Return only semantic identity and local evidence used for currentness."""
 
-    fields = (
+    identity_fields = (
         "candidate_id",
         "finding",
         "path",
         "owner",
         "skill_owner",
-        "fingerprint",
+        "source_selector",
     )
-    binding = {field: copy.deepcopy(candidate.get(field)) for field in fields}
+    identity = {
+        field: copy.deepcopy(candidate.get(field)) for field in identity_fields
+    }
+    evidence = {"fingerprint": candidate.get("fingerprint")}
     if axis == "root":
-        binding.update(
+        identity["document_part"] = candidate.get("document_part")
+        evidence.update(
             {
-                "document_part": candidate.get("document_part"),
                 "occurrence_fingerprint": candidate.get("occurrence_fingerprint"),
                 "context_fingerprint": candidate.get("context_fingerprint"),
             }
         )
     else:
-        binding.update(
+        evidence.update(
             {
                 "evidence_fingerprint": candidate.get("evidence_fingerprint"),
                 "content_fingerprint": candidate.get("content_fingerprint"),
             }
         )
         if candidate.get("path") == "group":
-            binding["group_members"] = sorted(
+            evidence["group_members"] = sorted(
                 {
                     (occurrence.get("path"), occurrence.get("owner"))
                     for occurrence in candidate.get("occurrences", [])
                     if isinstance(occurrence, dict)
                 }
             )
-    return binding
+    return {"stable_identity": identity, "current_evidence": evidence}
 
 
 def _semantic_entry_mismatches(
@@ -2212,7 +2415,7 @@ def _semantic_entry_mismatches(
 
     if entry is None:
         return ["prior-entry-missing"]
-    fields = ["candidate_id", "finding", "path", "fingerprint", "skill_owner"]
+    fields = ["candidate_id", "finding", "path", "source_selector", "skill_owner"]
     if axis == "root":
         fields.extend(["document_part", "priority"])
     mismatches = [field for field in fields if entry.get(field) != candidate.get(field)]
@@ -2238,7 +2441,49 @@ def _semantic_entry_mismatches(
         for entry_field, candidate_field in evidence_fields
         if evidence.get(entry_field) != candidate.get(candidate_field)
     )
+    try:
+        expected_record_fingerprint = (
+            panel_contracts.semantic_disposition_record_fingerprint(axis, entry)
+        )
+    except ValueError:
+        expected_record_fingerprint = None
+    if entry.get("record_fingerprint") != expected_record_fingerprint:
+        mismatches.append("record_fingerprint")
     return sorted(set(mismatches))
+
+
+def _semantic_eligible_candidates(
+    *, axis: str, semantic: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Select review-visible candidates, including configured detector drift."""
+
+    candidates = semantic.get("candidates")
+    contract = semantic.get("disposition_contract")
+    entries = contract.get("entries") if isinstance(contract, dict) else None
+    if not isinstance(candidates, list) or not all(
+        isinstance(candidate, dict) for candidate in candidates
+    ):
+        raise PanelReviewError(f"semantic audit {axis} candidates must be an array")
+    if not isinstance(entries, list) or not all(
+        isinstance(entry, dict) for entry in entries
+    ):
+        raise PanelReviewError(
+            f"semantic audit {axis} disposition entries must be an array"
+        )
+    configured_ids = {
+        str(entry.get("candidate_id"))
+        for entry in entries
+        if isinstance(entry.get("candidate_id"), str)
+    }
+    return [
+        candidate
+        for candidate in candidates
+        if (
+            axis == "root"
+            or candidate.get("detector_status") == "candidate"
+            or str(candidate.get("candidate_id")) in configured_ids
+        )
+    ]
 
 
 def _semantic_axis_diff(
@@ -2259,11 +2504,7 @@ def _semantic_axis_diff(
         raise PanelReviewError(
             f"semantic audit {axis} disposition entries must be an array"
         )
-    eligible = [
-        candidate
-        for candidate in candidates
-        if axis == "root" or candidate.get("detector_status") == "candidate"
-    ]
+    eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
     candidate_ids = [candidate.get("candidate_id") for candidate in eligible]
     entry_ids = [entry.get("candidate_id") for entry in entries]
     for label, values in (("candidate", candidate_ids), ("entry", entry_ids)):
@@ -2372,15 +2613,11 @@ def _semantic_source_fingerprints(
     ):
         raise PanelReviewError("semantic disposition candidates are unavailable")
     manifests: dict[str, list[dict[str, Any]]] = {}
-    for axis, candidates in (
-        ("root", root_candidates),
-        ("reference", reference_candidates),
+    for axis, candidates, semantic in (
+        ("root", root_candidates, root_semantic),
+        ("reference", reference_candidates, reference_semantic),
     ):
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         rows = []
         for candidate in eligible:
             candidate_id = _lowercase_sha256(
@@ -2569,12 +2806,13 @@ def prepare_semantic_disposition_packet(
 def _semantic_audit_for_axis_rereview(
     audit: dict[str, Any], axes: list[str]
 ) -> dict[str, Any]:
-    """Return a review-only audit view with selected axis entries withheld.
+    """Return a review-only view with selected-axis carry proofs invalidated.
 
     This reuses the ordinary semantic packet contract after a detector change:
-    current candidates remain unchanged, while exact prior dispositions on the
-    affected axis become explicit review targets again. The canonical audit and
-    its single-source-of-truth entries are never modified.
+    current candidates and configured stable IDs remain unchanged, while exact
+    prior dispositions on the affected axis become explicit review targets
+    again. The canonical audit and its single-source-of-truth entries are never
+    modified.
     """
 
     selected = sorted(set(axes))
@@ -2599,7 +2837,12 @@ def _semantic_audit_for_axis_rereview(
             raise PanelReviewError(
                 f"semantic re-review requires {axis} disposition entries"
             )
-        contract["entries"] = []
+        for entry in contract["entries"]:
+            if not isinstance(entry, dict):
+                raise PanelReviewError(
+                    f"semantic re-review requires valid {axis} disposition entries"
+                )
+            entry["record_fingerprint"] = None
     return result
 
 
@@ -2814,6 +3057,7 @@ def prepare_professional_completeness_ballot_template(
     created_on: str,
     capsule_path: Path | None = None,
     validation_root: Path = ROOT,
+    negative_route_match_version: str = PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> dict[str, Any]:
     """Create an unfilled completeness ballot for one assigned Skill subset."""
 
@@ -2838,7 +3082,13 @@ def prepare_professional_completeness_ballot_template(
             created_on=created_on,
             validation_root=validation_root,
         )
-    _validate_professional_completeness_packet(packet)
+    if packet.get("schema_version") == PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION:
+        _validate_professional_completeness_packet_v2(
+            packet,
+            negative_route_match_version=negative_route_match_version,
+        )
+    else:
+        _validate_professional_completeness_packet(packet)
     if capsule_path is not None:
         raise PanelReviewError(
             "review capsules require a professional completeness schema-3 packet"
@@ -3596,37 +3846,20 @@ def _readability_finding_id(
     *,
     document_id: str,
     kind: str,
-    band: str | None,
-    words: int | None,
-    sentence_fingerprint: str,
-    source_span: dict[str, Any],
+    sentence: str,
+    occurrence: int,
 ) -> str:
-    """Return the canonical identity of one exact detector finding."""
+    """Return a stable identity independent of raw source coordinates."""
 
-    return hashlib.sha256(
-        (
-            "ai-readability-finding-v2\0ai-readability-v1\0"
-            + document_id
-            + "\0"
-            + kind
-            + "\0"
-            + str(band or "")
-            + "\0"
-            + str(words or "")
-            + "\0"
-            + sentence_fingerprint
-            + "\0"
-            + str(source_span["start_line"])
-            + "\0"
-            + str(source_span["end_line"])
-            + "\0"
-            + str(source_span["start_offset"])
-            + "\0"
-            + str(source_span["end_offset"])
-            + "\0"
-            + str(source_span["sha256"])
-        ).encode("utf-8")
-    ).hexdigest()
+    try:
+        return panel_contracts.readability_stable_finding_id(
+            document_id=document_id,
+            kind=kind,
+            sentence=sentence,
+            occurrence=occurrence,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(str(exc)) from exc
 
 
 def _readability_targets_from_evidence(
@@ -3945,6 +4178,8 @@ def _actionability_target_id(path: str) -> str:
 
 
 def _actionability_front_window(path: str, *, limit: int) -> dict[str, Any]:
+    if type(limit) is not int or limit < 1:
+        raise PanelReviewError("actionability front-window limit is invalid")
     source = _canonical_relative_path(path, label="actionability target path")
     try:
         lines = source.read_text(encoding="utf-8").splitlines()
@@ -3965,9 +4200,22 @@ def _actionability_front_window(path: str, *, limit: int) -> dict[str, Any]:
             f"actionability source has unterminated YAML frontmatter: {path}"
         )
     body_lines = lines[end_index + 1 :]
-    window_lines = body_lines[:limit]
-    if not window_lines:
-        raise PanelReviewError(f"actionability source body is empty: {path}")
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            "\n".join(body_lines),
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(
+            f"actionability source body is invalid: {path}"
+        ) from exc
+    selected_units = logical_units[:limit]
+    if not selected_units:
+        raise PanelReviewError(
+            f"actionability source body has no governed logical units: {path}"
+        )
+    window_lines = body_lines[: int(selected_units[-1]["end_line"])]
     start_line = end_index + 2
     numbered_lines = [
         {"line": start_line + index, "text": text}
@@ -4002,7 +4250,7 @@ def _validate_actionability_front_window(
         or start_line < 1
         or type(end_line) is not int
         or type(line_count) is not int
-        or not 1 <= line_count <= limit
+        or line_count < 1
         or end_line != start_line + line_count - 1
     ):
         raise PanelReviewError(f"{label} coordinates are invalid")
@@ -4023,6 +4271,18 @@ def _validate_actionability_front_window(
     ).hexdigest()
     if fingerprint != expected_fingerprint:
         raise PanelReviewError(f"{label}.sha256 does not match embedded lines")
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            "\n".join(row["text"] for row in lines),
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(f"{label} logical units are invalid") from exc
+    if not 1 <= len(logical_units) <= limit:
+        raise PanelReviewError(
+            f"{label} normalized logical-unit count is outside the limit"
+        )
     return value
 
 
@@ -4033,7 +4293,19 @@ def _actionability_window_line_is_substantive(
 
     relative_line = line - int(window["start_line"]) + 1
     content = "\n".join(row["text"] for row in window["lines"])
-    return _is_substantive_markdown_line(content, relative_line)
+    try:
+        logical_units = panel_contracts.readability_normalized_logical_units(
+            content,
+            exclude_fenced=True,
+            strip_frontmatter=False,
+        )
+    except ValueError:
+        return False
+    return any(
+        unit["kind"] not in {"heading", "fenced"}
+        and relative_line in unit["source_lines"]
+        for unit in logical_units
+    )
 
 
 def _root_body_fingerprints(audit: dict[str, Any]) -> dict[str, str]:
@@ -4665,6 +4937,7 @@ def _validate_readability_packet(
                 f"packet readability target {index} findings are required"
             )
         finding_order: list[tuple[Any, ...]] = []
+        finding_identity_occurrences: dict[tuple[str, str], int] = {}
         for finding_index, finding in enumerate(findings):
             finding_fields = (
                 {
@@ -4745,13 +5018,22 @@ def _validate_readability_packet(
                         f"readability target {index} finding {finding_index}.finding_id"
                     ),
                 )
+                normalized_sentence = (
+                    panel_contracts.readability_normalized_visible_text(
+                        sentence
+                    )
+                )
+                occurrence_key = (
+                    str(finding["kind"]), normalized_sentence
+                )
+                finding_identity_occurrences[occurrence_key] = (
+                    finding_identity_occurrences.get(occurrence_key, 0) + 1
+                )
                 expected_finding_id = _readability_finding_id(
                     document_id=document_id,
                     kind=str(finding["kind"]),
-                    band=finding.get("band"),
-                    words=words,
-                    sentence_fingerprint=sentence_fingerprint,
-                    source_span=source_span,
+                    sentence=sentence,
+                    occurrence=finding_identity_occurrences[occurrence_key],
                 )
                 if finding_id != expected_finding_id:
                     raise PanelReviewError(
@@ -4793,17 +5075,25 @@ def _validate_readability_packet(
             raise PanelReviewError(
                 "schema-2 readability packet target or detector authority is stale"
             )
-        if readability_targets != current_targets:
+        packet_manifest = _readability_target_manifest_projection(
+            content_targets=content_targets,
+            readability_targets=readability_targets,
+            actionability_targets=packet.get("actionability_targets", []),
+        )
+        current_manifest = _readability_target_manifest_projection(
+            content_targets=current_content_targets,
+            readability_targets=current_targets,
+            actionability_targets=current_actionability_targets,
+        )
+        if packet_manifest != current_manifest:
             raise PanelReviewError(
-                "schema-2 readability packet findings or source inventory are stale"
+                "schema-2 readability normalized target bindings are stale"
             )
-        if content_targets != current_content_targets:
+        if packet["source_fingerprints"]["readability_target_manifest"] != (
+            _canonical_json_sha256(packet_manifest)
+        ):
             raise PanelReviewError(
-                "schema-2 content source bindings or inventory are stale"
-            )
-        if packet.get("actionability_targets") != current_actionability_targets:
-            raise PanelReviewError(
-                "schema-2 actionability source bindings or inventory are stale"
+                "schema-2 readability target manifest is internally stale"
             )
 
     if schema_version == READABILITY_SCHEMA_VERSION:
@@ -5158,6 +5448,7 @@ def _validate_professional_completeness_packet_v2(
     packet: dict[str, Any],
     *,
     validation_mode: str = VALIDATION_MODE_CURRENT,
+    negative_route_match_version: str = PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> None:
     validation_mode = _closed_validation_mode(validation_mode)
     if set(packet) != PROFESSIONAL_PACKET_FIELDS:
@@ -5235,7 +5526,7 @@ def _validate_professional_completeness_packet_v2(
         "delivery_scope",
         "task_routable",
     }
-    target_fields = {
+    historical_target_fields = {
         "skill_id",
         "layer",
         "required_expertise_tags",
@@ -5245,10 +5536,19 @@ def _validate_professional_completeness_packet_v2(
         "routing_adjacency",
         "package_fingerprint",
     }
+    current_target_fields = {
+        *historical_target_fields,
+        "registry_authority",
+        "reference_authority",
+    }
     for index, target in enumerate(targets):
         label = f"professional_targets[{index}]"
-        if not isinstance(target, dict) or set(target) != target_fields:
+        if not isinstance(target, dict) or set(target) not in {
+            frozenset(historical_target_fields),
+            frozenset(current_target_fields),
+        }:
             raise PanelReviewError(f"{label} fields are invalid")
+        has_current_authority = set(target) == current_target_fields
         skill_id = _non_blank(target.get("skill_id"), label=f"{label}.skill_id")
         layer = target.get("layer")
         if layer not in layer_counts:
@@ -5313,6 +5613,18 @@ def _validate_professional_completeness_packet_v2(
                 responsibility.get(field),
                 label=f"{label}.registry.responsibility_contract.{field}",
             )
+        if has_current_authority:
+            try:
+                professional_carry.professional_registry_authority_binding(
+                    target
+                )
+                professional_carry.professional_reference_authority_binding(
+                    target
+                )
+            except professional_carry.ProfessionalCarryForwardError as exc:
+                raise PanelReviewError(
+                    f"{label} current Registry or Reference authority is invalid"
+                ) from exc
         fingerprint = _lowercase_sha256(
             target.get("package_fingerprint"),
             label=f"{label}.package_fingerprint",
@@ -5356,6 +5668,7 @@ def _validate_professional_completeness_packet_v2(
         _professional_catalog_adjacency_features(
             targets,
             include_historical_alias=historical_aliases,
+            negative_route_match_version=negative_route_match_version,
         )
     )
     for index, target in enumerate(targets):
@@ -5446,7 +5759,10 @@ def _validate_professional_completeness_packet_v2(
                 raise PanelReviewError(
                     f"{label}.source_declared_skills is stale"
                 )
-        ranking = _professional_catalog_ranking(target["skill_id"], bases=bases)
+        ranking = _professional_catalog_ranking(
+            target["skill_id"], bases=bases,
+            negative_route_match_version=negative_route_match_version,
+        )
         if adjacency.get("full_catalog_count") != len(ranking):
             raise PanelReviewError(f"{label}.full_catalog_count is invalid")
         embedded_ranking = adjacency.get("full_catalog_ranking")
@@ -5898,11 +6214,7 @@ def _validate_semantic_packet_current(
             raise PanelReviewError(
                 f"semantic audit {axis} disposition entries must be an array"
             )
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         current_by_id = {
             str(candidate.get("candidate_id")): candidate for candidate in eligible
         }
@@ -6402,8 +6714,17 @@ def _professional_materials_by_skill(
 def _professional_review_bindings(
     targets: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Project canonical carry inputs without adding them to schema-2 packets."""
+    """Project current bindings or the audit-only schema-2 compatibility view."""
 
+    if all(
+        isinstance(target, dict)
+        and "registry_authority" not in target
+        and "reference_authority" not in target
+        for target in targets
+    ):
+        return professional_carry.professional_historical_content_review_bindings(
+            targets
+        )
     return professional_carry.professional_review_bindings(targets)
 
 
@@ -6915,11 +7236,13 @@ def _validate_professional_completeness_ballot_v2(
     expected_adjacency_by_target: dict[str, list[str]] | None = None,
     validate_packet_contract: bool = True,
     validation_mode: str = VALIDATION_MODE_CURRENT,
+    negative_route_match_version: str = PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> dict[str, Any]:
     if validate_packet_contract:
         _validate_professional_completeness_packet_v2(
             packet,
             validation_mode=validation_mode,
+            negative_route_match_version=negative_route_match_version,
         )
     if set(ballot) != PROFESSIONAL_BALLOT_FIELDS:
         raise PanelReviewError(
@@ -7700,6 +8023,7 @@ def _aggregate_readability_ballots(
         )
         for path, value in ballot_values
     ]
+    validated.sort(key=lambda item: item[1]["voter"]["voter_id"])
     voter_ids = [value["voter"]["voter_id"] for _path, value in validated]
     agent_ids = [value["voter"]["agent_id"] for _path, value in validated]
     roles = [value["voter"]["role"] for _path, value in validated]
@@ -8322,6 +8646,7 @@ def _aggregate_semantic_disposition_ballots(
         (path, validate_ballot(packet, value, packet_sha256=packet_sha256))
         for path, value in ballot_values
     ]
+    validated.sort(key=lambda item: item[1]["voter"]["voter_id"])
     voter_ids = [value["voter"]["voter_id"] for _path, value in validated]
     agent_ids = [value["voter"]["agent_id"] for _path, value in validated]
     roles = [value["voter"]["role"] for _path, value in validated]
@@ -9398,12 +9723,9 @@ def _validate_legacy_semantic_decision_application(
                     raise PanelReviewError(
                         f"semantic application current {axis} candidates must be an array"
                     )
-                eligible = [
-                    candidate
-                    for candidate in candidates
-                    if axis == "root"
-                    or candidate.get("detector_status") == "candidate"
-                ]
+                eligible = _semantic_eligible_candidates(
+                    axis=axis, semantic=semantic
+                )
                 for candidate in eligible:
                     target_id = f"{axis}:{candidate.get('candidate_id')}"
                     if target_id in current_bindings:
@@ -9495,12 +9817,9 @@ def _validate_legacy_semantic_decision_application(
                 raise PanelReviewError(
                     f"semantic application current {axis} entries must be an array"
                 )
-            eligible = [
-                candidate
-                for candidate in candidates
-                if axis == "root"
-                or candidate.get("detector_status") == "candidate"
-            ]
+            eligible = _semantic_eligible_candidates(
+                axis=axis, semantic=semantic
+            )
             candidates_by_id = {
                 str(candidate.get("candidate_id")): candidate
                 for candidate in eligible
@@ -9755,11 +10074,7 @@ def validate_semantic_decision_application(
             raise PanelReviewError(
                 f"semantic application current {axis} entries must be an array"
             )
-        eligible = [
-            candidate
-            for candidate in candidates
-            if axis == "root" or candidate.get("detector_status") == "candidate"
-        ]
+        eligible = _semantic_eligible_candidates(axis=axis, semantic=semantic)
         candidates_by_id = {
             str(candidate.get("candidate_id")): candidate
             for candidate in eligible
@@ -9989,8 +10304,15 @@ def _professional_v3_binding_state(
     base_targets: list[dict[str, Any]],
     *,
     review_contract_fingerprint: str,
+    historical_content_binding: bool = False,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-    bindings = professional_carry.professional_review_bindings(base_targets)
+    bindings = (
+        professional_carry.professional_historical_content_review_bindings(
+            base_targets
+        )
+        if historical_content_binding
+        else professional_carry.professional_review_bindings(base_targets)
+    )
     snapshot = professional_carry.professional_carry_snapshot(
         bindings,
         review_contract_fingerprint=review_contract_fingerprint,
@@ -10341,6 +10663,11 @@ def _professional_v3_review_plan(
         prior_snapshot=prior_snapshot,
         prior_decision_dependencies=prior_dependencies,
         review_contract_fingerprint=review_contract_fingerprint,
+        prior_candidate_material_bindings=(
+            baseline_state["attestation"]["dependency_material_catalog"]
+            if baseline_state is not None and "attestation" in baseline_state
+            else None
+        ),
     )
     baseline_depth = (
         baseline_state["plan_lineage_depth"]
@@ -10435,7 +10762,7 @@ def _professional_v3_review_plan(
 def _professional_v3_packet_limitations() -> list[str]:
     return [
         "Schema 3 carries only whole accepted packages through a bounded, recursively validated canonical plan lineage and direct last-fresh origin.",
-        "Carry eligibility is authoritative on package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+        "Carry eligibility is authoritative on the conservative deterministic Professional currentness projection through canonical package_material_binding, review_unit_binding, complete Registry and ordered Reference authority, and direct one-hop dependency material bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; unsupported or ambiguous material changes require affected-package fresh review.",
         "A full-fresh checkpoint resets plan lineage depth after recomputing its immediate predecessor effective evidence and reset trigger; superseded history is not recursively re-proved.",
         "Review capsules and deterministic byte proxies do not prove actual host tokens, latency, reviewer identity, credentials, behavior, production accuracy, or installed user experience.",
         "This packet does not by itself satisfy any formal release gate, and a static artifact tree cannot prove that historical rounds were not deleted.",
@@ -10880,6 +11207,7 @@ def _professional_v3_packet_state(
         )
         registered_contracts = {
             current_registered_contract,
+            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
@@ -10901,6 +11229,7 @@ def _professional_v3_packet_state(
         ).get("required_candidate_selection")
         if packet_contract_fingerprint in {
             current_registered_contract,
+            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
         }:
             registered_schema3_selection = True
@@ -10934,11 +11263,25 @@ def _professional_v3_packet_state(
     _validate_professional_completeness_packet_v2(
         projected,
         validation_mode=validation_mode,
+        negative_route_match_version=(
+            PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
+            if packet_contract_fingerprint
+            == panel_contracts.professional_review_contract_fingerprint()
+            else PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+        ),
     )
     base_targets = _professional_v3_base_targets(raw_targets)
     bindings, snapshot = _professional_v3_binding_state(
         base_targets,
         review_contract_fingerprint=expected_contract_fingerprint,
+        historical_content_binding=(
+            validation_mode == VALIDATION_MODE_HISTORICAL
+            and packet_contract_fingerprint
+            not in {
+                panel_contracts.professional_review_contract_fingerprint(),
+                PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+            }
+        ),
     )
     embedded_targets = packet["professional_targets"]
     for target in embedded_targets:
@@ -12379,6 +12722,7 @@ def prepare_professional_completeness_ballot_template_v3(
         expertise_tags=expertise_tags,
         skill_ids=assigned_ids,
         created_on=created_on,
+        negative_route_match_version=PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
     )
     manifest_by_target = {
         target["skill_id"]: target["candidate_material_manifest"]
@@ -12564,6 +12908,12 @@ def _validate_professional_completeness_ballot_v3(
         expected_adjacency_by_target=adjacency_by_target,
         validate_packet_contract=not packet_projection_was_supplied,
         validation_mode=validation_mode,
+        negative_route_match_version=(
+            PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
+            if packet["review_contract_fingerprint"]
+            == panel_contracts.professional_review_contract_fingerprint()
+            else PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+        ),
     )
     candidate_contract = _professional_v3_capsule_candidate_contract(capsule)
     for vote_index, vote in enumerate(ballot["professional_votes"]):
@@ -13099,7 +13449,8 @@ def _professional_v3_validate_decision_projection(
         row.get("skill_id") if isinstance(row, dict) else None for row in rows
     ] != sorted(targets):
         raise PanelReviewError(
-            "schema-3 decision must contain 189 Skill-sorted target rows"
+            "schema-3 decision must contain "
+            f"{PROFESSIONAL_PACKAGE_COUNT} Skill-sorted target rows"
         )
     plan_fresh = {
         row["skill_id"] for row in state["plan"]["fresh_targets"]
@@ -13946,7 +14297,7 @@ def _professional_v3_decision_record(
         ),
         "limitations": [
             "Fresh evidence is derived only from validated target-scoped capsules; carried rows contain no new votes and point directly to a validated depth-zero fresh origin.",
-            "Carried authority records package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+            "Carried authority records the conservative deterministic Professional currentness projection through canonical package_material_binding, review_unit_binding, complete Registry and ordered Reference authority, and direct one-hop dependency material bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; unsupported or ambiguous material changes require affected-package fresh review.",
             "Canonical JSON byte and optional ratio values are deterministic input-size proxies, not actual tokens, reviewer effort, latency, identity, credentials, behavior, or production outcomes.",
             "Static professional review and simulated carry validation do not prove real-host startup, wall-clock performance, production accuracy, or installed user experience.",
         ],
@@ -15599,7 +15950,11 @@ def _bound_json_object(path: Path, *, label: str, max_bytes: int) -> tuple[
 def _attestation_reviewers(record: dict[str, Any]) -> list[dict[str, Any]]:
     return [
         {
-            key: copy.deepcopy(voter[key])
+            key: (
+                sorted(set(voter[key]))
+                if key == "expertise"
+                else copy.deepcopy(voter[key])
+            )
             for key in (
                 "voter_id",
                 "agent_id",
@@ -15677,17 +16032,23 @@ def _readability_attestation_from_decision(
         review_id=packet["review_id"],
         created_on=packet["created_on"],
     )
-    for field in (
-        "source_fingerprints",
-        "panel_contract",
-        "content_targets",
-        "readability_targets",
-        "actionability_targets",
-    ):
+    for field in ("source_fingerprints", "panel_contract"):
         if packet.get(field) != current.get(field):
             raise PanelReviewError(
                 f"readability decision {field} is incomplete or stale"
             )
+    if _readability_target_manifest_projection(
+        content_targets=packet["content_targets"],
+        readability_targets=packet["readability_targets"],
+        actionability_targets=packet["actionability_targets"],
+    ) != _readability_target_manifest_projection(
+        content_targets=current["content_targets"],
+        readability_targets=current["readability_targets"],
+        actionability_targets=current["actionability_targets"],
+    ):
+        raise PanelReviewError(
+            "readability decision normalized target bindings are incomplete or stale"
+        )
     voter_ids = [reviewer["voter_id"] for reviewer in record["voters"]]
     ballot_by_voter = {
         ballot["voter"]["voter_id"]: ballot for ballot in ballots
@@ -15989,7 +16350,11 @@ def _load_professional_regression_validator() -> ModuleType:
 
 def _compact_professional_reviewer(voter: dict[str, Any]) -> dict[str, Any]:
     return {
-        key: copy.deepcopy(voter[key])
+        key: (
+            sorted(set(voter[key]))
+            if key == "expertise"
+            else copy.deepcopy(voter[key])
+        )
         for key in (
             "voter_id",
             "agent_id",
@@ -16189,6 +16554,16 @@ def _professional_attestation_bindings_from_state(
             current_bindings,
             authenticated_claims=authenticated_claims,
         )
+    except (
+        professional_carry
+        .ProfessionalReviewerAddedRequiredRelationshipDrift
+    ) as exc:
+        skill_id, candidate_ids = exc.overlaps[0]
+        raise ProfessionalReviewerAddedRequiredPromotionDrift(
+            skill_id,
+            candidate_ids,
+            overlaps=dict(exc.overlaps),
+        ) from exc
     except professional_carry.ProfessionalCarryForwardError as exc:
         raise PanelReviewError(
             "Professional current authority is invalid"
@@ -16832,11 +17207,9 @@ def _semantic_fixed_current_validation(
             raise PanelReviewError(
                 f"semantic current {axis} candidates are invalid"
             )
-        for candidate in candidates:
-            if axis == "reference" and candidate.get(
-                "detector_status"
-            ) != "candidate":
-                continue
+        for candidate in _semantic_eligible_candidates(
+            axis=axis, semantic=semantic
+        ):
             candidate_id = candidate.get("candidate_id")
             target_id = f"{axis}:{candidate_id}"
             if target_id in current_authorities:

@@ -53,10 +53,16 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
             for path in sorted((SKILL_DIR / "references").glob("*.md"))
         )
         foundation_entries = load_yaml_file(REGISTRY)["foundation_skills"]
+        selector_rows = load_yaml_file(REGISTRY)["selector_authority"]["selectors"]
         cls.entry = next(
             entry
             for entry in foundation_entries
             if entry["name"] == "task-dag-decomposition"
+        )
+        cls.selector = next(
+            row
+            for row in selector_rows
+            if row["selector_id"] == "accepted-brief-task-dag"
         )
         professional_entries = load_yaml_file(PROFESSIONAL_REGISTRY)[
             "professional_skills"
@@ -145,53 +151,47 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
         )
         self.assertIsNotNone(decision_section)
         planner_rules = {
-            re.sub(r"\s+", " ", line[2:].strip())
-            for line in decision_section.group("body").splitlines()
-            if line.startswith("- ")
+            re.sub(r"\s+", " ", rule.strip())
+            for rule in re.split(r"(?m)^- ", decision_section.group("body"))[1:]
         }
-        layer3_rule = (
-            "Inspect `task-dag-decomposition` candidate-graph evidence for "
-            "nodes, edges, blockers, critical path, collisions, uncertainty, "
-            "and proof limits."
+        for rule in (
+            "Preserve established acceptance and start with a reversible, verifiable slice that unresolved decisions cannot invalidate.",
+            "Inspect candidate-graph evidence for nodes, edges, blockers, critical path, shared-resource collisions, and uncertainty.",
+            "Do not silently modify acceptance, non-goals, ownership, invariants, placement, contract semantics, or rollback.",
+            "Do not use file, layer, test, or edit-step differences as task boundaries.",
+            "With shared or unknown workspace, serialize writes.",
+            "Add independent review only for an explicit request or a concrete semantic risk that needs independent judgment.",
+        ):
+            self.assertIn(rule, planner_rules)
+        self.assertEqual(
+            ["task-dag-decomposition"],
+            self.selector["selectable_layer3"],
         )
         self.assertEqual(
-            [layer3_rule],
-            sorted(rule for rule in planner_rules if "task-dag-decomposition" in rule),
-        )
-        layer3_mentions = [
-            re.sub(r"\s+", " ", line.strip())
-            for line in self.planner.splitlines()
-            if "task-dag-decomposition" in line
-        ]
-        self.assertEqual([f"- {layer3_rule}"], layer3_mentions)
-        self.assertNotRegex(
-            " ".join(layer3_mentions).casefold(),
-            r"first executable slice|\bfes\b",
-        )
-        self.assertIn(
-            "Accept or reject each node and edge with an evidence-backed "
-            "reason before construction.",
-            planner_rules,
-        )
-        self.assertTrue(
             {
-                "Preserve its First Executable Slice verbatim.",
-                "Never select the First Executable Slice.",
-                "Never replace the First Executable Slice.",
-                "Never reinterpret the First Executable Slice.",
-            }.issubset(planner_rules),
-            planner_rules,
+                "kind": "direct-static",
+                "symbol": "_route_impl",
+            },
+            self.selector["source"],
         )
-        self.assertIn(
-            "never modify acceptance, non-goals, owner, invariants, placement, "
-            "contract semantics, or rollback. a task dag and its nodes are "
-            "derived artifacts, not a parallel analysis authority.",
-            decision_section.group("body").casefold().replace("\n  ", " "),
+        self.assertEqual(
+            [
+                {
+                    "primary_skill": "task-dag-planner",
+                    "review_skill": "engineering-artifact-review",
+                }
+            ],
+            self.selector["owner_bindings"],
         )
-        self.assertIn("task-dag-decomposition", self.router)
+        self.assertNotIn("task-dag-decomposition", self.router)
+        self.assertIn("never truncate an invalid selection or load the full Foundation/Domain catalog", self.router)
         self.assertNotIn("layer3: [task-dag-decomposition]", self.routing_scenarios)
-        self.assertIn("control_path: direct", self.routing_scenarios)
-        self.assertIn("analysis: null", self.routing_scenarios)
+        parallel = next(
+            row for row in load_yaml_file(ROUTING_SCENARIOS)["scenarios"]
+            if row["id"] == "parallel"
+        )
+        self.assertEqual("task-agent", parallel["router"]["expected"]["profile"])
+        self.assertEqual("integration-change-builder", parallel["router"]["expected"]["primary"])
 
     def test_registry_and_reference_projection_are_exact(self) -> None:
         h1_titles, _sections = BUILD._markdown_heading_sections(self.body)

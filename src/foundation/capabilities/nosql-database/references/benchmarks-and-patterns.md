@@ -29,6 +29,6 @@ Before designing keys, inventory current in-scope read, write, update, delete, a
 
 Use representative maximum-size items and skewed key distributions, old/new schema fixtures, stale-index cases, duplicate/reordered propagation, and cross-partition failure cases where applicable. Local emulators and synthetic loads do not prove provider limits, production distribution, live cost, global consistency, or restore behavior.
 
-Reject store-first design, low-cardinality hot keys, unversioned documents, and secondary-index or projection reads used for immediate correctness without revalidation. Also reject authoritative data in an eviction-prone cache by default, unowned denormalization, and scans hidden behind convenient APIs.
+Reject store-first design, low-cardinality hot keys, unversioned documents, and index or projection reads used for immediate correctness without the invariant-required consistency or authoritative revalidation. Also reject authoritative data in an eviction-prone cache by default, unowned denormalization, and scans hidden behind convenient APIs.
 
 Route source modeling to `data-model-design`, migration to `data-migration-design`, cross-boundary consistency to `transaction-consistency`, search/OLAP to `search-analytics-design`, cache-only needs to `cache-design`, capacity to `performance-budgeting`, and recovery/operations to `backup-recovery` or `reliability-observability-gate`.

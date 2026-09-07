@@ -7,10 +7,7 @@ description: "For analysis/task/review agents using a Professional Skill on mode
 
 ## Role
 
-Use this focused Layer 3 Domain Skill for AI product decisions. Give
-`analysis-agent`, `task-agent`, and `review-agent` model-behavior,
-retrieval-authorization, tool-authority, evaluation, safety, and cost constraints
-across product surfaces.
+Focused Layer 3 Domain Skill: `analysis-agent` maps authority, `task-agent` applies controls, `review-agent` judges evidence.
 
 ## When To Use
 
@@ -28,39 +25,28 @@ across product surfaces.
 
 ## Professional Decision Rules
 
-- **Trace consequential claims**: distinguish source evidence, model inference, uncertainty, and abstention according to user harm.
-- **Keep low-impact output proportional**: do not impose universal citations on creative or low-impact output.
-- **Preserve retrieval authorization**: prove retrieved data honors source permissions, tenant scope, and revocation.
-- **Contain untrusted prompt content**: prove user or retrieved content cannot override trusted policy or authorize action.
-- **Bound tool authority**: prove least privilege, valid arguments, confirmation, auditability, and recovery for side-effecting calls.
-- **Evaluate probabilistic changes**: compare baseline and treatment on representative success, refusal, adversarial, and boundary cases.
-- **Calibrate evaluation effort**: derive datasets, metrics, and thresholds from product harm and observed variance.
-- **Distrust model output downstream**: validate model output independently at data, execution, rendering, API, and policy boundaries.
-- **Minimize context data**: include only authorized data needed for the task.
-- **Prove sensitive-data lifecycle**: verify redaction and retention when sensitive data reaches providers or logs.
+- Preserve Professional ownership.
+- Load the checklist only for an active AI decision.
+- Close with current authority, evaluation, failure/fallback, and residual risk.
 
 ## High-Value Gotchas
 
-- permission-blind retrieval leaks another tenant's chunks even when the source UI is secure
-- indirect prompt injection turns retrieved content into unauthorized tool instructions
-- evaluation averages hide severe failures in a small, consequential cohort
-- provider or model changes alter refusal, token cost, or structured-output behavior without an application code change
-- plausible output bypasses validation because downstream code treats model confidence as trust
+- Plausible or averaged model output does not prove authorization, safety, or consequential-cohort behavior.
 
 ## Execution Checklist
 
-1. Identify the AI risk signal, affected invariant, and evidence available for this change.
-2. Choose controls from the current permission model, harm, reversibility, and measured behavior.
-3. Define representative failure tests, fallback, observability, escalation, and residual risk.
+1. Confirm the active AI decision, owner, authority, and affected invariant.
+2. Load the checklist and close its applicable controls with current evidence.
+3. Report fallback, proof limits, escalation, and residual risk.
 
 ## Stop / Escalation Conditions
 
-- Stop when authority, data provenance, permission behavior, or a consequential safety invariant cannot be verified.
-- Escalate irreversible tool actions, regulated decisions, sensitive-data exposure, and unsupported provider assumptions to the owning gate.
+- Stop without provenance, authority, fallback, or safety proof.
+- Escalate irreversible, regulated, sensitive-data, or unsupported-provider decisions.
 
 ## Output Contract
 
-- State the AI risk, required outcome, selected control, evaluation limits, fallback, and residual risk.
+- Risk, outcome, control, evaluation limit, fallback, residual risk.
 
 ## Targeted References
 

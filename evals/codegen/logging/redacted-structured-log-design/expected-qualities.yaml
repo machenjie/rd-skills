@@ -1,6 +1,5 @@
 id: redacted-structured-log-design
 category: logging
-complexity: L4
 focus:
   - professional logging decision
   - security privacy gate

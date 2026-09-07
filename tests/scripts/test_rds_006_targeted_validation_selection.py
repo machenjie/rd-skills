@@ -162,8 +162,7 @@ class TargetedValidationSelectionContractTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
         self.assertIn(
-            "keep a safely selected but unauthorized command unrun and record "
-            "the missing execution authority",
+            "stop without evidenced coverage, resolved execution boundaries, or authority.",
             source,
         )
         for forbidden_authority_claim in (
@@ -197,27 +196,12 @@ class TargetedValidationSelectionContractTests(unittest.TestCase):
             for line in decision_section.group("body").splitlines()
             if line.startswith("- ")
         }
-        layer3_rule = (
-            "Use `targeted-validation-selection` only after strategy selection, "
-            "and only for repository-defined command and coverage selection."
-        )
-        self.assertIn(
-            "Own proof strategy and acceptance-to-signal mapping before command "
-            "selection.",
-            consumer_rules,
-        )
-        self.assertIn(layer3_rule, consumer_rules)
-        self.assertIn(
-            "Leave evidence timing and refresh decisions to Core Guard G and the "
-            "validation-freshness contract.",
-            consumer_rules,
-        )
-        layer3_mentions = [
-            re.sub(r"\s+", " ", line.strip())
-            for line in self.consumer.splitlines()
-            if "targeted-validation-selection" in line
-        ]
-        self.assertEqual([f"- {layer3_rule}"], layer3_mentions)
+        self.assertIn("Map each acceptance and material failure to one signal.", consumer_rules)
+        self.assertIn("Select the lowest level exercising the real boundary.", consumer_rules)
+        self.assertIn("Record stale, flaky, skipped, or partial evidence as limited.", consumer_rules)
+        self.assertIn("Select the proof strategy.", self.consumer)
+        self.assertIn("Judge coverage and freshness.", self.consumer)
+        self.assertIn("Stop before production mutation or authority overrun.", self.consumer)
         self.assertRegex(
             self.router,
             r"\| explicit test-data or test-strategy analysis \| analysis-agent "

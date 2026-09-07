@@ -14,7 +14,7 @@ Use this reference when model closure depends on repository inspection and prior
 | Read model remains derived | Source-of-truth owner, staleness tolerance, rebuild command/report, and reconciliation owner | Inspected projection can be rebuilt and is not the authoritative write surface | All late events, regional lag, or consumer cache behavior is covered |
 | Persistence/API boundary is clean | DTO/domain/persistence mapping, generated-client diff, and no direct ORM/entity exposure review | Inspected external contract does not depend on table internals | Unknown consumers or undocumented direct database reads are absent |
 | Existing model evolution is compatible | Old/new model diff, old readers/writers, old rows, generated clients, report/jobs, and migration handoff inspected | Inspected version window has a compatibility path | Live migration duration, rollback execution, or uninspected mobile/client lag is safe |
-| Regulated or temporal data is modeled | Data classification, retention/deletion/audit rule, temporal strategy, and security/privacy owner | Inspected fields have a reviewable retention and history model | Legal approval, restore RTO, or full compliance packet is complete |
+| Regulated or temporal data is modeled | Data classification and applicable history, retention, deletion, and audit decisions; security/privacy ownership when the data has a concrete security or privacy consequence | Inspected fields have a reviewable retention and history model | Legal approval, restore RTO, or full compliance packet is complete |
 
 ## Current Evidence And Freshness
 

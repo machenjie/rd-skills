@@ -45,7 +45,7 @@ class CaseResult:
     path: str
     primary_skill: str
     layer3_skills: list[str]
-    review_skill: str
+    review_skill: str | None
     excluded_skills: list[str]
     passed: bool
     domain_family: dict[str, str] | None
@@ -466,7 +466,7 @@ def _case(
         path=str(actual.get("path", "")).strip(),
         primary_skill=str(actual.get("primary_skill", "")).strip(),
         layer3_skills=_strings(actual.get("layer3_skills")),
-        review_skill=str(actual.get("review_skill", "")).strip(),
+        review_skill=(str(actual["review_skill"]).strip() if actual.get("review_skill") is not None else None),
         excluded_skills=_strings(raw.get("excluded_skills")),
         passed=raw.get("passed") is True,
         domain_family=domain_family,
@@ -507,9 +507,15 @@ def _case(
             f"profile '{result.profile}' is not supported by primary Skill '{result.primary_skill}'"
         )
     if len(result.layer3_skills) > 3:
-        result.errors.append("route selects more than three Layer 3 Skills without a fixture-specific risk rationale")
+        result.errors.append(
+            "selected Layer 3 list exceeds the hard maximum of three; "
+            "selection must fail closed and must never be truncated"
+        )
     if len(result.layer3_skills) != len(set(result.layer3_skills)):
-        result.errors.append("Layer 3 Skills must be unique")
+        result.errors.append(
+            "selected Layer 3 list contains duplicates; selection must be "
+            "unique and fail closed"
+        )
     for name in result.layer3_skills:
         if name not in layer3:
             result.errors.append(f"unknown Layer 3 Skill '{name}'")
@@ -521,13 +527,14 @@ def _case(
             result.errors.append(
                 f"Layer 3 Skill '{name}' does not support profile '{result.profile}'"
             )
-    review = professional.get(result.review_skill)
-    if review is None:
-        result.errors.append(f"unknown Review Skill '{result.review_skill}'")
-    elif "review-agent" not in _strings(review.get("role_support")):
-        result.errors.append(f"Review Skill '{result.review_skill}' does not support review-agent")
-    if result.primary_skill == "routing-quality-review":
-        result.errors.append("compatibility router cannot own a product task")
+    if result.profile == 'review-agent' and result.review_skill is None:
+        result.errors.append('review-agent requires a Review Skill')
+    elif result.review_skill is not None:
+        review = professional.get(result.review_skill)
+        if review is None:
+            result.errors.append(f"unknown Review Skill '{result.review_skill}'")
+        elif "review-agent" not in _strings(review.get("role_support")):
+            result.errors.append(f"Review Skill '{result.review_skill}' does not support review-agent")
     known = set(professional) | set(layer3)
     unknown_excluded = sorted(set(result.excluded_skills) - known)
     if unknown_excluded:

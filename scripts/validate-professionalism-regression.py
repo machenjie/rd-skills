@@ -621,8 +621,19 @@ def main(argv: list[str] | None = None) -> int:
         _validate_fresh_benchmark_report(reports["benchmarks"])
         content_audit_summary = _content_audit_summary(reports["content"])
         ai_readability_summary = _ai_readability_summary(reports["content"])
-        reference_content_summary = _reference_content_summary(reports["content"])
-        root_content_summary = _root_content_summary(reports["content"])
+        semantic_storage_status = expert_panel_storage_statuses[
+            expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND
+        ]
+        reference_content_summary = _reference_content_summary(
+            reports["content"],
+            semantic_storage_status=semantic_storage_status,
+            formal=formal_manifest,
+        )
+        root_content_summary = _root_content_summary(
+            reports["content"],
+            semantic_storage_status=semantic_storage_status,
+            formal=formal_manifest,
+        )
         expert_reviews = _expert_reviews(
             args.release_review_config,
             reference_fingerprint=reference_content_summary["source_fingerprint"],
@@ -676,12 +687,12 @@ def main(argv: list[str] | None = None) -> int:
     skill_report = reports["skill"]
     skill_results = [row for row in skill_report.get("results", []) if isinstance(row, dict)]
     professional = [row for row in skill_results if row.get("kind") == "professional"]
-    if len(professional) != 26:
+    if len(professional) != 25:
         blockers.append(
             Finding(
                 "professional-skill-count",
                 "skill-professionalism-eval.json",
-                f"expected 26 registered Professional Skills, found {len(professional)}",
+                f"expected 25 registered Professional Skills, found {len(professional)}",
             )
         )
     for row in professional:
@@ -785,6 +796,7 @@ def main(argv: list[str] | None = None) -> int:
         root_content_summary,
         content_audit_summary,
         expert_panel_release_manifest=expert_panel_release_manifest,
+        professional_review_cost_fixtures=professional_review_cost_fixtures,
     )
     application = content_audit_summary.get(
         "semantic_disposition_application",
@@ -1651,10 +1663,83 @@ def _coverage_gate_findings(summary: dict[str, Any]) -> list[Finding]:
     ]
 
 
+def _ordinary_semantic_source_currentness(
+    *,
+    formal: bool,
+    storage_status: str,
+    audit_section_exact_fresh: bool,
+    section: dict[str, Any],
+    configured_count: int,
+    disposition_error_count: int,
+    validator_errors: list[str],
+    wrapper: str | None,
+    error_prefix: str,
+    allowed_raw_messages: set[str],
+) -> bool:
+    """Recognize only trusted ordinary semantic source-currentness drift."""
+
+    if (
+        formal
+        or storage_status != "stale"
+        or audit_section_exact_fresh is not True
+        or type(configured_count) is not int
+        or type(disposition_error_count) is not int
+        or disposition_error_count <= 0
+        or not isinstance(validator_errors, list)
+        or not all(isinstance(error, str) for error in validator_errors)
+        or not allowed_raw_messages
+        or not all(isinstance(message, str) and message for message in allowed_raw_messages)
+    ):
+        return False
+    semantic = section.get("semantic_advisories")
+    contract = (
+        semantic.get("disposition_contract")
+        if isinstance(semantic, dict)
+        else None
+    )
+    entries = contract.get("entries") if isinstance(contract, dict) else None
+    if (
+        not isinstance(entries, list)
+        or type(contract.get("configured_count")) is not int
+        or configured_count != contract["configured_count"]
+        or configured_count != len(entries)
+    ):
+        return False
+    expected_error_count = disposition_error_count + (1 if wrapper is not None else 0)
+    if len(validator_errors) != expected_error_count:
+        return False
+    raw_errors = validator_errors
+    if wrapper is not None:
+        if not validator_errors or validator_errors[0] != wrapper:
+            return False
+        raw_errors = validator_errors[1:]
+    message_pattern = "|".join(
+        re.escape(message) for message in sorted(allowed_raw_messages)
+    )
+    pattern = re.compile(
+        rf"{re.escape(error_prefix)}\[(0|[1-9][0-9]*)\]: "
+        rf"(?:{message_pattern})"
+    )
+    indices: list[int] = []
+    for error in raw_errors:
+        match = pattern.fullmatch(error)
+        if match is None:
+            return False
+        indices.append(int(match.group(1)))
+    return bool(
+        indices
+        and indices == sorted(indices)
+        and len(indices) == len(set(indices))
+        and all(index < len(entries) for index in indices)
+    )
+
+
 def _reference_content_summary(
     report: dict[str, Any],
     *,
     fresh_reference_content: dict[str, Any] | None = None,
+    semantic_storage_status: str = "current",
+    formal: bool = False,
 ) -> dict[str, Any]:
     reference_content = report.get("reference_content")
     if not isinstance(reference_content, dict):
@@ -1706,13 +1791,51 @@ def _reference_content_summary(
             "skill-content-audit.json: tracked Reference content does not match "
             "fresh canonical source; rerun audit-skill-content.py"
         )
-    _semantic_counts, semantic_errors = validator._semantic_contract(reference_content)
-    if semantic_errors:
+    semantic_counts, semantic_errors = validator._semantic_contract(reference_content)
+    semantic_currentness_only = _ordinary_semantic_source_currentness(
+        formal=formal,
+        storage_status=semantic_storage_status,
+        audit_section_exact_fresh=reference_content == fresh,
+        section=reference_content,
+        configured_count=semantic_counts["semantic_disposition_configured"],
+        disposition_error_count=semantic_counts["semantic_disposition_errors"],
+        validator_errors=semantic_errors,
+        wrapper=(
+            "semantic_advisories.disposition_contract contains validation errors"
+        ),
+        error_prefix=(
+            "semantic disposition contract: "
+            "reference_semantic_dispositions.entries"
+        ),
+        allowed_raw_messages={"stale semantic disposition entry"},
+    )
+    if semantic_errors and not semantic_currentness_only:
         raise ValueError(
             "skill-content-audit.json: invalid semantic advisory contract: "
             + "; ".join(semantic_errors)
         )
-    counts, _default_errors = validator._evaluate(reference_content, strict=False)
+    counts, default_errors = validator._evaluate(reference_content, strict=False)
+    if semantic_errors and not _ordinary_semantic_source_currentness(
+        formal=formal,
+        storage_status=semantic_storage_status,
+        audit_section_exact_fresh=reference_content == fresh,
+        section=reference_content,
+        configured_count=counts["semantic_disposition_configured"],
+        disposition_error_count=counts["semantic_disposition_errors"],
+        validator_errors=default_errors,
+        wrapper=(
+            "semantic_advisories.disposition_contract contains validation errors"
+        ),
+        error_prefix=(
+            "semantic disposition contract: "
+            "reference_semantic_dispositions.entries"
+        ),
+        allowed_raw_messages={"stale semantic disposition entry"},
+    ):
+        raise ValueError(
+            "skill-content-audit.json: invalid Reference content contract: "
+            + "; ".join(default_errors)
+        )
     _strict_counts, strict_errors = validator._evaluate(reference_content, strict=True)
     structural_counts = {
         "missing_indexed_references": counts["missing"],
@@ -1745,6 +1868,7 @@ def _reference_content_summary(
         (
             counts["semantic_detector_downgraded_candidates"],
             counts["semantic_untriaged_candidates"],
+            counts["semantic_needs_confirmation_candidates"],
             counts["semantic_rewrite_candidates"],
             counts["semantic_resolved_candidates"],
         )
@@ -1752,6 +1876,7 @@ def _reference_content_summary(
     semantic_triage_complete = (
         semantic_accounted
         and counts["semantic_untriaged_candidates"] == 0
+        and counts["semantic_needs_confirmation_candidates"] == 0
         and counts["semantic_disposition_errors"] == 0
         and counts["semantic_disposition_configured"]
         == counts["semantic_disposition_applied"]
@@ -1815,6 +1940,9 @@ def _reference_content_summary(
             "semantic_detector_downgraded_candidates"
         ],
         "semantic_untriaged_candidates": counts["semantic_untriaged_candidates"],
+        "semantic_needs_confirmation_candidates": counts[
+            "semantic_needs_confirmation_candidates"
+        ],
         "semantic_rewrite_candidates": counts["semantic_rewrite_candidates"],
         "semantic_resolved_candidates": counts["semantic_resolved_candidates"],
         "semantic_unresolved_candidates": counts["semantic_unresolved_candidates"],
@@ -1850,6 +1978,8 @@ def _root_content_summary(
     report: dict[str, Any],
     *,
     fresh_root_content: dict[str, Any] | None = None,
+    semantic_storage_status: str = "current",
+    formal: bool = False,
 ) -> dict[str, Any]:
     root_content = report.get("root_content")
     if not isinstance(root_content, dict):
@@ -1902,7 +2032,24 @@ def _root_content_summary(
         )
 
     counts, default_errors = validator._evaluate(root_content, strict=False)
-    if default_errors:
+    if default_errors and not _ordinary_semantic_source_currentness(
+        formal=formal,
+        storage_status=semantic_storage_status,
+        audit_section_exact_fresh=root_content == fresh,
+        section=root_content,
+        configured_count=counts["dispositions_configured"],
+        disposition_error_count=counts["disposition_errors"],
+        validator_errors=default_errors,
+        wrapper=None,
+        error_prefix=(
+            "root semantic disposition contract: "
+            "root_semantic_dispositions.entries"
+        ),
+        allowed_raw_messages={
+            "stale root semantic disposition entry",
+            "evidence.context_fingerprint does not match current candidate",
+        },
+    ):
         raise ValueError(
             "skill-content-audit.json: invalid Root content contract: "
             + "; ".join(default_errors)
@@ -1926,11 +2073,19 @@ def _root_content_summary(
     )
     semantic_raw = int(semantic_summary.get("raw_candidates", 0))
     semantic_untriaged = int(semantic_summary.get("untriaged_candidates", 0))
+    semantic_needs_confirmation = int(
+        semantic_summary.get("needs_confirmation_candidates", 0)
+    )
     semantic_rewrite = int(semantic_summary.get("rewrite_candidates", 0))
     semantic_resolved = int(semantic_summary.get("resolved_candidates", 0))
     semantic_triage_complete = (
-        semantic_raw == semantic_untriaged + semantic_rewrite + semantic_resolved
+        semantic_raw
+        == semantic_untriaged
+        + semantic_needs_confirmation
+        + semantic_rewrite
+        + semantic_resolved
         and semantic_untriaged == 0
+        and semantic_needs_confirmation == 0
         and counts["disposition_errors"] == 0
         and counts["dispositions_configured"] == counts["dispositions_applied"]
     )
@@ -1992,6 +2147,7 @@ def _root_content_summary(
         "semantic_finding_families": list(semantic.get("finding_families") or []),
         "semantic_raw_candidates": semantic_raw,
         "semantic_untriaged_candidates": semantic_untriaged,
+        "semantic_needs_confirmation_candidates": semantic_needs_confirmation,
         "semantic_rewrite_candidates": semantic_rewrite,
         "semantic_resolved_candidates": semantic_resolved,
         "semantic_unresolved_candidates": counts["semantic_unresolved"],
@@ -4465,12 +4621,18 @@ def _professional_review_cost_policy_satisfied(
         != expert_panel.PANEL_SIZE * fresh_target_count
         or review_cost["carried_forward_vote_count"]
         != expert_panel.PANEL_SIZE * carried_forward_target_count
-        or review_cost["effective_vote_count"] != 567
+        or review_cost["effective_vote_count"]
+        != expert_panel.PROFESSIONAL_PACKAGE_COUNT * expert_panel.PANEL_SIZE
         or review_cost["fresh_criterion_result_count"]
         != 30 * fresh_target_count
         or review_cost["carried_forward_criterion_result_count"]
         != 30 * carried_forward_target_count
-        or review_cost["effective_criterion_result_count"] != 5670
+        or review_cost["effective_criterion_result_count"]
+        != (
+            expert_panel.PROFESSIONAL_PACKAGE_COUNT
+            * expert_panel.PANEL_SIZE
+            * len(expert_panel.PROFESSIONAL_COMPLETENESS_CRITERIA)
+        )
         or review_cost["maximum_origin_depth"] > 1
         or review_cost["plan_lineage_depth"]
         > expert_panel.PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH
@@ -4645,8 +4807,10 @@ def _professional_completeness_v3_evidence_ready(
         or qualification["per_target_panel_size"] != expert_panel.PANEL_SIZE
         or type(qualification["fresh_reviewer_pool_size"]) is not int
         or qualification["fresh_reviewer_pool_size"] < 0
-        or qualification["effective_domain_vote_count"] != 378
-        or qualification["effective_architecture_vote_count"] != 189
+        or qualification["effective_domain_vote_count"]
+        != expert_panel.PROFESSIONAL_PACKAGE_COUNT * 2
+        or qualification["effective_architecture_vote_count"]
+        != expert_panel.PROFESSIONAL_PACKAGE_COUNT
     ):
         return False
     expected_evidence_fields = set(
@@ -4658,22 +4822,28 @@ def _professional_completeness_v3_evidence_ready(
         or any(type(value) is not int or value < 0 for value in evidence.values())
     ):
         return False
+    reviewed_votes = (
+        expert_panel.PROFESSIONAL_PACKAGE_COUNT * expert_panel.PANEL_SIZE
+    )
+    criterion_results = reviewed_votes * len(
+        expert_panel.PROFESSIONAL_COMPLETENESS_CRITERIA
+    )
     return bool(
-        evidence["target_vote_count"] == 567
-        and evidence["criterion_result_count"] == 5670
-        and evidence["criterion_assertion_count"] >= 5670
+        evidence["target_vote_count"] == reviewed_votes
+        and evidence["criterion_result_count"] == criterion_results
+        and evidence["criterion_assertion_count"] >= criterion_results
         and evidence["criterion_anchor_binding_count"]
         >= evidence["criterion_assertion_count"]
-        and evidence["evidence_anchor_count"] >= 1134
-        and evidence["examined_failure_mode_count"] >= 1134
-        and evidence["examined_omission_candidate_count"] >= 1134
+        and evidence["evidence_anchor_count"] >= reviewed_votes * 2
+        and evidence["examined_failure_mode_count"] >= reviewed_votes * 2
+        and evidence["examined_omission_candidate_count"] >= reviewed_votes * 2
         and evidence["examined_required_adjacency_count"]
         == 3 * evidence["required_adjacency_candidate_count"]
         and evidence["examined_adjacency_count"]
         == evidence["examined_required_adjacency_count"]
         + evidence["reviewer_added_adjacency_count"]
-        and evidence["proof_limit_count"] >= 567
-        and evidence["qualification_claim_count"] >= 567
+        and evidence["proof_limit_count"] >= reviewed_votes
+        and evidence["qualification_claim_count"] >= reviewed_votes
     )
 
 
@@ -5864,7 +6034,10 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
     bindings = state["bindings"]
     target_ids = sorted(bindings)
     if len(target_ids) != expert_panel.PROFESSIONAL_PACKAGE_COUNT:
-        raise ValueError("professional review cost fixture requires 189 targets")
+        raise ValueError(
+            "professional review cost fixture requires "
+            f"{expert_panel.PROFESSIONAL_PACKAGE_COUNT} targets"
+        )
     reverse_dependencies = {skill_id: {skill_id} for skill_id in target_ids}
     for target_id, binding in bindings.items():
         for candidate_id in binding["dependency_material_bindings"]:
@@ -5978,7 +6151,8 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
         adjacency_plan["fresh_target_ids"] != [adjacency_target]
         or adjacency_plan["reasons_by_target"][adjacency_target]
         != ["review-unit-binding-changed"]
-        or len(adjacency_plan["carry_target_ids"]) != 188
+        or len(adjacency_plan["carry_target_ids"])
+        != expert_panel.PROFESSIONAL_PACKAGE_COUNT - 1
     ):
         raise ValueError(
             "representative routing-adjacency mutation carry plan is stale"
@@ -6024,13 +6198,13 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
         "status": status,
         "unchanged": {
             "fresh_target_count": 0,
-            "carried_forward_target_count": 189,
+            "carried_forward_target_count": expert_panel.PROFESSIONAL_PACKAGE_COUNT,
             "input_ratio_ppm": 0,
         },
         "routing_neutral_isolated_material_binding_sensitivity": sensitivity,
         "representative_routing_adjacency_mutation": representative_adjacency,
         "review_contract_change": {
-            "fresh_target_count": 189,
+            "fresh_target_count": expert_panel.PROFESSIONAL_PACKAGE_COUNT,
             "carried_forward_target_count": 0,
             "input_ratio_ppm": 1_000_000,
         },
@@ -6324,50 +6498,7 @@ def _git_tracked_expert_panel_paths() -> list[str]:
 
 
 def _expert_panel_currentness_drift(exc: Exception) -> bool:
-    """Classify only external authority drift as non-structural staleness."""
-
-    message = str(exc)
-    if isinstance(
-        exc,
-        expert_panel.panel_attestation.AttestationCurrentnessError,
-    ):
-        return message in {
-            "Readability detector contract binding is stale",
-            "Readability target manifest binding is stale",
-        }
-    if isinstance(exc, expert_panel.PanelReviewError):
-        return message in {
-            "semantic attestation selector must match exactly one current authority",
-            "Professional attestation exact current binding is stale",
-            "Professional attestation target coverage is stale",
-            "Professional baseline attestation selector is stale",
-            "readability attestation exact current coverage or contract is stale",
-            "semantic attestation exact current candidate coverage is stale",
-            "semantic attestation application entries are stale",
-            "semantic fixed missing target lacks a rewrite majority",
-            "semantic fixed attestation omits a current candidate",
-            "semantic fixed detector contract is stale",
-            "semantic fixed rewrite target remains current",
-            "semantic fixed attestation disposition mismatch",
-        }
-    if isinstance(exc, expert_panel.panel_attestation.AttestationError):
-        return (
-            message
-            in {
-                "attestation source fingerprints are stale",
-                "attestation review contract fingerprint is stale",
-                "professional package fingerprints are stale",
-                "readability source or review binding coverage is stale",
-                "semantic candidate authority is incomplete",
-                "Semantic candidate binding is stale",
-                "semantic candidate fingerprints are stale",
-                "semantic candidate fingerprint coverage is stale",
-                "Professional current binding coverage is incomplete",
-            }
-            or message.startswith("Professional current binding for ")
-            or message.startswith("Professional dependency binding for ")
-        )
-    return False
+    return expert_panel.attestation_currentness_drift(exc)
 
 
 def _validate_current_expert_panel_storage(*, formal: bool) -> dict[str, str]:
@@ -7019,6 +7150,7 @@ def _release_gate(
     content_audit_summary: dict[str, Any] | None = None,
     *,
     expert_panel_release_manifest: dict[str, Any],
+    professional_review_cost_fixtures: dict[str, Any],
 ) -> tuple[str, list[Finding]]:
     release_blockers = list(authoring_blockers)
     manifest_errors = validate_expert_panel_release_manifest(
@@ -7096,8 +7228,10 @@ def _release_gate(
                 f"rewrite_required_count={rewrites}",
             )
         )
-    if not _professional_completeness_review_formal_ready(
-        professional_completeness
+    cost_fixture_status = professional_review_cost_fixtures.get("status")
+    if (
+        not _professional_completeness_review_formal_ready(professional_completeness)
+        or cost_fixture_status != "pass"
     ):
         status = str(
             professional_completeness.get("attestation_status", "unknown")
@@ -7124,13 +7258,14 @@ def _release_gate(
                 "Completeness round with exact package carry-forward, current "
                 "review contract, plan, bindings, provenance, chain head, and "
                 "review-cost evidence; every fresh Skill needs two qualified "
-                "domain reviewers and one architecture reviewer, and all 189 "
+                "domain reviewers and one architecture reviewer, and all 188 "
                 "effective packages need source evidence, no required corrections, "
                 "and no unresolved domain-critical disagreement; "
                 f"status={status}; applied_target_count={coverage}; "
                 f"evidence_contract_satisfied={evidence_contract}; "
                 f"correction_count={corrections}; "
-                f"unresolved_professional_disagreement_count={unresolved}",
+                f"unresolved_professional_disagreement_count={unresolved}; "
+                f"professional_review_cost_fixture_status={cost_fixture_status}",
             )
         )
     release_ready = (
@@ -7175,6 +7310,8 @@ def _reference_content_findings(
                 (
                     "semantic_triage_complete=false; "
                     f"untriaged={int(summary.get('semantic_untriaged_candidates', 0))}; "
+                    "needs_confirmation="
+                    f"{int(summary.get('semantic_needs_confirmation_candidates', 0))}; "
                     "dispositions="
                     f"{int(summary.get('semantic_disposition_applied', 0))}/"
                     f"{int(summary.get('semantic_disposition_configured', 0))}; "
@@ -7228,6 +7365,8 @@ def _root_content_findings(
                 (
                     "semantic_triage_complete=false; "
                     f"untriaged={int(summary.get('semantic_untriaged_candidates', 0))}; "
+                    "needs_confirmation="
+                    f"{int(summary.get('semantic_needs_confirmation_candidates', 0))}; "
                     "dispositions="
                     f"{int(summary.get('semantic_disposition_applied', 0))}/"
                     f"{int(summary.get('semantic_disposition_configured', 0))}; "

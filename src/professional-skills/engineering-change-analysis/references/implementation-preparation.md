@@ -1,79 +1,25 @@
 # Implementation Preparation
 
-For `implementation-preparation`, remain read/search-only and return one Markdown `# Engineering Brief`; do not implement, dispatch, or review.
+Use read/search-only analysis when the user requests design or current source evidence leaves an important implementation decision unresolved. Unknown local files, owners, tests, or callers normally stay with the implementation agent's bounded discovery.
 
-## Engineering Brief Contract
+Resolve the named question: competing owner, behavior or invariant, shared contract or consumer, concurrency, transaction, recovery, migration, authority, or integration semantics. Inspect enough current source and relevant tests to distinguish alternatives and their consequences. Return the key decision, evidence, validation implications, and remaining issues; stop when implementation can proceed correctly.
 
-The current Engineering Brief is the only operational analysis authority for Analyzed
-Work. User requests, issues or PRDs, source and tests, external evidence, and Specialist
-analysis are inputs. Task DAGs, Task Contracts, Implementation Handoffs, and Review
-Handoffs are derived artifacts. They must not redefine Acceptance, Non-goals, Owner,
-Invariants, Placement, contract semantics, Rollback, or the First Executable Slice.
+An Engineering Brief is optional, for complex cross-agent work needing stable decisions. If needed, retain Goal, important constraints/invariants, key decisions, validation, and unresolved issues. Do not require a complete Brief, Task Contract, First Executable Slice, DAG, or independent Review before ordinary implementation.
 
-Perform one complete initial Analysis. Before exposing the Slice, close observable
-Acceptance, Owner/Placement/Invariant, Acceptance-proving Validation, executable
-dependencies, professional Skill boundaries, minimum sufficient Review Boundaries, and
-critical Evidence Gaps capable of blocking the Slice. Do not re-analyze for Task
-completion or switch, ordinary implementation discovery, or an unreached Review Boundary.
+Preserve settled decisions. Reopen only the affected questions when new evidence invalidates an important judgment; do not re-analyze on task switches, ordinary discovery, repair, or a preference for a different design.
 
-New evidence permits Delta Analysis only when it invalidates Acceptance/Non-goals,
-Owner/Placement/Invariant, contract/data semantics, dependency/rollback, material risk,
-or scope. Reuse Core `delta_analysis` without changing its
-triggers or transitive scope. Afterward, the complete updated Engineering Brief remains the only operational analysis authority.
-Then emit only:
+## Evidence Discipline
 
-```text
-Delta Impact:
-invalidated=[...];
-affected={
-  brief:[...],
-  tasks:[...],
-  dependencies:[...],
-  skills:[...],
-  reviews:[...]
-};
-unlisted=preserved
-```
+- Bind material conclusions to current source, an executable observation, or clearly labeled external evidence.
+- Separate source facts, supported inferences, reversible assumptions, and
+  unknowns. An unknown cannot be reported as no impact.
+- Treat generated reports, dependency graphs, examples, and prior analysis as
+  selectors until current source confirms them.
+- Scan for the same failure or ownership pattern before proposing a local fix;
+  record searched scope, related occurrences, and why the change is local or broad.
+- Map each changed surface to a validation signal and state what that signal cannot prove.
+- Do not use provider-only checks as proof of downstream consumer behavior.
 
-Project exact proved affected sets. `[]` means proved no impact; unknown cannot map to
-`[]`. Preserve Skill assignments unless professional domain, work type, or a material-risk
-trigger changes. If impact closure remains unknown, record a Proof Limit and return blocked.
-Main consumes Delta Impact without reinterpreting affected scope. The projection never
-replaces, summarizes, or weakens the updated Brief. Use full re-analysis only when foundational goals or system assumptions are invalidated.
+## Coordination
 
-- `## Problem and Desired Behavior`: observed behavior, requested behavior,
-  scope, constraints, assumptions, and unresolved user-owned choices.
-- `## Acceptance and Non-goals`: measurable success and excluded behavior.
-- `## Ownership and Invariants`: rule owner, object relationships, valid and forbidden
-  state changes, same-pattern evidence, consumers, and contracts.
-- `## Placement and Reuse`: explicit reuse candidates and placement.
-- When source evidence already proves placement, write it directly.
-- When a real structural choice remains, invoke the corresponding Specialist.
-- Incorporate the Specialist result here before it can affect implementation.
-- Never create a parallel analysis authority.
-- `## Contract / Data / Failure Impact`: direct and transitive consumers plus only material compatibility,
-  contract, data, side-effect, failure, migration, security, reliability, release,
-  documentation, or generated-output impact.
-- `## Validation Strategy`: acceptance-to-signal mapping for normal, invalid,
-  boundary, and forbidden outcomes, freshness, and proof limits.
-- `## Risks and Rollback`: safe revert, invalidating unknowns, residual risk, and owner.
-- `## First Executable Slice`: the complete Task Contract v2 using the exact
-  ordered fields in `engineering-brief-template.md`.
-- Select the First Executable Slice in the Brief.
-- Main dispatches it verbatim.
-- Main must not regenerate or reinterpret it.
-- `## Task Dependencies`: evidenced task edges and remaining work.
-- `## Integration Boundary`: integration ownership and cross-task boundary.
-- `## Review Boundary`: minimum sufficient boundaries, owner, scope, Covered
-  Task IDs, required Review Skills, professional-risk dimensions, and triggered
-  Specialist obligations. Related work is combined unless a concrete risk
-  requires an intermediate boundary.
-- `## Evidence Gaps and Proof Limits`: critical gaps, safe-slice limits, and
-  explicit unknowns.
-
-## Task DAG Handoff
-
-Record whether two or more tasks show a proven dependency, parallel benefit, cross-owner boundary, integration need, or ordered migration or release.
-Do not construct a Task DAG in this mode. Hand the current Brief to `task-dag-planner` only to project task splits, dependencies, parallel safety,
-critical path, integration/merge/conflict ownership, and remaining Task Contracts. The planner does not reselect the First Executable Slice or
-change a protected Brief decision. An insufficient Brief or downstream conflict returns `blocked` through Main to analysis for an updated Brief and redispatch.
+Decompose only for real dependencies or useful independent work. Keep jointly validated changes together. Account for shared resources, write collisions, ordered migration, external consumers, integration ownership, and cross-task validation when the evidence makes them relevant. A DAG can communicate those dependencies; it is not a default analysis output.

@@ -17,17 +17,6 @@ Official freedesktop.org, Wayland, and X.Org pages below were accessed on
 - Do not infer Wayland behavior from Xwayland success, one compositor from
   another, or toolkit fallback behavior from framework names.
 
-## Failure Proof
-
-- Exercise native X11, native Wayland, and Xwayland only where supported.
-- Exercise denied/unsupported protocol, compositor restart, multi-monitor
-  scaling, focus transfer, clipboard loss, and remote or nested sessions.
-
-## Required Record
-
-Return environment matrix, selected protocol/mechanism, rejected fallback,
-normal/failure evidence, unsupported combinations, and non-inferences.
-
 ## Primary Sources
 
 - [Wayland architecture](https://wayland.freedesktop.org/docs/book/Architecture.html)

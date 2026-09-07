@@ -9,4 +9,4 @@
 - Bound external/file IO with timeout, cancellation, retry/no-retry stance, idempotency, cleanup, reconciliation, and operator-visible failure.
 - Make nondeterministic reads injectable or centralized; name default, test override, replay/audit impact, and config/flag handoff.
 - Scan same-pattern siblings: mappers, validators, policies, repositories, adapters, jobs, decorators, generated wrappers, and framework hooks.
-- Map side-effect assertions to tests, validators, review artifacts, report paths, exit codes, freshness, skipped edges, residual risk, and next owner.
+- Map side-effect assertions to their verification evidence: tests, validators, review artifacts, report paths, exit codes, freshness, skipped edges, residual risk, and next owner.

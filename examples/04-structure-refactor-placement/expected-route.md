@@ -2,28 +2,34 @@
 
 ## Path
 
-Analyzed Work, because ownership and the complete same-pattern impact are not
-known from the request.
+Analysis answers the user's explicit question about conflicting rounding rules
+and ownership, then one Task implements only the supported extraction and runs
+targeted validation. Analysis is justified by a decision that changes behavior,
+not merely by unknown file locations or a multi-file change. No independent
+Review is selected under the stated facts.
 
 ## Analysis Assignment
 
 - Profile: `analysis-agent`
 - Primary Professional Skill: `architecture-impact-reviewer`
 - Layer 3 Skills: `module-boundary-design`, `architecture-tradeoff-analysis`
-- First Executable Slice: add characterization coverage for the three known
-  calculation paths before extraction.
+- Question: which calculation rules can share an owner without changing checkout,
+  invoice, or refund semantics?
+- Output: source-backed placement and preserved differences, relevant validation,
+  and unresolved business decisions. Ask the user only if intended behavior cannot
+  be established from current source and tests.
 
-## Implementation Assignment
+## Task Assignment
 
 - Profile: `task-agent`
 - Primary Professional Skill: `backend-change-builder`
-- Constraint: prefer the owning order/domain module; do not create a generic
-  shared utility without evidence that the calculation is domain-free
-- Verify: targeted characterization and regression tests for every found path
+- Layer 3 Skills: none
+- Allowed scope: the existing calculation owners and adjacent tests; preserve
+  intentional differences and do not introduce a generic shared utility without
+  ownership evidence
+- Verify: targeted characterization and regression tests for affected paths,
+  including rounding and stored-total behavior
 
-## Independent Review
-
-- Profile: `review-agent`
-- Review Skill: `architecture-impact-reviewer`
-- Boundary: actual diff, owner placement, dependency direction, same-pattern
-  coverage, and rejected locations
+Keep one Task unless inspection establishes a real dependency or independently
+useful implementation boundary. If no behavior-preserving extraction is supported,
+report that conclusion instead of forcing a new abstraction.

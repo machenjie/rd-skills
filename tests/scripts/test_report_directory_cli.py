@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,9 +38,7 @@ class ReportDirectoryCliTests(unittest.TestCase):
             (AUDIT, ["--gate", "authoring"]),
             (INSTALLATION, []),
             (ROUTING, []),
-            (LIGHTWEIGHT, []),
             (RENDERED, []),
-            (CONTEXT, []),
             (DOCS, []),
         )
         with tempfile.TemporaryDirectory() as raw:
@@ -53,6 +52,28 @@ class ReportDirectoryCliTests(unittest.TestCase):
                         custom,
                         module._args([*required, "--reports-dir", str(custom)]).reports_dir,
                     )
+
+    def test_behavior_and_context_main_forward_report_directory(self) -> None:
+        report = {
+            "fixture_count": 1, "negative_fixture_count": 1,
+            "status": "pass", "errors": [],
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            output = Path(raw)
+            paths = (output / "report.json", output / "report.md")
+            for module in (LIGHTWEIGHT, CONTEXT):
+                for argv, expected in (
+                    ([], module.REPORT_JSON.parent),
+                    (["--reports-dir", str(output / "custom")], output / "custom"),
+                ):
+                    with self.subTest(module=module.__name__, argv=argv), mock.patch.object(
+                        module, "evaluate", return_value=report
+                    ), mock.patch.object(
+                        module, "report_output_paths", return_value=paths
+                    ) as output_paths:
+                        self.assertEqual(0, module.main(argv))
+                        self.assertEqual(expected, output_paths.call_args.args[0])
+                        self.assertTrue(paths[0].is_file())
 
     def test_new_producer_output_paths_follow_reports_directory(self) -> None:
         expected = (

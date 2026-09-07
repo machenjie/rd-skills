@@ -17,33 +17,23 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: primary-Skill-select
 
 ## Skill Role
 
-Consume immutable gateway-owned end-to-end, hop-deadline, and retry ceilings. Beneath them, own dependency connection, read, and phase timeouts plus the actual safe/idempotent retry policy, fallback, bulkhead, circuit, and recovery. On paths without a gateway chain, derive equivalent local caller/dependency ceilings before selecting those controls.
+Own bounded dependency-failure behavior under immutable gateway ceilings.
 
 ## High-Value Rules
 
-- When gateway-owned end-to-end, hop-deadline, and retry ceilings apply, consume them without extending or redefining them. Without a gateway chain, derive local ceilings from the caller budget, cancellation, overhead, fan-out, and amplification risk.
-- Select dependency connection, read, and other phase timeouts beneath the applicable hop ceiling from remaining budget, connection/response distributions, queueing, cleanup, fan-out, and cancellation behavior.
-- Define the actual retryable and non-retryable classes, maximum attempts, deadline-aware backoff and jitter, unknown-outcome handling, and amplification bound for safe or idempotent effects beneath both retry and deadline ceilings.
-- Fallback and fail-open/fail-closed behavior require the product, security, or data owner whose invariant changes; record freshness and irreversible-effect limits.
-- Isolate dependency resources with a bulkhead; derive breaker volume, window, open duration, probes, and close criteria from traffic and recovery.
+- Consume gateway ceilings without redefining them.
+- Derive local ceilings only when no gateway owns them.
+- Bind phase timeouts and retry to current ceiling and failure evidence.
+- Select fallback, isolation, and breaker behavior from product invariants, capacity, and recovery.
+- Load only the named Reference for unresolved parameters, checks, or proof.
 
 ## Anti-Patterns
 
-- Nested timeouts can exceed the caller deadline unless budgets flow downstream.
-- Allow layered retries because they multiply dependency load.
-- Skip jitter when concurrent callers can synchronize retries.
-- Continue ordinary attempts while the circuit breaker is open.
-- A stale or empty fallback is user-visible behavior, not a neutral implementation detail.
-
-## Execution Checklist
-
-1. Map dependency criticality, caller deadline, immutable gateway ceilings or out-of-chain local ceilings, resource pool, and fallback authority.
-2. Record dependency connection/read/phase timeouts and the actual retry policy beneath those ceilings, plus fallback, bulkhead, breaker states, probes, and recovery criteria.
-3. Verify timeout exhaustion, amplification, fallback, isolation, and half-open recovery.
+- Local success substituted for dependency-failure and recovery evidence.
 
 ## Stop Conditions
 
-Escalate fail-open changes to authorization, fraud, compliance, payment, or irreversible effects; regulated stale data; shared-tenant blast radius; or production fault injection. Stop when an applicable gateway-owned end-to-end, hop-deadline, or retry ceiling is missing or mutable and route that decision to `network-protocol-gateway-usage`.
+Stop when selected degradation behavior lacks an owned safety or recovery proof.
 
 ## Output Contract
 

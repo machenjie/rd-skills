@@ -23,6 +23,6 @@ Use this reference when scenario decomposition closure depends on validation fre
 - Map every scenario ID, release-critical decision, validation method, handoff boundary, accepted/rejected reuse claim, tool-output artifact, and residual risk to current evidence or explicit not-run disclosure.
 
 - If failure injection, replay harness, integration sandbox, load or abuse simulation, record environment, data class, stop condition, redaction, and cleanup path.
-- If live external dependency, support console, production replay, admin action, or connector write, require owner approval, containment path, rollback or compensation plan, and redaction rule.
+- If live external dependency, support console, production replay, admin action, or connector write, record actual authority, action and data scope, stop conditions, and applicable redaction. Mutating effects require accepted recovery or containment and explicit irreversible limits; read-only observation has no inverse mutation to invent.
 - Classify each retained scenario as normal, alternate, edge, failure, abuse, recovery, or operational with release criticality.
 - Require a task-local decision or failure trigger for each retained category row.

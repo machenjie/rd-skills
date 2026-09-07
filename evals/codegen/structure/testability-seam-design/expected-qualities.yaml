@@ -1,6 +1,5 @@
 id: testability-seam-design
 category: structure
-complexity: L3
 focus:
   - public behavior test boundary
   - explicit test seam

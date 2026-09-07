@@ -7,7 +7,8 @@ validation, review, repair, re-review, progress, and closure.
 - Count control turns, subagents, duplicate reads, loaded Skills, and context
   size.
 - Detect repeated same-scope analysis, edit before evidence, stale validation,
-  unreviewed changed files, and repair without re-review.
+  changed paths without type-appropriate evidence, and repair without fresh affected validation.
+- Treat absent re-review as a gap only for a new material question needing independent judgment or an unresolved required review.
 - Separate deterministic fixtures from live-agent measurements.
 - State collection gaps without inferring efficiency gains from structural
   compliance alone.

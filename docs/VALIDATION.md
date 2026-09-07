@@ -55,10 +55,8 @@ integration handoff or release-candidate decision:
 python3 scripts/eval-core-principles.py --gate authoring
 python3 scripts/validate-examples.py
 python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
-python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/generate-marketplace-catalog.py --out docs/MARKETPLACE_CATALOG.md --check
+python3 scripts/validate-marketplace-index.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py --require-pass
 python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900
@@ -74,11 +72,64 @@ Core authoring is the canonical full deterministic producer owner. The
 remaining commands are artifact consumers or non-Core repository checks; they
 must not replay a Core-owned producer merely to count a second pass.
 
+### Single Runtime Completeness Responsibilities
+
+Retiring the development Runtime changes delivery, not proof scope. The source
+authority remains 1 Control, 25 Professional, 150 Foundation, and 13 Domain
+Skills. The fixed Runtime has 26 top-level Skills and 154 JIT Layer 3 entries;
+9 authoring/internal Foundation entries remain source-valid but non-Runtime.
+
+The deterministic owner checks cover:
+
+- source and four-registry completeness and uniqueness;
+- Professional selector completeness and exact Foundation/Domain ownership;
+- complete compact projection of all 163 Layer 3 sources;
+- nested Reference, asset, example, local-link, and symlink containment;
+- routing regression, including Domain positive, neighboring negative,
+  transition-positive, and unchanged-paraphrase controls;
+- Route Once behavior, role authorization, and Review route stability;
+- rendered-context budgets across the fixed Runtime, selected zero-to-three
+  Layer 3 items, and explicitly named nested References; and
+- code-generation definition, harness, and negative-control evidence.
+
+When all Foundation and Domain sources must be expanded, the owning validator
+creates the 163-item projection once in a cleaned temporary directory outside
+the repository, `dist/`, packages, and Host discovery. It compares registry and
+source inventories, validates every compact projection and nested link, proves
+154 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
+temporary tree. No development build is created.
+
+### Professional Independence Gate
+
+`python3 scripts/validate-skills.py` applies the Professional transplant test:
+professional judgments must remain valid in an ordinary repository that has no
+rd-skills control-plane implementation. Confirmed self-coupling fails normal
+validation. `python3 scripts/validate-skills.py
+--professional-independence-report` emits the same scope as stable report-only
+JSON and returns success when findings are present; source-collection failures
+remain errors in both modes.
+
+The shared content collector covers Professional root descriptions and bodies,
+all physical Professional References including unindexed files, and all 18
+Professional examples. Generic Engineering Brief, Task Contract, Task DAG,
+First Executable Slice, Review Boundary, and Evidence Ledger concepts are
+negative controls, not findings by name. Registry and Agent Profile runtime
+adapters are allowed when they preserve rather than redefine domain knowledge.
+The transplant test and zero-finding result cover authored governed domain
+content. The canonical Registry-generated `Targeted References` adapter table
+is physically embedded in the source root but logically excluded: it may select
+only an optional Reference and its depth, and may not change the owner,
+invariant, failure behavior, acceptance condition, domain verdict, or proof
+obligation. Manual, noncanonical, malformed, or diverged tables are not exempt.
+Static matching cannot prove the absence of indirect or novel coupling and does
+not cover non-Markdown assets; record those false-negative boundaries with the
+zero-finding result.
+
 Development Affected runs only the selected affected producer and owner-test
 closure; it does not run the local Full Regression above. The
 [`impact_graph_contract`](../src/control-model/core-contracts.json) is the sole
 authority for changed-path classification, canonical producer dependency
-closure, owner-test selection, fail-closed outcomes, isolation, and build-profile
+closure, owner-test selection, fail-closed outcomes, isolation, and Runtime
 projection;
 [`scripts/impact_graph.py`](../scripts/impact_graph.py) is its resolver.
 `scripts/run-ci-tests.py` and `eval-core-principles.py --gate affected --base
@@ -96,15 +147,28 @@ and include their proven dependent closure. Readability and Semantic detector
 or contract changes select their focused axis validators. None of these
 affected rules weakens or replaces the independent full strict Formal Release
 or causes an affected run to generate panel packets, ballots, or attestations.
-Package changes project their base and head registry entries through the actual
-`recommended`, `full`, and `dev` build graph; an unresolved package selects all
-three profiles. Build and code-generation integration tests, plus the focused
-quickstart unit test, are selected only for direct changes to their owners. The
+Package changes project their base and head registry entries through the fixed
+Runtime build graph. An unresolved package selects the Runtime producer rather
+than creating a second build surface. Build and code-generation integration
+tests, plus the focused quickstart unit test, are selected only for direct
+changes to their owners. The
 runner preserves that one unsharded selected list, then runs each selected
 module in an isolated subprocess with a distinct temporary directory and
 disabled bytecode writes. `--jobs` bounds concurrent modules (default `2`);
-`--jobs 1` keeps a sequential diagnostic path, and `--timeout` bounds each
-module. Worker logs, durations, and status are emitted in module-path order
+`--jobs 1` keeps a sequential diagnostic path. `--timeout` is the base duration
+in seconds for every test module executed by `_execute_modules`, including
+affected `run` and both Full execution lanes. An absent `TEST_TIMEOUT_CLASS`
+declaration or `standard` applies `1x` the base timeout; `source-validation`
+applies `2x`. `TEST_TIMEOUT_CLASS` must be declared at most once as a top-level
+static string literal from the closed set `standard` and `source-validation`.
+Duplicate, nested, dynamic, or unknown declarations fail selection. Worker
+timeout owners are checked explicitly. The schema-3 Professional validation
+module uses `source-validation` for its complete 188-package bindings,
+capsule materials, CLI chain, and ballot aggregation checks. Its protocol and
+CLI fixtures still use bounded synthetic content. With `--timeout 900`, this
+module has an effective 1800-second deadline; the base timeout is unchanged.
+Worker
+logs, durations, and status are emitted in module-path order
 regardless of completion order. A test failure returns `1`; selection, startup,
 timeout, interruption, abnormal-exit, or cleanup errors return `2`. After the
 first non-pass result, no new module is started, already-running workers are
@@ -200,6 +264,14 @@ current source contracts directly. Evaluation tests load their owned artifacts
 and apply the existing schema, status, count, error, and cross-report
 invariants. Build consumers additionally compare each manifest's
 `authoritative_build_inputs` snapshot with the current narrow build input set.
+Before creating that snapshot or touching staging, cleanup, reset, package, or
+managed-output paths, `build.py` validates one source-only v2 semantic-marker
+inventory. It derives owners from the four registries, covers the control
+prompt, every Skill root, and every physical source Reference, and delegates
+parsing plus cross-document rule/occurrence collision checks to
+`validation_utils.py`. This preflight does not import the content auditor or
+read tracked reports. Runtime stripping and leakage rejection remain a second
+defense after rendering.
 Mutating a consumed field, required file, authoritative build input, or expected
 Skill count fails the owning consumer. Arbitrary extra fields that no consumer
 reads are explicitly outside this proof. These checks do not replay producers
@@ -226,8 +298,10 @@ or consume the tracked ordinary producer reports.
 | Root, Reference, and expert-review lifecycle | [Skill content governance](SKILL_CONTENT_GOVERNANCE.md) | Strict source validators and required independent decisions are current; no blocking disposition remains. |
 | Documentation | `validate-docs-consistency.py` and local-link checks | Required docs, managed Core projections and markers, commands, and links match current source; ordinary prose is not whole-document hash-bound. |
 | Routing and professional quality | Registries, deterministic fixtures, and professionalism producers | Fresh actual routes cover 233 canonical entries and 62 capability entries. The 429 admissions are 105 Professional, 276 Foundation, and 48 Domain. The Foundation projection covers 141 unique Foundation Skills in the 163-entry Layer 3 catalog. Required coverage and professional obligations pass without forbidden behavior. |
+| Agent behavior comparison | `src/control-model/core-contracts.json#/behavior_eval_contract` and `eval-agent-behavior.py` | Captured handoffs retain their deterministic oracle. The optional blind OLD/NEW mode validates physically separated packet/oracle/observations/caller-supplied-capture/reveal artifacts, opaque agent-visible identifiers, exact same-run bindings, capture byte/provenance integrity, Core-derived routing and Review metrics, and Main-owned pre-dispatch zero-review gates with an explicit decision actor, review candidate, zero dispatch count, and `reviewer_executed=false`. Caller-supplied captures have no Host/verifier-owned receipt trust channel, so effective live evidence remains `not_collected`; behavior improvement, host execution, and elapsed time are never inferred. |
+| Implementation and repair behavior | `eval-agent-lightweight.py` | Adjacent positive and negative traces distinguish bounded discovery from important unresolved decisions, optional review from ceremony, reachable effects from keywords, justified structure from speculation, and fresh validation from stale or contradicted proof. Selected reviewers need actual current diff and source. These are simulated fixtures, not live Host performance evidence. |
 | Capability coverage | `evals/capability-coverage/matrix.yaml` and deterministic coverage validators | All 125 entries classify as 81 covered, 39 partial, 0 missing, and 5 intentionally unsupported; covered means catalog/routing evidence, not Professional Completeness. |
-| Build and installation | [Build profiles](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | Profiles contain 27, 40, and 190 top-level Skills; supported hosts include four Profiles; manifests and doctor checks match. |
+| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 26 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
 | Code generation | [Benchmarks](BENCHMARKS.md) | Definitions, harnesses, and starter negative controls pass; candidate claims require an explicit candidate input. |
 | Open-source publication | [Open-source readiness](OPEN_SOURCE_READINESS.md) | Root license, metadata, contribution, security, and publication checks pass together. |
 
@@ -261,6 +335,15 @@ Professional Completeness schema 3 are defined only in [Skill content
 governance](SKILL_CONTENT_GOVERNANCE.md#validation). Validation operators use
 their strict commands and reported blockers; this document does not redefine
 packet, ballot, reviewer-assignment, carry, storage, or cost semantics.
+Semantic disposition uses content-independent versioned selectors for stable
+candidate identity and separate current-evidence fingerprints. Same-selector
+evidence drift is reported as `needs-confirmation`; selector drift creates a new
+identity. Raw source SHA-256 remains provenance and tamper/build-freshness
+evidence, not the candidate identity. A v2 source-only semantic marker declares
+its closed finding and stable rule: owner, finding, path, document part, and rule
+form identity, while the discovered heading and detector match remain evidence.
+The marker is ignored by judgment projections and removed from built Runtime
+Markdown.
 Current Professional evidence uses the v3 review/carry contract: packets bind
 one package material and one review unit per target, compact storage
 deduplicates dependency materials in one catalog, and each finding names only
@@ -284,7 +367,7 @@ commit that records the fixed artifact may be `P` while the authenticated
 origin remains `C`. Currentness and Formal Release validate that preserved
 origin authority and do not require `origin_commit == P`.
 
-The Phase 2 inventory is current and final, so the formal target is all 189
+The Phase 2 inventory is current and final, so the formal target is all 188
 non-Control packages. The tracked Expert Panel inventory is exactly
 `evals/expert-panel/readability.json`,
 `evals/expert-panel/semantic-disposition.json`, and
@@ -293,7 +376,7 @@ current compact attestation and is replaced rather than appended. Full runtime
 packets, templates, ballots, capsules, and decisions remain only under the
 ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact.
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. A current Semantic Disposition application binds the
 exact fixed-attestation bytes. Replace an attestation only when its strict
 current validator reports source, detector, binding, or contract drift, then
@@ -358,22 +441,43 @@ Record every skipped or unavailable check, affected scope, proof limit, and
 residual risk. A failed command remains failed until its cause is verified and
 the relevant command passes after the final fix.
 
+Run Calibration to a temporary report directory before canonical Conformance:
+
+```bash
+python3 scripts/eval-rendered-context-budget.py --mode calibration --reports-dir /private/tmp/rd-skills-budget-calibration
+python3 scripts/eval-rendered-context-budget.py --mode conformance
+```
+
+Calibration measures the otherwise-valid population without using budget for
+selection, frontier construction, rejection, or exit. Conformance applies the
+Core-derived hard ceiling after complete context measurement and records soft
+growth advisories separately.
+
 ## Rendered Context Budget Contract
 
 <!-- BEGIN CHANGEFORGE CONTEXT BUDGET PROJECTION: validation-rendered-context-budget -->
 Source: `src/control-model/core-contracts.json#/context_budget_contract`.
 
-`required reserve = ceil(capacity ceiling * minimum headroom ratio)`; `release target = capacity ceiling - required reserve`; `evolution target = release target - minimum release margin`.
-Release and evolution targets are derived and are not stored as second authorities.
+Budget taxonomy and all Runtime/Rendered limits are owned only by Core. Budget is a cost guardrail and never changes routing, required context, or correctness obligations.
 
-| Context | Capacity ceiling | Minimum headroom ratio | Required reserve | Release target | Minimum release margin | Evolution target |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |
-| Direct Task dispatch | 3200 | 0.00 | 0 | 3200 | 0 | 3200 |
-| Analyzed Task dispatch | 6500 | 0.00 | 0 | 6500 | 0 | 6500 |
-| Analysis dispatch | 5000 | 0.00 | 0 | 5000 | 0 | 5000 |
-| Review dispatch | 4000 | 0.00 | 0 | 4000 | 0 | 4000 |
-| Utility dispatch | 2500 | 0.00 | 0 | 2500 | 0 | 2500 |
+Authoring Budget classes: Main Prompt, Control Skill, Professional Skill, Foundation, Domain.
+Resident Runtime Budget classes: Main always-loaded.
+Dispatch Composition Budget classes: Direct Task, Analyzed Task, Analysis, Review, Utility.
+Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool System Prompt, Conversation History; observation-only, with host conversation compaction out of scope.
+
+| Category | Context | Soft target | Hard ceiling | Calibration status |
+| --- | --- | ---: | ---: | --- |
+| Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3200 | provisional-migration-value |
+| Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
+| Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
+| Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |
+| Dispatch Composition Budget | Utility dispatch | 2000 | 2500 | provisional-migration-value |
+
+Soft-target overage is a growth advisory; hard-ceiling overage fails Conformance. Calibration does not apply either limit to candidate selection or exit.
+Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence context is never truncated to satisfy a budget.
+Quality-first A/B gate: Routing, Review, and Codegen evidence must preserve quality before a candidate enters the token/turn/elapsed cost frontier. Any quality regression rejects the candidate even when tokens decrease. Missing comparable evidence is structural-only/not-enough-evidence; absent live behavior, codegen, or elapsed evidence is not_collected.
+Candidate total not greater than baseline is not correctness acceptance. The Core hard ceiling remains an independent Conformance failure, and static token proxies do not prove latency.
 
 Tokenizer: `o200k_base`. Exact duplicate-rule ratio gate: `0.03`.
 <!-- END CHANGEFORGE CONTEXT BUDGET PROJECTION: validation-rendered-context-budget -->
@@ -411,9 +515,7 @@ python3 scripts/validate-skill-content-size.py
 python3 scripts/audit-skill-content.py --gate authoring
 python3 scripts/validate-reference-content.py --strict
 python3 scripts/validate-root-content.py --strict
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
+python3 scripts/build.py
 python3 scripts/validate-agent-profiles.py
 python3 scripts/validate-docs-consistency.py
 python3 scripts/validate-built-skill-reference-links.py
@@ -423,7 +525,7 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-agent-lightweight.py
-python3 scripts/eval-rendered-context-budget.py
+python3 scripts/eval-rendered-context-budget.py --mode conformance
 python3 scripts/eval-context-control-plane.py
 python3 scripts/eval-agent-behavior.py --format json --output-dir evals/agent-behavior/outputs
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

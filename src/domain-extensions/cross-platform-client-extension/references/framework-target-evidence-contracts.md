@@ -7,6 +7,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Evidence Order
 
+- Prove targets from repository, build targets, release configuration, or published artifacts without framework inference.
 - Inspect repository manifests, source sets, platform directories, build
   targets, CI jobs, release configuration, and published artifacts.
 - Record only targets supported by task evidence; distinguish compilable,
@@ -18,13 +19,15 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Routing Boundary
 
-- When task evidence confirms an affected concrete target, load its registered
-  platform Domain with this modifier under `installed-client-change-builder`.
+- When evidence confirms a new affected target, report its knowledge needs to Main.
+- Main selects required platform expertise under the current role-compatible
+  Professional within the zero-to-three Layer 3 limit.
+- Task and Review load only capsule-named Domains.
 - Keep confirmed targets in a cohesive executable slice when dependency,
   ownership, write, validation, release, rollback, and integration-risk
   boundaries stay cohesive.
-- Use analysis-first splitting when those boundaries create separately
-  executable work.
+- Split separately executable work when those boundaries require it. Use Analysis
+  only for a concrete unresolved decision that could change the split or implementation.
 - A framework name without a confirmed platform target loads no Domain.
 
 ## Required Record
@@ -45,3 +48,12 @@ routing decision, one unresolved question if needed, and proof limits.
 These pages are rolling or version-specific support statements. They do not
 prove repository target selection, artifact publication, release support,
 account ownership, or the installed toolchain. Recheck exact versions.
+
+## High-Value Gotchas
+
+- Shared or compile-time success can hide target-specific lifecycle, permission, accessibility, packaging, or runtime failure.
+
+## Execution Checklist
+
+- Verify ownership, compatibility, normal, failure, upgrade, and artifact behavior per affected target.
+- Report the target matrix, source freshness, untested targets, non-inferences, and residual risk.

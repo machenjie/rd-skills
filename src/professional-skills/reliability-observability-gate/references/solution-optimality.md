@@ -12,4 +12,4 @@ Derive thresholds from the current repository baseline, representative workload,
 2. Does the chosen SLI or alert reflect the relevant traffic and failure duration, provide an actionable response, and fit current error-budget semantics and operational maturity?
 3. Which CPU, memory, connection, queue, storage, network, or cardinality boundary can saturate first under the representative workload, and what measured/platform evidence sets the trigger?
 4. What failure mode justifies timeout, retry budget, backpressure, circuit breaking, degradation, recovery exercise, or another control, and what test or incident evidence supports the selected mechanism?
-5. If objective, capacity, cost, and operator-response tradeoffs cannot be decided within this boundary, identify `solution-optimality-evaluation` as the broader owner without assuming automatic loading.
+5. If objective, capacity, cost, and operator-response tradeoffs cannot be decided within this boundary, record broader tradeoff analysis as unresolved scope with its evidence need and decision owner.

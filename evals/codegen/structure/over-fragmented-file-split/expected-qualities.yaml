@@ -1,6 +1,5 @@
 id: over-fragmented-file-split
 category: structure
-complexity: L3
 focus:
   - file granularity
   - anti-fragmentation

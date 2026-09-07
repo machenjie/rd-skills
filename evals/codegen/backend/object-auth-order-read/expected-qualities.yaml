@@ -1,6 +1,5 @@
 id: object-auth-order-read
 category: backend
-complexity: L4
 focus:
   - object level authorization
   - tenant isolation

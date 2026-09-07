@@ -8,10 +8,10 @@
 - Define payload fields with type, required/optional status, stable identifiers, examples, semantics, tenant/object identifiers, and schema version.
 - Classify PII, financial, health, credential, tenant, object, permission, and audit fields; restrict or tokenize sensitive payloads.
 - Define the schema registry, compatibility mode, migration plan, and rollback behavior for schema changes.
-- Inventory known consumers, side effects, owners, subscription mechanisms, each consumer's idempotency key and duplicate/replay handling, and DLQ owner.
+- Inventory known consumers, side effects, owners, subscription mechanisms, each consumer's effect identity and duplicate/replay handling, and selected terminal-state owner.
 - Identify unknown consumers or repository inspection/prior evidence assumptions that current source does not prove.
 - Declare ordering expectations and partition or message-group key, or explicitly state that no ordering is guaranteed.
-- Define retry count, backoff, poison-message behavior, DLQ destination, alert threshold, replay tool, runbook, and owner.
+- Define applicable retry and poison-message behavior, the selected terminal disposition, required alerting, controlled replay, and recovery owner; name the DLQ destination when a DLQ is selected.
 - Define saga role, compensation event, timeout, reconciliation path, audit fields, and retention where applicable.
 - For each producer, schema, consumer, idempotency rule, ordering rule, retry/DLQ policy, replay path, privacy decision, and rollback path, map validation evidence. Record what evidence proves and does not prove, the residual-risk owner, handoff boundary, and next professional gate.
 - State behavior preservation for old producers, consumers, schemas, topics/channels, replay procedures, DLQ procedures, and runbooks.

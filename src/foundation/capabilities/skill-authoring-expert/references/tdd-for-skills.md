@@ -42,7 +42,7 @@ Match the skill change to the cheapest test that can fail for the right reason:
 | --- | --- | --- |
 | New or changed routing trigger | routing case (+ over-routing guard) | `evals/routing/` |
 | New or changed discipline rule | pressure case | `evals/pressure/<area>/` |
-| Reference split or loading policy | reference retrieval check | reference link validation + dev build |
+| Reference split or loading policy | reference retrieval check | `python3 scripts/build.py`, then `python3 scripts/validate-built-skill-reference-links.py` (validates the registered Foundation and Domain inventory in a temporary projection) |
 | New or changed output contract | output contract assertion | agent-behavior sample |
 | Agent Profile, build, or installation contract | owning validator or safety negative-control | existing test module for the changed generator, builder, or installer |
 | End-to-end routing manifest | agent-behavior sample | `evals/agent-behavior/samples/` |

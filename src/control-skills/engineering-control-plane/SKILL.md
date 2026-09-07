@@ -13,20 +13,19 @@ A host without an Agent Profile loads `references/main-control-agent.md`.
 
 ## Decision Rules
 
-The prompt owns control rules: Direct Task, Analyzed Work, First Executable Slice,
-normalized capability facts, shared-workspace writes, review/repair, progress, and closure.
+The prompt owns implementation-first dispatch, evidence-based analysis and review,
+Host authority, shared-workspace writes, validation, and completion.
 Do not restate; choose a named targeted Reference or template.
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [execution level contract](references/execution-level-contract.md) | targeted | check execution level before routing | no repo answer or completed legacy with no work | main-control-agent | routing-decision |
 | [professional skill router](references/professional-skill-router.md) | targeted | select one Professional Skill | capsule already fixes route | main-control-agent | routing-decision |
-| [direct task](references/direct-task-template.md) | template | Direct Task needs handoff | task uses Analyzed Work | main-control-agent | task-contract |
-| [engineering brief](references/engineering-brief-template.md) | template | analysis produces Engineering Brief | accepted Engineering Brief exists | analysis-agent | engineering-brief |
+| [direct task](references/direct-task-template.md) | template | delegation needs explicit task context | ordinary single-agent work already has sufficient context | main-control-agent | task-contract |
+| [engineering brief](references/engineering-brief-template.md) | template | complex cross-agent decisions need stable communication | a direct answer or ordinary implementation is sufficient | analysis-agent | engineering-brief |
 | [task dag](references/task-dag-template.md) | template | Task DAG plans dependencies | bounded task skips DAG | analysis-agent | task-dag |
-| [implementation handoff](references/implementation-handoff-template.md) | template | accepted handoff starts implementation | no implementation task exists | task-agent | implementation-handoff |
+| [implementation handoff](references/implementation-handoff-template.md) | template | a downstream consumer needs implementation results | ordinary result reporting is sufficient | task-agent | implementation-handoff |
 | [utility capsule](references/utility-capsule-template.md) | template | utility needs no-edit capsule | no utility operation exists | task-agent | utility-handoff |
 | [review handoff](references/review-handoff-template.md) | template | review requires independent handoff | no review task exists | review-agent | review-handoff |
 

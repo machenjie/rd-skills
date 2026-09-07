@@ -23,7 +23,7 @@ Represent applicable idle, loading, stale/revalidating, success, accepted/pendin
 
 ## Cache, Freshness, And Pagination
 
-Cache keys include every response-changing resource, actor/tenant, filter, sort, cursor, projection, and locale dimension. Define freshness, stale display, invalidation after each mutation/event, and reset on logout, 401 failure, user/tenant switch, or permission change. Optimistic updates snapshot all affected views and roll back, reconcile, or expose partial/unknown outcome.
+Cache keys include every response-changing resource, actor/tenant, filter, sort, cursor, projection, and locale dimension. Define freshness, stale display, invalidation after each mutation/event, and reset on logout, 401 failure, user/tenant switch, or permission change. For optimistic updates, preserve the prior-state or operation evidence needed by the selected rollback, inverse-patch, or reconciliation strategy. Restore or derive affected views from their authoritative state, and expose partial or unknown outcomes when they cannot yet be reconciled; do not require duplicate snapshots of every derived view.
 
 Choose cursor/keyset, offset, or bounded static pagination from mutation rate, stable ordering/tie-breaker, deep-page access, query/index support, and user expectations. Offset instability is acceptable only with an explicit refresh/duplicate/skip contract.
 

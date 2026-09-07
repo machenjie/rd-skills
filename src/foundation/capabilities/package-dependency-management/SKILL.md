@@ -21,19 +21,13 @@ Define package authority, necessity, graph effects, lockfile integrity, lifecycl
 
 ## High-Value Rules
 
-- **Follow the repository's package authority.** Identify manifest, lockfile, workspace root, resolution policy, supported runtimes, registry configuration, and generated-file ownership before changing dependencies.
-- **Justify capability before package choice.** Compare reuse already present, platform support, implementation cost, maintenance status, transitive surface, runtime weight, license, and security consequence against the task-local need.
-- **Review the resolved graph, not the requested line alone.** Inspect added, removed, deduplicated, downgraded, platform-specific, optional, peer, and transitive packages plus runtime, build, and deployment effects.
-- **Treat lifecycle code as executable supply chain.** Inspect install hooks, build plugins, generators, native extensions, downloaded binaries, registry provenance, checksums, and credential exposure according to current trust policy.
-- **Bound compatibility from current consumers.** Check runtime floors, public types, module format, generated output, configuration, binary interfaces, and peer ranges before accepting an addition or upgrade.
-- **Keep lockfile change attributable.** Regenerate through the repository-owned mechanism, separate expected graph movement from unrelated churn, and preserve evidence connecting manifest intent to resolved output.
-- **Prove removal across all consumption paths.** Scan source, tests, scripts, generated code, configuration, plugins, dynamic loading, deployment assets, and transitive reliance; distinguish unused direct declaration from still-needed resolved dependency.
+- Keep package decisions within repository authority and load the command-map, checklist, and evidence References only for their active decision problems.
+- Preserve current compatibility and graph obligations.
+- Route vulnerability, policy, legal, public-contract, credential, and release-registry decisions to owners.
 
 ## Anti-Patterns
 
-- Edit a lockfile manually, regenerate it from the wrong workspace or runtime, or accept unrelated resolver churn without explanation.
-- Add a package for trivial convenience while ignoring existing capability, transitive cost, lifecycle code, or long-term ownership.
-- Declare removal complete from source imports alone while scripts, generators, configuration, plugins, or runtime loading still depend on it.
+- Reject manual locks, unjustified packages, unrelated graph churn, and import-only removal proof.
 
 ## Stop Conditions
 

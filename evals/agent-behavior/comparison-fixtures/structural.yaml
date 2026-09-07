@@ -1,0 +1,11 @@
+schema_version: 1
+suite_id: structural-routing-review-old-new
+evidence_class: structural_only
+live_evidence_status: not_collected
+hardening_evidence_refs: []
+artifacts:
+  agent_packet: structural-agent-packet.yaml
+  oracle: structural-oracle.yaml
+  observations: structural-observations.yaml
+  verifier_capture: structural-verifier-capture.yaml
+  reveal: structural-reveal.yaml

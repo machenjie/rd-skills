@@ -19,7 +19,7 @@ Select one lifecycle and module contract that preserves terminal outcomes, consu
 | Process terminal state | Natural drain or explicit exit, exit code, fatal-error policy, synchronous finalization, and supervisor handoff | `process.exit()` truncates pending output or cleanup |
 | Signal | Supported platforms, installed handlers, default behavior, repeated signal, deadline, and forced termination | A handler suppresses default exit without completing shutdown |
 | Child process | Spawn API, shell use, arguments, stdio flow, timeout/signal, IPC, exit/close, and descendant policy | Buffered stdio deadlocks or parent completion orphans a child |
-| Worker | CPU rationale, pool owner, queue bound, clone/transfer/share contract, message errors, and termination | Per-request Workers amplify load or transferred data is reused |
+| Worker | Measured CPU or blocking-work rationale, pool owner, queue bound, clone/transfer/share contract, message errors, and supported termination limits | Per-request Workers amplify load or transferred data is reused |
 | Module mode | `type`, extension, import/require entrypoint, resolution, side effects, cycles, and top-level await | Supported consumers execute different initialization paths |
 | Package exports | Public subpaths, conditions, target Node.js versions, and compatibility baseline | Adding `exports` hides a previously reachable entrypoint |
 | Cache identity | CommonJS resolved filename, ESM URL identity, query/fragment use, and singleton expectation | One logical module initializes more than once |

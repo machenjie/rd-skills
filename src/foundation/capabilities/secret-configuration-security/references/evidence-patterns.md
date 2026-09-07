@@ -1,24 +1,21 @@
 # Secret Configuration Security Evidence Patterns
 
-Use this reference when secret/config closure depends on scanner freshness, exposure-path proof, redaction validation, image/log/bundle inspection, rotation audit signals, stale prior evidence, tool-output retention, or proof limits. Keep raw secret values out of every artifact.
+- Keep raw values out of prompts, commands, diffs, fixtures, screenshots, reports, and retained scanner output. Validate transformation-aware redaction with representative secret-bearing shapes and downstream sinks.
 
-## Secret Config-To-Validation Map
+Use this evidence-pattern Reference only when a no-leak, least-privilege, redaction, rotation, or recovery claim needs fresh proof; skip when no secret/config security claim awaits validation.
 
-| Secret/config claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| Current source is secret-free | Current scanner/report, searched path scope, reviewed `.env*`/docs/generated paths, and detector version or rule set | The inspected tree did not match the selected detectors and manual path review | Git history, old build logs, provider validity, or unscanned artifacts are clean |
-| Frontend boundary is safe | Public-prefix rule, bundle/static config inspection, source-map/CDN scope, and reviewed env labels | Selected server-side secret labels are absent from inspected frontend artifacts | Older deployments, CDN caches, source maps outside scope, or unlisted env keys are safe |
-| Logs/traces/errors are redacted | Allowlisted fields, representative payload, sink visibility, test/review artifact, and retention owner | Tested fields and sinks scrub selected secret-bearing values | Future field names, third-party processors, or every support export is covered |
-| Container/build artifact is secret-free | Dockerfile/build config review, image history/provenance, SBOM or build report, and cache boundary | Inspected image metadata and build artifacts lack selected secret labels | Private build cache, base-image history, or other image tags are covered |
-| Rotation sequence is safe | Consumer graph, rollout order, audit signal, health check, revoke criteria, and rollback trigger | Known consumers can adopt the new version before old revocation | Unknown consumers, long-lived caches, offline jobs, or backup copies are handled |
-| KMS/secret-manager policy is least-privilege | Policy diff with raw values removed, principal scope, deletion/recovery window, audit source, and owner review | The inspected access policy matches named principals and lifecycle controls | Every runtime use, emergency path, or future policy drift is prevented |
+## Evidence Map
 
-## Evidence Quality Labels
+- **Source:** bind current detector/version, searched source/history/generated scope, reviewed sensitive paths, and limits; a miss does not prove history, providers, logs, or unscanned artifacts clean.
+- **Frontend:** bind public-prefix rules, bundles/static configuration, source-map/CDN scope, environment labels, deployments and cache limits.
+- **Logs and support:** bind safe allowlisted fields, representative secret-bearing shapes, observed sinks/audience/retention, and downstream/export limits.
+- **Images and builds:** bind Docker/build configuration, image history/provenance, SBOM/report, cache boundary, base/tag limits, and raw-value exclusion.
+- **Rotation:** bind known consumers, rollout order, redacted adoption/audit/health evidence, revoke criteria, rollback trigger, unknown/offline/cache/backup limits.
+- **KMS or secret manager:** bind redacted policy diff, principal/purpose/operation/lifetime scope, deletion/recovery, audit and break-glass owner, runtime/emergency/drift limits.
 
-- **Strong evidence**: current files/artifacts/log sinks inspected, command or manual review artifact named, exit code or owner result recorded, values redacted, final-edit freshness stated, and proof limits named.
-- **Weak evidence**: old scan report, provider console screenshot without policy diff, masked CI setting without representative log output, prior claim, or scanner result with unknown scope.
-- **Missing evidence**: no scan scope, no exposure path review, no redaction test, no rotation consumer list, no KMS recovery review, no tool permission boundary, or no owner for inaccessible logs/artifacts.
-- **Invalid evidence**: raw secrets in output, real credentials in examples, rollback that revives a compromised secret, unredacted scanner output, or owner approval offered as proof that no leak exists.
+## Evidence Quality And Authority
 
-- If provider console/API read, support export, CI log export, rotation, revocation, KMS deletion, release, or cleanup, require owner, least-privilege scope, stop condition, rollback/forward-fix path, output redaction, and retention boundary.
-- Classify the secret/config risk as source, frontend, logs, image, rotation, or KMS policy before selecting proof.
+Strong evidence is current, final-edit fresh, scoped, redacted, reproducible, owner-attributed, and explicit about limits. Old scans, screenshots without policy diffs, masked settings without representative output, or unknown scope are weak. Missing scope/path/redaction/consumer/recovery/permission evidence remains a gap. Raw secrets, unsafe rollback, unredacted output, or approval substituted for no-leak proof is invalid.
+
+Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary. Classify the claim before selecting proof.
+

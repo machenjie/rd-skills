@@ -40,7 +40,11 @@ Define search and analytical authority, ingestion, visibility, freshness, rebuil
 
 ## Stop Conditions
 
-Stop when authority, permission ownership, freshness consequence, rebuild source, analytical grain, or current reconciliation evidence is missing. For model-backed retrieval, stop and route to `ai-product-extension` when model/embedding selection, evaluation, or lifecycle acceptance is missing; route unresolved cutover or deployment execution to `data-migration-design` and `delivery-release-gate`. Static inspection does not prove deployed permissions, live freshness, production relevance, metric trust, or cutover duration.
+Stop when authority, permission ownership, freshness consequence, rebuild source, analytical grain, or current reconciliation evidence is missing.
+
+For model-backed retrieval, stop and route to `ai-product-extension` when model/embedding selection, evaluation, or lifecycle acceptance is missing. For any search or analytics change, route unresolved cutover or deployment execution to `data-migration-design` and `delivery-release-gate`.
+
+Static inspection does not prove deployed permissions, live freshness, production relevance, metric trust, or cutover duration.
 
 ## Output Contract
 

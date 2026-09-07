@@ -1,6 +1,5 @@
 id: eip712-chainid-nonce
 category: web3
-complexity: L5
 focus:
   - EIP-712 domain validation
   - chain id binding

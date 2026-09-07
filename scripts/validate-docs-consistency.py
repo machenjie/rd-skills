@@ -27,15 +27,19 @@ from changeforge_install import (  # noqa: E402
     DEFAULT_SKILL_TARGETS,
     PROJECT_PROFILE_SUBPATHS,
     PROJECT_SKILL_SUBPATHS,
+    RUNTIME_PROFILE,
+    RUNTIME_SKILL_COUNT,
     SOURCE_PROFILE_ROOTS,
     SOURCE_SKILL_ROOTS,
+    InstallError,
+    read_host_product_surfaces,
 )
 
 from validation_utils import (  # noqa: E402
+    AUTHORITATIVE_BUILD_INPUT_EXCLUDED_PATHS,
     ValidationProblem,
     context_budget_docs_projection_block,
     derived_context_budget_limits,
-    docs_projection_block,
     load_core_contracts,
     load_yaml_file,
 )
@@ -54,7 +58,6 @@ VOLATILE_FACT_DOCS = (
     "AGENTS.md",
     ".github/pull_request_template.md",
     "docs/BUILD_PROFILES.md",
-    "docs/QUICKSTART.md",
     "docs/VALIDATION.md",
     "docs/SCORECARD.md",
     "docs/BENCHMARKS.md",
@@ -77,7 +80,7 @@ STATIC_EVIDENCE_PROOF_LIMIT_DOCS = (
     "docs/SCORECARD.md",
     "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
 )
-SLASH_ONBOARDING_DOCS = (
+HOST_INVOCATION_ONBOARDING_DOCS = (
     "README.md",
     "docs/QUICKSTART.md",
     "docs/USAGE.md",
@@ -91,18 +94,12 @@ SHELL_PLACEHOLDER_RE = re.compile(
     r"COMPLETED_BALLOT|REVIEWER_[ABC])(?:\.json)?\b",
     re.MULTILINE,
 )
-EXPECTED_HUMAN_DOC_COUNT = 56
 INSTALL_CONTRACT_SOURCE = "installers/changeforge_install.py"
-HOST_LABELS = {
-    "codex": "Codex",
-    "claude": "Claude",
-    "copilot": "Copilot",
-    "cline": "Cline",
-    "openai-api": "OpenAI API",
-}
+HOST_PRODUCT_SURFACES_SOURCE = "src/agent-profiles/host-product-surfaces.json"
 SCOPE_ORDER = ("project", "user", "admin")
 COMMAND_VALIDATION_SCOPE = (
-    "documented Python script/installer targets exist; command flags are not validated"
+    "documented Python script/installer targets exist; retired Runtime flags are "
+    "rejected on public and authoring surfaces"
 )
 GOVERNANCE_BUDGET_REPORT = "reports/rendered-context-budget.json"
 GOVERNANCE_BUDGET_BEGIN = (
@@ -115,14 +112,14 @@ GOVERNANCE_EVIDENCE_AUTHORITIES = {
     "RDS-002": (
         "src/control-model/core-contracts.json",
         "tests/scripts/test_validate_agent_profiles.py",
-        "tests/scripts/test_eval_agent_lightweight_utility.py",
+        "tests/scripts/test_eval_agent_lightweight.py",
     ),
     "RDS-003": (
         "src/control-model/core-contracts.json",
         "src/agent-profiles/role-agents.json",
         "tests/scripts/test_validate_agent_profiles.py",
     ),
-    "RDS-009": ("tests/scripts/test_eval_agent_lightweight_utility.py",),
+    "RDS-009": ("tests/scripts/test_eval_agent_lightweight.py",),
     "RDS-010": ("reports/installation-validation.json",),
 }
 GOVERNANCE_HISTORICAL_EVIDENCE_LABEL = (
@@ -194,6 +191,7 @@ REQUIRED_DOCS = (
     "docs/SUBAGENT_MODEL.md",
     "docs/USAGE.md",
     "docs/VALIDATION.md",
+    "docs/HOW_IT_WORKS.md",
     "docs/BENCHMARKS.md",
     "docs/MARKETPLACE.md",
     "docs/MARKETPLACE_CATALOG.md",
@@ -211,6 +209,87 @@ FORBIDDEN_USER_TOKENS = (
     "PreToolUse",
     "PostToolUse",
     ".changeforge-packs",
+)
+RETIRED_RUNTIME_FLAGS = (
+    "--profile",
+    "--with-hooks",
+    "--without-hooks",
+    "--hook-profile",
+    "--professional-injection",
+    "--activation-level",
+)
+RUNTIME_SURFACE_FILES = (
+    "pyproject.toml",
+    "Makefile",
+    "SUPPORT.md",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/ISSUE_TEMPLATE/skill_change.md",
+    "src/foundation/capabilities/README.md",
+    (
+        "src/foundation/capabilities/repository-context-map/references/"
+        "source-generated-boundary-map.md"
+    ),
+    (
+        "src/foundation/capabilities/skill-authoring-expert/references/"
+        "evidence-patterns.md"
+    ),
+    "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
+    (
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/"
+        "benchmarks-and-patterns.md"
+    ),
+    (
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/"
+        "evidence-patterns.md"
+    ),
+)
+RUNTIME_PROFILE_CHOICE_HISTORY_DOCS = frozenset(
+    {"CHANGELOG.md", "GOVERNANCE.md", "docs/MIGRATING_TO_HOOKLESS.md"}
+)
+RUNTIME_PROFILE_CHOICE_PATTERNS = (
+    re.compile(
+        r"\bchoose\s+(?:a\s+)?(?:build\s+|install\s+|runtime\s+)?profile\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bbuild\s+profiles?\s+affected\b", re.IGNORECASE),
+    re.compile(r"^\|\s*`(?:full|dev)`\s*\|", re.IGNORECASE | re.MULTILINE),
+    re.compile(
+        r"\b(?:select|specify)\s+`?(?:recommended|full|dev)`?\s+"
+        r"(?:profile|runtime)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bbuild\s+profiles?\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:profile\s+delivery|generated\s+profiles|public\s+profile|"
+        r"build-profile(?:\s+(?:output|map))?)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bselected\s+profile\b", re.IGNORECASE),
+    re.compile(
+        r"\bprofile(?:\s+impact)?\s*:[^\n]*\b(?:full|dev)\b",
+        re.IGNORECASE,
+    ),
+)
+LAYER3_CARDINALITY_GUIDANCE_FILES = (
+    "docs/SKILL_CONTENT_GOVERNANCE.md",
+    "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md",
+)
+LAYER3_CARDINALITY_GUIDANCE_FACTS = (
+    "Layer 3 selection is an ordered unique list of zero to three items.",
+    "More than three items or any duplicate fails closed; never truncate the selection.",
+    "Higher risk changes which Layer 3 items are selected, not the maximum count.",
+)
+SOFTENED_LAYER3_CARDINALITY_PATTERNS = (
+    re.compile(
+        r"\bnormally\b[^\n]{0,100}\b(?:zero\s+to\s+three|0\s*(?:\.\.|to)\s*3)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:may|can)\s+(?:use|select|load)\s+more\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\brisk[- ]rationale\b", re.IGNORECASE),
 )
 DELETED_PATH_MARKERS = (
     "src/hook-runtime",
@@ -245,6 +324,7 @@ REQUIRED_NAVIGATION = {
         "docs/QUICKSTART.md",
         "docs/INSTALLATION.md",
         "docs/USAGE.md",
+        "docs/HOW_IT_WORKS.md",
     ),
     "docs/QUICKSTART.md": (
         "docs/INSTALLATION.md",
@@ -255,10 +335,18 @@ REQUIRED_NAVIGATION = {
         "docs/USAGE.md",
     ),
     "docs/USAGE.md": (
-        "docs/SHOWCASE.md",
-        "examples/README.md",
+        "SUPPORT.md",
+        "docs/INSTALLATION.md",
+        "docs/HOW_IT_WORKS.md",
+    ),
+    "docs/HOW_IT_WORKS.md": (
+        "docs/README.md",
+        "docs/HOOKLESS_ARCHITECTURE.md",
+        "docs/OPERATING_MODEL.md",
+        "docs/SUBAGENT_MODEL.md",
     ),
     "docs/README.md": (
+        "docs/HOW_IT_WORKS.md",
         "docs/AI_CONTROL_BOUNDARIES.md",
         "docs/BENCHMARKS.md",
         "docs/BUILD_PROFILES.md",
@@ -272,7 +360,6 @@ REQUIRED_NAVIGATION = {
         "docs/QUALITY_MODEL.md",
         "docs/QUICKSTART.md",
         "docs/RELEASE.md",
-        "docs/ROUTING_EXAMPLES.md",
         "docs/SCORECARD.md",
         "docs/SHOWCASE.md",
         "docs/SKILL_CONTENT_GOVERNANCE.md",
@@ -293,6 +380,33 @@ REQUIRED_NAVIGATION = {
         "evals/pressure/README.md",
     ),
 }
+README_FIRST_SURFACE_FORBIDDEN = (
+    "runtime",
+    "layer 3",
+    "foundation",
+    "domain",
+    "engineering brief",
+    "execution level",
+    "evidence ledger",
+    "review boundary",
+    "manifest",
+    "digest",
+    "fingerprint",
+    "validator",
+    "benchmark",
+)
+BEGINNER_PROTOCOL_TUTORIAL_TERMS = (
+    "direct task",
+    "analyzed work",
+    "primary professional",
+    "layer 3",
+    "review input ready",
+    "repair round",
+    "evidence ledger",
+    "effective level",
+    "engineering brief",
+    "execution level",
+)
 DEVELOPMENT_AFFECTED_COMMANDS = (
     "python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>",
     "python3 scripts/run-ci-tests.py run --base <base> --head <head>",
@@ -301,10 +415,8 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/eval-core-principles.py --gate authoring",
     "python3 scripts/validate-examples.py",
     "python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check",
-    "python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check",
-    "python3 scripts/validate-marketplace-index.py --profile recommended",
-    "python3 scripts/validate-marketplace-index.py --profile full",
-    "python3 scripts/validate-marketplace-index.py --profile dev",
+    "python3 scripts/generate-marketplace-catalog.py --out docs/MARKETPLACE_CATALOG.md --check",
+    "python3 scripts/validate-marketplace-index.py",
     "python3 scripts/validate-productization-assets.py",
     "python3 scripts/validate-open-source-readiness.py --require-pass",
     "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900",
@@ -314,6 +426,22 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run",
     "python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run",
     "python3 scripts/quickstart.py --agent openai-api --dry-run",
+)
+TEST_TIMEOUT_GUIDANCE_FACTS = (
+    (
+        "`--timeout` is the base duration in seconds for every test module "
+        "executed by `_execute_modules`, including affected `run` and both Full "
+        "execution lanes."
+    ),
+    (
+        "An absent `TEST_TIMEOUT_CLASS` declaration or `standard` applies `1x` "
+        "the base timeout; `source-validation` applies `2x`."
+    ),
+    (
+        "`TEST_TIMEOUT_CLASS` must be declared at most once as a top-level static "
+        "string literal from the closed set `standard` and `source-validation`."
+    ),
+    "Duplicate, nested, dynamic, or unknown declarations fail selection.",
 )
 RETIRED_WORKFLOW_PATHS = (
     ".github/workflows/ci.yml",
@@ -483,6 +611,33 @@ def _command_target_errors(root: Path, path: Path) -> list[str]:
     return errors
 
 
+def _generated_document_ownership_errors(root: Path) -> list[str]:
+    """Require source-owned generated Markdown to identify an executable producer."""
+
+    errors: list[str] = []
+    owner_pattern = re.compile(
+        r"_Generated by `python3 (?P<producer>scripts/[A-Za-z0-9_.-]+\.py)\b[^`]*`\. "
+        r"Do not edit by hand\._"
+    )
+    generated_docs = tuple(
+        relative
+        for relative in AUTHORITATIVE_BUILD_INPUT_EXCLUDED_PATHS
+        if relative.startswith("docs/") and relative.endswith(".md")
+    )
+    for relative in generated_docs:
+        path = root / relative
+        if not path.is_file():
+            continue
+        matches = tuple(owner_pattern.finditer(path.read_text(encoding="utf-8")))
+        if len(matches) != 1:
+            errors.append(f"{relative}: generated document must declare one owning producer")
+            continue
+        producer = matches[0].group("producer")
+        if not (root / producer).is_file():
+            errors.append(f"{relative}: generated document producer is missing: {producer}")
+    return errors
+
+
 def _current_term_errors(root: Path, path: Path) -> list[str]:
     relative = path.relative_to(root).as_posix()
     if relative in HISTORICAL_TERM_DOCS:
@@ -493,6 +648,35 @@ def _current_term_errors(root: Path, path: Path) -> list[str]:
         for term in FORBIDDEN_CURRENT_TERMS
         if term in folded
     ]
+
+
+def _runtime_surface_errors(root: Path) -> list[str]:
+    """Reject public Runtime choice surfaces while permitting legacy migration prose."""
+
+    errors: list[str] = []
+    paths = {
+        *_markdown_files(root),
+        *(root / relative for relative in RUNTIME_SURFACE_FILES),
+    }
+    for path in sorted(path for path in paths if path.is_file()):
+        relative = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        for flag in RETIRED_RUNTIME_FLAGS:
+            if flag in text:
+                errors.append(f"{relative}: removed Runtime flag remains: {flag}")
+        if relative == "pyproject.toml" and "[tool.changeforge.profiles]" in text:
+            errors.append(
+                "pyproject.toml: retired Runtime Profile metadata table remains"
+            )
+        if relative in RUNTIME_PROFILE_CHOICE_HISTORY_DOCS:
+            continue
+        for pattern in RUNTIME_PROFILE_CHOICE_PATTERNS:
+            if pattern.search(text):
+                errors.append(
+                    f"{relative}: retired user-facing Runtime Profile choice remains"
+                )
+                break
+    return errors
 
 
 def _mapping(value: Any, context: str) -> dict[str, Any]:
@@ -520,17 +704,17 @@ def _registry_authority(root: Path) -> dict[str, Any]:
     counts = {layer: len(entries) for layer, entries in registries.items()}
     total = sum(counts.values())
     non_control = total - counts["control"]
-    profile_counts = {
-        "recommended": counts["control"] + counts["professional"],
-        "full": counts["control"] + counts["professional"] + counts["domain"],
-        "dev": total,
-    }
+    runtime_top_level_count = counts["control"] + counts["professional"]
+    if runtime_top_level_count != RUNTIME_SKILL_COUNT:
+        raise ValidationProblem(
+            "registry Runtime top-level count does not match installer authority"
+        )
     return {
         "registries": registries,
         "counts": counts,
         "total": total,
         "non_control": non_control,
-        "profile_counts": profile_counts,
+        "runtime_top_level_count": runtime_top_level_count,
     }
 
 
@@ -676,16 +860,9 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
     routing_only = (
         foundation_delivery["dev-only"] + foundation_delivery["authoring-only"]
     )
-    profile_delivery = {
-        "recommended": {
-            "targeted": foundation_delivery["product"] + counts["domain"],
-            "routing_only": routing_only,
-        },
-        "full": {
-            "targeted": foundation_delivery["product"],
-            "routing_only": routing_only,
-        },
-        "dev": {"targeted": 0, "routing_only": 0},
+    runtime_delivery = {
+        "targeted": foundation_delivery["product"] + counts["domain"],
+        "routing_only": routing_only,
     }
 
     foundation_names = {str(entry.get("name")) for entry in registries["foundation"]}
@@ -739,8 +916,8 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
         "counts": counts,
         "total": registry["total"],
         "non_control": registry["non_control"],
-        "profile_counts": registry["profile_counts"],
-        "profile_delivery": profile_delivery,
+        "runtime_top_level_count": registry["runtime_top_level_count"],
+        "runtime_delivery": runtime_delivery,
         "routing_case_count": len(routing_cases),
         "capability_routing_case_count": len(capability_cases),
         "admission_case_count": len(admission_cases),
@@ -755,8 +932,8 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
 
 def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     counts = authority["counts"]
-    profiles = authority["profile_counts"]
-    delivery = authority["profile_delivery"]
+    runtime_top_level = authority["runtime_top_level_count"]
+    delivery = authority["runtime_delivery"]
     admissions = authority["admission_counts"]
     coverage = authority["coverage_counts"]
     references = authority["reference_inventory"]
@@ -765,17 +942,10 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         f"{counts['foundation']} Foundation, and {counts['domain']} Domain Skills: "
         f"{authority['total']} total and {authority['non_control']} non-Control"
     )
-    profile_counts = (
-        f"{profiles['recommended']}, {profiles['full']}, and {profiles['dev']} "
-        "top-level Skills"
-    )
+    runtime_count = f"{runtime_top_level} top-level Skills"
     delivery_counts = (
-        f"{profiles['recommended']}/{delivery['recommended']['targeted']}/"
-        f"{delivery['recommended']['routing_only']}, "
-        f"{profiles['full']}/{delivery['full']['targeted']}/"
-        f"{delivery['full']['routing_only']}, and "
-        f"{profiles['dev']}/{delivery['dev']['targeted']}/"
-        f"{delivery['dev']['routing_only']} top-level/targeted/routing-only"
+        f"{runtime_top_level}/{delivery['targeted']}/"
+        f"{delivery['routing_only']} top-level/targeted/routing-only"
     )
     routing = (
         f"{authority['routing_case_count']} canonical entries and "
@@ -805,7 +975,7 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         f"{'is' if references['unindexed_templates'] == 1 else 'are'} unindexed"
     )
     return {
-        "AGENTS.md": (inventory, profile_counts),
+        "AGENTS.md": (inventory, runtime_count, delivery_counts),
         ".github/pull_request_template.md": (
             f"all {authority['non_control']} effective packages are accepted",
             f"{authority['non_control']}/{authority['non_control']} effective coverage",
@@ -813,15 +983,12 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         "CHANGELOG.md": (routing, layer3, matrix),
         "docs/BUILD_PROFILES.md": (
             inventory,
+            runtime_count,
+            delivery_counts,
             reference_inventory,
             unindexed_templates,
         ),
-        "docs/QUICKSTART.md": (
-            f"| `recommended` | {profiles['recommended']} |",
-            f"| `full` | {profiles['full']} |",
-            f"| `dev` | {profiles['dev']} |",
-        ),
-        "docs/VALIDATION.md": (routing, admission, layer3, matrix, profile_counts),
+        "docs/VALIDATION.md": (routing, admission, layer3, matrix, runtime_count),
         "docs/SCORECARD.md": (inventory, routing, admission, layer3, matrix, delivery_counts),
         "docs/BENCHMARKS.md": (f"all {counts['domain']} Domain Skills",),
         "src/foundation/capabilities/README.md": (
@@ -917,11 +1084,27 @@ def _current_evidence_authority(root: Path) -> dict[str, Any]:
         exceptions.get("root_semantic_dispositions"),
         "root_semantic_dispositions",
     )
-    if root_dispositions.get("schema_version") != 7 or "lifecycle" in (
+    if root_dispositions.get("schema_version") != 8 or "lifecycle" in (
         root_dispositions
     ):
         raise ValidationProblem(
-            "root_semantic_dispositions must use lifecycle-free schema 7"
+            "root_semantic_dispositions must use lifecycle-free stable-selector schema 8"
+        )
+    reference_dispositions = _mapping(
+        exceptions.get("reference_semantic_dispositions"),
+        "reference_semantic_dispositions",
+    )
+    if reference_dispositions.get("schema_version") != 3:
+        raise ValidationProblem(
+            "reference_semantic_dispositions must use stable-selector schema 3"
+        )
+    legacy_evidence = _mapping(
+        exceptions.get("semantic_disposition_legacy_evidence"),
+        "semantic_disposition_legacy_evidence",
+    )
+    if legacy_evidence.get("schema_version") != 1:
+        raise ValidationProblem(
+            "semantic_disposition_legacy_evidence must use immutable schema 1"
         )
     review_config = _mapping(
         load_yaml_file(root / "config/professionalism-release-review.yaml"),
@@ -1089,35 +1272,240 @@ def _current_evidence_projection_errors(root: Path) -> list[str]:
     return errors
 
 
-def _slash_invocation_errors(root: Path) -> list[str]:
+def _markdown_tables(text: str) -> tuple[tuple[tuple[str, ...], ...], ...]:
+    tables: list[tuple[tuple[str, ...], ...]] = []
+    current: list[tuple[str, ...]] = []
+    for line in (*text.splitlines(), ""):
+        if line.startswith("|"):
+            cells = tuple(cell.strip() for cell in line.strip().strip("|").split("|"))
+            if cells and not all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+                current.append(cells)
+            continue
+        if current:
+            tables.append(tuple(current))
+            current = []
+    return tuple(tables)
+
+
+def _host_product_table_rows(
+    text: str,
+    expected_labels: set[str],
+) -> tuple[tuple[str, ...], ...]:
+    candidates = []
+    for table in _markdown_tables(text):
+        data = table[1:]
+        matched = len({row[0] for row in data if row} & expected_labels)
+        candidates.append((matched, data))
+    if not candidates:
+        return ()
+    matched, rows = max(candidates, key=lambda item: item[0])
+    return rows if matched else ()
+
+
+def _expected_host_product_rows(root: Path) -> tuple[tuple[str, ...], ...]:
+    contract = read_host_product_surfaces(
+        root / HOST_PRODUCT_SURFACES_SOURCE
+    )["surfaces"]
+    delivery_labels = {
+        "skills-and-agent-profiles": "Skills + Agent Profiles",
+        "skills-only": "Skills only",
+        "zip-packages": "Zip packages",
+    }
+    live_labels = {
+        "not-established": "Not established",
+        "not-applicable": "Not applicable",
+    }
+    workflow_labels = {
+        "available": "Available",
+        "not-established": "Not established",
+        "integration-owned": "API integration owns orchestration",
+    }
+    limitation_labels = {
+        "artifact-health-only": "Artifacts checked; live loading not proved",
+        "copilot-cli-only": "Copilot CLI only",
+        "artifact-delivery-only": "Artifact delivery only",
+        "api-integration-only": "API integration only",
+    }
+    rows: list[tuple[str, ...]] = []
+    for agent in INSTALLER_AGENTS:
+        surface = contract[agent]
+        live = (
+            f"`{surface['invocation']}`"
+            if surface["live_skill_invocation"] == "supported"
+            else live_labels[surface["live_skill_invocation"]]
+        )
+        rows.append(
+            (
+                surface["label"],
+                delivery_labels[surface["artifact_delivery"]],
+                live,
+                workflow_labels[surface["full_workflow"]],
+                limitation_labels[surface["limitation_code"]],
+            )
+        )
+    return tuple(rows)
+
+
+def _task_example_invocation_tokens(text: str) -> tuple[str, ...]:
+    """Return only invocation tokens that open runnable text task examples."""
+
+    tokens: list[str] = []
+    fence_character: str | None = None
+    fence_length = 0
+    language = ""
+    body: list[str] = []
+    invocation = re.compile(r"^[$/][a-z0-9]+(?:-[a-z0-9]+)*$")
+    for line in text.splitlines():
+        marker_match = FENCE_RE.match(line)
+        marker = marker_match.group("marker") if marker_match is not None else ""
+        if fence_character is None:
+            if marker:
+                fence_character = marker[0]
+                fence_length = len(marker)
+                language = line[marker_match.end() :].strip().casefold()
+                body = []
+            continue
+        if (
+            marker
+            and marker[0] == fence_character
+            and len(marker) >= fence_length
+        ):
+            if language == "text":
+                first = next(
+                    (index for index, value in enumerate(body) if value.strip()),
+                    None,
+                )
+                if (
+                    first is not None
+                    and invocation.fullmatch(body[first].strip())
+                    and first + 1 < len(body)
+                    and not body[first + 1].strip()
+                    and any(value.strip() for value in body[first + 2 :])
+                ):
+                    tokens.append(body[first].strip())
+            fence_character = None
+            fence_length = 0
+            language = ""
+            body = []
+            continue
+        body.append(line)
+    return tuple(tokens)
+
+
+def _host_product_surface_errors(root: Path) -> list[str]:
+    """Validate structured Host facts without freezing surrounding product copy."""
+
     errors: list[str] = []
-    for relative in SLASH_ONBOARDING_DOCS:
+    try:
+        expected = _expected_host_product_rows(root)
+    except (InstallError, KeyError, TypeError) as exc:
+        return [f"{HOST_PRODUCT_SURFACES_SOURCE}: {exc}"]
+
+    expected_labels = {row[0] for row in expected}
+    for relative in ("README.md", "docs/QUICKSTART.md"):
         path = root / relative
         if not path.is_file():
             continue
-        text = path.read_text(encoding="utf-8")
-        if "/engineering-control-plane" not in text:
+        actual = _host_product_table_rows(
+            path.read_text(encoding="utf-8"),
+            expected_labels,
+        )
+        factual = tuple(row[:5] for row in actual)
+        if factual != expected:
             errors.append(
-                f"{relative}: first-task onboarding must name /engineering-control-plane"
+                f"{relative}: Host delivery/invocation/workflow table must match "
+                f"{HOST_PRODUCT_SURFACES_SOURCE}"
             )
-        if re.search(
-            r"Use\s+`?engineering-control-plane`?",
-            text,
-            re.IGNORECASE,
-        ):
-            errors.append(
-                f"{relative}: old non-Slash engineering-control-plane onboarding remains"
-            )
+
+    texts = {
+        relative: (root / relative).read_text(encoding="utf-8")
+        for relative in HOST_INVOCATION_ONBOARDING_DOCS
+        if (root / relative).is_file()
+    }
+    universal_slash = re.compile(
+        r"\b(?:all\s+(?:supported\s+)?hosts?|every\s+host)\s+"
+        r"(?:use|uses|start|starts|invoke|invokes)[^\n]*"
+        r"/engineering-control-plane",
+        re.IGNORECASE,
+    )
+    unsupported_claims = (
+        re.compile(
+            r"(?mi)^(?:.*\bCline\b.{0,100}full rd-skills workflow (?:is )?available|"
+            r".*full rd-skills workflow (?:is )?available.{0,100}\bCline\b).*$"
+        ),
+        re.compile(
+            r"(?mi)^(?:.*\bOpenAI API\b.{0,100}live (?:Skill|Host) "
+            r"(?:invocation|installation) (?:is )?supported|.*live (?:Skill|Host) "
+            r"(?:invocation|installation) (?:is )?supported.{0,100}\bOpenAI API\b).*$"
+        ),
+        re.compile(
+            r"(?mi)^.*(?:every|all|other) (?:GitHub )?Copilot surfaces?.*"
+            r"(?:use|support|available).*(?:/engineering-control-plane|full workflow).*$"
+        ),
+        re.compile(
+            r"(?mi)^.*available.{0,80}(?:every|all) (?:GitHub )?Copilot surfaces?.*$"
+        ),
+    )
+    for relative, text in texts.items():
+        contract = read_host_product_surfaces(
+            root / HOST_PRODUCT_SURFACES_SOURCE
+        )["surfaces"]
+        expected_codex = contract["codex"]["invocation"]
+        for token in _task_example_invocation_tokens(text):
+            if token != expected_codex:
+                errors.append(
+                    f"{relative}: invocation token {token} conflicts with "
+                    f"{HOST_PRODUCT_SURFACES_SOURCE}"
+                )
+        if universal_slash.search(text):
+            errors.append(f"{relative}: universal Slash invocation claim is unsupported")
+        if any(pattern.search(text) for pattern in unsupported_claims):
+            errors.append(f"{relative}: unsupported Host workflow claim")
+    return errors
+
+
+def _product_surface_errors(root: Path) -> list[str]:
+    errors: list[str] = []
     readme = root / "README.md"
-    if readme.is_file() and "Slash Skill syntax: `/skill-name`." not in readme.read_text(
-        encoding="utf-8"
-    ):
-        errors.append("README.md: missing canonical Slash Skill syntax")
-    fallback = "does not prove native Slash support"
-    for relative in ("docs/QUICKSTART.md", "docs/USAGE.md"):
-        path = root / relative
-        if path.is_file() and fallback not in path.read_text(encoding="utf-8"):
-            errors.append(f"{relative}: missing bounded non-native Slash fallback")
+    if readme.is_file():
+        text = readme.read_text(encoding="utf-8")
+        level_two_headings = tuple(re.finditer(r"(?m)^##\s+", text))
+        first_surface_end = (
+            level_two_headings[1].start()
+            if len(level_two_headings) > 1
+            else len(text)
+        )
+        first_surface = text[:first_surface_end]
+        normalized = first_surface.casefold()
+        for term in README_FIRST_SURFACE_FORBIDDEN:
+            if term in normalized:
+                errors.append(
+                    f"README.md: first product surface exposes internal term {term}"
+                )
+
+    quickstart = root / "docs/QUICKSTART.md"
+    if quickstart.is_file():
+        text = quickstart.read_text(encoding="utf-8")
+        normalized = text.casefold()
+        for term in ("runtime", *BEGINNER_PROTOCOL_TUTORIAL_TERMS):
+            if term in normalized:
+                errors.append(
+                    f"docs/QUICKSTART.md: beginner path teaches internal term {term}"
+                )
+
+    usage = root / "docs/USAGE.md"
+    if usage.is_file():
+        normalized = usage.read_text(encoding="utf-8").casefold()
+        for term in BEGINNER_PROTOCOL_TUTORIAL_TERMS:
+            if term in normalized:
+                errors.append(
+                    f"docs/USAGE.md: daily-use guide teaches internal term {term}"
+                )
+
+    if (root / "docs/ROUTING_EXAMPLES.md").exists():
+        errors.append(
+            "docs/ROUTING_EXAMPLES.md: scenarios must be owned by docs/USAGE.md"
+        )
     return errors
 
 
@@ -1187,7 +1575,7 @@ def _governance_context_budget_authority_block(
 ) -> str:
     contract = core_contracts["context_budget_contract"]
     rows = [
-        f"| {row['label']} | {row['capacity_ceiling']} |"
+        f"| {row['label']} | {row['soft_target']} | {row['hard_ceiling']} |"
         for row in contract["budget_classes"].values()
     ]
     return "\n".join(
@@ -1200,16 +1588,16 @@ def _governance_context_budget_authority_block(
             "IDs, margins, duplicate-rule ratio, and pass/fail status. Governance records no",
             "current measurement snapshot.",
             "",
-            "The fixed capacity ceilings below come from",
+            "The provisional migration soft targets and hard ceilings below come from",
             "`src/control-model/core-contracts.json#/context_budget_contract`. They are",
-            "constraints, not current measurements.",
+            "guardrails, not current measurements or calibrated optima.",
             "",
-            "| Context | Fixed capacity ceiling |",
-            "| --- | ---: |",
+            "| Context | Soft target | Hard ceiling |",
+            "| --- | ---: | ---: |",
             *rows,
             "",
             "The report must exist, have `status: pass`, report no errors, and project these",
-            "ceilings unchanged. Run `python3 scripts/eval-rendered-context-budget.py` to",
+            "limits unchanged. Run `python3 scripts/eval-rendered-context-budget.py --mode conformance` to",
             "refresh current evidence.",
             GOVERNANCE_BUDGET_END,
         ]
@@ -1266,14 +1654,15 @@ def _governance_context_budget_errors(
             re.IGNORECASE,
         ),
         re.compile(
-            r"\b(?:capacity\s+)?ceilings?\b[^\n]{0,80}\b\d{3,5}\b",
+            r"\b(?:soft\s+targets?|hard\s+ceilings?|ceilings?)\b"
+            r"[^\n]{0,80}\b\d{3,5}\b",
             re.IGNORECASE,
         ),
     )
     if any(pattern.search(outside) for pattern in snapshot_patterns):
         errors.append(
             "GOVERNANCE.md: must not copy current rendered measurements or "
-            "declare budget ceilings outside the fixed ceiling authority block"
+            "declare budget limits outside the Core-derived authority block"
         )
 
     report_path = _governance_budget_report_path(
@@ -1305,23 +1694,25 @@ def _governance_context_budget_errors(
         )
 
     limits = derived_context_budget_limits(core_contracts["context_budget_contract"])
-    expected_ceilings = {
-        budget_class: limit["capacity_ceiling"]
+    expected_soft_targets = {
+        budget_class: limit["soft_target"]
         for budget_class, limit in limits.items()
     }
-    expected_evolution = {
-        budget_class: limit["evolution_target"]
+    expected_hard_ceilings = {
+        budget_class: limit["hard_ceiling"]
         for budget_class, limit in limits.items()
     }
-    calibration = report.get("budget_calibration")
+    governance = report.get("budget_governance")
     if (
-        not isinstance(calibration, dict)
-        or calibration.get("capacity_ceilings") != expected_ceilings
-        or calibration.get("evolution_targets") != expected_evolution
+        not isinstance(governance, dict)
+        or governance.get("mode") != "conformance"
+        or governance.get("soft_targets") != expected_soft_targets
+        or governance.get("hard_ceilings") != expected_hard_ceilings
+        or governance.get("conformance_failures") != []
     ):
         errors.append(
-            f"{GOVERNANCE_BUDGET_REPORT}: rendered context budget report ceilings "
-            "or evolution targets do not match Core"
+            f"{GOVERNANCE_BUDGET_REPORT}: rendered context Conformance limits "
+            "or failure state do not match Core"
         )
     aggregate = report.get("aggregate")
     maxima: dict[str, object] = {}
@@ -1330,12 +1721,19 @@ def _governance_context_budget_errors(
         by_class = aggregate.get("max_by_budget_class")
         if isinstance(by_class, dict):
             maxima.update(by_class)
-    for budget_class, ceiling in expected_ceilings.items():
+    for budget_class, soft_target in expected_soft_targets.items():
         maximum = maxima.get(budget_class)
+        distribution = governance.get("distributions", {}).get(budget_class, {}) if isinstance(governance, dict) else {}
+        if (budget_class == "utility" and maximum is None
+                and distribution.get("count") == 0 and distribution.get("max") is None):
+            # There is no special utility dispatch in the authored workload.
+            # Keep it explicitly unmeasured rather than inventing a passing maximum.
+            continue
         if (
             not isinstance(maximum, dict)
-            or maximum.get("capacity_ceiling") != ceiling
-            or maximum.get("evolution_target") != expected_evolution[budget_class]
+            or maximum.get("soft_target") != soft_target
+            or maximum.get("hard_ceiling") != expected_hard_ceilings[budget_class]
+            or maximum.get("within_hard_ceiling") is not True
         ):
             errors.append(
                 f"{GOVERNANCE_BUDGET_REPORT}: rendered context budget report "
@@ -1432,12 +1830,40 @@ def _normalized_document_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().casefold()
 
 
+def _layer3_cardinality_guidance_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in LAYER3_CARDINALITY_GUIDANCE_FILES:
+        path = root / relative
+        if not path.is_file():
+            continue
+        raw = path.read_text(encoding="utf-8")
+        normalized = _normalized_document_text(raw)
+        if any(
+            _normalized_document_text(fact) not in normalized
+            for fact in LAYER3_CARDINALITY_GUIDANCE_FACTS
+        ):
+            errors.append(
+                f"{relative}: Layer 3 cardinality guidance must state the exact "
+                "ordered-unique zero-to-three, fail-closed, never-truncate contract"
+            )
+        if any(pattern.search(raw) for pattern in SOFTENED_LAYER3_CARDINALITY_PATTERNS):
+            errors.append(
+                f"{relative}: Layer 3 cardinality guidance must not permit "
+                "risk-based exceptions to the hard maximum"
+            )
+    return errors
+
+
 def _document_path(path: Path) -> str:
     try:
         relative = path.relative_to(Path.home())
     except ValueError:
         return path.as_posix()
     return "~" if not relative.parts else f"~/{relative.as_posix()}"
+
+
+def _installer_agent_label(agent: str) -> str:
+    return "OpenAI API" if agent == "openai-api" else agent.title()
 
 
 def _expected_installation_matrix_rows() -> tuple[str, ...]:
@@ -1447,8 +1873,8 @@ def _expected_installation_matrix_rows() -> tuple[str, ...]:
     for agent in INSTALLER_AGENTS:
         if agent == "openai-api":
             rows.append(
-                "| OpenAI API | zip output only | "
-                "`dist/openai-api/zips/<profile>/` | none |"
+                f"| {_installer_agent_label(agent)} | zip output only | "
+                f"`dist/openai-api/zips/{RUNTIME_PROFILE}/` | none |"
             )
             continue
         for scope in SCOPE_ORDER:
@@ -1469,35 +1895,28 @@ def _expected_installation_matrix_rows() -> tuple[str, ...]:
                     _document_path(profile_path) if profile_path is not None else None
                 )
             rows.append(
-                f"| {HOST_LABELS[agent]} | `{scope}` | `{skill_target}` | "
+                f"| {_installer_agent_label(agent)} | `{scope}` | `{skill_target}` | "
                 f"{f'`{profile_target}`' if profile_target is not None else 'none'} |"
             )
     return tuple(rows)
 
 
 def _installation_matrix_rows(text: str) -> tuple[str, ...]:
-    heading = "## Host, Scope, And Default Targets"
-    start = text.find(heading)
-    if start < 0:
-        return ()
-    section = text[start + len(heading) :]
-    next_heading = re.search(r"(?m)^## ", section)
-    if next_heading is not None:
-        section = section[: next_heading.start()]
-    table_rows = [line.strip() for line in section.splitlines() if line.startswith("|")]
-    return tuple(table_rows[2:]) if len(table_rows) >= 2 else ()
+    for table in _markdown_tables(text):
+        data = table[1:]
+        if data and all(
+            len(row) == 4
+            and (row[1] in {"`project`", "`user`", "`admin`", "zip output only"})
+            for row in data
+        ):
+            return tuple(f"| {' | '.join(row)} |" for row in data)
+    return ()
 
 
 def _installation_contract_errors(root: Path) -> list[str]:
     """Validate docs projected from installers/changeforge_install.py."""
 
     errors: list[str] = []
-    if tuple(INSTALLER_AGENTS) != tuple(HOST_LABELS):
-        errors.append(
-            f"{INSTALL_CONTRACT_SOURCE}: supported hosts and documentation labels diverge"
-        )
-        return errors
-
     runtime_hosts = {agent for agent, _scope in SOURCE_SKILL_ROOTS}
     if runtime_hosts != set(INSTALLER_AGENTS) - {"openai-api"}:
         errors.append(
@@ -1521,101 +1940,40 @@ def _installation_contract_errors(root: Path) -> list[str]:
                 f"match {INSTALL_CONTRACT_SOURCE}"
             )
 
-    fact_requirements = {
-        "README.md": (
-            "Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.",
-            "Project scope requires `--target` with the project root.",
-        ),
-        "docs/QUICKSTART.md": (
-            "Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.",
-            "Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline support `project` and `user`.",
-            "OpenAI API produces zip files and has no installation scope.",
-            "Codex, Claude, and Copilot receive four native Agent Profile files; Cline and OpenAI API receive standard Skills only.",
-        ),
-        "docs/INSTALLATION.md": (
-            "Codex, Claude, and Copilot install the four static Agent Profiles.",
-            "Cline installs Skills without native Agent Profile files.",
-            "OpenAI API produces zip files only and has no runtime target.",
-            "For `project`, `--target` means the project root and is required.",
-            "For `user` or Codex `admin`, `--target` means an explicit Skill directory, not a project root.",
-            "An explicit user/admin Skill target does not relocate the host's default Agent Profile target.",
-            "Claude, Copilot, and Cline reject `admin` scope.",
-        ),
-    }
-    for relative, facts in fact_requirements.items():
-        path = root / relative
-        if not path.is_file():
-            continue
-        normalized = _normalized_document_text(path.read_text(encoding="utf-8"))
-        for fact in facts:
-            if _normalized_document_text(fact) not in normalized:
-                errors.append(
-                    f"{relative}: missing source-backed installation fact {fact} "
-                    f"(authority: {INSTALL_CONTRACT_SOURCE})"
-                )
     return errors
 
 
 def _required_content_errors(root: Path) -> list[str]:
     errors: list[str] = []
     requirements = {
-        "README.md": (
-            "Python 3.11",
-            "python3 -m pip install .",
-            "--dry-run",
-            "installers/doctor.py",
-            "engineering-control-plane",
-            "Unverified",
-            "Residual risk",
+        "docs/BUILD_PROFILES.md": (
+            "Foundation and Domain Skills never enter Host top-level discovery",
+            "Primary Professional routing happens once",
+            "stable, independent Primary Route",
         ),
-        "docs/QUICKSTART.md": (
-            "Python 3.11",
-            "--dry-run",
-            "installers/doctor.py",
-            "OpenAI API Zip Path",
-            "Submit A First Task",
-            "Expected outcome",
+        "docs/VALIDATION.md": (
+            "163-item projection once in a cleaned temporary directory",
+            "Route Once behavior",
+            *TEST_TIMEOUT_GUIDANCE_FACTS,
         ),
-        "docs/INSTALLATION.md": (
-            "--backup",
-            "--force",
-            "no automatic restore CLI",
-            "Troubleshooting And Recovery",
-            "dist/openai-api/zips/recommended/",
-        ),
-        "docs/USAGE.md": (
-            "Copyable Direct Task Request",
-            "Copyable Analyzed Work Request",
-            "Copyable Review-Only Request",
-            "Decisions That Stay With You",
-            "Final Handoff Contents",
+        "docs/SKILL_CONTENT_GOVERNANCE.md": (
+            "strict order",
+            "stable, independent Primary Route",
+            "Foundation is a capability-modifier layer",
+            "Domain is `modifier-only`",
         ),
     }
     for relative, phrases in requirements.items():
         path = root / relative
         if not path.is_file():
             continue
-        text = path.read_text(encoding="utf-8").casefold()
+        text = _normalized_document_text(path.read_text(encoding="utf-8"))
         for phrase in phrases:
-            if phrase.casefold() not in text:
+            if _normalized_document_text(phrase) not in text:
                 errors.append(f"{relative}: missing required documentation content {phrase}")
 
-    for relative in ("README.md", "docs/QUICKSTART.md", "docs/INSTALLATION.md"):
-        path = root / relative
-        if not path.is_file():
-            continue
-        text = path.read_text(encoding="utf-8").casefold()
-        for host in ("codex", "claude", "copilot", "cline", "openai-api"):
-            if host not in text:
-                errors.append(f"{relative}: missing supported host {host}")
-    support = root / "SUPPORT.md"
-    if support.is_file():
-        text = support.read_text(encoding="utf-8").casefold()
-        for host in ("codex", "claude", "copilot", "cline", "openai-api"):
-            if host not in text:
-                errors.append(f"SUPPORT.md: missing supported host {host}")
-
     errors.extend(_installation_contract_errors(root))
+    errors.extend(_layer3_cardinality_guidance_errors(root))
     return errors
 
 
@@ -1738,70 +2096,6 @@ def _core_projection_errors(
         except RuntimeError as exc:
             return [f"Core Model documentation contract is invalid: {exc}"]
     docs_contract = core_contracts["docs_contract"]
-    for projection in docs_contract["projections"]:
-        relative = projection["path"]
-        path = root / relative
-        if not path.is_file():
-            errors.append(f"{relative}: missing Core Model documentation projection")
-            continue
-        text = path.read_text(encoding="utf-8")
-        expected = docs_projection_block(core_contracts, projection)
-        body, outside, section_errors = _projection_section(
-            text, projection["section"]
-        )
-        errors.extend(f"{relative}: {error}" for error in section_errors)
-        if body is not None and body != expected:
-            errors.append(
-                f"{relative}: docs projection {projection['id']!r} must equal "
-                "the exact ordered Core Model rendering"
-            )
-        begin = (
-            "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: "
-            f"{projection['id']} -->"
-        )
-        end = (
-            "<!-- END CHANGEFORGE CORE DOCS PROJECTION: "
-            f"{projection['id']} -->"
-        )
-        if text.count(begin) != 1 or text.count(end) != 1:
-            errors.append(
-                f"{relative}: managed docs projection markers must each appear exactly once"
-            )
-        outside_folded = outside.casefold()
-        completion = core_contracts["completion_state"]
-        arrow_sources = [
-            *completion["statuses"],
-            *completion["fail_closed_rules"],
-        ]
-        arrow_expression = re.compile(
-            rf"(?im)^\s*(?:{'|'.join(re.escape(item) for item in arrow_sources)})"
-            r"\s*->"
-        )
-        if arrow_expression.search(outside):
-            errors.append(
-                f"{relative}: completion arrows are forbidden outside the managed projection"
-            )
-        for rule_id in completion["fail_closed_rules"]:
-            if rule_id.casefold() in outside_folded:
-                errors.append(
-                    f"{relative}: fail-closed rule {rule_id!r} is duplicated outside "
-                    "the managed projection"
-                )
-        field_declaration = re.compile(
-            r"(?i)\b(?:extra\s+)?(?:task(?:\s+contract(?:\s+v2)?)?|"
-            r"evidence(?:\s+ledger)?)\s+(?:fields?|schema|"
-            r"(?:also\s+)?includes?|adds?|requires?)\b"
-        )
-        if field_declaration.search(outside):
-            errors.append(
-                f"{relative}: Task or Evidence field declarations are forbidden "
-                "outside the managed projection"
-            )
-        if "runtime identity" in outside_folded:
-            errors.append(
-                f"{relative}: obsolete runtime identity is forbidden outside the "
-                "managed projection"
-            )
     for projection in docs_contract["context_budget_projections"]:
         relative = projection["path"]
         path = root / relative
@@ -1845,11 +2139,6 @@ def validate_docs_consistency(
             errors.append(f"missing required documentation: {relative}")
 
     markdown = _markdown_files(root)
-    if len(markdown) != EXPECTED_HUMAN_DOC_COUNT:
-        errors.append(
-            "human documentation boundary must contain exactly "
-            f"{EXPECTED_HUMAN_DOC_COUNT} files, found {len(markdown)}"
-        )
     for path in markdown:
         relative = path.relative_to(root).as_posix()
         text = path.read_text(encoding="utf-8")
@@ -1865,12 +2154,15 @@ def validate_docs_consistency(
         errors.extend(_shell_fence_placeholder_errors(root, path))
 
     errors.extend(_navigation_errors(root))
+    errors.extend(_generated_document_ownership_errors(root))
     errors.extend(_required_content_errors(root))
+    errors.extend(_runtime_surface_errors(root))
     errors.extend(_validation_path_consistency_errors(root))
     errors.extend(_retired_workflow_contract_errors(root))
     errors.extend(_volatile_fact_errors(root))
     errors.extend(_current_evidence_projection_errors(root))
-    errors.extend(_slash_invocation_errors(root))
+    errors.extend(_host_product_surface_errors(root))
+    errors.extend(_product_surface_errors(root))
     errors.extend(_release_process_errors(root))
 
     errors.extend(_core_projection_errors(root))
@@ -1897,9 +2189,9 @@ def validate_docs_consistency(
         if phrase.casefold() not in subagent_model.casefold():
             errors.append(f"docs/SUBAGENT_MODEL.md: missing {phrase}")
     authority_requirements = {
-        "docs/BUILD_PROFILES.md": ("27", "40", "190", "manifest"),
-        "docs/INSTALLATION.md": ("scripts/build.py --profile", "doctor", "manifest"),
-        "docs/RELEASE.md": ("scripts/package.py --profile", "Build profiles", "manifest"),
+        "docs/BUILD_PROFILES.md": ("26", "163", "Runtime", "manifest"),
+        "docs/INSTALLATION.md": ("scripts/build.py", "doctor", "manifest"),
+        "docs/RELEASE.md": ("scripts/package.py", "Runtime build", "manifest"),
     }
     for relative, phrases in authority_requirements.items():
         text = (root / relative).read_text(encoding="utf-8")

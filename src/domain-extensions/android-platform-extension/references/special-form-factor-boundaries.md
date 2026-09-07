@@ -16,21 +16,6 @@ Official Android Developers pages below were accessed on 2026-07-24.
 - For a multi-form-factor package, keep each target's artifact and validation
   result distinct even when source is shared.
 
-## Failure Proof
-
-- Android TV needs remote/focus, large-distance UI, playback, manifest, and TV
-  device evidence appropriate to the claimed tier.
-- Wear OS needs watch interaction, power, connectivity, lifecycle, packaging,
-  and physical or representative watch evidence.
-- Android Automotive needs the exact car surface, parked/driving restrictions,
-  allowed app category, distraction controls, and compatible vehicle evidence.
-
-## Required Record
-
-Return one row per form factor with support claim, source owner, manifest and
-artifact scope, target-specific obligations, devices exercised, unavailable
-evidence, non-inferences, and residual risk.
-
 ## Primary Sources
 
 - [TV app quality](https://developer.android.com/docs/quality-guidelines/tv-app-quality)

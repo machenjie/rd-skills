@@ -1,6 +1,5 @@
 id: go-shadowed-err
 category: code-elements
-complexity: L2
 focus:
   - Go error shadowing
   - transaction failure behavior

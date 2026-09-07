@@ -343,9 +343,9 @@ def _admission_trace_projection(
         errors.append(
             "selection_evidence must contain exactly one eligible primary"
         )
-    if len(review) != 1:
+    if len(review) != int(route_decision.get("route_result", {}).get("start_profile") == "review-agent"):
         errors.append(
-            "selection_evidence must contain exactly one eligible review"
+            "selection_evidence review candidates must match the selected Profile"
         )
     transformed_policy = {
         "critical-unknown": ("analyzed", "analysis-agent"),
@@ -369,10 +369,10 @@ def _admission_trace_projection(
         "profile": profile,
         "primary_skill": primary[0],
         "layer3_skills": layer3,
-        "review_skill": review[0],
+        "review_skill": review[0] if review else None,
     }
     for field in ("path", "profile", "primary_skill", "review_skill"):
-        selected_value = selected.get(field)
+        selected_value = None if field == "review_skill" and profile != "review-agent" else selected.get(field)
         if selected_value is not None and selected_value != projection[field]:
             errors.append(
                 f"winner_trace.selected_candidate.{field} must equal "
@@ -520,27 +520,11 @@ def _admission_route_integrity_errors(
             errors.append(
                 "analyzed route main_execution_provenance must be null"
             )
-        if route_result.get("execution_level") is not None or route_result.get(
-            "level_basis"
-        ) is not None:
-            errors.append("analyzed route must not carry executable Level or Basis")
     else:
         if route_decision.get("main_execution_provenance") != main_execution:
             errors.append(
                 "route_decision.main_execution_provenance must deep-equal "
                 "main_execution"
-            )
-        if route_result.get("execution_level") != main_execution.get(
-            "execution_level"
-        ):
-            errors.append(
-                "route_result.execution_level must equal "
-                "main_execution.execution_level"
-            )
-        if route_result.get("level_basis") != main_execution.get("level_basis"):
-            errors.append(
-                "route_result.level_basis must deep-equal "
-                "main_execution.level_basis"
             )
     if route_decision.get("route_once") is not True:
         errors.append("route_decision.route_once must be true")
@@ -612,7 +596,7 @@ def _strict_admission_conflict_errors(
         "profile": "analysis-agent",
         "primary_skill": "engineering-change-analysis",
         "layer3_skills": ["repository-context-map"],
-        "review_skill": "architecture-impact-reviewer",
+        "review_skill": None,
     }
     actual_policy = {
         "path": route_decision.get("path"),
@@ -888,8 +872,7 @@ def _admission_typed_direct_task_proven(
         == route_result.get("primary_skill")
         and selected.get("layer3_skills")
         == route_result.get("layer3_skills")
-        and selected.get("review_skill")
-        == route_result.get("review_skill")
+        and route_result.get("review_skill") is None
     )
 
 

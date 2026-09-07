@@ -1,6 +1,5 @@
 id: inheritance-vs-composition-decision
 category: structure
-complexity: L3
 focus:
   - inheritance vs composition
   - substitutability evidence

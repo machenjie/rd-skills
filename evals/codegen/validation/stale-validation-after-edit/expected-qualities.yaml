@@ -1,6 +1,5 @@
 id: stale-validation-after-edit
 category: validation
-complexity: L4
 focus:
   - validation freshness
   - stale validation detection

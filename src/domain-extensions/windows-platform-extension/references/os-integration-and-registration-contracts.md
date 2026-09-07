@@ -18,18 +18,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Respect user/default-app choice; registration does not authorize silently
   taking a default association.
 
-## Failure Proof
-
-- Exercise missing/stale registration, malformed URI/file input, bitness
-  mismatch, unavailable COM server, repair, upgrade, and partial uninstall.
-- Prove prior-version registrations are migrated or removed without deleting
-  unrelated user or machine state.
-
-## Required Record
-
-Return registration inventory, identity/scope, trust and bitness boundaries,
-migration/removal rules, failure behavior, installed-host evidence, and risk.
-
 ## Primary Sources
 
 - [Registry](https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry)

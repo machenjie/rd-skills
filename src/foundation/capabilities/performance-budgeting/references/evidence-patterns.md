@@ -10,7 +10,7 @@ Load this reference when closing threshold-authority, representative-workload, c
 | Measurement is comparable | Matched code/config/data/environment/state/window, instrumentation, repeated result or variance/noise account | Production contention and rare events are not inferred |
 | Capacity or recovery is bounded | Saturation/queue/pool behavior, accepted/rejected/degraded work, downstream limit, recovery or drain result | A different spike or outage shape may behave differently |
 | Unit cost is traceable | Owned cost unit, billing dimensions, retries/cache/egress/storage effects, scenario growth, approval boundary | Invoice accuracy and shared-cost allocation outside the inspected billing boundary are not proven |
-| Correctness is preserved | Output/state/error comparison, required work accounting, security/durability checks, rollback or degradation result | Performance evidence alone does not prove full functional compatibility |
+| Correctness is preserved | Output/state/error comparison, required work accounting, applicable security/durability checks, and proof of the selected enforcement or recovery control | Performance evidence alone does not prove full functional compatibility |
 | Exception is removable | Authority, impact, rationale, mitigation, revisit/expiry trigger, residual risk, removal validator | Owner execution and future removal are not guaranteed |
 
 Treat prior dashboards, traces, billing exports, load results, benchmark notes, task claims, and generated reports as selectors.

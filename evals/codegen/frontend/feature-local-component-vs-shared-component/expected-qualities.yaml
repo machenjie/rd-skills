@@ -1,6 +1,5 @@
 id: feature-local-component-vs-shared-component
 category: frontend
-complexity: L3
 focus:
   - feature-local component placement
   - hook and state scope

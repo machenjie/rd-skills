@@ -17,30 +17,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when typed confi
 
 ## Skill Role
 
-Define configuration as a typed, observable, reversible policy boundary. Prevent flags, modes, and overrides from becoming invariant bypasses, hidden strategy systems, or stale rollout mechanisms.
+Own typed, observable, reversible configuration; prevent invariant bypass.
 
 ## High-Value Rules
 
-- Define each configurable behavior's schema, values, owner, default, precedence, and read boundary from current source of truth.
-- Select consequence-derived defaults that fail closed unless an approved degradation design preserves protected invariants.
-- Reject invalid configuration before effect unless the selected degradation, alert, and rollback behavior is explicitly safe.
-- Reject switches that bypass domain, permission, tenant, transaction, encryption, audit, or compliance invariants.
-- Bound flags, modes, providers, and strategies by explicit semantics, owner, lifecycle, telemetry, and old/new behavior proof; avoid hidden registries.
-- When hot reload is required, validate before atomic publication and preserve current-state visibility and recovery to a known-good version.
-- Map config-driven wiring to affected source and validation, and require an owned cleanup decision for temporary configuration.
+- Bind typed source, values, owner, default, precedence, apply boundary, and effective state.
+- For protected invariants, use consequence-derived defaults, pre-effect validation, bounded variants, and atomic last-good recovery.
+- Load only the named output Reference.
 
 ## Anti-Patterns
 
-- Treating build-, deploy-, and runtime-time configuration as interchangeable hides when behavior can change.
-- Leaving precedence implicit makes code, file, environment, CLI, remote, tenant, experiment, and operator values nondeterministic.
-- Using test-friendly defaults in production silently changes safety behavior.
-- Publishing hot reloads before validation exposes partial or invalid state.
-- Creating untyped or ownerless flags leaves obsolete branches and unverifiable rollout state.
-- Packing unrelated strategies into one mode parameter creates an unbounded policy registry.
+- Local success lacks configuration evidence.
 
 ## Stop Conditions
 
-- Untyped config stale flags and vague mode switches bypass invariants create hidden strategy systems and make rollout rollback unsafe
+- Stop on invariant bypass or unsafe rollout/recovery.
 
 ## Output Contract
 

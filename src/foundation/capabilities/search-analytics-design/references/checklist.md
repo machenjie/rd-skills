@@ -7,5 +7,6 @@
 - For search, version mapping, analyzer, and non-model ranking changes and compare current segmented judgment cases plus failure behavior.
 - For semantic/vector retrieval, record the `ai-product-extension`-owned model/embedding selection, evaluation, and lifecycle acceptance; verify search-owned corpus, retrieval, permissions, freshness, fallback, and lineage integration.
 - For analytics, define grain, entity/event-time identity, dedupe, dimensions/measures, timezone/currency, correction/retraction, and source reconciliation.
-- Define in-place or versioned rebuild requirements from compatibility, reversibility, validation, fallback, containment or rollback, and cleanup evidence; assign actual cutover, backfill, and deployment execution to `data-migration-design` and `delivery-release-gate`.
+- Define in-place or versioned rebuild requirements from compatibility, reversibility, validation, fallback, containment or rollback, and cleanup evidence.
+- Assign actual cutover, backfill, and deployment execution to `data-migration-design` and `delivery-release-gate`.
 - Map authority, permission, freshness, relevance/metric, and rebuild claims to current evidence, proof limits, and named owners.

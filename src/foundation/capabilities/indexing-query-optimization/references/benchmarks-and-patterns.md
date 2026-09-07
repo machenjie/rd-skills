@@ -40,8 +40,8 @@ After adding an index:
 | Method | Query pattern | Performance at depth | Stability | Use when |
 | --- | --- | --- | --- | --- |
 | Offset | `LIMIT 20 OFFSET N` | O(N), degrades as page depth grows | Unstable under inserts/deletes | Small tables or required page-number navigation. |
-| Keyset or seek | `WHERE (ts, id) < ($last_ts, $last_id)` | O(log N) with matching index | Stable with deterministic tie-breaker | Large tables, infinite scroll, API cursors. |
-| Opaque cursor | Encoded keyset values | Same as keyset | Stable if cursor includes tie-breaker | Public APIs that should hide physical columns. |
+| Keyset or seek | `WHERE (ts, id) < ($last_ts, $last_id)` | O(log N) with matching index | Deterministic order requires a tie-breaker; cross-page consistency also needs immutable ordering keys, a snapshot/as-of boundary, or explicit update/dedup/refresh semantics | Large tables, infinite scroll, API cursors. |
+| Keyset-backed opaque cursor | Opaque token carries accepted keyset state; other opaque cursors may encode offset or snapshot state | Depends on the actual predicate and index, not token opacity | Inherits the underlying keyset and mutation/snapshot contract; opacity and a tie-breaker alone do not prevent repeated or omitted rows | Public APIs that should hide physical columns. |
 | Deferred join | Join full rows after selecting ordered ids | Better than plain offset | Still unstable under writes | Legacy page-number UX when keyset is not feasible. |
 ## Evidence Patterns
 - Slow-query repair: telemetry identifies the normalized query, plan shows scan/sort cost, proposed index maps to one query, and before/after plan proves the improvement.
@@ -53,7 +53,7 @@ After adding an index:
 - Index on every filterable column with no named query.
 - Index proposed from a plan on a 100-row dev table while production has millions of rows.
 - Offset pagination on deep pages with no table-size disclosure.
-- Low-cardinality leading column on a broad query.
+- Leading index keys chosen from cardinality alone without showing how predicates, ordering, engine behavior, and workload justify the access path.
 - N+1 query fan-out treated as an index-only issue.
 - Dropping an index after a short or non-representative quiet period.
 - Blocking index build on a hot production table without lock evidence.

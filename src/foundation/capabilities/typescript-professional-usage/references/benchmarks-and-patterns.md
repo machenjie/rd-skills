@@ -6,7 +6,7 @@ This contract focuses TypeScript review on erased types, structural assignabilit
 
 | TypeScript facet | Facts to establish | Accident signal |
 | --- | --- | --- |
-| Runtime boundary | Producer, trust/version boundary, parser/schema owner, accepted and rejected shapes, error mapping, and persisted/historic data | A type annotation or generated interface is treated as validation |
+| Runtime boundary | Producer, trust/version boundary, existing generation/storage/prior parsing guarantees and their limits, parser/schema owner for unresolved validation, accepted and rejected shapes, error mapping, and persisted/historic data | A type annotation or generated interface is treated as validation, or a persisted/generated label alone triggers redundant parsing |
 | Structural typing | Required capabilities, excess properties, optional-property presence, undefined, variance, nominal identity, discriminant, and exactness need | Assignability accepts an authority-bearing or semantically different value that happens to share fields |
 | Unsafe escape | Location and scope of `any`, assertion, non-null, suppression, unchecked index, or catch value plus safer alternative and cleanup trigger | The escape crosses API, storage, message, generated, or public boundaries and silently propagates |
 | Async and cancellation | Promise owner, rejection observation, AbortSignal/deadline propagation, stale completion, cleanup, and state transition | Floating or late work mutates state after cancellation or a broad catch hides failure |

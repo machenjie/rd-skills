@@ -22,32 +22,13 @@ automatic_routing_policy:
       review_skill: architecture-impact-reviewer
       reason: implementation-owner-conflict
 professional_skills:
-  - name: routing-quality-review
-    routing_mode: not-automatic
-    required_expertise_tags: ["foundation-engineering-workflow", "foundation-repository-intelligence"]
-    path: "src/professional-skills/routing-quality-review"
-    role_support: ["review-agent"]
-    trigger_signals: ["rd-skills routing registry or router change", "route fixture owner conflict", "independently assigned post-authoring review of a changed rd-skills routing asset"]
-    anti_trigger_signals: ["ordinary product engineering task", "global re-routing from inside a dispatched task agent", "no changed rd-skills routing asset or route-owner conflict to review"]
-    required_inputs: ["four Skill registries", "compact routing index", "changed routing fixtures"]
-    output_contract: ["routing findings", "trigger and anti-trigger conflicts", "coverage gaps", "validation results"]
-    escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
-    reference_index:
-      - path: "references/routing-maintenance-checklist.md"
-        type: decision-checklist
-        load_when: "routing review detects owner, trigger, or fixture conflicts"
-        do_not_load_when: "routing registry and fixtures are unchanged or already agree"
-        required_by: ["review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
-    layer3_candidates: []
-    task_routable: false
   - name: change-intake-compiler
     routing_mode: evidence-only
     required_expertise_tags: ["foundation-intake-requirements"]
     path: "src/professional-skills/change-intake-compiler"
     role_support: ["analysis-agent"]
     trigger_signals: ["ambiguous request", "missing desired behavior"]
-    anti_trigger_signals: ["accepted Engineering Brief already exists", "no-repo direct-answer mode"]
+    anti_trigger_signals: ["accepted Engineering Brief already exists", "questions fully determined by user-supplied facts that require no repository evidence or engineering intent compilation"]
     required_inputs: ["request summary", "observed current behavior"]
     output_contract: ["minimal intent slice with current behavior, desired behavior, observable acceptance or completion signal, constraints, non-goals, and affected surfaces", "assumptions", "open questions"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -83,10 +64,10 @@ professional_skills:
     required_expertise_tags: ["foundation-architecture-design", "foundation-domain-modeling", "foundation-engineering-workflow", "foundation-intake-requirements", "foundation-quality-testing", "foundation-repository-intelligence"]
     path: "src/professional-skills/engineering-change-analysis"
     role_support: ["analysis-agent"]
-    trigger_signals: ["implementation-preparation for source-backed desired-behavior, affected-consumer, and verification analysis before implementation or repair", "diagnosis-only for verified cause analysis", "source-backed-answer for a repository-dependent engineering question"]
-    anti_trigger_signals: ["eligible bounded Direct Task", "source-free question", "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis", "module-boundary placement decision", "dependency-direction placement decision"]
-    required_inputs: ["explicit mode: implementation-preparation, diagnosis-only, or source-backed-answer", "user request or question", "bounded repository read scope and known constraints", "current source and test evidence discovered within the assigned scope"]
-    output_contract: ["implementation-preparation result defined by references/implementation-preparation.md with one initial Analysis or protected-decision Delta Analysis", "diagnosis-only result defined by references/diagnosis-only.md", "source-backed-answer result defined by references/source-backed-answer.md", "source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`"]
+    trigger_signals: ["implementation-preparation when the user requests design or evidence leaves an important implementation decision unresolved", "diagnosis-only for verified cause analysis", "source-backed-answer for a repository-dependent engineering question"]
+    anti_trigger_signals: ["implementation whose remaining unknowns are local owner, file, test, or caller discovery", "source-free question", "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis", "module-boundary placement decision", "dependency-direction placement decision"]
+    required_inputs: ["explicit mode: implementation-preparation, diagnosis-only, or source-backed-answer", "user request or question", "initial source context and known constraints", "current source and test evidence discovered as needed"]
+    output_contract: ["implementation-preparation result defined by references/implementation-preparation.md for the specific unresolved question", "diagnosis-only result defined by references/diagnosis-only.md", "source-backed-answer result defined by references/source-backed-answer.md", "source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
@@ -131,6 +112,39 @@ professional_skills:
         do_not_load_when: "engineering change analysis is executing another mode"
         required_by: ["analysis-agent"]
         required_output: ["mode-result", "proof-limit"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/checklist.md:
+          conflicts_with: []
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/diagnosis-only.md:
+          conflicts_with: []
+          decision_problem: "diagnosis-only"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/evidence-patterns.md:
+          conflicts_with: []
+          decision_problem: "evidence-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/implementation-preparation.md:
+          conflicts_with: []
+          decision_problem: "implementation-preparation"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/source-backed-answer.md:
+          conflicts_with: []
+          decision_problem: "source-backed-answer"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["repository-context-map", "consumer-impact-analysis", "data-side-effect-flow-tracing", "failure-diagnosis", "release-rollback", "api-contract-design", "version-compatibility", "data-migration-design", "transaction-consistency", "concurrency-control", "failure-contract-design", "test-strategy", "permission-boundary-modeling", "threat-modeling", "web-security", "degradation-circuit-breaking", "observability", "idempotency-retry-design", "package-dependency-management", "minimal-correct-implementation", "refactoring", "web3-product-extension", "ai-product-extension", "bigdata-product-extension", "iot-embedded-extension", "payment-trading-extension", "low-level-systems-extension", "android-platform-extension", "cloud-platform-extension", "cross-platform-client-extension", "ios-ipados-platform-extension", "linux-desktop-platform-extension", "macos-platform-extension", "windows-platform-extension", "repository-impact-inspection", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: acceptance-criteria-builder
@@ -146,7 +160,7 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 draft or review needs a compact coverage check for actor, precondition, action, result, normal, invalid, boundary, permission, regression, compatibility, and evidence"
+        load_when: "A bounded draft or review needs a compact coverage check for actor, precondition, action, result, normal, invalid, boundary, permission, regression, compatibility, and evidence"
         do_not_load_when: "The body quality gate is enough or evidence mapping/sign-off freshness is material"
         required_by: ["analysis-agent"]
         required_output: ["checklist-result", "residual-risk"]
@@ -169,10 +183,10 @@ professional_skills:
     required_expertise_tags: ["foundation-architecture-design", "foundation-delivery-platform", "foundation-engineering-workflow", "foundation-reliability-operations"]
     path: "src/professional-skills/task-dag-planner"
     role_support: ["analysis-agent"]
-    trigger_signals: ["explicit Task DAG request with accepted Engineering Brief", "accepted Brief has multiple tasks with a dependency parallel benefit integration need or release order"]
-    anti_trigger_signals: ["single bounded edit", "task DAG already accepted", "unanalysed change request"]
-    required_inputs: ["accepted Engineering Brief", "source evidence", "semantic and Primary Professional Skill boundaries", "resource and minimum sufficient Review Boundaries"]
-    output_contract: ["Task Capsules with one Primary Professional Skill each", "dependency edges", "integration order", "minimum sufficient Review Boundaries preserving required Review Skills and Specialist obligations"]
+    trigger_signals: ["explicit Task DAG request", "multiple tasks with a real dependency parallel benefit integration need or release order"]
+    anti_trigger_signals: ["single bounded edit", "existing dependency plan already resolves coordination", "no useful decomposition or dependency question"]
+    required_inputs: ["clear goal and important decisions", "current source evidence", "work owners and dependency boundaries", "write coordination requirements"]
+    output_contract: ["bounded tasks with needed expertise", "actual dependency edges", "integration order", "validation and unresolved questions"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
@@ -195,8 +209,8 @@ professional_skills:
         required_output: ["evidence-record", "proof-limit", "residual-risk"]
       - path: "references/task-contract-patterns.md"
         type: benchmark-pattern
-        load_when: "Nodes must be executable by a fresh agent or placeholder tasks need replacement"
-        do_not_load_when: "L1/L2 handoff already has exact files, command, and residual risk"
+        load_when: "Nodes must be executable by a fresh implementer or placeholder tasks need replacement"
+        do_not_load_when: "Existing task contracts already name exact scope, behavior, validation, and residual risk"
         required_by: ["analysis-agent"]
         required_output: ["option-comparison", "selected-approach"]
     layer3_candidates: ["task-dag-decomposition", "release-rollback"]
@@ -226,7 +240,7 @@ professional_skills:
     path: "src/professional-skills/engineering-artifact-review"
     role_support: ["review-agent"]
     trigger_signals: ["ordinary Engineering Brief Task Plan acceptance or contract artifact needs independent review", "pre-implementation decision affects downstream tasks"]
-    anti_trigger_signals: ["actual implementation diff review", "ordinary Direct Task", "high-risk Engineering Brief; use `high-risk-design-review`", "release deployment or migration readiness; use `delivery-release-gate`"]
+    anti_trigger_signals: ["actual implementation diff review", "bounded implementation task with no separate decision artifact", "high-risk Engineering Brief specialist review", "release deployment or migration readiness approval"]
     required_inputs: ["acceptance", "decision boundary", "actual engineering artifact", "source evidence"]
     output_contract: ["verdict and severity-ranked findings", "reviewed, unreviewed, and unverified scope", "owner, dependency, first-slice, validation, and rollback assessment", "downstream impact and residual risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -234,7 +248,7 @@ professional_skills:
       - path: "references/review-checklist.md"
         type: decision-checklist
         load_when: "ordinary pre-implementation artifact decisions have downstream impact"
-        do_not_load_when: "the task is implementation diff review, a Direct Task, high-risk design, or release/deployment/migration readiness"
+        do_not_load_when: "the task is implementation diff review, a bounded implementation task with no separate decision artifact, high-risk design, or release/deployment/migration readiness"
         required_by: ["review-agent"]
         required_output: ["checklist-result", "residual-risk"]
     layer3_candidates: ["code-review"]
@@ -330,15 +344,33 @@ professional_skills:
       review-agent: ["architecture verdict", "boundary findings", "unreviewed structural risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
-      - path: "references/architecture-output-and-gates.md"
+      - path: "references/placement-and-ownership.md"
         type: targeted
-        load_when: "L3-L5 analysis or review needs mode-specific closure and targeted gates for selected placement, consumer/data, topology/enforcement, or reversibility risk"
-        do_not_load_when: "The root result is sufficient and no selected risk needs the extended proof contract"
+        load_when: "Structure responsibility ownership reuse or placement remains open"
+        do_not_load_when: "Owner public/private surface and smallest viable placement are fixed by current evidence"
         required_by: ["analysis-agent", "review-agent"]
-        required_output: ["gate-decision", "residual-risk"]
+        required_output: ["boundary-decision", "selected-approach", "residual-risk"]
+      - path: "references/consumer-and-data-impact.md"
+        type: targeted
+        load_when: "Public or indirect consumer or authoritative-data impact remains open"
+        do_not_load_when: "No consumer contract compatibility versioning migration or data-owner boundary changes"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "residual-risk"]
+      - path: "references/dependency-topology-and-enforcement.md"
+        type: targeted
+        load_when: "Dependency direction topology or durable enforcement remains open"
+        do_not_load_when: "Current source edges topology owner and enforcement evidence already fix the boundary"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["boundary-decision", "gate-decision", "validation-plan", "residual-risk"]
+      - path: "references/reversibility-evolution-and-proof-limits.md"
+        type: targeted
+        load_when: "Reversal coexistence migration evolution or architecture proof limits remain open"
+        do_not_load_when: "Current evidence fixes reversibility evolution residual risk and next owner"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit", "residual-risk"]
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 mode needs compact checks for its triggered placement, ownership, dependency, consumer, data, topology, or reversibility risk"
+        load_when: "A bounded mode needs compact checks for its triggered placement, ownership, dependency, consumer, data, topology, or reversibility risk"
         do_not_load_when: "The root contract is enough or targeted proof fields are required"
         required_by: ["analysis-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
@@ -354,6 +386,39 @@ professional_skills:
         do_not_load_when: "The change is owner-internal with no structural impact or current evidence already fixes placement"
         required_by: ["analysis-agent", "review-agent"]
         required_output: ["selected-approach", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/placement-and-ownership.md:
+          conflicts_with: []
+          decision_problem: "placement-and-ownership"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/consumer-and-data-impact.md:
+          conflicts_with: []
+          decision_problem: "consumer-and-data-impact"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dependency-topology-and-enforcement.md:
+          conflicts_with: []
+          decision_problem: "dependency-topology-and-enforcement"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/reversibility-evolution-and-proof-limits.md:
+          conflicts_with: []
+          decision_problem: "reversibility-evolution-and-proof-limits"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/checklist.md:
+          conflicts_with: []
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["module-boundary-design", "implementation-structure-design", "design-pattern-selection", "architecture-tradeoff-analysis", "consumer-impact-analysis", "architecture-enforcement-tooling", "architecture-style-selection", "event-driven-architecture", "extensibility-design", "layered-architecture-design", "microservice-splitting", "technology-stack-selection"]
     task_routable: true
   - name: data-api-contract-changer
@@ -366,10 +431,10 @@ professional_skills:
     required_inputs: ["contract evidence", "compatibility requirements"]
     required_inputs_by_role:
       analysis-agent: ["consumer inventory", "deployed versions", "current schema or API behavior"]
-      task-agent: ["accepted contract decision", "producer", "consumer", "migration", "rollback checks"]
+      task-agent: ["accepted contract decision", "producer", "consumer", "migration", "recovery checks"]
     output_contract: ["contract transition", "consumer impact", "compatibility evidence"]
     output_contract_by_role:
-      analysis-agent: ["contract transition", "consumer impact", "migration and rollback model"]
+      analysis-agent: ["contract transition", "consumer impact", "migration and recovery model"]
       task-agent: ["producer and consumer changes", "compatibility evidence", "unverified consumers"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
@@ -413,16 +478,46 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 review needs a compact frontend inventory for component, route, form, state, API, accessibility, security, performance, or tests"
+        load_when: "A bounded review needs a compact frontend inventory for component, route, form, state, API, accessibility, security, performance, or tests"
         do_not_load_when: "The inline quality gate is enough or deeper gate/evidence mapping is required"
         required_by: ["task-agent"]
         required_output: ["checklist-result", "residual-risk"]
-      - path: "references/frontend-output-and-gates.md"
+      - path: "references/component-placement-and-reuse-gates.md"
         type: targeted
-        load_when: "Drafting or reviewing placement decisions, failure contracts, a11y/security gates, same-pattern scans, state-to-validation maps, or closure evidence"
-        do_not_load_when: "The body output contract and minimal verification are sufficient for the risk"
+        load_when: "Component, shared UI, hook, store, client, or reuse ownership remains open"
+        do_not_load_when: "Owner, current consumers, and reuse decision are fixed"
         required_by: ["task-agent"]
-        required_output: ["gate-decision", "residual-risk"]
+        required_output: ["boundary-decision", "selected-approach", "residual-risk"]
+      - path: "references/state-ownership-and-api-failure-gates.md"
+        type: targeted
+        load_when: "State ownership or API, failure, or retry contract remains open"
+        do_not_load_when: "Current contract fixes states, failures, recovery, and retry"
+        required_by: ["task-agent"]
+        required_output: ["decision-record", "failure-decision", "residual-risk"]
+      - path: "references/accessibility-closure-gates.md"
+        type: targeted
+        load_when: "Frontend accessibility closure decision remains open"
+        do_not_load_when: "Accepted accessibility contract already fixes the implementation"
+        required_by: ["task-agent"]
+        required_output: ["gate-decision", "validation-plan", "proof-limit"]
+      - path: "references/frontend-security-closure-gates.md"
+        type: targeted
+        load_when: "HTML, content, token, script, or browser-storage security decision remains open"
+        do_not_load_when: "No frontend security boundary changes"
+        required_by: ["task-agent"]
+        required_output: ["gate-decision", "validation-plan", "residual-risk"]
+      - path: "references/frontend-quality-and-validation-evidence.md"
+        type: evidence-pattern
+        load_when: "State, testability, reliability, performance, or quality claim needs proof"
+        do_not_load_when: "No changed frontend quality claim awaits validation"
+        required_by: ["task-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/same-pattern-scan-and-handoff-evidence.md"
+        type: evidence-pattern
+        load_when: "Same-pattern, tool-boundary, or final-handoff evidence is required"
+        do_not_load_when: "No scan or closure claim remains"
+        required_by: ["task-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
       - path: "references/index.md"
         type: index
         load_when: "competing frontend change builder references require dependency, conflict, or output-fragment selection"
@@ -447,6 +542,39 @@ professional_skills:
         do_not_load_when: "No visual reference is supplied, or visual polish and redesign do not require matching one"
         required_by: ["task-agent"]
         required_output: ["proof-limit", "selected-approach", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/component-placement-and-reuse-gates.md:
+          conflicts_with: []
+          decision_problem: "component-placement-and-reuse-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-ownership-and-api-failure-gates.md:
+          conflicts_with: []
+          decision_problem: "state-ownership-and-api-failure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-closure-gates.md:
+          conflicts_with: []
+          decision_problem: "accessibility-closure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/frontend-security-closure-gates.md:
+          conflicts_with: []
+          decision_problem: "frontend-security-closure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/frontend-quality-and-validation-evidence.md:
+          conflicts_with: []
+          decision_problem: "frontend-quality-and-validation-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/same-pattern-scan-and-handoff-evidence.md:
+          conflicts_with: []
+          decision_problem: "same-pattern-scan-and-handoff-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["page-component-decomposition", "state-management-design", "frontend-testing", "form-validation-design", "interaction-state-modeling", "typescript-professional-usage", "frontend-api-integration", "routing-navigation-design", "accessibility-inclusive-design", "web-platform-professional-usage", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: backend-change-builder
@@ -487,7 +615,7 @@ professional_skills:
         required_output: ["boundary-decision", "residual-risk"]
       - path: "references/professional-modes.md"
         type: mode-contract
-        load_when: "L3+ implementation or accepted-finding repair needs mode-specific proof and ownership limits"
+        load_when: "implementation or accepted-finding repair needs mode-specific proof and ownership limits"
         do_not_load_when: "The root contract determines implementation evidence or the task is still diagnosis/independent review"
         required_by: ["task-agent"]
         required_output: ["mode-result", "proof-limit"]
@@ -497,6 +625,29 @@ professional_skills:
         do_not_load_when: "No runtime/resource tradeoff is material or current system evidence already fixes the mechanism"
         required_by: ["task-agent"]
         required_output: ["selected-approach", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/backend-output-and-gates.md:
+          conflicts_with: []
+          decision_problem: "backend-output-and-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/proactive-triggers.md:
+          conflicts_with: []
+          decision_problem: "proactive-triggers"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/professional-modes.md:
+          conflicts_with: []
+          decision_problem: "professional-modes"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["service-business-logic", "domain-object-identification", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "permission-boundary-modeling", "authentication-authorization", "regression-testing", "logging-error-handling", "message-queue-design", "observability", "failure-diagnosis", "failure-contract-design", "implementation-structure-design", "design-pattern-selection", "minimal-correct-implementation", "go-professional-usage", "java-jvm-professional-usage", "kotlin-professional-usage", "csharp-dotnet-professional-usage", "python-professional-usage", "language-idiom-enforcement", "language-performance-safety", "ai-product-extension", "payment-trading-extension", "low-level-systems-extension", "cloud-platform-extension", "windows-platform-extension", "async-job-design", "controller-api-implementation", "dependency-wiring-lifecycle", "domain-logic-implementation", "repository-persistence", "nodejs-runtime-professional-usage", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: data-middleware-change-builder
@@ -510,7 +661,7 @@ professional_skills:
     required_inputs: ["source of truth evidence", "failure requirements"]
     required_inputs_by_role:
       analysis-agent: ["access patterns", "consistency model", "current read, write, and recovery evidence"]
-      task-agent: ["accepted state transition", "migration", "replay", "rollback checks"]
+      task-agent: ["accepted state transition", "migration", "replay", "recovery checks"]
     output_contract: ["state-ownership decision", "stateful boundary changes", "recovery risk"]
     output_contract_by_role:
       analysis-agent: ["state-ownership decision", "consistency, migration, and recovery model"]
@@ -519,7 +670,7 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 review needs checks for source of truth, consistency, access patterns, indexes, cache, queues, search, storage, migrations, lifecycle, observability, and evidence"
+        load_when: "A bounded review needs checks for source of truth, consistency, access patterns, indexes, cache, queues, search, storage, migrations, lifecycle, observability, and evidence"
         do_not_load_when: "The inline quality gate is enough or detailed evidence/recovery patterns are required"
         required_by: ["analysis-agent", "task-agent"]
         required_output: ["checklist-result", "residual-risk"]
@@ -564,7 +715,7 @@ professional_skills:
       - path: "references/checklist.md"
         type: decision-checklist
         load_when: "Closing or reviewing an external integration change needs provider-contract, timeout, retry/backoff, circuit-breaker, idempotency, webhook/replay, credential, reconciliation, test, and monitoring checks"
-        do_not_load_when: "The inline Skill quality gate is sufficient for an L1 read or a deeper capability reference already covers the same checklist with task-specific detail"
+        do_not_load_when: "The inline Skill quality gate is sufficient for an read or a deeper capability reference already covers the same checklist with task-specific detail"
         required_by: ["analysis-agent", "task-agent"]
         required_output: ["checklist-result", "validation-plan"]
       - path: "references/index.md"
@@ -597,7 +748,7 @@ professional_skills:
     output_contract: ["validation strategy", "covered behavior", "coverage verdict"]
     output_contract_by_role:
       analysis-agent: ["validation strategy", "acceptance-to-signal mapping", "uncovered acceptance"]
-      task-agent: ["proving test change", "covered behavior", "remaining regression risk"]
+      task-agent: ["current check results and any necessary test change", "covered behavior", "remaining regression risk"]
       review-agent: ["coverage verdict", "uncovered changed behavior", "stale or missing proof"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
@@ -625,45 +776,45 @@ professional_skills:
         do_not_load_when: "No test-structure decision exists"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["validation-plan", "proof-limit"]
-    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing"]
+    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing", "bigdata-product-extension"]
     task_routable: true
   - name: security-privacy-gate
     routing_mode: evidence-only
     required_expertise_tags: ["foundation-backend-engineering", "foundation-domain-modeling", "foundation-security-privacy", "specialty-identity-access-control"]
     path: "src/professional-skills/security-privacy-gate"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
-    trigger_signals: ["proved trust, privilege, permission, privacy, credential, or secret boundary change with a reachable abuse or disclosure path", "credential or session lifecycle behavior change"]
+    trigger_signals: ["proved trust, privilege, permission, credential, or secret boundary change with a reachable abuse or disclosure path", "credential or session lifecycle behavior change", "evidenced personal-data purpose, processing, retention, deletion, or other lifecycle change with a concrete privacy consequence"]
     anti_trigger_signals:
-      - "no trust boundary impact"
+      - "no security boundary or privacy lifecycle impact"
       - "self review request"
-      - "internal refactor with evidence that credential and session lifecycle behavior is unchanged"
+      - "internal refactor with evidence that security controls and credential, session, and privacy lifecycle behavior are unchanged"
       - "reliability-only failure with no abuse or privacy risk"
-      - "input shape change with no security sink"
+      - "input shape change with no security sink or privacy lifecycle consequence"
       - "scanner report organization without a security verdict"
       - "security terminology, a permission API, path mutability, or future replacement possibility without a proved trust, privilege, secret, or privacy boundary change"
       - "bounded same-principal non-sensitive local access with no privilege elevation or less-trusted writer"
-    required_inputs: ["acceptance", "trust boundary summary"]
+    required_inputs: ["acceptance", "security boundary or privacy lifecycle summary"]
     required_inputs_by_role:
-      analysis-agent: ["affected assets", "actors", "entry points", "sinks", "current control evidence"]
-      task-agent: ["accepted control decision", "denied-path and abuse-case checks"]
-      review-agent: ["changed trust boundary", "exploit-relevant evidence"]
-    output_contract: ["abuse-path model", "trust-boundary changes", "security verdict"]
+      analysis-agent: ["affected assets or personal-data flows", "actors", "security paths or lifecycle consequences", "current control evidence"]
+      task-agent: ["accepted control decision", "applicable denied-path, abuse-case, or privacy lifecycle checks"]
+      review-agent: ["changed security or privacy behavior", "exploit-relevant or purpose/lifecycle evidence for the selected claim"]
+    output_contract: ["security-path or privacy-lifecycle model", "control changes", "security/privacy verdict"]
     output_contract_by_role:
-      analysis-agent: ["abuse-path model", "control strategy", "unknown exposure"]
-      task-agent: ["trust-boundary changes", "denied-case evidence", "unverified exposure"]
-      review-agent: ["security verdict", "reachable findings", "residual exposure"]
+      analysis-agent: ["security-path or privacy-lifecycle model", "control strategy", "unknown risk"]
+      task-agent: ["control changes", "applicable denial or lifecycle evidence", "unverified risk"]
+      review-agent: ["security/privacy verdict", "evidenced findings", "residual risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 mode needs compact checks for its triggered authorization, input/output, secret, dependency, privacy, cloud, AI, or tool risk"
+        load_when: "A bounded mode needs compact checks for its triggered authorization, input/output, secret, dependency, privacy, cloud, AI, or tool risk"
         do_not_load_when: "The root gate is enough or mode-specific closure and targeted proof are required"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
       - path: "references/evidence-patterns.md"
         type: evidence-pattern
         load_when: "Closure depends on command/report artifacts, exit code, denied-case proof, scanner evidence, sandbox classification, freshness, or proof limits"
-        do_not_load_when: "No selected security claim depends on runtime evidence or the root contract is sufficient"
+        do_not_load_when: "No selected security or privacy claim depends on runtime evidence or the root contract is sufficient"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["evidence-record", "proof-limit", "residual-risk"]
       - path: "references/index.md"
@@ -674,8 +825,8 @@ professional_skills:
         required_output: ["reference-selection"]
       - path: "references/security-output-and-gates.md"
         type: targeted
-        load_when: "L3-L5 work needs mode-specific closure and targeted gates for a selected authorization, abuse, secret, dependency, privacy, cloud, AI, or tool-authority risk"
-        do_not_load_when: "A compact L1/L2 result is sufficient and no selected risk needs the extended proof contract"
+        load_when: "work needs mode-specific closure and targeted gates for a selected authorization, abuse, secret, dependency, privacy, cloud, AI, or tool-authority risk"
+        do_not_load_when: "A compact result is sufficient and no selected risk needs the extended proof contract"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["gate-decision", "residual-risk"]
     layer3_candidates: ["threat-modeling", "permission-boundary-modeling", "authentication-authorization", "input-validation", "web-security", "secret-configuration-security", "idempotency-retry-design", "regression-testing", "payment-trading-extension", "ai-product-extension", "authentication-security", "dependency-vulnerability-scanning", "privacy-data-lifecycle", "cloud-platform-extension", "tenant-isolation", "cryptography-key-lifecycle", "audit-evidence-integrity"]
@@ -707,7 +858,7 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 mode needs compact checks for the triggered objective, telemetry, alert, dashboard, recovery, or runbook risk"
+        load_when: "A bounded mode needs compact checks for the triggered objective, telemetry, alert, dashboard, recovery, or runbook risk"
         do_not_load_when: "The root contract is enough or mode-specific closure and targeted proof are required"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
@@ -725,8 +876,8 @@ professional_skills:
         required_output: ["reference-selection"]
       - path: "references/reliability-output-and-gates.md"
         type: targeted
-        load_when: "L3-L5 work needs mode-specific closure and targeted gates for a selected objective, alert, resilience, telemetry, capacity/cost, recovery, or incident risk"
-        do_not_load_when: "A compact L1/L2 result is sufficient and no selected risk needs the extended proof contract"
+        load_when: "work needs mode-specific closure and targeted gates for a selected objective, alert, resilience, telemetry, capacity/cost, recovery, or incident risk"
+        do_not_load_when: "A compact result is sufficient and no selected risk needs the extended proof contract"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["gate-decision", "residual-risk"]
       - path: "references/solution-optimality.md"
@@ -757,7 +908,7 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk"
+        load_when: "A bounded mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk"
         do_not_load_when: "The root contract is enough or targeted proof fields are required"
         required_by: ["task-agent", "review-agent"]
         required_output: ["checklist-result", "validation-plan"]
@@ -769,7 +920,7 @@ professional_skills:
         required_output: ["reference-selection"]
       - path: "references/logging-output-and-gates.md"
         type: targeted
-        load_when: "L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk"
+        load_when: "implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk"
         do_not_load_when: "The root result is sufficient and no selected risk needs the extended proof contract"
         required_by: ["task-agent", "review-agent"]
         required_output: ["gate-decision", "residual-risk"]
@@ -802,14 +953,14 @@ professional_skills:
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "bounded L2 release checks remain unresolved"
+        load_when: "bounded release checks remain unresolved"
         do_not_load_when: "mode-specific closure or extended proof is required"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
       - path: "references/delivery-output-and-gates.md"
         type: targeted
-        load_when: "L3-L5 release closure needs extended risk gates"
-        do_not_load_when: "compact L1-L2 release proof is sufficient"
+        load_when: "release closure needs extended risk gates"
+        do_not_load_when: "compact release proof is sufficient"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["gate-decision", "residual-risk"]
       - path: "references/index.md"
@@ -857,7 +1008,7 @@ professional_skills:
         required_output: ["reference-selection"]
       - path: "references/review-output-and-gates.md"
         type: targeted
-        load_when: "L5 review needs exhaustive schema, quality gates, handoff routing, or repair/re-review semantics"
+        load_when: "review needs exhaustive schema, quality gates, handoff routing, or repair/re-review semantics"
         do_not_load_when: "A compact severity finding list is sufficient"
         required_by: ["review-agent"]
         required_output: ["gate-decision", "residual-risk"]
@@ -867,7 +1018,30 @@ professional_skills:
         do_not_load_when: "The issue is already a concrete finding or no material implementation choice changed"
         required_by: ["review-agent"]
         required_output: ["selected-approach", "residual-risk"]
-    layer3_candidates: ["code-review", "accessibility-inclusive-design", "code-clarity-maintainability", "regression-testing", "domain-object-identification", "implementation-structure-design", "refactoring", "cpp-professional-usage", "rust-professional-usage", "cleanup-deletion-governance", "code-element-professionalism", "design-pattern-selection", "minimal-correct-implementation", "repeat-failure-analysis", "configuration-runtime-policy", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/ai-review-pattern-catalog.md:
+          conflicts_with: ["references/checklist.md"]
+          decision_problem: "ai-review-pattern-catalog"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/checklist.md:
+          conflicts_with: ["references/ai-review-pattern-catalog.md", "references/review-output-and-gates.md"]
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/review-output-and-gates.md:
+          conflicts_with: ["references/checklist.md"]
+          decision_problem: "review-output-and-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
+    layer3_candidates: ["code-review", "accessibility-inclusive-design", "code-clarity-maintainability", "regression-testing", "domain-object-identification", "implementation-structure-design", "refactoring", "cpp-professional-usage", "rust-professional-usage", "cleanup-deletion-governance", "code-element-professionalism", "design-pattern-selection", "minimal-correct-implementation", "repeat-failure-analysis", "configuration-runtime-policy", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension", "web3-product-extension", "low-level-systems-extension"]
     task_routable: true
   - name: change-documentation-gate
     routing_mode: evidence-only
@@ -930,12 +1104,91 @@ professional_skills:
         do_not_load_when: "Only shared framework behavior changes and native target contracts remain untouched"
         required_by: ["task-agent"]
         required_output: ["boundary-decision", "proof-limit", "validation-plan"]
-      - path: "references/framework-contracts.md"
+      - path: "references/flutter-framework-contracts.md"
         type: targeted
-        load_when: "Flutter React Native Electron Tauri Qt .NET MAUI or Kotlin Multiplatform ownership bridge lifecycle or packaging behavior affects the change"
-        do_not_load_when: "The client is native-only or the framework layer is not affected"
+        load_when: "Flutter shared state platform-channel restoration link plugin or target packaging behavior affects the accepted change"
+        do_not_load_when: "No Flutter source channel plugin lifecycle link or packaging behavior changes"
         required_by: ["task-agent"]
         required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/react-native-framework-contracts.md"
+        type: targeted
+        load_when: "React Native JavaScript state native state process recreation link or platform seam affects the accepted change"
+        do_not_load_when: "No React Native state lifecycle link native seam or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/electron-framework-contracts.md"
+        type: targeted
+        load_when: "Electron main renderer operating-system privilege deep-link or packaged-artifact behavior affects the accepted change"
+        do_not_load_when: "No Electron process privilege deep-link operating-system or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/tauri-framework-contracts.md"
+        type: targeted
+        load_when: "Tauri command plugin capability webview deep-link or bundle behavior affects the accepted change"
+        do_not_load_when: "No Tauri command capability plugin webview link or bundle behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/qt-framework-contracts.md"
+        type: targeted
+        load_when: "Qt window ownership window-manager runtime library plugin QML or package behavior affects the accepted change"
+        do_not_load_when: "No Qt window runtime plugin QML platform or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/dotnet-maui-framework-contracts.md"
+        type: targeted
+        load_when: ".NET MAUI window native lifecycle restoration permission workload or package target affects the accepted change"
+        do_not_load_when: "No .NET MAUI lifecycle restoration permission workload or package behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/kotlin-multiplatform-framework-contracts.md"
+        type: targeted
+        load_when: "Kotlin Multiplatform source-set target support expected actual binary or host integration affects the accepted change"
+        do_not_load_when: "No Kotlin Multiplatform source-set target binary or host-integration behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/native-platform-source-contracts.md:
+          conflicts_with: []
+          decision_problem: "native-platform-source-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/flutter-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "flutter-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/react-native-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "react-native-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/electron-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "electron-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/tauri-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "tauri-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/qt-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "qt-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dotnet-maui-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "dotnet-maui-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/kotlin-multiplatform-framework-contracts.md:
+          conflicts_with: []
+          decision_problem: "kotlin-multiplatform-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["state-management-design", "client-lifecycle-state-restoration", "offline-sync-conflict-resolution", "client-application-testing", "accessibility-inclusive-design", "privacy-data-lifecycle", "kotlin-professional-usage", "swift-professional-usage", "csharp-dotnet-professional-usage", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: platform-infrastructure-change-builder
@@ -1002,7 +1255,7 @@ professional_skills:
     path: "src/professional-skills/incident-response-coordinator"
     role_support: ["analysis-agent"]
     trigger_signals: ["Multiple responders or workstreams need one command structure.", "Impact needs a shared severity and update cadence.", "Diagnosis, mitigation, communications, and handoff need synchronization."]
-    anti_trigger_signals: ["Route ordinary diagnosis to `engineering-change-analysis` and its failure-diagnosis path.", "Route reliability design or review to `reliability-observability-gate`.", "Route a release or rollback decision to `delivery-release-gate`.", "Route post-incident documentation to `change-documentation-gate`.", "Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority."]
+    anti_trigger_signals: ["ordinary single-owner diagnosis without active coordination", "reliability design or review without incident-command work", "release or rollback approval", "post-incident documentation after coordination is closed", "Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority."]
     required_inputs: ["current impact scope severity indicators and time basis", "responder authority roles communication channels and decision cadence", "known evidence hypotheses mitigations recovery signals and handoff constraints"]
     output_contract: ["incident command record with severity roles cadence workstreams evidence and decision log", "mitigation coordination authorization recovery verification communications and handoff record", "proof limits unresolved risk owners and closure criteria"]
     escalation_signals: ["command authority safety boundary destructive mitigation communication owner or recovery evidence remains unresolved"]

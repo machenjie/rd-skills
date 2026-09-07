@@ -4,7 +4,8 @@ Use this reference when concurrency closure depends on parallel proof, lock/leas
 
 ## Evidence Map
 - **Shared-resource invariant:** prove resource, actors, invariant, overlap scenario, mechanism, rejected alternatives, concurrent test command, artifact, exit code, and residual interleaving risk.
-- **Duplicate effect prevention:** prove idempotency key scope, unique storage, payload fingerprint, replay/conflict behavior, duplicate test, and retention owner.
+- **Duplicate effect prevention:** prove the selected atomic, conditional, or deduplication boundary and concurrent/replay outcomes.
+- **Idempotency record, when selected:** include its key scope, storage, relevant payload conflict, and retention contract.
 - **Worker parallelism or ordering:** prove partition/claim strategy, idempotent handler, bounded pool, queue depth/lag evidence, redelivery test, and DLQ or terminal state.
 - **Distributed lease or leader:** prove provider guarantee, TTL/release, fencing token source, stale-token rejection test, timeout behavior, and advisory-only residual risk when applicable.
 - **Contention or deadlock repair:** prove reproducer, lock-wait or hot-row report, canonical lock order, before/after stress/profile result, same-pattern scan, and watch signal.

@@ -17,14 +17,14 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when a service s
 
 ## Skill Role
 
-Approve, reject, or defer a service split from business/data ownership, contract stability, failure isolation, deployability, rollback, and operating capacity. Own the integrated decision and transition exit criteria while named specialists retain their mechanisms. Require coupling reduction to exceed distributed-system cost.
+Approve, reject, or defer a service split from business/data ownership, contract stability, failure isolation, deployability, rollback, and operating capacity. Own the integrated decision and transition exit criteria while named specialists retain their mechanisms. Evaluate the selected benefit, such as coupling reduction, fault or resource isolation, against distributed-system and operating cost; honor proven hard compliance or data-boundary constraints without requiring coupling reduction as a universal benefit.
 
 ## High-Value Rules
 
 - Shared databases, shared schemas, cross-service foreign keys, or direct table reads block independent deployability until data ownership is separated or mediated through contracts/events.
 - Extract only behind a versioned API, gRPC, or event contract that excludes ORM and domain internals.
 - An independently deployed service names accountable service, release, and incident owners before production. Accepted service levels, failure modes, or platform policy determine its SLO, alert, dashboard, runbook, capacity, and escalation artifacts.
-- Transaction boundaries must be redesigned explicitly with Saga, transactional outbox/inbox, compensation, reconciliation, or a documented decision to keep the boundary in-process.
+- Select transaction boundaries through `transaction-consistency`: keep work local or prove the accepted atomic or recoverable cross-participant protocol, including identity, ordering, timeout, participant failure, and recovery limits.
 - A new synchronous call defines timeout, failure, cancellation, and observability behavior; add retry, circuit breaking, bulkheads, or degradation only when dependency criticality, overload, and failure tests justify them.
 - Approve a split only when current evidence rejects viable in-process alternatives.
 - Integrate accepted outputs from `module-boundary-design`, `data-api-contract-changer`, `transaction-consistency`, `reliability-observability-gate`, `security-privacy-gate`, and `delivery-release-gate`, with each specialist retaining its mechanism.

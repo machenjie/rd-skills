@@ -1,6 +1,5 @@
 id: lock-held-across-io
 category: performance
-complexity: L4
 focus:
   - lock scope
   - IO inside critical section

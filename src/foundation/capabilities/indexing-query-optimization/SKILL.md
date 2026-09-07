@@ -32,7 +32,7 @@ Define beneficiary-query identity, plan evidence, data distribution, index or qu
 
 ## Anti-Patterns
 
-- Add an index without a named query, representative plan, and measurable beneficiary.
+- Add an index without a named beneficiary query, objective, and safe plan evidence or bounded query telemetry that supports the decision.
 - Optimize one sampled parameter while ignoring skew, parameter sensitivity, write cost, and competing queries.
 - Use offset pagination or an unstable sort where concurrent data change can duplicate or omit results unnoticed.
 

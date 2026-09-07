@@ -1,6 +1,5 @@
 id: side-effect-boundary
 category: structure
-complexity: L3
 focus:
   - side effect boundary
   - pure policy testing

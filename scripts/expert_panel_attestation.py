@@ -465,34 +465,37 @@ def semantic_candidate_current_binding(
 
     if axis not in {"root", "reference"} or not isinstance(candidate, dict):
         raise AttestationError("semantic current-binding input is invalid")
-    fields = (
-        "candidate_id", "finding", "path", "owner", "skill_owner", "fingerprint",
+    identity_fields = (
+        "candidate_id", "finding", "path", "owner", "skill_owner", "source_selector",
     )
-    binding = {field: copy.deepcopy(candidate.get(field)) for field in fields}
+    identity = {
+        field: copy.deepcopy(candidate.get(field)) for field in identity_fields
+    }
+    evidence = {"fingerprint": candidate.get("fingerprint")}
     if axis == "root":
-        binding.update(
+        identity["document_part"] = candidate.get("document_part")
+        evidence.update(
             {
-                "document_part": candidate.get("document_part"),
                 "occurrence_fingerprint": candidate.get("occurrence_fingerprint"),
                 "context_fingerprint": candidate.get("context_fingerprint"),
             }
         )
     else:
-        binding.update(
+        evidence.update(
             {
                 "evidence_fingerprint": candidate.get("evidence_fingerprint"),
                 "content_fingerprint": candidate.get("content_fingerprint"),
             }
         )
         if candidate.get("path") == "group":
-            binding["group_members"] = sorted(
+            evidence["group_members"] = sorted(
                 {
                     (occurrence.get("path"), occurrence.get("owner"))
                     for occurrence in candidate.get("occurrences", [])
                     if isinstance(occurrence, dict)
                 }
             )
-    return binding
+    return {"stable_identity": identity, "current_evidence": evidence}
 
 
 def semantic_candidate_fingerprints(
@@ -577,16 +580,20 @@ def readability_target_authority(
                 finding.get("sentence_fingerprint"),
                 f"readability target authority finding {index} source fingerprint",
             )
+            try:
+                finding_review_authority = (
+                    panel_contracts.readability_finding_review_projection(
+                        finding=finding
+                    )
+                )
+            except ValueError as exc:
+                raise AttestationError(str(exc)) from exc
             finding_binding = {
                 "binding_contract_id": (
                     panel_contracts.READABILITY_FINDING_BINDING_CONTRACT_ID
                 ),
                 "target_id": target_id,
-                "review_authority": (
-                    panel_contracts.readability_finding_review_projection(
-                        finding=finding
-                    )
-                ),
+                "review_authority": finding_review_authority,
             }
             findings[finding_id] = {
                 "finding_id": finding_id,
@@ -602,24 +609,27 @@ def readability_target_authority(
         finding_bindings = [
             {
                 "finding_id": finding_id,
-                "source_fingerprint": finding["source_fingerprint"],
                 "review_binding_fingerprint": finding[
                     "review_binding_fingerprint"
                 ],
             }
             for finding_id, finding in authority["findings"].items()
         ]
+    try:
+        target_review_authority = (
+            panel_contracts.readability_target_review_projection(
+                category=category, target=target
+            )
+        )
+    except ValueError as exc:
+        raise AttestationError(str(exc)) from exc
     target_binding: dict[str, Any] = {
         "binding_contract_id": (
             panel_contracts.READABILITY_TARGET_BINDING_CONTRACT_ID
         ),
         "category": category,
         "target_id": target_id,
-        "review_authority": (
-            panel_contracts.readability_target_review_projection(
-                category=category, target=target
-            )
-        ),
+        "review_authority": target_review_authority,
     }
     if category == "readability":
         target_binding["finding_authorities"] = finding_bindings
@@ -691,7 +701,9 @@ def readability_target_manifest_projection(
 ) -> dict[str, Any]:
     """Return the one complete Readability target-authority manifest."""
 
-    projected = _readability_authority_projection(value)
+    projected = _readability_binding_projection(
+        _readability_authority_projection(value)
+    )
     targets: list[dict[str, Any]] = []
     for category in ("content", "readability", "actionability"):
         for target_id, authority in sorted(projected[category].items()):
@@ -714,6 +726,40 @@ def readability_target_manifest_fingerprint(value: object) -> str:
     return canonical_json_sha256(readability_target_manifest_projection(value))
 
 
+def _readability_binding_projection(
+    value: dict[str, dict[str, dict[str, Any]]],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Project validated authorities without raw provenance fingerprints."""
+
+    return {
+        category: {
+            target_id: {
+                "review_binding_fingerprint": authority[
+                    "review_binding_fingerprint"
+                ],
+                **(
+                    {
+                        "findings": {
+                            finding_id: {
+                                "review_binding_fingerprint": finding[
+                                    "review_binding_fingerprint"
+                                ]
+                            }
+                            for finding_id, finding in authority.get(
+                                "findings", {}
+                            ).items()
+                        }
+                    }
+                    if category == "readability"
+                    else {}
+                ),
+            }
+            for target_id, authority in rows.items()
+        }
+        for category, rows in value.items()
+    }
+
+
 def _readability_local_authority(
     *,
     category: str,
@@ -721,7 +767,6 @@ def _readability_local_authority(
     finding_id: str | None = None,
 ) -> dict[str, Any]:
     target = {
-        "source_fingerprint": authority["source_fingerprint"],
         "review_binding_fingerprint": authority[
             "review_binding_fingerprint"
         ],
@@ -736,7 +781,6 @@ def _readability_local_authority(
     return {
         "target": target,
         "finding": {
-            "source_fingerprint": finding["source_fingerprint"],
             "review_binding_fingerprint": finding[
                 "review_binding_fingerprint"
             ],
@@ -1079,9 +1123,11 @@ def _derive_readability(
     expected_order = {"content": 0, "readability": 1, "actionability": 2}
     if identities != sorted(set(identities), key=lambda item: (expected_order.get(item[0], 99), str(item[1]))):
         raise AttestationError("readability targets are not canonical")
-    if actual != expected:
+    if _readability_binding_projection(
+        actual
+    ) != _readability_binding_projection(expected):
         raise AttestationError(
-            "readability source or review binding coverage is stale"
+            "readability review binding coverage is stale"
         )
     return summary, ("requires-readability-correction" if failure else "accepted-current-readability")
 
@@ -1099,6 +1145,9 @@ def _validate_semantic_candidate(
     del candidate_id
     for field in ("finding", "owner", "skill_owner"):
         _text(candidate.get(field), f"{label}.{field}")
+    source_selector = candidate.get("source_selector")
+    if not isinstance(source_selector, dict) or not source_selector:
+        raise AttestationError(f"{label}.source_selector must be a non-empty object")
     path = candidate.get("path")
     if path != "group":
         _source_path(path, f"{label}.path")
@@ -1137,9 +1186,10 @@ def _validate_semantic_candidate(
                 occurrence.get("context_fingerprint"),
                 f"{label}.occurrences[{index}].context_fingerprint",
             )
-    elif path == "group":
+    else:
         _sha(candidate.get("evidence_fingerprint"), f"{label}.evidence_fingerprint")
         _sha(candidate.get("content_fingerprint"), f"{label}.content_fingerprint")
+    if axis == "reference" and path == "group":
         if len(member_paths) < 2 or len(set(member_paths)) < 2:
             raise AttestationError(
                 f"{label} group requires complete multi-path membership"

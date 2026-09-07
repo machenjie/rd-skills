@@ -1,6 +1,5 @@
 id: cpp-switch-fallthrough
 category: code-elements
-complexity: L2
 focus:
   - switch fallthrough
   - branch behavior proof

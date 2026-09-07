@@ -156,7 +156,6 @@
       "requirement-clarification",
       "requirement-structuring",
       "routing-navigation-design",
-      "routing-quality-review",
       "rust-professional-usage",
       "scenario-decomposition",
       "sdk-library-contract-design",
@@ -649,9 +648,6 @@
       "routing-navigation-design": [
         "full-evaluation"
       ],
-      "routing-quality-review": [
-        "full-evaluation"
-      ],
       "rust-professional-usage": [
         "full-evaluation"
       ],
@@ -800,7 +796,7 @@
     "required_skill_count": 10,
     "pass_count": 10,
     "fail_count": 0,
-    "not_required_count": 180
+    "not_required_count": 179
   },
   "rows": [
     {
@@ -808,44 +804,6 @@
       "layer": "control",
       "role_support": [
         "main-control-agent"
-      ],
-      "trigger_contract": "present",
-      "anti_trigger_contract": "present",
-      "layer3_candidates": [],
-      "authoring_status": "pass",
-      "evidence_case_ids": {
-        "positive_route": [],
-        "negative_route": [],
-        "behavior": [],
-        "pressure": [],
-        "release_critical": [],
-        "adversarial_negative_control": []
-      },
-      "evidence_counts": {
-        "positive_route": 0,
-        "negative_route": 0,
-        "behavior": 0,
-        "pressure": 0,
-        "release_critical": 0,
-        "adversarial_negative_control": 0
-      },
-      "coverage_states": {
-        "registered": true,
-        "route_covered": false,
-        "negative_route_covered": false,
-        "behavior_covered": false,
-        "pressure_covered": false,
-        "release_critical_covered": false
-      },
-      "required_states": [],
-      "unmet_required_states": [],
-      "coverage_gate_status": "not-required"
-    },
-    {
-      "name": "routing-quality-review",
-      "layer": "professional",
-      "role_support": [
-        "review-agent"
       ],
       "trigger_contract": "present",
       "anti_trigger_contract": "present",
@@ -1039,11 +997,9 @@
           "structure-placement-multiple-anaphora",
           "structure-unresolved-placement-is-not-refactoring",
           "t2b-critical-backend-acceptance",
-          "t2b-critical-backend-owner",
           "t2b-critical-backend-placement",
           "t2b-critical-backend-revert",
           "t2b-critical-backend-rollback",
-          "t2b-critical-backend-verification",
           "t2b-critical-preparation-tie",
           "t2b-critical-preparation-tie-reversed",
           "t2b-dedicated-ai-analysis",
@@ -1062,7 +1018,6 @@
           "t2c-repair-conflict-release-security",
           "t2c-repair-conflict-reliability-logging",
           "t2c-repair-conflict-security-release",
-          "unknown-owner",
           "wave1a-config-build-only-negative",
           "wave1a-config-generic-negative",
           "wave1a-config-owner-unknown",
@@ -1070,10 +1025,8 @@
           "wave1a-dependency-package-mechanics-negative",
           "wave1a-sandbox-dev-only-negative",
           "wave1a-stack-fixed-negative",
-          "wave1a-stack-invalid-brief-negative",
           "wave1a-stack-language-negative",
           "wave1a-stack-stale-brief-negative",
-          "wave1a-stack-unaccepted-brief-negative",
           "web3-bridge-proof-paraphrase",
           "web3-chain-contract-finality",
           "web3-chain-custody-finality",
@@ -1086,7 +1039,6 @@
           "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution"
         ],
         "pressure": [
-          "hookless-direct-bounded-local-discovery",
           "hookless-direct-unresolved-behavior",
           "hookless-direct-unresolved-material-impact",
           "hookless-direct-unresolved-placement",
@@ -1099,10 +1051,10 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 103,
+        "positive_route": 98,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 8,
+        "pressure": 7,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -1225,9 +1177,10 @@
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "high-risk-multi-task",
           "wave1a-module-boundary-major-brief-review",
-          "wave1a-stack-accepted-brief-review"
+          "wave1a-stack-accepted-brief-review",
+          "wave1a-stack-invalid-brief-negative",
+          "wave1a-stack-unaccepted-brief-negative"
         ],
         "negative_route": [],
         "behavior": [],
@@ -1236,7 +1189,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 3,
+        "positive_route": 4,
         "negative_route": 0,
         "behavior": 0,
         "pressure": 0,
@@ -1269,7 +1222,6 @@
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "accepted-brief-task-dag",
           "engineering-artifact-review"
         ],
         "negative_route": [],
@@ -1279,7 +1231,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 2,
+        "positive_route": 1,
         "negative_route": 0,
         "behavior": 0,
         "pressure": 0,
@@ -1426,104 +1378,11 @@
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "accepted-api-analysis",
-          "ai-agent-tool-authority",
-          "ai-anti-database-model-evaluation",
-          "ai-anti-static-search",
-          "ai-anti-unchanged-rag-documentation",
-          "ai-model-decision-paraphrase",
-          "ai-rag-http-contrast-clause",
-          "ai-rag-tool-authority",
-          "ai-retrieval-permission-paraphrase",
-          "ai-transition-search-to-prompt-context",
           "architecture-boundary",
-          "bigdata-anti-unchanged-pipeline-documentation",
-          "bigdata-cdc-stream-replay",
-          "bigdata-distributed-backfill-schema",
-          "bigdata-lake-reprocessing-paraphrase",
-          "bigdata-stream-checkpoint-paraphrase",
-          "domain-invariant",
-          "experience-generic-negative",
-          "external-integration-combined-reliability-conflict",
-          "external-integration-consumer-reliability-conflict",
-          "external-integration-failure-reliability-conflict",
-          "iot-anti-cloud-device-api",
-          "iot-anti-cloud-network-protocol-timing",
-          "iot-anti-cloud-only-no-firmware-physical",
-          "iot-anti-unchanged-protocol-documentation",
-          "iot-device-physical-runtime",
-          "iot-edge-provisioning-paraphrase",
-          "iot-firmware-actuator-rollout",
-          "iot-firmware-brownout-paraphrase",
-          "iot-transition-cloud-api-to-device-protocol",
-          "low-level-ffi-ownership",
-          "low-level-kernel-driver",
-          "low-level-native-memory-paraphrase",
-          "low-level-realtime-paraphrase",
-          "payment-ledger-settlement-paraphrase",
-          "payment-security",
-          "payment-trading-execution",
-          "payment-transition-price-display-to-wallet-ledger",
-          "payment-venue-order-paraphrase",
-          "payment-wallet-custody-accounting-conflict",
-          "public-api",
-          "security-anti-input-shape",
-          "source-backed-question",
           "structure-cross-module-public-edge",
           "structure-documentation-with-runtime-architecture-change",
-          "structure-domain-object-classification",
-          "structure-dto-table-ui-not-domain",
-          "structure-fixed-helper-placement-declaration-not-request",
-          "structure-fixed-placement-refactor-analysis",
-          "structure-generated-authority-unknown",
-          "structure-minimal-analysis",
-          "structure-minimal-backend",
-          "structure-module-api-explicitly-unchanged",
-          "structure-named-generic-anaphora-ambiguous",
-          "structure-object-classification-method-placement",
-          "structure-owner-internal-backend-placement",
-          "structure-package-supply-chain-not-reuse",
-          "structure-passive-private-helper-move-not-request",
           "structure-pattern-analysis",
-          "structure-placement-incompatible-destinations",
-          "structure-placement-multiple-anaphora",
-          "structure-sdk-contract-not-reuse",
-          "structure-unresolved-placement-is-not-refactoring",
-          "t2b-critical-backend-acceptance",
-          "t2b-critical-backend-owner",
-          "t2b-critical-backend-placement",
-          "t2b-critical-backend-revert",
-          "t2b-critical-backend-rollback",
-          "t2b-critical-backend-verification",
-          "t2b-critical-preparation-tie",
-          "t2b-critical-preparation-tie-reversed",
-          "t2b-dedicated-ai-analysis",
-          "t2b-dedicated-payment-analysis",
-          "t2b-dedicated-platform-owner",
-          "t2b-preparation-ai",
-          "t2b-preparation-payment",
-          "t2c-repair-conflict-logging-reliability",
-          "t2c-repair-conflict-release-security",
-          "t2c-repair-conflict-reliability-logging",
-          "t2c-repair-conflict-security-release",
-          "unknown-owner",
-          "wave1a-config-build-only-negative",
-          "wave1a-config-generic-negative",
-          "wave1a-config-owner-unknown",
-          "wave1a-dependency-advisory-keyword-negative",
-          "wave1a-dependency-package-mechanics-negative",
-          "wave1a-sandbox-dev-only-negative",
-          "wave1a-stack-architecture-analysis",
-          "wave1a-stack-fixed-negative",
-          "wave1a-stack-invalid-brief-negative",
-          "wave1a-stack-language-negative",
-          "wave1a-stack-stale-brief-negative",
-          "wave1a-stack-unaccepted-brief-negative",
-          "web3-bridge-proof-paraphrase",
-          "web3-chain-contract-finality",
-          "web3-chain-custody-finality",
-          "web3-transition-api-signature-to-chain-custody",
-          "web3-wallet-signing-paraphrase"
+          "wave1a-stack-architecture-analysis"
         ],
         "negative_route": [
           "frontend-direct"
@@ -1538,7 +1397,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 98,
+        "positive_route": 5,
         "negative_route": 1,
         "behavior": 1,
         "pressure": 0,
@@ -1665,7 +1524,9 @@
           "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
           "evals/professional-benchmarks/language/typescript-any-at-api-boundary"
         ],
-        "pressure": [],
+        "pressure": [
+          "hookless-direct-bounded-local-discovery"
+        ],
         "release_critical": [],
         "adversarial_negative_control": []
       },
@@ -1673,7 +1534,7 @@
         "positive_route": 10,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 0,
+        "pressure": 1,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -1682,7 +1543,7 @@
         "route_covered": true,
         "negative_route_covered": false,
         "behavior_covered": true,
-        "pressure_covered": false,
+        "pressure_covered": true,
         "release_critical_covered": false
       },
       "required_states": [],
@@ -1756,6 +1617,8 @@
           "t2b-backend-negated-unknown-direct",
           "t2b-backend-resolved-direct",
           "t2b-bare-backend-plan-not-preparation",
+          "t2b-critical-backend-owner",
+          "t2b-critical-backend-verification",
           "t2b-repair-no-owner-unknown-direct",
           "t2b-repair-owner-not-unknown-direct",
           "t2b-repair-rollback-no-longer-unknown-direct",
@@ -1789,7 +1652,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 26,
+        "positive_route": 28,
         "negative_route": 0,
         "behavior": 11,
         "pressure": 3,
@@ -1961,15 +1824,12 @@
         "language-testing-strategy",
         "testability-seam-design",
         "targeted-validation-selection",
-        "client-application-testing"
+        "client-application-testing",
+        "bigdata-product-extension"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "accepted-data-analysis",
-          "bigdata-anti-single-database-table",
-          "bigdata-anti-single-table-without-pipeline",
-          "reliability-anti-data-correctness",
           "reliability-anti-unit-local-performance",
           "validation"
         ],
@@ -1989,7 +1849,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 6,
+        "positive_route": 2,
         "negative_route": 0,
         "behavior": 5,
         "pressure": 2,
@@ -2042,21 +1902,11 @@
         "positive_route": [
           "security",
           "security-credential-session-lifecycle-change",
-          "security-ssrf-boundary",
           "t2b-dedicated-tenant-authorization-analysis",
-          "t2b-preparation-tenant-authorization",
-          "t2c-preparation-security-risk",
           "t2c-repair-security-material-logging-none",
           "t2c-repair-security-material-release-out-of-scope",
           "t2c-review-regression-security-risk",
-          "t2c-review-security-tenant-auth-diff",
-          "wave1a-dependency-backend",
-          "wave1a-dependency-data-middleware",
-          "wave1a-dependency-frontend",
-          "wave1a-dependency-installed-client",
-          "wave1a-dependency-integration",
-          "wave1a-dependency-platform-infrastructure",
-          "wave1a-dependency-repository-tooling"
+          "t2c-review-security-tenant-auth-diff"
         ],
         "negative_route": [
           "payment-anti-authorization-copy",
@@ -2081,7 +1931,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 17,
+        "positive_route": 7,
         "negative_route": 8,
         "behavior": 2,
         "pressure": 1,
@@ -2133,12 +1983,8 @@
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "cache-stampede-reliability",
-          "failure-diagnosis",
-          "incident-response-command",
           "reliability",
           "security-anti-reliability-only",
-          "t2c-preparation-reliability-risk",
           "t2c-repair-reliability-material-logging-background",
           "t2c-repair-reliability-material-release-out-of-scope",
           "t2c-review-reliability-slo-recovery"
@@ -2160,7 +2006,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 9,
+        "positive_route": 5,
         "negative_route": 5,
         "behavior": 1,
         "pressure": 0,
@@ -2205,11 +2051,9 @@
         "positive_route": [
           "logging",
           "reliability-anti-logging-field",
-          "t2c-preparation-logging-risk",
           "t2c-repair-logging-material-reliability-none",
           "t2c-repair-logging-material-security-unchanged",
-          "t2c-review-logging-secret-redaction",
-          "wave1a-config-secret-only-negative"
+          "t2c-review-logging-secret-redaction"
         ],
         "negative_route": [
           "documentation"
@@ -2224,7 +2068,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 7,
+        "positive_route": 5,
         "negative_route": 1,
         "behavior": 1,
         "pressure": 0,
@@ -2277,10 +2121,8 @@
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "data-migration",
           "release",
           "reliability-anti-release-ordering",
-          "t2c-preparation-release-risk",
           "t2c-repair-release-material-reliability-unchanged",
           "t2c-repair-release-material-security-background",
           "t2c-review-release-production-rollout"
@@ -2297,7 +2139,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 7,
+        "positive_route": 5,
         "negative_route": 0,
         "behavior": 4,
         "pressure": 0,
@@ -2346,93 +2188,27 @@
         "windows-platform-extension",
         "macos-platform-extension",
         "linux-desktop-platform-extension",
-        "cross-platform-client-extension"
+        "cross-platform-client-extension",
+        "web3-product-extension",
+        "low-level-systems-extension"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
-          "acceptance-gap",
-          "accepted-integration-analysis",
-          "ambiguous-request",
-          "android-accessibility-compose-focus-paraphrase",
-          "android-accessibility-platform-authority",
-          "backend-idempotency",
-          "bigdata-transition-table-to-distributed-batch",
-          "experience-analysis",
-          "experience-combined-analysis",
-          "experience-design-analysis",
-          "external-integration-consumer-only",
-          "external-integration-failure-only",
-          "frontend-direct",
-          "integration",
-          "low-level-anti-rust-business-service",
-          "low-level-anti-unchanged-ffi-documentation",
-          "low-level-transition-rust-to-os-resource",
-          "mobile-android-permission-paraphrase",
-          "mobile-anti-responsive-pwa",
-          "mobile-anti-unchanged-permission-help",
-          "mobile-native-lifecycle-permission",
-          "mobile-offline-deeplink",
-          "mobile-store-upgrade-paraphrase",
-          "mobile-transition-pwa-to-native-lifecycle",
-          "multi-task-plan",
-          "payment-anti-authorization-copy",
-          "payment-anti-order-copy",
-          "payment-anti-order-display-unchanged-state",
-          "payment-anti-unchanged-wallet-copy",
-          "platform-infrastructure-direct",
-          "reliability-anti-unit-local-performance",
-          "repository-tooling-direct",
           "review-only",
-          "security-anti-credential-session-internal-refactor",
           "structure-actual-diff-domain-object",
           "structure-actual-diff-pattern",
           "structure-actual-diff-private-move",
-          "structure-deliberate-separate-owner-implementations",
-          "structure-ef-mapping-domain-facts-unchanged",
-          "structure-filesystem-safety-not-placement",
           "structure-fixed-placement-refactor",
           "structure-guard-naming-only",
-          "structure-known-generator-authority-placement",
-          "structure-known-generator-pattern",
           "structure-minimal-delete-list",
-          "structure-minimal-generator",
-          "structure-move-selected-file-placement",
-          "structure-owner-private-business-predicate-not-placement",
-          "structure-owner-private-runtime-selection-not-placement",
-          "structure-placement-within-selected-destination",
-          "structure-put-selected-file-placement",
-          "structure-real-pattern-force",
-          "structure-relative-business-method-homonym-not-placement",
-          "structure-tooling-within-selected-destination",
-          "t2b-backend-negated-unknown-direct",
-          "t2b-backend-resolved-direct",
-          "t2b-bare-backend-plan-not-preparation",
-          "t2b-preparation-backend-repair",
-          "t2b-preparation-platform",
-          "t2b-repair-no-owner-unknown-direct",
-          "t2b-repair-owner-not-unknown-direct",
-          "t2b-repair-rollback-no-longer-unknown-direct",
-          "t2b-repair-unrelated-unknown-direct",
           "t2c-review-generic-refactor-diff",
           "t2c-review-logging-unchanged",
           "t2c-review-regression-ordinary",
           "t2c-review-release-out-of-scope",
           "t2c-review-reliability-slo-unchanged",
           "t2c-review-security-auth-unchanged",
-          "t2c-review-security-background-context",
-          "validation",
-          "wave1a-config-backend",
-          "wave1a-config-data-middleware",
-          "wave1a-config-frontend",
-          "wave1a-config-installed-client",
-          "wave1a-config-integration",
-          "wave1a-config-platform-infrastructure",
-          "wave1a-config-repository-tooling",
-          "wave1a-dependency-lockfile-negative",
-          "web3-anti-hash-signature",
-          "web3-anti-payment-wallet-recovery",
-          "web3-anti-unchanged-wallet-documentation"
+          "t2c-review-security-background-context"
         ],
         "negative_route": [],
         "behavior": [
@@ -2451,7 +2227,7 @@
         ]
       },
       "evidence_counts": {
-        "positive_route": 82,
+        "positive_route": 14,
         "negative_route": 0,
         "behavior": 5,
         "pressure": 1,
@@ -2557,6 +2333,7 @@
           "mobile-offline-deeplink",
           "mobile-store-upgrade-paraphrase",
           "mobile-transition-pwa-to-native-lifecycle",
+          "unknown-owner",
           "wave1a-config-installed-client",
           "wave1a-dependency-installed-client"
         ],
@@ -2569,7 +2346,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 9,
+        "positive_route": 10,
         "negative_route": 0,
         "behavior": 1,
         "pressure": 0,
@@ -2670,7 +2447,11 @@
           "incident-response-command"
         ],
         "behavior": [],
-        "pressure": [],
+        "pressure": [
+          "hookless-direct-host-operation",
+          "hookless-observed-execution-blocker",
+          "hookless-optimization-evidence-review-preservation"
+        ],
         "release_critical": [],
         "adversarial_negative_control": []
       },
@@ -2678,7 +2459,7 @@
         "positive_route": 8,
         "negative_route": 1,
         "behavior": 0,
-        "pressure": 0,
+        "pressure": 3,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -2687,7 +2468,7 @@
         "route_covered": true,
         "negative_route_covered": true,
         "behavior_covered": false,
-        "pressure_covered": false,
+        "pressure_covered": true,
         "release_critical_covered": false
       },
       "required_states": [],
@@ -6303,15 +6084,15 @@
       "evidence_case_ids": {
         "positive_route": [
           "wave1a-stack-accepted-brief-review",
-          "wave1a-stack-architecture-analysis"
+          "wave1a-stack-architecture-analysis",
+          "wave1a-stack-invalid-brief-negative",
+          "wave1a-stack-unaccepted-brief-negative"
         ],
         "negative_route": [
           "wave1a-dependency-package-mechanics-negative",
           "wave1a-stack-fixed-negative",
-          "wave1a-stack-invalid-brief-negative",
           "wave1a-stack-language-negative",
-          "wave1a-stack-stale-brief-negative",
-          "wave1a-stack-unaccepted-brief-negative"
+          "wave1a-stack-stale-brief-negative"
         ],
         "behavior": [],
         "pressure": [],
@@ -6319,8 +6100,8 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 2,
-        "negative_route": 6,
+        "positive_route": 4,
+        "negative_route": 4,
         "behavior": 0,
         "pressure": 0,
         "release_critical": 0,
@@ -7478,7 +7259,10 @@
           "wave1a-config-secret-only-negative"
         ],
         "behavior": [],
-        "pressure": [],
+        "pressure": [
+          "hookless-direct-host-operation",
+          "hookless-observed-execution-blocker"
+        ],
         "release_critical": [],
         "adversarial_negative_control": []
       },
@@ -7486,7 +7270,7 @@
         "positive_route": 8,
         "negative_route": 3,
         "behavior": 0,
-        "pressure": 0,
+        "pressure": 2,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -7495,7 +7279,7 @@
         "route_covered": true,
         "negative_route_covered": true,
         "behavior_covered": false,
-        "pressure_covered": false,
+        "pressure_covered": true,
         "release_critical_covered": false
       },
       "required_states": [],
@@ -7816,11 +7600,9 @@
           "structure-placement-multiple-anaphora",
           "structure-unresolved-placement-is-not-refactoring",
           "t2b-critical-backend-acceptance",
-          "t2b-critical-backend-owner",
           "t2b-critical-backend-placement",
           "t2b-critical-backend-revert",
           "t2b-critical-backend-rollback",
-          "t2b-critical-backend-verification",
           "t2b-critical-preparation-tie",
           "t2b-critical-preparation-tie-reversed",
           "t2b-dedicated-ai-analysis",
@@ -7833,17 +7615,14 @@
           "t2c-repair-conflict-release-security",
           "t2c-repair-conflict-reliability-logging",
           "t2c-repair-conflict-security-release",
-          "unknown-owner",
           "wave1a-config-build-only-negative",
           "wave1a-config-generic-negative",
           "wave1a-config-owner-unknown",
           "wave1a-dependency-advisory-keyword-negative",
           "wave1a-sandbox-dev-only-negative",
           "wave1a-stack-fixed-negative",
-          "wave1a-stack-invalid-brief-negative",
           "wave1a-stack-language-negative",
           "wave1a-stack-stale-brief-negative",
-          "wave1a-stack-unaccepted-brief-negative",
           "web3-bridge-proof-paraphrase",
           "web3-chain-contract-finality",
           "web3-chain-custody-finality",
@@ -7856,7 +7635,6 @@
           "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution"
         ],
         "pressure": [
-          "hookless-direct-bounded-local-discovery",
           "hookless-direct-unresolved-behavior",
           "hookless-direct-unresolved-material-impact",
           "hookless-direct-unresolved-placement",
@@ -7868,10 +7646,10 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 79,
+        "positive_route": 74,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 7,
+        "pressure": 6,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -8113,7 +7891,9 @@
         ],
         "negative_route": [],
         "behavior": [],
-        "pressure": [],
+        "pressure": [
+          "hookless-optimization-evidence-review-preservation"
+        ],
         "release_critical": [],
         "adversarial_negative_control": []
       },
@@ -8121,7 +7901,7 @@
         "positive_route": 7,
         "negative_route": 0,
         "behavior": 0,
-        "pressure": 0,
+        "pressure": 1,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -8130,7 +7910,7 @@
         "route_covered": true,
         "negative_route_covered": false,
         "behavior_covered": false,
-        "pressure_covered": false,
+        "pressure_covered": true,
         "release_critical_covered": false
       },
       "required_states": [],

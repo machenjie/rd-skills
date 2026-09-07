@@ -1,6 +1,5 @@
 id: offline-sync-conflict
 category: mobile
-complexity: L4
 focus:
   - offline state
   - conflict resolution

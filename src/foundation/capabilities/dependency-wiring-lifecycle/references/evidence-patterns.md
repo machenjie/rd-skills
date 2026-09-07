@@ -7,7 +7,7 @@ Use this reference when wiring closure depends on validation freshness, prior so
 | Wiring claim | Minimum evidence | What it proves | What it does not prove |
 | --- | --- | --- | --- |
 | Construction owner is explicit | Composition root, constructor/factory/provider path, owner, consumers, and rejected locations | The inspected dependency has a named construction boundary | All dynamic container registrations are known |
-| Lifecycle scope is correct | Scope matrix, resource type, identity/tenant/transaction coupling, startup validation, shutdown owner, and metrics | Obvious scope mismatch was considered | Production load or leak behavior is fully proven |
+| Lifecycle scope is correct | Scope and state/resource ownership, actual identity/tenant/transaction coupling, and required validation, teardown, and observation evidence | Obvious scope mismatch was considered | Production load or leak behavior is fully proven |
 | Graph is acyclic and directed | Current graph slice, imports/providers, config variants, generated clients, cycle result, and omitted dynamic edges | Inspected graph does not knowingly violate direction | Runtime plugin discovery or reflection creates no hidden edge |
 | Reusable resource is reused safely | Client/pool construction site, reuse scope, health check, pool config, close/drain path, and tests or review | The inspected hot path avoids per-operation construction | Capacity, latency, or resource leaks are proven under production load |
 | Lazy/provider/service locator is bounded | Lazy/eager decision, race behavior, error caching, retry, first-use latency, observability, and test override | The inspected indirection has explicit semantics | The indirection is the best architecture choice |

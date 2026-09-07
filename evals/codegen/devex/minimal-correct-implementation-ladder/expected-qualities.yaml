@@ -1,6 +1,5 @@
 id: minimal-correct-implementation-ladder
 category: devex
-complexity: L2
 focus:
   - minimal correctness ladder
   - reuse before new structure

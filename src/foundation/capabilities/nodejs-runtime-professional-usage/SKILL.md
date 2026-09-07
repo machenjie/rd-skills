@@ -23,7 +23,7 @@ Own Node.js runtime and core-library semantics. Exclude product, build, package-
 ## High-Value Rules
 
 - Define the supported Node.js release, flags, entrypoint, module mode, and host constraints.
-- Bound synchronous callbacks, promise continuations, and `process.nextTick()` chains. Use bounded Workers only for evidence-backed CPU work.
+- Bound synchronous callbacks, promise continuations, and `process.nextTick()` chains. Use bounded Workers for evidenced CPU or unavoidable synchronous blocking work when offload protects the caller budget.
 - Use one cancellation owner with supported `AbortSignal` propagation and reconciliation of abort, timeout, cleanup, and late completion.
 - Enforce stream backpressure, byte/object modes, completion, and destroy/error paths.
 - Define Buffer encoding, byte length, initialized allocation, copy/view choice, alias lifetime, and conversion.
@@ -54,7 +54,7 @@ Own Node.js runtime and core-library semantics. Exclude product, build, package-
 
 ## Output Contract
 
-- Node.js runtime decision with scheduling cancellation stream binary process Worker context module cache resource ownership verification proof limits and residual risk
+- Node.js runtime decision with scheduling and cancellation; stream, binary, process, and Worker behavior; context, module cache, and resource ownership; verification, proof limits, and residual risk
 
 ## Targeted References
 

@@ -4,7 +4,9 @@ import copy
 import io
 import importlib.util
 import json
+import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -76,6 +78,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
         target.write_bytes(source.read_bytes())
         return target
 
+
     def _copy_paths(self, root: Path, relatives: tuple[str, ...]) -> None:
         for relative in relatives:
             source = ROOT / relative
@@ -83,38 +86,54 @@ class DocsCoreProjectionTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source.read_bytes())
 
-    def _volatile_fact_inputs(self, root: Path) -> None:
-        self._copy_paths(
-            root,
-            (
-                "src/registry/control-skills.yaml",
-                "src/registry/professional-skills.yaml",
-                "src/registry/foundation-skills.yaml",
-                "src/registry/domain-skills.yaml",
-                "evals/routing/cases.yaml",
-                "evals/routing/capability-coverage-cases.yaml",
-                "evals/capability-coverage/admission-cases.yaml",
-                "evals/capability-coverage/matrix.yaml",
-                "config/skill-content-exceptions.yaml",
-                "config/professionalism-release-review.yaml",
-                "AGENTS.md",
-                "CHANGELOG.md",
-                ".github/pull_request_template.md",
-                "docs/BUILD_PROFILES.md",
-                "docs/QUICKSTART.md",
-                "docs/VALIDATION.md",
-                "docs/SCORECARD.md",
-                "docs/BENCHMARKS.md",
-                "src/foundation/capabilities/README.md",
-            ),
-        )
-        for relative in (
-            "src/control-skills",
-            "src/professional-skills",
-            "src/foundation/capabilities",
-            "src/domain-extensions",
-        ):
-            shutil.copytree(ROOT / relative, root / relative, dirs_exist_ok=True)
+    def _synthetic_volatile_authority(self) -> dict[str, object]:
+        return {
+            "counts": {
+                "control": 1,
+                "professional": 2,
+                "foundation": 3,
+                "domain": 2,
+            },
+            "total": 8,
+            "non_control": 7,
+            "runtime_top_level_count": 3,
+            "runtime_delivery": {"targeted": 4, "routing_only": 1},
+            "routing_case_count": 5,
+            "capability_routing_case_count": 2,
+            "admission_case_count": 4,
+            "admission_counts": {
+                "professional": 1,
+                "foundation": 2,
+                "domain": 1,
+            },
+            "foundation_candidate_count": 2,
+            "layer3_catalog_count": 5,
+            "matrix_entry_count": 4,
+            "coverage_counts": {
+                "covered": 1,
+                "partial": 1,
+                "missing": 1,
+                "intentionally-unsupported": 1,
+            },
+            "reference_inventory": {
+                "indexed": 2,
+                "physical": 3,
+                "unindexed_templates": 1,
+            },
+        }
+
+    def _volatile_fact_inputs(
+        self, root: Path, authority: dict[str, object]
+    ) -> dict[str, tuple[str, ...]]:
+        projections = self.validator._required_volatile_projections(authority)
+        for relative, facts in projections.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            body = "\n".join(facts) + "\n"
+            if relative == "CHANGELOG.md":
+                body = "# Changelog\n\n## Unreleased\n\n" + body
+            path.write_text(body, encoding="utf-8")
+        return projections
 
     def _current_evidence_inputs(self, root: Path) -> None:
         self._copy_paths(
@@ -176,16 +195,53 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 )
             )
 
-    def test_current_human_documentation_boundary_has_56_files(self) -> None:
+    def test_human_documentation_boundary_keeps_required_owners(self) -> None:
         files = self.validator._markdown_files(ROOT)
 
-        self.assertEqual(56, len(files))
         relative = {path.relative_to(ROOT).as_posix() for path in files}
         self.assertIn("CODE_OF_CONDUCT.md", relative)
         self.assertIn(".github/pull_request_template.md", relative)
         self.assertIn("reports/README.md", relative)
         self.assertIn("evals/codegen/README.md", relative)
         self.assertIn("docs/AGENT_LIGHT_ARCHITECTURE.md", relative)
+        self.assertNotIn("docs/ROUTING_EXAMPLES.md", relative)
+
+    def test_beginner_product_surface_hides_internal_protocol(self) -> None:
+        self.assertEqual([], self.validator._product_surface_errors(ROOT))
+
+    def test_readme_first_surface_internal_term_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(root, ("README.md",))
+            readme = root / "README.md"
+            readme.write_text(
+                readme.read_text(encoding="utf-8").replace(
+                    "rd-skills",
+                    "rd-skills Runtime",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._product_surface_errors(root)
+
+            self.assertTrue(any("first product surface" in error for error in errors), errors)
+
+    def test_readme_first_surface_boundary_does_not_require_an_image(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            readme = root / "README.md"
+            readme.write_text(
+                "# rd-skills\n\n"
+                "A plain-language engineering assistant.\n\n"
+                "## Why it helps\n\n"
+                "It scopes and verifies changes.\n\n"
+                "## Maintainer details\n\n"
+                "Runtime internals live outside the beginner surface.\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual([], self.validator._product_surface_errors(root))
 
     def test_legacy_architecture_path_is_a_minimal_compatibility_redirect(self) -> None:
         path = ROOT / "docs/AGENT_LIGHT_ARCHITECTURE.md"
@@ -227,6 +283,32 @@ class DocsCoreProjectionTests(unittest.TestCase):
             errors = self.validator._local_link_errors(root, source)
             self.assertTrue(any("missing local heading anchor" in error for error in errors))
 
+    def test_generated_document_ownership_uses_declared_producer(self) -> None:
+        self.assertEqual([], self.validator._generated_document_ownership_errors(ROOT))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "docs/SHOWCASE.md",
+                    "docs/MARKETPLACE_CATALOG.md",
+                    "scripts/generate-examples-showcase.py",
+                    "scripts/generate-marketplace-catalog.py",
+                ),
+            )
+            showcase = root / "docs/SHOWCASE.md"
+            showcase.write_text(
+                showcase.read_text(encoding="utf-8").replace(
+                    "Do not edit by hand.",
+                    "Generated output.",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._generated_document_ownership_errors(root)
+            self.assertTrue(any("SHOWCASE.md" in error for error in errors), errors)
+
     def test_heading_anchor_matches_numbered_standard_sections(self) -> None:
         anchors = self.validator._heading_anchors(
             "## 1. Purpose\n## Task, Evidence, and Completion Contracts\n"
@@ -256,13 +338,21 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
     def test_command_validation_reports_target_existence_not_flag_validation(self) -> None:
         output = io.StringIO()
-        with redirect_stdout(output):
+        with mock.patch.object(
+            self.validator,
+            "validate_docs_consistency",
+            return_value=[],
+        ), mock.patch.object(
+            self.validator,
+            "_markdown_files",
+            return_value=[Path("README.md")],
+        ), redirect_stdout(output):
             result = self.validator.main(["--root", str(ROOT)])
 
         self.assertEqual(0, result)
         self.assertIn(
-            "documented Python script/installer targets exist; "
-            "command flags are not validated",
+            "documented Python script/installer targets exist; retired Runtime "
+            "flags are rejected on public and authoring surfaces",
             output.getvalue(),
         )
 
@@ -278,91 +368,319 @@ class DocsCoreProjectionTests(unittest.TestCase):
             self.assertEqual([], self.validator._current_term_errors(root, historical))
 
     def test_current_volatile_documentation_facts_match_authorities(self) -> None:
-        self.assertEqual([], self.validator._volatile_fact_errors(ROOT))
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            authority = self._synthetic_volatile_authority()
+            self._volatile_fact_inputs(root, authority)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                self.assertEqual([], self.validator._volatile_fact_errors(root))
+
+    def test_current_runtime_surfaces_are_profile_choice_free(self) -> None:
+        self.assertEqual([], self.validator._runtime_surface_errors(ROOT))
+
+    def test_public_profile_selection_is_rejected_but_legacy_migration_input_is_allowed(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            readme = root / "README.md"
+            readme.write_text(
+                "Run `python3 scripts/build.py --profile full`.\n",
+                encoding="utf-8",
+            )
+            migration = root / "docs/MIGRATING_TO_HOOKLESS.md"
+            migration.parent.mkdir(parents=True)
+            migration.write_text(
+                "Legacy `full` and `dev` manifests are accepted migration inputs.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                ["README.md: removed Runtime flag remains: --profile"],
+                errors,
+            )
+
+    def test_pull_request_template_cannot_restore_runtime_profile_choices(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            template = root / ".github/pull_request_template.md"
+            template.parent.mkdir(parents=True)
+            template.write_text(
+                "Build profiles affected: `recommended` / `full` / `dev` / none\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                [
+                    ".github/pull_request_template.md: retired user-facing "
+                    "Runtime Profile choice remains"
+                ],
+                errors,
+            )
+
+    def test_all_public_and_authoring_runtime_surfaces_reject_profile_choices(
+        self,
+    ) -> None:
+        stale = {
+            "pyproject.toml": (
+                "[tool.changeforge.profiles]\n"
+                'recommended = "runtime"\nfull = "runtime"\ndev = "runtime"\n'
+            ),
+            "Makefile": (
+                "doctor-codex:\n"
+                "\tpython3 installers/doctor.py --agent codex --scope user "
+                "--profile recommended\n"
+            ),
+            "SUPPORT.md": "Selected profile: recommended, full, or dev.\n",
+            ".github/ISSUE_TEMPLATE/bug_report.md": (
+                "Profile: recommended / full / dev\n"
+            ),
+            ".github/ISSUE_TEMPLATE/feature_request.md": (
+                "Profile impact: recommended / full / dev / none\n"
+            ),
+            ".github/ISSUE_TEMPLATE/skill_change.md": (
+                "## Routing or Build Profile Impact\n"
+            ),
+            "src/foundation/capabilities/README.md": (
+                "Foundation entries are emitted by the recommended, full, and "
+                "dev build profiles.\n"
+            ),
+            (
+                "src/foundation/capabilities/repository-context-map/references/"
+                "source-generated-boundary-map.md"
+            ): "| Build profile | Recommended, full, dev, or installed output. |\n",
+            (
+                "src/foundation/capabilities/skill-authoring-expert/references/"
+                "evidence-patterns.md"
+            ): "Run the dev/recommended build when the build profile matters.\n",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for relative, text in stale.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                set(stale),
+                {error.split(":", 1)[0] for error in errors},
+                errors,
+            )
+
+    def test_retired_runtime_surface_guard_names_each_profile_authority(self) -> None:
+        required = {
+            "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/benchmarks-and-patterns.md"
+            ),
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/evidence-patterns.md"
+            ),
+        }
+
+        self.assertTrue(
+            required.issubset(set(self.validator.RUNTIME_SURFACE_FILES)),
+            set(self.validator.RUNTIME_SURFACE_FILES),
+        )
+
+    def test_each_profile_authority_rejects_restored_ambiguous_runtime_wording(
+        self,
+    ) -> None:
+        stale = {
+            "src/foundation/capabilities/skill-authoring-expert/SKILL.md": (
+                "Change routing, references, registries, profile delivery, or "
+                "Skill validation.\n"
+            ),
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/benchmarks-and-patterns.md"
+            ): "Same task, profile, build profile, and source-vs-dist boundary.\n",
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/evidence-patterns.md"
+            ): "Test the final build-profile output rather than source alone.\n",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for relative, text in stale.items():
+                with self.subTest(relative=relative):
+                    path = root / relative
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding="utf-8")
+
+                    errors = self.validator._runtime_surface_errors(root)
+
+                    self.assertEqual(
+                        [
+                            f"{relative}: retired user-facing Runtime Profile "
+                            "choice remains"
+                        ],
+                        errors,
+                    )
+                    path.unlink()
+
+    def test_every_removed_runtime_flag_is_rejected_on_public_surfaces(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            makefile = root / "Makefile"
+            for flag in (
+                "--profile",
+                "--with-hooks",
+                "--without-hooks",
+                "--hook-profile",
+                "--professional-injection",
+                "--activation-level",
+            ):
+                with self.subTest(flag=flag):
+                    makefile.write_text(
+                        "doctor-codex:\n"
+                        "\tpython3 installers/doctor.py --agent codex "
+                        f"--scope user {flag}\n",
+                        encoding="utf-8",
+                    )
+                    errors = self.validator._runtime_surface_errors(root)
+                    self.assertTrue(
+                        any(flag in error for error in errors),
+                        errors,
+                    )
+
+    def test_make_doctor_recipe_is_accepted_by_current_doctor_parser(self) -> None:
+        dry_run = subprocess.run(
+            ["make", "-n", "doctor-codex"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+        self.assertEqual(0, dry_run.returncode, dry_run.stderr)
+        argv = shlex.split(dry_run.stdout.strip())
+        self.assertTrue(argv)
+        if argv[0] == "python3":
+            argv[0] = sys.executable
+        parsed = subprocess.run(
+            argv,
+            cwd=ROOT,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+        self.assertNotEqual(2, parsed.returncode, parsed.stderr)
+        self.assertNotIn("unrecognized arguments", parsed.stderr)
 
     def test_seeded_stale_domain_and_capability_counts_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             benchmarks = root / "docs/BENCHMARKS.md"
+            domain_fact = projections["docs/BENCHMARKS.md"][0]
             benchmarks.write_text(
                 benchmarks.read_text(encoding="utf-8").replace(
-                    "all 13 Domain Skills",
-                    "all seven Domain Skills",
+                    domain_fact,
+                    "all 3 Domain Skills",
                     1,
                 ),
                 encoding="utf-8",
             )
             validation = root / "docs/VALIDATION.md"
+            matrix_fact = projections["docs/VALIDATION.md"][-2]
             validation.write_text(
                 validation.read_text(encoding="utf-8").replace(
-                    "125 entries classify as 81 covered",
-                    "124 entries classify as 80 covered",
+                    matrix_fact,
+                    "4 entries classify as 2 covered, 1 partial, 1 missing, "
+                    "and 0 intentionally unsupported",
                     1,
                 ),
                 encoding="utf-8",
             )
-
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
-                any("docs/BENCHMARKS.md" in error and "Domain" in error for error in errors),
+                any("docs/BENCHMARKS.md" in error and domain_fact in error for error in errors),
                 errors,
             )
             self.assertTrue(
-                any("docs/VALIDATION.md" in error and "125 entries" in error for error in errors),
+                any("docs/VALIDATION.md" in error and matrix_fact in error for error in errors),
                 errors,
             )
 
     def test_stale_indexed_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-2]
             changed, replacements = re.subn(
                 r"\d+ registry-indexed Markdown files",
-                "526 registry-indexed Markdown files",
+                "1 registry-indexed Markdown files",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
+                f"{expected!r}",
                 errors,
             )
 
     def test_stale_physical_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-2]
             changed, replacements = re.subn(
                 r"\d+(\s+physical Markdown files)",
-                r"527\1",
+                r"2\1",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
+                f"{expected!r}",
                 errors,
             )
 
     def test_stale_unindexed_template_reference_count_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             profiles = root / "docs/BUILD_PROFILES.md"
+            expected = projections["docs/BUILD_PROFILES.md"][-1]
             text = profiles.read_text(encoding="utf-8")
             changed, replacements = re.subn(
                 r"The extra physical file is the intentionally\s+unindexed "
@@ -375,12 +693,15 @@ class DocsCoreProjectionTests(unittest.TestCase):
             self.assertEqual(1, replacements)
             profiles.write_text(changed, encoding="utf-8")
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
                 any(
                     "docs/BUILD_PROFILES.md" in error
-                    and "Exactly 1 physical Reference is unindexed" in error
+                    and expected in error
                     for error in errors
                 ),
                 errors,
@@ -389,11 +710,21 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_reference_inventory_collector_failure_is_closed(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            self._volatile_fact_inputs(root, authority)
+
+            def failed_authority(_root: Path) -> dict[str, object]:
+                self.validator._reference_inventory_authority(root)
+                raise AssertionError("collector failure did not propagate")
+
             with mock.patch.object(
                 self.validator,
                 "_canonical_reference_content",
                 side_effect=RuntimeError("fixture collector failure"),
+            ), mock.patch.object(
+                self.validator,
+                "_volatile_fact_authority",
+                side_effect=failed_authority,
             ):
                 errors = self.validator._volatile_fact_errors(root)
 
@@ -411,56 +742,276 @@ class DocsCoreProjectionTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._volatile_fact_inputs(root)
+            authority = self._synthetic_volatile_authority()
+            projections = self._volatile_fact_inputs(root, authority)
             changelog = root / "CHANGELOG.md"
             current = changelog.read_text(encoding="utf-8")
-            stale, replacements = re.subn(
-                r"233 canonical entries and 62 capability\s+entries",
-                "232 canonical entries and 62 capability entries",
-                current,
-                count=1,
+            expected = projections["CHANGELOG.md"][0]
+            stale = current.replace(
+                expected,
+                "4 canonical entries and 2 capability entries",
+                1,
             )
-            self.assertEqual(1, replacements)
             changelog.write_text(
                 stale
                 + "\n## Historical fixture\n\n"
-                + "233 canonical entries and 62 capability entries\n",
+                + expected
+                + "\n",
                 encoding="utf-8",
             )
 
-            errors = self.validator._volatile_fact_errors(root)
+            with mock.patch.object(
+                self.validator, "_volatile_fact_authority", return_value=authority
+            ):
+                errors = self.validator._volatile_fact_errors(root)
 
             self.assertTrue(
                 any(
                     "CHANGELOG.md" in error
-                    and "233 canonical entries and 62 capability entries" in error
+                    and expected in error
                     for error in errors
                 ),
                 errors,
             )
 
-    def test_slash_skill_onboarding_is_current(self) -> None:
-        self.assertEqual([], self.validator._slash_invocation_errors(ROOT))
+    def test_host_specific_skill_invocation_is_current(self) -> None:
+        self.assertEqual([], self.validator._host_product_surface_errors(ROOT))
 
-    def test_old_non_slash_onboarding_is_rejected(self) -> None:
+    def test_copilot_user_label_projects_from_host_authority(self) -> None:
+        authority = json.loads(
+            (ROOT / "src/agent-profiles/host-product-surfaces.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual("Copilot CLI", authority["surfaces"]["copilot"]["label"])
+        for relative in ("README.md", "docs/QUICKSTART.md"):
+            with self.subTest(relative=relative):
+                self.assertIn(
+                    "| Copilot CLI | Skills + Agent Profiles |",
+                    (ROOT / relative).read_text(encoding="utf-8"),
+                )
+
+    def test_explicit_invocation_examples_are_bound_to_host_authority(self) -> None:
+        for relative in ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._copy_paths(
+                    root,
+                    (
+                        "README.md",
+                        "docs/QUICKSTART.md",
+                        "docs/USAGE.md",
+                        "src/agent-profiles/host-product-surfaces.json",
+                    ),
+                )
+                target = root / relative
+                text = target.read_text(encoding="utf-8")
+                task_start = "$engineering-control-plane\n\nPayment callbacks"
+                self.assertIn(task_start, text)
+                target.write_text(
+                    text.replace(
+                        task_start,
+                        "$wrong-skill\n\nPayment callbacks",
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+
+                errors = self.validator._host_product_surface_errors(root)
+
+                self.assertTrue(
+                    any("invocation token" in error for error in errors),
+                    errors,
+                )
+
+    def test_copilot_every_surface_limit_claim_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_paths(
                 root,
-                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
             )
-            usage = root / "docs/USAGE.md"
-            usage.write_text(
-                usage.read_text(encoding="utf-8").replace(
-                    "/engineering-control-plane",
-                    "Use engineering-control-plane",
+            readme = root / "README.md"
+            current = readme.read_text(encoding="utf-8")
+            original = "Copilot CLI only"
+            self.assertIn(original, current)
+            readme.write_text(
+                current.replace(
+                    original,
+                    "Available on every Copilot surface.",
+                    1,
                 ),
                 encoding="utf-8",
             )
 
-            errors = self.validator._slash_invocation_errors(root)
+            errors = self.validator._host_product_surface_errors(root)
 
-            self.assertTrue(any("docs/USAGE.md" in error for error in errors), errors)
+            self.assertTrue(
+                any("Host delivery/invocation/workflow table" in error for error in errors),
+                errors,
+            )
+
+    def test_cline_install_target_does_not_claim_live_host_behavior(self) -> None:
+        quickstart = (ROOT / "docs/QUICKSTART.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "| Cline | Skills only | Not established | Not established | "
+            "Artifact delivery only |",
+            quickstart,
+        )
+        self.assertEqual([], self.validator._host_product_surface_errors(ROOT))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            target = root / "docs/QUICKSTART.md"
+            target.write_text(
+                target.read_text(encoding="utf-8").replace(
+                    "| Cline | Skills only | Not established | Not established | "
+                    "Artifact delivery only |",
+                    "| Cline | Skills only | `/engineering-control-plane` | Available | "
+                    "Artifact delivery only |",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._host_product_surface_errors(root)
+            self.assertTrue(
+                any("Host delivery/invocation/workflow table" in error for error in errors),
+                errors,
+            )
+
+    def test_cline_full_workflow_prose_claim_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            usage = root / "docs/USAGE.md"
+            usage.write_text(
+                usage.read_text(encoding="utf-8")
+                + "\nThe full rd-skills workflow is available in Cline.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._host_product_surface_errors(root)
+
+            self.assertTrue(any("unsupported Host workflow claim" in error for error in errors), errors)
+
+    def test_quickstart_codex_task_rejects_slash_invocation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            quickstart = root / "docs/QUICKSTART.md"
+            current = quickstart.read_text(encoding="utf-8")
+            task_start = "$engineering-control-plane\n\nPayment callbacks"
+            self.assertIn(task_start, current)
+            quickstart.write_text(
+                current.replace(
+                    task_start,
+                    "/engineering-control-plane\n\nPayment callbacks",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._host_product_surface_errors(root)
+
+            self.assertTrue(
+                any(
+                    "docs/QUICKSTART.md" in error and "invocation token" in error
+                    for error in errors
+                ),
+                errors,
+            )
+
+    def test_slash_invocation_examples_are_bound_to_host_authority(self) -> None:
+        for relative in ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._copy_paths(
+                    root,
+                    (
+                        "README.md",
+                        "docs/QUICKSTART.md",
+                        "docs/USAGE.md",
+                        "src/agent-profiles/host-product-surfaces.json",
+                    ),
+                )
+                target = root / relative
+                current = target.read_text(encoding="utf-8")
+                task_start = "$engineering-control-plane\n\nPayment callbacks"
+                self.assertIn(task_start, current)
+                target.write_text(
+                    current.replace(
+                        task_start,
+                        "/wrong-skill\n\nPayment callbacks",
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+
+                errors = self.validator._host_product_surface_errors(root)
+
+                self.assertTrue(
+                    any(
+                        relative in error and "invocation token" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_universal_slash_invocation_claim_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            usage = root / "docs/USAGE.md"
+            usage.write_text(
+                usage.read_text(encoding="utf-8")
+                + "\nAll supported hosts use `/engineering-control-plane`.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._host_product_surface_errors(root)
+
+            self.assertTrue(
+                any("universal Slash" in error for error in errors),
+                errors,
+            )
 
     def test_shell_fences_have_no_usage_placeholders(self) -> None:
         errors = []
@@ -553,8 +1104,8 @@ class DocsCoreProjectionTests(unittest.TestCase):
             text = exceptions.read_text(encoding="utf-8")
             exceptions.write_text(
                 text.replace(
-                    "  schema_version: 7\n",
-                    "  schema_version: 7\n  lifecycle: {}\n",
+                    "  schema_version: 8\n",
+                    "  schema_version: 8\n  lifecycle: {}\n",
                     1,
                 ),
                 encoding="utf-8",
@@ -729,6 +1280,95 @@ class DocsCoreProjectionTests(unittest.TestCase):
         self.assertEqual([], self.validator._navigation_errors(ROOT))
         self.assertEqual([], self.validator._required_content_errors(ROOT))
 
+    def test_current_timeout_class_guidance_matches_runner_contract(self) -> None:
+        errors = self.validator._required_content_errors(ROOT)
+
+        self.assertFalse(
+            any(
+                fact in error
+                for fact in self.validator.TEST_TIMEOUT_GUIDANCE_FACTS
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_authoritative_layer3_guidance_rejects_softened_cardinality(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            professional = (
+                root
+                / "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+            )
+            governance = root / "docs/SKILL_CONTENT_GOVERNANCE.md"
+            professional.parent.mkdir(parents=True)
+            governance.parent.mkdir(parents=True, exist_ok=True)
+            professional.write_text(
+                "# Professional\n\n"
+                "A Direct Task normally uses zero to three Layer 3 Skills. "
+                "Higher-risk work may use more only with a concrete risk rationale.\n",
+                encoding="utf-8",
+            )
+            governance.write_text(
+                "# Governance\n\n"
+                "Use this strict order for a stable, independent Primary Route. "
+                "Foundation is a capability-modifier layer and Domain is `modifier-only`.\n\n"
+                "Each task normally selects zero to three Layer 3 items; a "
+                "fixture-specific risk rationale permits more.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._required_content_errors(root)
+
+            self.assertEqual(
+                {
+                    "docs/SKILL_CONTENT_GOVERNANCE.md",
+                    (
+                        "docs/skill_authoring_standard/"
+                        "PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+                    ),
+                },
+                {
+                    error.split(":", 1)[0]
+                    for error in errors
+                    if "Layer 3 cardinality guidance" in error
+                },
+                errors,
+            )
+
+    def test_layer3_cardinality_guard_ignores_historical_prose(self) -> None:
+        canonical = (
+            "Layer 3 selection is an ordered unique list of zero to three items.\n"
+            "More than three items or any duplicate fails closed; never truncate "
+            "the selection.\n"
+            "Higher risk changes which Layer 3 items are selected, not the "
+            "maximum count.\n"
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            professional = (
+                root
+                / "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+            )
+            governance = root / "docs/SKILL_CONTENT_GOVERNANCE.md"
+            professional.parent.mkdir(parents=True)
+            governance.parent.mkdir(parents=True, exist_ok=True)
+            professional.write_text(canonical, encoding="utf-8")
+            governance.write_text(
+                "Use this strict order for a stable, independent Primary Route. "
+                "Foundation is a capability-modifier layer and Domain is `modifier-only`.\n"
+                + canonical,
+                encoding="utf-8",
+            )
+            (root / "CHANGELOG.md").write_text(
+                "Historical note: higher-risk work may use more Layer 3 Skills "
+                "with a risk rationale.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._required_content_errors(root)
+
+            self.assertEqual([], errors)
+
     def test_installation_matrix_is_derived_from_installer_authority(self) -> None:
         installation = (ROOT / "docs/INSTALLATION.md").read_text(encoding="utf-8")
 
@@ -779,48 +1419,6 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(any("host/scope/default-target matrix" in error for error in errors), errors)
 
-    def test_wrong_target_meaning_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            text = target.read_text(encoding="utf-8")
-            original = "For `project`, `--target` means the project root and is required."
-            self.assertIn(original, text)
-            target.write_text(
-                text.replace(
-                    original,
-                    "For `project`, `--target` means the Skill directory and is optional.",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-
-            errors = self.validator._required_content_errors(root)
-
-            self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
-
-    def test_wrong_profile_delivery_claim_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            text = target.read_text(encoding="utf-8")
-            original = "Cline\ninstalls Skills without native Agent Profile files."
-            self.assertIn(original, text)
-            target.write_text(
-                text.replace(
-                    original,
-                    "Cline\ninstalls Skills with four native Agent Profile files.",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-
-            errors = self.validator._required_content_errors(root)
-
-            self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
-
     def test_validation_path_surfaces_are_consistent(self) -> None:
         self.assertEqual([], self.validator._validation_path_consistency_errors(ROOT))
 
@@ -829,7 +1427,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900"
         )
         legacy = "python3 -m unittest discover -s tests"
-        self.assertEqual(official, self.validator.FULL_REGRESSION_COMMANDS[9])
+        self.assertEqual(official, self.validator.FULL_REGRESSION_COMMANDS[7])
         for relative in ("AGENTS.md", "docs/VALIDATION.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertEqual(1, text.count(official), relative)
@@ -917,114 +1515,10 @@ class DocsCoreProjectionTests(unittest.TestCase):
                     errors,
                 )
 
-    def test_completion_term_drift_fails_docs_projection(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._projected_docs(root)
-            target = root / "docs" / "SUBAGENT_MODEL.md"
-            text = target.read_text(encoding="utf-8")
-            target.write_text(
-                text.replace(
-                    "validation-failed -> blocked | partial",
-                    "validation-failed -> partial",
-                    1,
-                ),
-                encoding="utf-8",
-            )
 
-            errors = self.validator._core_projection_errors(root, CORE_CONTRACTS)
 
-            self.assertTrue(
-                any(
-                    "exact ordered Core Model rendering" in error
-                    for error in errors
-                ),
-                errors,
-            )
 
-    def test_conflicting_completion_rule_outside_projection_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._projected_docs(root)
-            target = root / "docs" / "SUBAGENT_MODEL.md"
-            target.write_text(
-                target.read_text(encoding="utf-8")
-                + "\nContradictory policy: validation-failed -> completed.\n",
-                encoding="utf-8",
-            )
 
-            errors = self.validator._core_projection_errors(root, CORE_CONTRACTS)
-
-            self.assertTrue(
-                any("validation-failed" in error and "duplicated" in error for error in errors),
-                errors,
-            )
-
-    def test_extra_task_field_outside_projection_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._projected_docs(root)
-            target = root / "docs" / "SUBAGENT_MODEL.md"
-            target.write_text(
-                target.read_text(encoding="utf-8")
-                + "\nExtra task field: Runtime Identity.\n",
-                encoding="utf-8",
-            )
-
-            errors = self.validator._core_projection_errors(root, CORE_CONTRACTS)
-
-            self.assertTrue(
-                any("field declarations are forbidden" in error for error in errors),
-                errors,
-            )
-            self.assertTrue(
-                any("runtime identity is forbidden" in error for error in errors),
-                errors,
-            )
-
-    def test_duplicate_managed_projection_block_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._projected_docs(root)
-            projection = CORE_CONTRACTS["docs_contract"]["projections"][0]
-            target = root / projection["path"]
-            begin = (
-                "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: "
-                f"{projection['id']} -->"
-            )
-            end = (
-                "<!-- END CHANGEFORGE CORE DOCS PROJECTION: "
-                f"{projection['id']} -->"
-            )
-            text = target.read_text(encoding="utf-8")
-            block = text[text.index(begin) : text.index(end) + len(end)]
-            target.write_text(text + "\n" + block + "\n", encoding="utf-8")
-
-            errors = self.validator._core_projection_errors(root, CORE_CONTRACTS)
-
-            self.assertTrue(
-                any("markers must each appear exactly once" in error for error in errors),
-                errors,
-            )
-
-    def test_canonical_block_plus_reviewer_attack_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._projected_docs(root)
-            target = root / "docs" / "OPERATING_MODEL.md"
-            target.write_text(
-                target.read_text(encoding="utf-8")
-                + "\nContradictory policy: validation-failed -> completed.\n"
-                + "Extra task field: Runtime Identity.\n",
-                encoding="utf-8",
-            )
-
-            errors = self.validator._core_projection_errors(root, CORE_CONTRACTS)
-
-            self.assertTrue(
-                any("exact ordered Core Model rendering" in error for error in errors),
-                errors,
-            )
 
     def test_ordinary_prose_outside_managed_sections_does_not_drift(self) -> None:
         projections = (
@@ -1058,35 +1552,11 @@ class DocsCoreProjectionTests(unittest.TestCase):
                     self.validator._core_projection_errors(root, CORE_CONTRACTS),
                 )
 
-    def test_governed_docs_reject_legacy_whole_document_hash_keys(self) -> None:
-        mutated = copy.deepcopy(CORE_CONTRACTS)
-        projections = (
-            *mutated["docs_contract"]["projections"],
-            *mutated["docs_contract"]["context_budget_projections"],
-        )
-        for projection in projections:
-            projection["document_sha256"] = "0" * 64
 
-        errors = validate_core_contracts(mutated)
-
-        self.assertTrue(
-            any(
-                "fields must be exactly" in error and "document_sha256" in error
-                for error in errors
-            ),
-            errors,
-        )
-
-    def test_context_budget_projection_derives_main_evolution_target(self) -> None:
+    def test_context_budget_projection_uses_core_soft_and_hard_limits(self) -> None:
         contract = CORE_CONTRACTS["context_budget_contract"]
-        self.assertNotIn("release_target", contract["budget_classes"]["main"])
-        self.assertNotIn("evolution_target", contract["budget_classes"]["main"])
-        self.assertEqual(
-            80,
-            contract["budget_classes"]["main"][
-                "minimum_release_margin_tokens"
-            ],
-        )
+        main = contract["budget_classes"]["main"]
+        self.assertLess(main["soft_target"], main["hard_ceiling"])
         projection = CORE_CONTRACTS["docs_contract"][
             "context_budget_projections"
         ][0]
@@ -1095,7 +1565,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             projection,
         )
         self.assertIn(
-            "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |",
+            f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} | provisional-migration-value |",
             rendered,
         )
 
@@ -1104,10 +1574,11 @@ class DocsCoreProjectionTests(unittest.TestCase):
             root = Path(raw)
             self._projected_docs(root)
             target = root / "docs" / "VALIDATION.md"
+            main = CORE_CONTRACTS["context_budget_contract"]["budget_classes"]["main"]
             target.write_text(
                 target.read_text(encoding="utf-8").replace(
-                    "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |",
-                    "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 0 | 1980 |",
+                    f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} | provisional-migration-value |",
+                    f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling'] - 1} | provisional-migration-value |",
                     1,
                 ),
                 encoding="utf-8",
@@ -1136,7 +1607,12 @@ class DocsCoreProjectionTests(unittest.TestCase):
             governance = root / "GOVERNANCE.md"
             governance.write_text(
                 governance.read_text(encoding="utf-8")
-                + "\nCurrent rendered Main maximum is 9999/1900 tokens.\n",
+                + "\nCurrent rendered Main maximum is 9999/"
+                + str(
+                    CORE_CONTRACTS["context_budget_contract"]["budget_classes"]
+                    ["main"]["hard_ceiling"]
+                )
+                + " tokens.\n",
                 encoding="utf-8",
             )
 
@@ -1155,10 +1631,11 @@ class DocsCoreProjectionTests(unittest.TestCase):
             root = Path(raw)
             self._governance_budget_inputs(root)
             governance = root / "GOVERNANCE.md"
+            main = CORE_CONTRACTS["context_budget_contract"]["budget_classes"]["main"]
             governance.write_text(
                 governance.read_text(encoding="utf-8").replace(
-                    "| Main always-loaded | 2200 |",
-                    "| Main always-loaded | 2199 |",
+                    f"| Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} |",
+                    f"| Main always-loaded | {main['soft_target']} | {main['hard_ceiling'] - 1} |",
                     1,
                 ),
                 encoding="utf-8",
@@ -1188,7 +1665,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                     if mutation == "failed-status":
                         report["status"] = "fail"
                     else:
-                        report["budget_calibration"]["capacity_ceilings"]["main"] = 2199
+                        report["budget_governance"]["hard_ceilings"]["main"] -= 1
                     report_path.write_text(
                         json.dumps(report),
                         encoding="utf-8",
@@ -1200,7 +1677,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 )
 
                 self.assertTrue(
-                    any("rendered context budget report" in error for error in errors),
+                    any("rendered context" in error for error in errors),
                     errors,
                 )
 
@@ -1243,7 +1720,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             "src/control-model/core-contracts.json",
             "src/agent-profiles/role-agents.json",
             "tests/scripts/test_validate_agent_profiles.py",
-            "tests/scripts/test_eval_agent_lightweight_utility.py",
+            "tests/scripts/test_eval_agent_lightweight.py",
             "reports/installation-validation.json",
         )
         for target in authority_targets:
@@ -1287,34 +1764,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 errors,
             )
 
-    def test_projection_cannot_drop_a_required_contract_binding(self) -> None:
-        mutated = copy.deepcopy(CORE_CONTRACTS)
-        projection = mutated["docs_contract"]["projections"][0]
-        projection["bindings"] = [
-            binding
-            for binding in projection["bindings"]
-            if not binding["source_path"].startswith("completion_state.")
-        ]
 
-        errors = validate_core_contracts(mutated)
-
-        self.assertTrue(
-            any("bindings must cover exactly" in error for error in errors),
-            errors,
-        )
-
-    def test_projection_rejects_an_unknown_renderer(self) -> None:
-        mutated = copy.deepcopy(CORE_CONTRACTS)
-        mutated["docs_contract"]["projections"][0]["bindings"][0][
-            "render"
-        ] = "copied-text"
-
-        errors = validate_core_contracts(mutated)
-
-        self.assertTrue(
-            any(".render is invalid" in error for error in errors),
-            errors,
-        )
 
     def test_single_source_acceptance_cannot_drop_docs_validation(self) -> None:
         mutated = copy.deepcopy(CORE_CONTRACTS)

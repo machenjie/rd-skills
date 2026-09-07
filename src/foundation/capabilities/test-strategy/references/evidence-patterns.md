@@ -1,27 +1,29 @@
 # Test Strategy Evidence Patterns
 
-Use this reference when closure depends on repository inspection, prior task evidence, observable action sequence, validation freshness, command output, report artifacts, affected-test selection, or a changed-code-to-test map. Keep it as an evidence map, not a second testing tutorial.
+Use this evidence map for a named changed-code-to-test, freshness, omission, command-signal, affected-test, or admissibility claim; keep stale, partial, flaky, retried, and skipped evidence explicit for `quality-test-gate`.
 
 ## Changed-Code-To-Test Map
 
-| Claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| Changed behavior is covered | Changed path, public behavior, acceptance/risk ID, test level, command, and owner. | The named behavior has a runnable proof obligation. | Untouched consumers, hidden branches, or production-only conditions are safe. |
-| Negative path is covered | Denied/invalid/conflict/timeout/retry/rollback/partial-failure case and expected result. | The inspected failure state is distinguished from success. | Every failure taxonomy or provider-specific error is covered. |
-| Contract compatibility is covered | Consumer inventory, schema/API/event/SDK diff, generated-client check, old/new fixture. | Inspected consumers have compatibility evidence. | Unknown external consumers or stale generated clients are safe. |
-| Migration/data integrity is covered | Forward command, rollback command, representative data shape, integrity assertion, artifact. | Inspected data path can move forward and recover in test. | Production volume, lock duration, backup/restore RTO, or all data skew is safe. |
-| Affected-test coverage obligation is bounded | Changed paths, direct/transitive dependents, generated inputs, cache-key inputs, and required observable signals. | The strategy identifies graph surfaces and command-signal requirements for targeted selection. | Exact repository entrypoints, combined coverage, fallbacks, or full-suite parity are selected. |
-| Validation is fresh | Command, working directory, exit code, output summary, report/artifact path, final-edit freshness. | Evidence was produced after the final material edit for the mapped risk. | Later source/config/fixture/generated/report edits are covered. |
-| Omitted level is justified | Technical reason, compensating evidence, release consequence, owner, and reopen trigger. | The omission is explicit and owned. | The omitted level would add no future value if risk changes. |
+| Claim | Minimum current evidence | Proves / limit |
+| --- | --- | --- |
+| Behavior covered | Changed path, behavior, acceptance/risk, level, command, owner. | Runnable obligation; not hidden consumers/branches/production-only conditions. |
+| Failure covered | Denied/invalid/conflict/timeout/retry/rollback/partial case and result. | Named failure differs from success; not every provider taxonomy. |
+| Compatibility covered | Consumers, contract diff, generated check, old/new fixture. | Inspected consumers; not unknown externals or stale clients. |
+| Migration integrity covered | Forward/rollback, representative shape, integrity assertion, artifact. | Inspected recovery; not production volume, lock, RTO, or every skew. |
+| Affected scope bounded | Changed paths, transitive dependents, generated/cache inputs, required signals. | Strategy obligations; not exact entrypoints, combined coverage, or fallback. |
+| Evidence fresh | Command, directory, status, summary, artifact, final-edit freshness. | Post-edit mapped evidence; not later edits. |
+| Omitted level owned | Reason, compensating evidence, release consequence, owner, reopen trigger. | Explicit omission; not permanent lack of value. |
 
-## Current Evidence And Freshness
+## Freshness And Permission Rules
 
-- Treat repository inspection, prior task evidence, old coverage notes, prior CI results, generated reports, and observable action sequence as discovery inputs until current source confirms them.
-- Accept prior "covered by integration", "E2E sufficient", "no consumer", "full suite passed", or "affected tests selected correctly" claims only when current changed paths, tests, generated inputs, CI config, and reports still match.
-- Reject or downgrade memory when it lacks date, owner, command, changed-path scope, generated-input freshness, or coverage alignment.
-- Mark evidence stale after edits to source, tests, fixtures, generated artifacts, schemas, migrations, lockfiles, CI config, reports, build outputs, or targeted-validation-selection mappings.
-- When making a final test confidence claim for the selected strategy and inspected scope, map it to a command, test, validator, report, diff, review artifact, owner approval, or explicit not-run residual risk.
+- Treat repository inspection, prior evidence, CI, coverage notes, reports, and memory as discovery until current source confirms them.
+- Reopen after relevant source, test, fixture, schema, migration, lockfile, CI, report, generated-input, or command-mapping edits.
+- Accept prior coverage claims only when current paths, tests, generated inputs, CI, and reports still match; otherwise record `not verified` and proof limits.
+- Bind final confidence to a command, test, validator, report, diff, review artifact, approval, or explicit not-run risk.
+- For regeneration, record source input, output owner, diff review, and rollback.
+- External, deploy, migration, restore, or rollback commands need authority, bounded effects, sandbox/dry-run where available, recovery, redaction, and stop.
+- Telemetry/audit/export evidence stays read-only or approved-connector-scoped with sensitive-value redaction and retention limits.
 
-- If fixture, generated-client, migration, or test-data regeneration, record source-of-truth input, generated output owner, diff review, and rollback/revert path.
-- If external sandbox, live provider, cloud, deploy, migration, backup, restore, or rollback command, require permission, dry-run/sandbox proof when available, rollback/forward-fix path, redaction rule, and stop condition.
-- If dashboard, telemetry, audit, or connector export, keep access read-only or approved-connector-scoped, redact tenant/user/secret-bearing values, and state retention limits.
+## Anti-Patterns
+
+Reject catalog-, coverage-, broad-suite-, mock-, or manual-only proof without a task-specific mechanism and oracle.

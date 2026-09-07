@@ -39,7 +39,7 @@ Define explicit CLI and daemon behavior for human use, automation, side effects,
 
 - Escalate to `security-privacy-gate` for credential, IAM, secret, or sensitive-output boundaries.
 - Escalate to `delivery-release-gate` for deploy, migration, publication, or production mutation.
-- Escalate to `reliability-observability-gate` for supervised daemons, unattended execution, or operational signals.
+- Return unresolved reliability, recovery, or observability judgments from daemon or automation changes to Main for `reliability-observability-gate`.
 - Escalate to `data-api-contract-changer` when machine output is a consumed contract and compatibility is unresolved.
 
 ## Output Contract

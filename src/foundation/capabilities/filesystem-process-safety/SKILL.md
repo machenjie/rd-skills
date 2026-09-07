@@ -23,39 +23,34 @@ Define portable application-runtime safety for local mutation and direct child p
 
 ## Inputs
 
-- supported platforms, filesystems, runtime APIs, path authority, who can write the path, whether any writer is less trusted, link policy, replacement, durability, protection, and cleanup owner
-- executable identity, argv, environment, working directory, stdio, deadline, cancellation, descendants, exit meaning, and effect reconciliation
+- supported platforms, filesystems, runtime APIs, actual mutation intent and completion boundary, required durability, legitimate concurrency, and cleanup owner
+- executable identity, argv, environment, working directory, stdio, deadline, cancellation, descendants, exit meaning, and result reconciliation
+- current related trust evidence, less-trusted actor or writer, sensitive authority, reachable impact path, and any complete related `critical_unknown`
 
 ## High-Value Rules
 
-- Define exclusive temporary creation in the destination directory, restrictive protection, documented same-filesystem commit, atomic visibility, and separate crash-durability proof.
-- Classify path trust from writer identity, reachable impact, handle-relative confinement, and traversal exclusions; same-user writability or path difference alone does not establish a material boundary.
-- Apply mode, ACL, ownership, and inheritance at creation where supported; verify final protection because replacement APIs preserve metadata differently.
-- Execute a selected program directly with structured argv. Make lookup, environment, working directory, credential, and inherited-resource policy explicit; route shell semantics elsewhere.
-- Define stdin closure, separate stdout/stderr, encoding, bounds, redaction, and concurrent draining before waiting.
-- Distinguish spawn failure, exit, signal or forced termination, timeout, cancellation, partial output, and unknown effects. Start or termination request is not completion.
-- Define timeout and cancellation with a deadline, graceful request, escalation, descendant policy, final wait/reap, reconciliation, and no blind retry after an unknown effect.
-- Close handles, pipes, and temporary resources while preserving the primary failure; report cleanup failure and surviving or unknown state.
+- Preserve normal correctness whenever a current filesystem effect or direct child-process effect changes; a controlled same-trust environment does not remove correctness work.
+- When local creation, replacement, durability, containment, link, permission, ownership, or cleanup semantics are active, load the `atomic-filesystem-commit-and-containment` Reference.
+- When direct executable, argv, environment, working-directory, inherited-resource, stdio, exit, timeout, cancellation, descendant, result, or cleanup semantics are active, load the `child-process-invocation-and-completion` Reference.
+- Load `trust-sensitive-filesystem-process-protection` only for current related concrete reachable trust evidence or a complete related `critical_unknown`.
+- Ordinary mutability, path difference, future replacement, or generic unknown does not create a less-trusted writer or replace an independent concurrency, durability, retry, or recovery decision.
 
 ## Anti-Patterns
 
-- Cross-volume replacement fails or degrades to copy/delete, exposing partial state.
-- Check-then-open permits a link or reparse swap before mutation.
-- Create-then-tighten protection briefly exposes bytes under default access.
-- Treating every writable or replaceable path as attacker-controlled invents a trust boundary without writer evidence.
-- Waiting before draining both pipes can deadlock parent and child.
-- Killing only the direct child leaves descendants or effects running; timeout is not rollback.
+- Reject API-name-only correctness claims, blind retry after an unknown result, pipe deadlocks, and kill-as-completion.
+- Reject trust-sensitive proof demands based only on mutability, path spelling, future possibility, or a disconnected generic unknown.
 
 ## Stop Conditions
 
-- Stop when the trusted base, target, executable, platform guarantee, effective protection, descendant scope, or reconciliation owner cannot be bounded.
+- Stop when the target, executable, platform guarantee, commit, descendant scope, or reconciliation owner cannot be bounded.
+- Stop trust-sensitive work when a complete related `critical_unknown` leaves actor, authority, or reachable impact unresolved; a generic unknown remains a Proof Limit.
 - Reject atomicity, durability, containment, termination, or result claims based only on an API name.
 - Route uploads, shell behavior, Linux host operations, build graphs, and service rules to their existing owners.
 
 ## Output Contract
 
-- Return a Filesystem/Process Safety Record covering platform, path/link, commit, durability, protection, cleanup, executable, argv, environment, working-directory, inherited-resource, and stdio decisions.
-- Include exit, timeout, cancellation, descendants, unknown results, evidence, proof limits, and residual owners.
+- Return a normal Filesystem/Process Safety Record covering create or replace, atomicity, durability, legitimate concurrency, cleanup, wait and reap, stdout/stderr, timeout or cancellation, and result reconciliation.
+- Add trust-sensitive protection only when its Reference loads, with separate actor or writer, privilege or sensitive asset, and reachable material impact decisions.
 
 ## Targeted References
 
@@ -63,3 +58,4 @@ Define portable application-runtime safety for local mutation and direct child p
 |---|---|---|---|---|---|
 | [atomic filesystem commit and containment](references/atomic-filesystem-commit-and-containment.md) | targeted | Local creation, replacement, durability, containment, link, permission, ownership, or cleanup semantics remain open | No local filesystem mutation or path-authority decision changes | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, residual-risk |
 | [child process invocation and completion](references/child-process-invocation-and-completion.md) | targeted | Executable selection, argv, environment, stdio, exit, timeout, cancellation, descendants, or result certainty remains open | No direct child-process execution contract changes | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, residual-risk |
+| [trust sensitive filesystem process protection](references/trust-sensitive-filesystem-process-protection.md) | targeted | A current filesystem or direct child-process effect has concrete reachable trust evidence, or a complete related Core critical unknown remains | Only normal filesystem or process correctness applies, or trust evidence is generic, disconnected from the current effect, or unreachable | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, residual-risk |

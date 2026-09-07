@@ -8,7 +8,7 @@
     "No latency, context-size, accuracy, or adoption threshold is evaluated."
   ],
   "routing_cases_checked": 233,
-  "professional_skills_checked": 26,
+  "professional_skills_checked": 25,
   "layer3_skills_checked": 163,
   "errors": [],
   "cases": [
@@ -20,7 +20,7 @@
       "layer3_skills": [
         "requirement-clarification"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -37,7 +37,7 @@
       "layer3_skills": [
         "acceptance-standard-definition"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -48,15 +48,14 @@
     },
     {
       "case_id": "unknown-owner",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "installed-client-change-builder",
       "layer3_skills": [
         "cross-platform-client-extension",
-        "android-platform-extension",
-        "repository-context-map"
+        "android-platform-extension"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -82,7 +81,7 @@
         "ios-ipados-platform-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -103,7 +102,7 @@
       "layer3_skills": [
         "failure-diagnosis"
       ],
-      "review_skill": "reliability-observability-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -120,7 +119,7 @@
       "layer3_skills": [
         "linux-desktop-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -144,7 +143,7 @@
       "layer3_skills": [
         "task-dag-decomposition"
       ],
-      "review_skill": "engineering-artifact-review",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -161,7 +160,7 @@
       "layer3_skills": [
         "release-rollback"
       ],
-      "review_skill": "high-risk-design-review",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -179,7 +178,7 @@
         "business-rule-extraction",
         "state-machine-modeling"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -196,7 +195,7 @@
       "layer3_skills": [
         "implementation-structure-design"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -214,7 +213,7 @@
         "cloud-platform-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "module-boundary-design",
         "api-contract-design"
@@ -242,7 +241,7 @@
         "build-tool-professional-usage",
         "targeted-validation-selection"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -257,7 +256,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -274,7 +273,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -293,7 +292,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -310,7 +309,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -327,7 +326,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -342,7 +341,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -361,7 +360,7 @@
       "layer3_skills": [
         "implementation-structure-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -378,7 +377,7 @@
       "layer3_skills": [
         "implementation-structure-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -395,7 +394,7 @@
       "layer3_skills": [
         "implementation-structure-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -414,7 +413,7 @@
         "implementation-structure-design",
         "targeted-validation-selection"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -431,7 +430,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -448,7 +447,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -483,7 +482,7 @@
       "layer3_skills": [
         "domain-object-identification"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -502,7 +501,7 @@
         "design-pattern-selection",
         "concurrency-control"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -523,7 +522,7 @@
       "layer3_skills": [
         "design-pattern-selection"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -542,7 +541,7 @@
         "design-pattern-selection",
         "targeted-validation-selection"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -610,7 +609,7 @@
       "layer3_skills": [
         "minimal-correct-implementation"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -628,7 +627,7 @@
         "windows-platform-extension",
         "minimal-correct-implementation"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -651,7 +650,7 @@
         "minimal-correct-implementation",
         "targeted-validation-selection"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -669,7 +668,7 @@
         "windows-platform-extension",
         "domain-object-identification"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -693,7 +692,7 @@
       "layer3_skills": [
         "windows-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "domain-object-identification"
       ],
@@ -717,7 +716,7 @@
         "windows-platform-extension",
         "implementation-structure-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "module-boundary-design"
       ],
@@ -741,7 +740,7 @@
         "macos-platform-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -767,7 +766,7 @@
       "layer3_skills": [
         "module-boundary-design"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -806,7 +805,7 @@
         "macos-platform-extension",
         "refactoring"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -830,7 +829,7 @@
         "linux-desktop-platform-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "refactoring"
       ],
@@ -874,7 +873,7 @@
       "layer3_skills": [
         "model-boundary-mapping"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "domain-object-identification"
       ],
@@ -893,7 +892,7 @@
       "layer3_skills": [
         "documentation-generation"
       ],
-      "review_skill": "change-documentation-gate",
+      "review_skill": null,
       "excluded_skills": [
         "design-pattern-selection"
       ],
@@ -912,7 +911,7 @@
       "layer3_skills": [
         "documentation-generation"
       ],
-      "review_skill": "change-documentation-gate",
+      "review_skill": null,
       "excluded_skills": [
         "module-boundary-design"
       ],
@@ -931,7 +930,7 @@
       "layer3_skills": [
         "module-boundary-design"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "documentation-generation"
       ],
@@ -950,7 +949,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "module-boundary-design",
         "api-contract-design"
@@ -970,7 +969,7 @@
       "layer3_skills": [
         "filesystem-process-safety"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -989,7 +988,7 @@
       "layer3_skills": [
         "sdk-library-contract-design"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -1008,7 +1007,7 @@
       "layer3_skills": [
         "package-dependency-management"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "implementation-structure-design"
       ],
@@ -1027,7 +1026,7 @@
       "layer3_skills": [
         "infrastructure-as-code-safety"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "reliability-observability-gate",
         "cloud-platform-extension"
@@ -1048,7 +1047,7 @@
         "build-tool-professional-usage",
         "targeted-validation-selection"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "incident-response-coordinator"
       ],
@@ -1068,7 +1067,7 @@
         "failure-diagnosis",
         "observability"
       ],
-      "review_skill": "reliability-observability-gate",
+      "review_skill": null,
       "excluded_skills": [
         "repository-tooling-change-builder"
       ],
@@ -1087,7 +1086,7 @@
       "layer3_skills": [
         "idempotency-retry-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1104,7 +1103,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "architecture-impact-reviewer",
         "cross-platform-client-extension"
@@ -1124,7 +1123,7 @@
       "layer3_skills": [
         "interaction-state-modeling"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1141,7 +1140,7 @@
       "layer3_skills": [
         "design-system-rules"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1159,7 +1158,7 @@
         "interaction-state-modeling",
         "design-system-rules"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1176,7 +1175,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "interaction-state-modeling",
         "design-system-rules"
@@ -1197,7 +1196,7 @@
         "api-contract-design",
         "version-compatibility"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1214,7 +1213,7 @@
       "layer3_skills": [
         "version-compatibility"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1233,7 +1232,7 @@
         "transaction-consistency",
         "release-rollback"
       ],
-      "review_skill": "delivery-release-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1250,7 +1249,7 @@
       "layer3_skills": [
         "transaction-consistency"
       ],
-      "review_skill": "quality-test-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1268,7 +1267,7 @@
         "consumer-impact-analysis",
         "failure-contract-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1285,7 +1284,7 @@
       "layer3_skills": [
         "contract-testing"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1302,7 +1301,7 @@
       "layer3_skills": [
         "regression-testing"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "windows-platform-extension"
       ],
@@ -1322,7 +1321,7 @@
         "permission-boundary-modeling",
         "threat-modeling"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1340,7 +1339,7 @@
         "threat-modeling",
         "web-security"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1378,7 +1377,7 @@
         "degradation-circuit-breaking",
         "observability"
       ],
-      "review_skill": "reliability-observability-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1395,7 +1394,7 @@
       "layer3_skills": [
         "logging-error-handling"
       ],
-      "review_skill": "logging-design-gate",
+      "review_skill": null,
       "excluded_skills": [
         "macos-platform-extension"
       ],
@@ -1432,7 +1431,7 @@
       "layer3_skills": [
         "documentation-generation"
       ],
-      "review_skill": "change-documentation-gate",
+      "review_skill": null,
       "excluded_skills": [
         "logging-design-gate",
         "linux-desktop-platform-extension"
@@ -1485,7 +1484,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1507,7 +1506,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1529,7 +1528,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1551,7 +1550,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1573,7 +1572,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1594,7 +1593,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1615,7 +1614,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "ai-product-extension"
       ],
@@ -1634,7 +1633,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "ai-product-extension"
       ],
@@ -1653,7 +1652,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "ai-product-extension"
       ],
@@ -1673,7 +1672,7 @@
         "bigdata-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1695,7 +1694,7 @@
         "bigdata-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1717,7 +1716,7 @@
         "bigdata-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1739,7 +1738,7 @@
         "bigdata-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1760,7 +1759,7 @@
       "layer3_skills": [
         "bigdata-product-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1780,7 +1779,7 @@
       "layer3_skills": [
         "transaction-consistency"
       ],
-      "review_skill": "quality-test-gate",
+      "review_skill": null,
       "excluded_skills": [
         "bigdata-product-extension"
       ],
@@ -1799,7 +1798,7 @@
       "layer3_skills": [
         "transaction-consistency"
       ],
-      "review_skill": "quality-test-gate",
+      "review_skill": null,
       "excluded_skills": [
         "bigdata-product-extension"
       ],
@@ -1818,7 +1817,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "bigdata-product-extension"
       ],
@@ -1838,7 +1837,7 @@
         "iot-embedded-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1860,7 +1859,7 @@
         "iot-embedded-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1882,7 +1881,7 @@
         "iot-embedded-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1904,7 +1903,7 @@
         "iot-embedded-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -1926,7 +1925,7 @@
         "iot-embedded-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -1947,7 +1946,7 @@
         "api-contract-design",
         "version-compatibility"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "iot-embedded-extension"
       ],
@@ -1967,7 +1966,7 @@
         "api-contract-design",
         "version-compatibility"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "iot-embedded-extension"
       ],
@@ -1986,7 +1985,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "iot-embedded-extension"
       ],
@@ -2005,7 +2004,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "iot-embedded-extension"
       ],
@@ -2025,7 +2024,7 @@
         "low-level-systems-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2047,7 +2046,7 @@
         "low-level-systems-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2069,7 +2068,7 @@
         "low-level-systems-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2091,7 +2090,7 @@
         "low-level-systems-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2112,7 +2111,7 @@
       "layer3_skills": [
         "low-level-systems-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2130,7 +2129,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "low-level-systems-extension"
       ],
@@ -2147,7 +2146,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "low-level-systems-extension"
       ],
@@ -2166,7 +2165,7 @@
       "layer3_skills": [
         "android-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2187,7 +2186,7 @@
       "layer3_skills": [
         "android-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2209,7 +2208,7 @@
         "android-platform-extension",
         "accessibility-inclusive-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2231,7 +2230,7 @@
         "android-platform-extension",
         "accessibility-inclusive-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2252,7 +2251,7 @@
       "layer3_skills": [
         "ios-ipados-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2276,7 +2275,7 @@
       "layer3_skills": [
         "ios-ipados-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2297,7 +2296,7 @@
       "layer3_skills": [
         "android-platform-extension"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2317,7 +2316,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "android-platform-extension"
       ],
@@ -2336,7 +2335,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "ios-ipados-platform-extension"
       ],
@@ -2356,7 +2355,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2378,7 +2377,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2400,7 +2399,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2422,7 +2421,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2444,7 +2443,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2465,7 +2464,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2486,7 +2485,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
         "payment-trading-extension"
@@ -2506,7 +2505,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
         "payment-trading-extension"
@@ -2526,7 +2525,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
         "payment-trading-extension"
@@ -2546,7 +2545,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
         "payment-trading-extension"
@@ -2567,7 +2566,7 @@
         "web3-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2589,7 +2588,7 @@
         "web3-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2611,7 +2610,7 @@
         "web3-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2633,7 +2632,7 @@
         "web3-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": {
@@ -2655,7 +2654,7 @@
         "web3-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2673,7 +2672,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "web3-product-extension"
       ],
@@ -2690,7 +2689,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "web3-product-extension"
       ],
@@ -2709,7 +2708,7 @@
       "layer3_skills": [
         "state-management-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "web3-product-extension"
       ],
@@ -2726,7 +2725,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate"
       ],
@@ -2745,7 +2744,7 @@
       "layer3_skills": [
         "authentication-security"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2783,7 +2782,7 @@
       "layer3_skills": [
         "api-contract-design"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate"
       ],
@@ -2802,7 +2801,7 @@
       "layer3_skills": [
         "documentation-generation"
       ],
-      "review_skill": "change-documentation-gate",
+      "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate"
       ],
@@ -2821,7 +2820,7 @@
       "layer3_skills": [
         "regression-testing"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "reliability-observability-gate"
       ],
@@ -2840,7 +2839,7 @@
       "layer3_skills": [
         "logging-error-handling"
       ],
-      "review_skill": "logging-design-gate",
+      "review_skill": null,
       "excluded_skills": [
         "reliability-observability-gate"
       ],
@@ -2879,7 +2878,7 @@
       "layer3_skills": [
         "transaction-consistency"
       ],
-      "review_skill": "quality-test-gate",
+      "review_skill": null,
       "excluded_skills": [
         "reliability-observability-gate"
       ],
@@ -2892,13 +2891,11 @@
     },
     {
       "case_id": "t2b-critical-backend-owner",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
-      "layer3_skills": [
-        "repository-context-map"
-      ],
-      "review_skill": "architecture-impact-reviewer",
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "backend-change-builder",
+      "layer3_skills": [],
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2915,7 +2912,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2932,7 +2929,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2943,13 +2940,11 @@
     },
     {
       "case_id": "t2b-critical-backend-verification",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
-      "layer3_skills": [
-        "repository-context-map"
-      ],
-      "review_skill": "architecture-impact-reviewer",
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "backend-change-builder",
+      "layer3_skills": [],
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2966,7 +2961,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2983,7 +2978,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -2998,7 +2993,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3013,7 +3008,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3028,7 +3023,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3043,7 +3038,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3058,7 +3053,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3073,7 +3068,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3090,7 +3085,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3108,7 +3103,7 @@
         "permission-boundary-modeling",
         "threat-modeling"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3126,7 +3121,7 @@
         "permission-boundary-modeling",
         "threat-modeling"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3144,7 +3139,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3162,7 +3157,7 @@
         "payment-trading-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3180,7 +3175,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3198,7 +3193,7 @@
         "ai-product-extension",
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3213,7 +3208,7 @@
       "path": "analyzed",
       "primary_skill": "engineering-change-analysis",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3230,7 +3225,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3247,7 +3242,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3264,7 +3259,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3279,7 +3274,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3508,7 +3503,7 @@
         "permission-boundary-modeling",
         "threat-modeling"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3526,7 +3521,7 @@
         "release-rollback",
         "version-compatibility"
       ],
-      "review_skill": "delivery-release-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3541,7 +3536,7 @@
       "path": "analyzed",
       "primary_skill": "engineering-change-analysis",
       "layer3_skills": [],
-      "review_skill": "logging-design-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3559,7 +3554,7 @@
         "degradation-circuit-breaking",
         "observability"
       ],
-      "review_skill": "reliability-observability-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3723,7 +3718,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3740,7 +3735,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3757,7 +3752,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3774,7 +3769,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3791,7 +3786,7 @@
       "layer3_skills": [
         "consumer-impact-analysis"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3808,7 +3803,7 @@
       "layer3_skills": [
         "failure-contract-design"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3825,7 +3820,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3842,7 +3837,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3859,7 +3854,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3876,7 +3871,7 @@
       "layer3_skills": [
         "technology-stack-selection"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3928,7 +3923,7 @@
         "web-platform-professional-usage",
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3945,7 +3940,7 @@
       "layer3_skills": [
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3962,7 +3957,7 @@
       "layer3_skills": [
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3979,7 +3974,7 @@
       "layer3_skills": [
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -3997,7 +3992,7 @@
         "infrastructure-as-code-safety",
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4014,7 +4009,7 @@
       "layer3_skills": [
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4033,7 +4028,7 @@
         "targeted-validation-selection",
         "configuration-runtime-policy"
       ],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4051,7 +4046,7 @@
         "repository-context-map",
         "configuration-runtime-policy"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4069,7 +4064,7 @@
         "web-platform-professional-usage",
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4086,7 +4081,7 @@
       "layer3_skills": [
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4103,7 +4098,7 @@
       "layer3_skills": [
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4120,7 +4115,7 @@
       "layer3_skills": [
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4138,7 +4133,7 @@
         "infrastructure-as-code-safety",
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4155,7 +4150,7 @@
       "layer3_skills": [
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4174,7 +4169,7 @@
         "targeted-validation-selection",
         "dependency-vulnerability-scanning"
       ],
-      "review_skill": "security-privacy-gate",
+      "review_skill": null,
       "excluded_skills": [],
       "passed": true,
       "domain_family": null,
@@ -4191,7 +4186,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "technology-stack-selection"
       ],
@@ -4210,7 +4205,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "technology-stack-selection"
       ],
@@ -4223,16 +4218,14 @@
     },
     {
       "case_id": "wave1a-stack-invalid-brief-negative",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
+      "profile": "review-agent",
+      "path": "direct",
+      "primary_skill": "high-risk-design-review",
       "layer3_skills": [
-        "repository-context-map"
-      ],
-      "review_skill": "architecture-impact-reviewer",
-      "excluded_skills": [
         "technology-stack-selection"
       ],
+      "review_skill": "high-risk-design-review",
+      "excluded_skills": [],
       "passed": true,
       "domain_family": null,
       "domain_transition": null,
@@ -4242,16 +4235,14 @@
     },
     {
       "case_id": "wave1a-stack-unaccepted-brief-negative",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
+      "profile": "review-agent",
+      "path": "direct",
+      "primary_skill": "high-risk-design-review",
       "layer3_skills": [
-        "repository-context-map"
-      ],
-      "review_skill": "architecture-impact-reviewer",
-      "excluded_skills": [
         "technology-stack-selection"
       ],
+      "review_skill": "high-risk-design-review",
+      "excluded_skills": [],
       "passed": true,
       "domain_family": null,
       "domain_transition": null,
@@ -4267,7 +4258,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "technology-stack-selection"
       ],
@@ -4286,7 +4277,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "configuration-runtime-policy"
       ],
@@ -4305,7 +4296,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "configuration-runtime-policy"
       ],
@@ -4322,7 +4313,7 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [],
-      "review_skill": "logging-design-gate",
+      "review_skill": null,
       "excluded_skills": [
         "configuration-runtime-policy"
       ],
@@ -4341,7 +4332,7 @@
       "layer3_skills": [
         "package-dependency-management"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "technology-stack-selection",
         "dependency-vulnerability-scanning"
@@ -4359,7 +4350,7 @@
       "path": "direct",
       "primary_skill": "repository-tooling-change-builder",
       "layer3_skills": [],
-      "review_skill": "ai-code-review-refactor",
+      "review_skill": null,
       "excluded_skills": [
         "dependency-vulnerability-scanning"
       ],
@@ -4378,7 +4369,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "dependency-vulnerability-scanning"
       ],
@@ -4397,7 +4388,7 @@
       "layer3_skills": [
         "repository-context-map"
       ],
-      "review_skill": "architecture-impact-reviewer",
+      "review_skill": null,
       "excluded_skills": [
         "agent-tool-permission-sandbox"
       ],
@@ -4427,7 +4418,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 14,
-      "review_case_count": 82,
+      "review_case_count": 14,
       "negative_case_count": 0
     },
     {
@@ -4438,7 +4429,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 5,
-      "review_case_count": 98,
+      "review_case_count": 0,
       "negative_case_count": 1
     },
     {
@@ -4447,7 +4438,7 @@
         "task-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 26,
+      "primary_case_count": 28,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4459,7 +4450,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 4,
-      "review_case_count": 4,
+      "review_case_count": 0,
       "negative_case_count": 0
     },
     {
@@ -4503,7 +4494,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 5,
-      "review_case_count": 7,
+      "review_case_count": 5,
       "negative_case_count": 0
     },
     {
@@ -4523,7 +4514,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 1,
-      "review_case_count": 2,
+      "review_case_count": 1,
       "negative_case_count": 0
     },
     {
@@ -4532,7 +4523,7 @@
         "analysis-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 103,
+      "primary_case_count": 98,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4562,8 +4553,8 @@
         "review-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 2,
-      "review_case_count": 3,
+      "primary_case_count": 4,
+      "review_case_count": 4,
       "negative_case_count": 0
     },
     {
@@ -4582,7 +4573,7 @@
         "task-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 9,
+      "primary_case_count": 10,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4605,7 +4596,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 5,
-      "review_case_count": 7,
+      "review_case_count": 3,
       "negative_case_count": 1
     },
     {
@@ -4627,7 +4618,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 2,
-      "review_case_count": 4,
+      "review_case_count": 0,
       "negative_case_count": 0
     },
     {
@@ -4639,7 +4630,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 5,
-      "review_case_count": 9,
+      "review_case_count": 5,
       "negative_case_count": 5
     },
     {
@@ -4653,16 +4644,6 @@
       "negative_case_count": 1
     },
     {
-      "name": "routing-quality-review",
-      "role_support": [
-        "review-agent"
-      ],
-      "task_routable": false,
-      "primary_case_count": 0,
-      "review_case_count": 0,
-      "negative_case_count": 0
-    },
-    {
       "name": "security-privacy-gate",
       "role_support": [
         "analysis-agent",
@@ -4671,7 +4652,7 @@
       ],
       "task_routable": true,
       "primary_case_count": 7,
-      "review_case_count": 17,
+      "review_case_count": 4,
       "negative_case_count": 8
     },
     {
@@ -4807,7 +4788,7 @@
     "relational-database": 0,
     "release-rollback": 8,
     "repeat-failure-analysis": 0,
-    "repository-context-map": 79,
+    "repository-context-map": 74,
     "repository-impact-inspection": 0,
     "repository-persistence": 0,
     "requirement-clarification": 1,
@@ -4832,7 +4813,7 @@
     "task-context-selection": 0,
     "task-dag-decomposition": 1,
     "task-handoff-context": 0,
-    "technology-stack-selection": 2,
+    "technology-stack-selection": 4,
     "tenant-isolation": 0,
     "test-data-management": 0,
     "test-strategy": 0,
@@ -4997,7 +4978,7 @@
     "task-context-selection": 0,
     "task-dag-decomposition": 0,
     "task-handoff-context": 0,
-    "technology-stack-selection": 6,
+    "technology-stack-selection": 4,
     "tenant-isolation": 0,
     "test-data-management": 0,
     "test-strategy": 0,

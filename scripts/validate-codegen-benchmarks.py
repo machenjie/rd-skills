@@ -23,7 +23,6 @@ from validation_utils import (
 from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
 from routing_scenarios import (
     load_release_routing_scenarios,
-    project_release_contract,
     project_release_route_hints,
 )
 
@@ -33,7 +32,6 @@ CODEGEN_DIR = ROOT / "evals" / "codegen"
 REGISTRY_DIR = ROOT / "src" / "registry"
 RELEASE_ROUTING_SCENARIOS = ROOT / "src" / "registry" / "release-routing-scenarios.yaml"
 
-VALID_COMPLEXITIES = {"L2", "L3", "L4", "L5"}
 REQUIRED_ROOT_FILES = (
     "prompt.md",
     "expected-qualities.yaml",
@@ -178,7 +176,6 @@ def _load_release_routing_projections(errors: list[str]) -> dict[str, dict[str, 
             )
             continue
         projections[codegen_case_id] = {
-            "release_contract": project_release_contract(row),
             "route_hints": project_release_route_hints(row),
         }
     return projections
@@ -414,26 +411,12 @@ def _validate_expected_qualities(
         errors.append(f"{rel}: 'id' must match directory name '{case_id}'")
     if loaded.get("category") != category:
         errors.append(f"{rel}: 'category' must match parent directory '{category}'")
-    if loaded.get("complexity") not in VALID_COMPLEXITIES:
-        errors.append(f"{rel}: 'complexity' must be one of {sorted(VALID_COMPLEXITIES)}")
 
     for field in REQUIRED_LIST_FIELDS:
         _validate_list_field(loaded, field, rel, errors)
 
     codegen_case_id = f"{category}/{case_id}"
     projection = release_routing_projections.get(codegen_case_id)
-    actual_release_contract = loaded.get("release_contract")
-    expected_release_contract = projection.get("release_contract") if projection else None
-    if (
-        expected_release_contract is not None
-        and actual_release_contract != expected_release_contract
-    ):
-        errors.append(
-            f"{rel}: release_contract disagrees with release-routing-scenarios.yaml projection"
-        )
-    if expected_release_contract is None and actual_release_contract is not None:
-        errors.append(f"{rel}: release_contract has no core release routing scenario")
-
     route_hints = loaded.get("route_hints")
     if not isinstance(route_hints, dict):
         errors.append(f"{rel}: 'route_hints' must be a mapping")

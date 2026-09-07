@@ -7,7 +7,7 @@ Use this reference when closure depends on changed-skill-to-validation mapping, 
 | Claim | Minimum evidence | Does not prove |
 | --- | --- | --- |
 | Body remains efficient | `SKILL.md` line count, moved/deferred detail map, selected references, and anti-bloat validator result. | The skill is easy for every future prompt. |
-| Reference is loadable | Link from `SKILL.md`, precise loading condition, link validator pass, and dev/recommended build when the build profile matters. | The reference will be chosen correctly without a trigger or guard. |
+| Reference is loadable | Link from `SKILL.md`, precise loading condition, link validator pass, and a temporary canonical Runtime build when delivery matters. | The reference will be chosen correctly without a trigger or guard. |
 | Trigger change is safe | Routing case or explicit no-routing-impact rationale plus over-routing guard for trivial docs/comment work. | Universal route precision across all prompts. |
 | Discipline rule changes behavior | Baseline failure or expected-behavior case, pressure scenario or rationalization list, and validator result. | Real-world agent adoption without future eval coverage. |
 | Generated artifacts are fresh | Source edit, generator command, reports/dist/runtime link/install validation, and source-vs-generated boundary note. | External installation state outside the validated workspace. |

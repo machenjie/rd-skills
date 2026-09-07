@@ -1,6 +1,6 @@
 ---
 name: infrastructure-as-code-safety
-description: "`analysis-agent`/`task-agent`/`review-agent`: use for infrastructure state, identity, drift, replacement, destruction, or recovery; skip docs, live apply, and provider-only policy."
+description: "IaC state, identity, drift, destruction, and recovery safety."
 ---
 
 # infrastructure-as-code-safety
@@ -9,44 +9,29 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for infrastructu
 
 **Use when**
 
-- change desired-state infrastructure source where state, identity, drift, destruction, or recovery can alter the outcome
-- interpret a plan, preview, change set, render, or diff with freshness or unknown-effect limits
+- IaC state/identity/drift/destruction/recovery/proposal limits
 
 **Do not use when**
 
-- work is documentation-only or simple configuration text without a desired-state source change
-- work requests production apply, deployment, release or rollback approval, or irreversible mutation
-- work concerns provider quota or platform policy without infrastructure-as-code source
+- docs, production mutation, or provider-only policy
 
 ## Skill Role
 
-Define cross-tool IaC safety for state, proposal, identity, graph, external effects, and recovery. Exclude Builder workflow, provider policy, secret lifecycle, data migration, and production authority.
-
-- Keep Kubernetes desired and recorded IaC state, source identity, plan, and external-effect decisions here.
-- Route workload lifecycle, health, capacity, traffic, scheduling, runtime reconciliation, and runtime recovery to `kubernetes-gateway`.
+Own cross-tool state/identity/destruction/recovery; exclude adjacent and production authority.
 
 ## High-Value Rules
 
-- Reconcile material disagreements only after separating desired, recorded, provider-observed, and effective state.
-- Bind target, remote state backend, workspace or stack, writer, and locking semantics before trusting a proposal.
-- Bind proposal evidence to current source, state, target, dependency, provider version, tool version, unknowns, omissions, staleness, and apply-gap limits.
-- Treat targeted apply, exclude, prune, and force as incomplete graph evidence requiring dependency and reconciliation inspection.
-- Classify import, move, rename, adoption, replacement, and removal by source-to-remote identity and update, replace, destroy, orphan, or external-owner outcomes.
-- Inspect privilege, network exposure, deletion protection, secret-bearing output, and irreversibility before accepting source.
-- Select source reversion, state recovery, remote restoration, or forward reconciliation for every surface that can remain changed.
-- Keep plan, state encryption, protection, drift, and rollback tool-specific; reject name-based equivalence.
+- Bind state authority and layer boundaries.
+- Bind proposals to source/recorded/effective state, identity/effects/recovery, versions, and unknowns.
+- Reject unproved tool equivalence, execution, or convergence.
 
 ## Anti-Patterns
 
-- Treat a clean preview as execution approval, live convergence proof, or proof that unknowns are harmless.
-- Rename or remove an address without proving move, import, replacement, destruction, orphaning, duplication, and remote identity.
-- Present targeted operation evidence as the complete desired-state outcome.
-- Call source rollback complete while state, resources, privileges, routes, secrets, or external effects remain changed.
+- Local success is not IaC evidence.
 
 ## Stop Conditions
 
-- Escalate unknown target, state owner, lock, effective state, version, identity, destruction, privilege, exposure, secrets, or recovery authority.
-- Stop before production apply, state rewrite, import, forced replacement, destroy, deploy, release, rollback approval, or irreversible mutation.
+- Stop on unresolved authority, effects, recovery, or production mutation.
 
 ## Output Contract
 

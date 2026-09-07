@@ -18,7 +18,7 @@ control_skills:
       - current workspace isolation capability when parallel writes are considered
       - current exact change evidence read and export, reviewer-accessible change reference, non-mutating validation, and workspace state observation capability facts
     output_contract:
-      - selected Direct Task or Analyzed Work path
+      - implementation-first assignment with analysis or review only when useful
       - bounded profile and Skill assignments
       - progress, validation, review, repair, and closure summary
     escalation_signals:
@@ -26,12 +26,6 @@ control_skills:
       - destructive, production, privileged, or irreversible operation
       - evidence gap that makes safe continuation impossible
     reference_index:
-      - path: "references/execution-level-contract.md"
-        type: targeted
-        load_when: "check execution level before routing"
-        do_not_load_when: "no repo answer or completed legacy with no work"
-        required_by: ["main-control-agent"]
-        required_output: ["routing-decision"]
       - path: "references/professional-skill-router.md"
         type: targeted
         load_when: "select one Professional Skill"
@@ -40,14 +34,14 @@ control_skills:
         required_output: ["routing-decision"]
       - path: "references/direct-task-template.md"
         type: template
-        load_when: "Direct Task needs handoff"
-        do_not_load_when: "task uses Analyzed Work"
+        load_when: "delegation needs explicit task context"
+        do_not_load_when: "ordinary single-agent work already has sufficient context"
         required_by: ["main-control-agent"]
         required_output: ["task-contract"]
       - path: "references/engineering-brief-template.md"
         type: template
-        load_when: "analysis produces Engineering Brief"
-        do_not_load_when: "accepted Engineering Brief exists"
+        load_when: "complex cross-agent decisions need stable communication"
+        do_not_load_when: "a direct answer or ordinary implementation is sufficient"
         required_by: ["analysis-agent"]
         required_output: ["engineering-brief"]
       - path: "references/task-dag-template.md"
@@ -58,8 +52,8 @@ control_skills:
         required_output: ["task-dag"]
       - path: "references/implementation-handoff-template.md"
         type: template
-        load_when: "accepted handoff starts implementation"
-        do_not_load_when: "no implementation task exists"
+        load_when: "a downstream consumer needs implementation results"
+        do_not_load_when: "ordinary result reporting is sufficient"
         required_by: ["task-agent"]
         required_output: ["implementation-handoff"]
       - path: "references/utility-capsule-template.md"

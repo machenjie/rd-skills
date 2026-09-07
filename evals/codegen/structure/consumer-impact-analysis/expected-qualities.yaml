@@ -1,6 +1,5 @@
 id: consumer-impact-analysis
 category: structure
-complexity: L3
 focus:
   - public contract consumer impact
   - compatibility and migration

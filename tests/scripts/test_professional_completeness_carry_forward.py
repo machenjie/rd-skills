@@ -1,17 +1,12 @@
 from __future__ import annotations
 
 import copy
-import hashlib
 import json
 import linecache
 import sys
 import tempfile
 import types
 import unittest
-from collections import OrderedDict, defaultdict, namedtuple
-from decimal import Decimal
-from enum import IntEnum
-from functools import lru_cache
 from pathlib import Path
 from unittest import mock
 
@@ -331,7 +326,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             },
         )
         fingerprint = self.bindings.get(candidate_id, {}).get(
-            "package_material_binding", "f" * 64
+            "content_fingerprint", "f" * 64
         )
         return {
             "skill_id": candidate_id,
@@ -344,6 +339,22 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         plan = self._plan(self.targets)
         self.assertEqual([], plan["fresh_target_ids"])
         self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
+        for target in self.targets:
+            binding = self.bindings[target["skill_id"]]
+            self.assertEqual(
+                CARRY.canonical_json_sha256(
+                    CARRY.professional_candidate_material_binding(target)
+                ),
+                binding["content_fingerprint"],
+            )
+            self.assertEqual(
+                CARRY.canonical_json_sha256(
+                    CARRY.professional_candidate_currentness_projection(
+                        target
+                    )
+                ),
+                binding["package_material_binding"],
+            )
 
     def test_no_baseline_and_contract_change_make_every_target_fresh(self) -> None:
         without_baseline = self._plan(
@@ -409,49 +420,1019 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             changed["reasons_by_target"]["a"],
         )
 
-    def test_root_and_reference_changes_expand_to_required_candidate_once(self) -> None:
-        root_plan = self._plan(
-            _catalog(roots={"d": "# d\n\nChanged d root evidence.\n"})
+    def test_currentness_contract_mutation_forces_all_fresh(self) -> None:
+        current_contract = CONTRACTS.professional_review_contract_fingerprint()
+        current_snapshot = CARRY.professional_carry_snapshot(
+            self.bindings,
+            review_contract_fingerprint=current_contract,
         )
-        reference_plan = self._plan(
-            _catalog(
-                references={
-                    "d": "# d Reference\n\nChanged d failure evidence.\n"
-                }
-            )
+        changed_projection = CONTRACTS.professional_schema3_contract_projection()
+        changed_projection["binding_contracts"]["currentness_projection"][
+            "version"
+        ] = "professional-conservative-material-projection-other"
+        changed_contract = CONTRACTS.professional_review_contract_fingerprint(
+            changed_projection
         )
-        for plan in (root_plan, reference_plan):
-            self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-            self.assertIn(
-                "required-candidate-material-changed",
-                plan["reasons_by_target"]["b"],
-            )
-            self.assertEqual([], plan["reasons_by_target"]["a"])
+        plan = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=self.bindings,
+            prior_snapshot=current_snapshot,
+            prior_decision_dependencies=self.dependencies,
+            review_contract_fingerprint=changed_contract,
+        )
+        self.assertNotEqual(current_contract, changed_contract)
+        self.assertEqual(list(SKILL_IDS), plan["fresh_target_ids"])
+        self.assertEqual(
+            ["review-contract-changed"], plan["reasons_by_target"]["a"]
+        )
 
-    def test_registry_expertise_and_layer_changes_are_exact(self) -> None:
+    def test_presentation_only_markdown_changes_carry_with_new_raw_sha(self) -> None:
+        cases = (
+            _catalog(
+                roots={
+                    "d": (
+                        "# d\r\n\r\nReview d\r\n"
+                        "root behavior.\r\n"
+                    )
+                }
+            ),
+            _catalog(
+                roots={
+                    "d": (
+                        "# d\n\n"
+                        "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                        "Review d root behavior.\n"
+                        "<!-- END CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                    )
+                }
+            ),
+            _catalog(roots={"d": "# d\n\n**Review** d root behavior.\n"}),
+            _catalog(roots={"d": "# d\n\nReview   d root behavior.\n"}),
+            _catalog(roots={"d": "# d\n    \nReview d root behavior.\n"}),
+            _catalog(roots={"d": "# d\n\t\nReview d root behavior.\n"}),
+            _catalog(
+                roots={
+                    "d": (
+                        "# d\n\n"
+                        "<!-- rd-semantic-id:v2 finding=fixed_number_candidate "
+                        "rule=d/rule occurrence=d-one -->\n"
+                        "Review d root behavior.\n"
+                    )
+                }
+            ),
+        )
+        baseline_content = self.bindings["d"]["content_fingerprint"]
+        for targets in cases:
+            with self.subTest(content=targets[3]["root"]["content"]):
+                current = CARRY.professional_review_bindings(targets)
+                self.assertNotEqual(
+                    baseline_content, current["d"]["content_fingerprint"]
+                )
+                self.assertEqual(
+                    self.bindings["d"]["package_material_binding"],
+                    current["d"]["package_material_binding"],
+                )
+                plan = self._plan(targets)
+                self.assertEqual([], plan["fresh_target_ids"])
+                self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
+
+    def test_unicode_nfc_carries_but_compatibility_and_case_do_not(self) -> None:
+        composed = _catalog(
+            roots={"d": "# d\n\nReview café behavior.\n"}
+        )
+        decomposed = _catalog(
+            roots={"d": "# d\n\nReview cafe\u0301 behavior.\n"}
+        )
+        fullwidth = _catalog(
+            roots={"d": "# d\n\nReview Ａ behavior.\n"}
+        )
+        compatibility = _catalog(
+            roots={"d": "# d\n\nReview A behavior.\n"}
+        )
+        composed_bindings = CARRY.professional_review_bindings(composed)
+        decomposed_bindings = CARRY.professional_review_bindings(decomposed)
+        fullwidth_bindings = CARRY.professional_review_bindings(fullwidth)
+        compatibility_bindings = CARRY.professional_review_bindings(
+            compatibility
+        )
+        self.assertNotEqual(
+            composed_bindings["d"]["content_fingerprint"],
+            decomposed_bindings["d"]["content_fingerprint"],
+        )
+        self.assertEqual(
+            composed_bindings["d"]["package_material_binding"],
+            decomposed_bindings["d"]["package_material_binding"],
+        )
+        packet, ballots, decision = _prior_artifacts(composed)
+        nfc_plan = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=decomposed_bindings,
+            prior_snapshot=CARRY.professional_carry_snapshot(
+                composed_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            ),
+            prior_decision_dependencies=(
+                CARRY.professional_prior_decision_dependencies(
+                    prior_packet=packet,
+                    prior_ballots=ballots,
+                    prior_decision=decision,
+                )
+            ),
+            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        )
+        self.assertEqual([], nfc_plan["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), nfc_plan["carry_target_ids"])
+        self.assertNotEqual(
+            fullwidth_bindings["d"]["package_material_binding"],
+            compatibility_bindings["d"]["package_material_binding"],
+        )
+
+    def test_frontmatter_and_unordered_marker_presentation_changes_carry(
+        self,
+    ) -> None:
+        baseline = _catalog(
+            roots={
+                "d": (
+                    "---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "---\n\n"
+                    "# d\n\n"
+                    "- Review d root behavior.\n"
+                    "  - Verify d failure evidence.\n"
+                )
+            }
+        )
+        presentation = _catalog(
+            roots={
+                "d": (
+                    "---\n"
+                    'description: "Review d behavior."\n'
+                    "name: d\n"
+                    "---\n\n"
+                    "# d\n\n"
+                    "* **Review** d root\n"
+                    "  behavior.\n"
+                    "  + Verify d failure evidence.\n"
+                )
+            }
+        )
+        baseline_bindings = CARRY.professional_review_bindings(baseline)
+        current_bindings = CARRY.professional_review_bindings(presentation)
+        self.assertNotEqual(
+            baseline_bindings["d"]["content_fingerprint"],
+            current_bindings["d"]["content_fingerprint"],
+        )
+        self.assertEqual(
+            baseline_bindings["d"]["package_material_binding"],
+            current_bindings["d"]["package_material_binding"],
+        )
+        plan = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=current_bindings,
+            prior_snapshot=CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            ),
+            prior_decision_dependencies=self.dependencies,
+            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        )
+        self.assertEqual([], plan["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
+
+    def test_parser_authenticated_presentation_families_carry(self) -> None:
         cases = (
             (
-                _catalog(registry_markers={"d": "changed-registry"}),
-                "target-material-changed",
+                "blockquote-soft-wrap",
+                "# d\n\n> Review d root behavior.\n",
+                "# d\n\n> **Review** d root\n> behavior.\n",
             ),
             (
-                _catalog(expertise={"d": ["domain", "security"]}),
-                "target-material-changed",
+                "heading-decoration",
+                "# d\n\n## Review input\n",
+                "# d\n\nReview input\n------------\n",
             ),
             (
-                _catalog(layers={"d": "domain"}),
-                "target-placement-changed",
+                "fence-decoration",
+                "# d\n\n```text\nReview input\n```\n",
+                "# d\n\n~~~text\nReview input\n~~~\n",
+            ),
+            (
+                "thematic-decoration",
+                "# d\n\n***\n",
+                "# d\n\n_ _ _\n",
+            ),
+            (
+                "intraword-strong-decoration",
+                "# d\n\nfoobarbaz\n",
+                "# d\n\nfoo**bar**baz\n",
             ),
         )
-        for targets, own_reason in cases:
-            with self.subTest(reason=own_reason):
-                plan = self._plan(targets)
+        for label, baseline_text, changed_text in cases:
+            baseline_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    baseline_text
+                )
+            )
+            changed_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    changed_text
+                )
+            )
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            changed_bindings = CARRY.professional_review_bindings(changed)
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            plan = CARRY.plan_exact_professional_carry_forward(
+                current_bindings=changed_bindings,
+                prior_snapshot=CARRY.professional_carry_snapshot(
+                    baseline_bindings,
+                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
+                ),
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            with self.subTest(label=label):
+                self.assertEqual(baseline_projection, changed_projection)
+                self.assertNotEqual(
+                    baseline_bindings["d"]["content_fingerprint"],
+                    changed_bindings["d"]["content_fingerprint"],
+                )
+                self.assertEqual(
+                    baseline_bindings["d"]["package_material_binding"],
+                    changed_bindings["d"]["package_material_binding"],
+                )
+                self.assertEqual([], plan["fresh_target_ids"])
+                self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
+
+    def test_markdown_collision_matrix_is_material_and_scoped(self) -> None:
+        cases = (
+            (
+                "intraword-double-underscore",
+                "# d\n\nReview foo__bar__baz.\n",
+                "# d\n\nReview foobarbaz.\n",
+            ),
+            (
+                "escaped-emphasis-closer",
+                "# d\n\nReview **A\\**\n",
+                "# d\n\nReview A\\\n",
+            ),
+            (
+                "html-horizontal-whitespace",
+                "# d\n\n<pre>Review  input</pre>\n",
+                "# d\n\n<pre>Review input</pre>\n",
+            ),
+            (
+                "fenced-block-under-list",
+                "# d\n\n- Review\n  ```text\n  input\n  ```\n",
+                "# d\n\n- Review ```text input ```\n",
+            ),
+            (
+                "indented-code-under-list",
+                "# d\n\n- Review\n\n      input\n",
+                "# d\n\n- Review input\n",
+            ),
+            (
+                "blockquote-under-list",
+                "# d\n\n- Review\n  > input\n",
+                "# d\n\n- Review > input\n",
+            ),
+            (
+                "table-under-list",
+                (
+                    "# d\n\n"
+                    "- Review\n"
+                    "  | A | B |\n"
+                    "  | --- | --- |\n"
+                ),
+                "# d\n\n- Review | A | B | | --- | --- |\n",
+            ),
+            (
+                "unwrapped-gfm-table",
+                "# d\n\nA | B\n--- | ---\n",
+                "# d\n\nA | B --- | ---\n",
+            ),
+            (
+                "setext-heading",
+                "# d\n\nTitle\n===\n",
+                "# d\n\nTitle ===\n",
+            ),
+            (
+                "ambiguous-lazy-list-continuation",
+                "# d\n\n- Review\nVerify output\n",
+                "# d\n\n- Review\n\nVerify output\n",
+            ),
+            (
+                "ambiguous-lazy-list-after-closed-wrap",
+                "# d\n\n- Review\n  input\nVerify output\n",
+                "# d\n\n- Review\n  input\n\nVerify output\n",
+            ),
+            (
+                "nested-atx-heading-under-list",
+                "# d\n\n- Item\n  # Rule\n",
+                "# d\n\n- Item # Rule\n",
+            ),
+            (
+                "nested-thematic-break-under-list",
+                "# d\n\n- Item\n  ***\n",
+                "# d\n\n- Item ***\n",
+            ),
+            (
+                "spaced-star-thematic-break",
+                "# d\n\n* * *\n",
+                "# d\n\n- * *\n",
+            ),
+            (
+                "spaced-dash-thematic-break",
+                "# d\n\n- - -\n",
+                "# d\n\n* - -\n",
+            ),
+            (
+                "spaced-underscore-thematic-break",
+                "# d\n\n_ _ _\n",
+                "# d\n\nReview _ _ _\n",
+            ),
+            (
+                "indented-frontmatter-delimiters",
+                (
+                    "    ---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "    ---\n\n"
+                    "# d\n\nReview d root behavior.\n"
+                ),
+                (
+                    "---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "---\n\n"
+                    "# d\n\nReview d root behavior.\n"
+                ),
+            ),
+            (
+                "authenticated-marker-inside-fence",
+                (
+                    "# d\n\n```text\n"
+                    "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                    "```\n"
+                ),
+                "# d\n\n```text\n```\n",
+            ),
+            (
+                "indented-authenticated-marker",
+                (
+                    "# d\n\n"
+                    "    <!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                ),
+                (
+                    "# d\n\n"
+                    "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                ),
+            ),
+            (
+                "indented-heading-candidate",
+                "# d\n\n    # Rule\n",
+                "# d\n\n# Rule\n",
+            ),
+            (
+                "indented-fully-wrapped-table",
+                "# d\n\n    | A | B |\n    | --- | --- |\n",
+                "# d\n\n| A | B |\n| --- | --- |\n",
+            ),
+            (
+                "ordered-list-block-ownership",
+                "# d\n\nReview input\n2. Verify output\n",
+                "# d\n\nReview input\n\n2. Verify output\n",
+            ),
+            (
+                "pipe-row-block-ownership",
+                "# d\n\nReview input\n| Verify output |\n",
+                "# d\n\nReview input\n\n| Verify output |\n",
+            ),
+            (
+                "gfm-table-block-ownership",
+                (
+                    "# d\n\nReview input\n"
+                    "A | B\n"
+                    "--- | ---\n"
+                ),
+                (
+                    "# d\n\nReview input\n\n"
+                    "A | B\n"
+                    "--- | ---\n"
+                ),
+            ),
+            (
+                "autolink-block-ownership",
+                "# d\n\nReview input\n<https://example.com>\n",
+                "# d\n\nReview input\n\n<https://example.com>\n",
+            ),
+            (
+                "list-marker-padding-ownership",
+                "# d\n\n- item\n",
+                "# d\n\n-     item\n",
+            ),
+        )
+        for label, baseline_text, changed_text in cases:
+            baseline_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    baseline_text
+                )
+            )
+            changed_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    changed_text
+                )
+            )
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            changed_bindings = CARRY.professional_review_bindings(changed)
+            snapshot = CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            plan = CARRY.plan_exact_professional_carry_forward(
+                current_bindings=changed_bindings,
+                prior_snapshot=snapshot,
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            with self.subTest(label=label):
+                self.assertNotEqual(
+                    baseline_projection,
+                    changed_projection,
+                )
+                self.assertNotEqual(
+                    baseline_bindings["d"]["package_material_binding"],
+                    changed_bindings["d"]["package_material_binding"],
+                )
                 self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-                self.assertIn(own_reason, plan["reasons_by_target"]["d"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
                 self.assertIn(
                     "required-candidate-material-changed",
                     plan["reasons_by_target"]["b"],
                 )
+                self.assertEqual([], plan["reasons_by_target"]["a"])
+                self.assertEqual([], plan["reasons_by_target"]["c"])
+
+    def test_opaque_markdown_preserves_whitespace_and_final_newline(self) -> None:
+        cases = (
+            (
+                "horizontal-whitespace",
+                "# d\n\n<pre>Review  input</pre>\n",
+                "# d\n\n<pre>Review input</pre>\n",
+            ),
+            (
+                "blank-whitespace",
+                "# d\n\n<pre>Review input\n \nVerify output</pre>\n",
+                "# d\n\n<pre>Review input\n\nVerify output</pre>\n",
+            ),
+            (
+                "final-newline",
+                "# d\n\n<pre>Review input</pre>\n",
+                "# d\n\n<pre>Review input</pre>",
+            ),
+        )
+        for label, baseline_text, changed_text in cases:
+            with self.subTest(label=label):
+                self.assertNotEqual(
+                    CARRY.professional_markdown_currentness_projection(
+                        baseline_text
+                    ),
+                    CARRY.professional_markdown_currentness_projection(
+                        changed_text
+                    ),
+                )
+
+    def test_markdown_hard_break_is_not_normalized_as_soft_wrapping(self) -> None:
+        hard_break = "# d\n\nReview input.  \nVerify output.\n"
+        one_paragraph = "# d\n\nReview input. Verify output.\n"
+        hard_projection = (
+            CARRY.professional_markdown_currentness_projection(hard_break)
+        )
+        self.assertNotEqual("opaque-document", hard_projection[0]["type"])
+        self.assertNotEqual(
+            hard_projection,
+            CARRY.professional_markdown_currentness_projection(one_paragraph),
+        )
+
+    def test_unsupported_parser_families_make_the_whole_body_opaque(self) -> None:
+        cases = (
+            "# d\n\n1. Review input\n",
+            "# d\n\n| A | B |\n| --- | --- |\n",
+            "# d\n\n<pre>Review input</pre>\n",
+            "# d\n\n[Review][rule]\n\n[rule]: /input\n",
+        )
+        for content in cases:
+            with self.subTest(content=content):
+                projection = (
+                    CARRY.professional_markdown_currentness_projection(content)
+                )
+                self.assertEqual("opaque-document", projection[0]["type"])
+                self.assertEqual(content, projection[0]["value"])
+
+    def test_commonmark_emphasis_is_presentation_but_unmatched_is_material(
+        self,
+    ) -> None:
+        for decorated, plain in (
+            ("# d\n\n**Review _input_**\n", "# d\n\nReview input\n"),
+            ("# d\n\nfoo**bar**baz\n", "# d\n\nfoobarbaz\n"),
+        ):
+            with self.subTest(decorated=decorated):
+                self.assertEqual(
+                    CARRY.professional_markdown_currentness_projection(decorated),
+                    CARRY.professional_markdown_currentness_projection(plain),
+                )
+        self.assertNotEqual(
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\n**Review input\n"
+            ),
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\nReview input\n"
+            ),
+        )
+
+    def test_possible_prose_semantic_changes_are_fresh_not_inferred(self) -> None:
+        cases = {
+            "spelling": "# d\n\nReveiw d root behavior.\n",
+            "synonym": "# d\n\nInspect d root behavior.\n",
+            "compression": "# d\n\nReview d behavior.\n",
+            "action": "# d\n\nDelete d root behavior.\n",
+            "object": "# d\n\nReview d root contract.\n",
+            "direction": "# d\n\nReview input from d root behavior.\n",
+            "condition": "# d\n\nReview d root behavior unless valid.\n",
+            "constraint": "# d\n\nMay review d root behavior.\n",
+            "case": "# d\n\nreview d root behavior.\n",
+            "punctuation": "# d\n\nReview d root behavior!\n",
+            "unauthenticated-comment": (
+                "# d\n\n<!-- ordinary prose note -->\n"
+                "Review d root behavior.\n"
+            ),
+        }
+        for label, content in cases.items():
+            targets = _catalog(roots={"d": content})
+            with self.subTest(label=label):
+                plan = self._plan(targets)
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
+                self.assertIn(
+                    "required-candidate-material-changed",
+                    plan["reasons_by_target"]["b"],
+                )
+                self.assertEqual([], plan["reasons_by_target"]["a"])
+                self.assertEqual([], plan["reasons_by_target"]["c"])
+
+    def test_order_nesting_code_link_table_and_opaque_changes_are_fresh(
+        self,
+    ) -> None:
+        cases = (
+            (
+                "heading-level",
+                "# d\n\nReview input.\n",
+                "## d\n\nReview input.\n",
+            ),
+            (
+                "paragraph-list-type",
+                "# d\n\nReview input.\n",
+                "# d\n\n- Review input.\n",
+            ),
+            (
+                "ordered-step",
+                (
+                    "# d\n\n"
+                    "1. Review input.\n"
+                    "2. Verify output.\n"
+                ),
+                (
+                    "# d\n\n"
+                    "1. Verify output.\n"
+                    "2. Review input.\n"
+                ),
+            ),
+            (
+                "nested-owner",
+                (
+                    "# d\n\n"
+                    "- Review input.\n"
+                    "  - Verify output.\n"
+                ),
+                (
+                    "# d\n\n"
+                    "- Review input.\n"
+                    "- Verify output.\n"
+                ),
+            ),
+            (
+                "fenced-code",
+                "# d\n\n" + "\x60\x60\x60text\nreview input\n\x60\x60\x60\n",
+                "# d\n\n" + "\x60\x60\x60text\nreview output\n\x60\x60\x60\n",
+            ),
+            (
+                "inline-code",
+                "# d\n\nReview \x60input\x60 exactly.\n",
+                "# d\n\nReview \x60output\x60 exactly.\n",
+            ),
+            (
+                "link-destination",
+                "# d\n\nReview [input](references/input.md).\n",
+                "# d\n\nReview [input](references/output.md).\n",
+            ),
+            (
+                "link-title",
+                '# d\n\nReview [input](references/input.md "input").\n',
+                '# d\n\nReview [input](references/input.md "output").\n',
+            ),
+            (
+                "image-source",
+                "# d\n\nReview ![input](images/input.png).\n",
+                "# d\n\nReview ![input](images/output.png).\n",
+            ),
+            (
+                "commonmark-autolink",
+                "# d\n\nReview <https://example.com/input>.\n",
+                "# d\n\nReview <https://example.com/output>.\n",
+            ),
+            (
+                "link-leading-boundary-whitespace",
+                "# d\n\nReview [input](references/input.md).\n",
+                "# d\n\nReview[input](references/input.md).\n",
+            ),
+            (
+                "link-trailing-boundary-whitespace",
+                "# d\n\n[Review](references/input.md) input.\n",
+                "# d\n\n[Review](references/input.md)input.\n",
+            ),
+            (
+                "inline-code-boundary-whitespace",
+                "# d\n\nReview `input`.\n",
+                "# d\n\nReview`input`.\n",
+            ),
+            (
+                "image-boundary-whitespace",
+                "# d\n\nUse ![safe](images/input.png) input.\n",
+                "# d\n\nUse![safe](images/input.png) input.\n",
+            ),
+            (
+                "link-label-boundary-whitespace",
+                "# d\n\nReview [ input ](references/input.md).\n",
+                "# d\n\nReview [input](references/input.md).\n",
+            ),
+            (
+                "autolink-boundary-whitespace",
+                "# d\n\nReview <https://example.com>.\n",
+                "# d\n\nReview<https://example.com>.\n",
+            ),
+            (
+                "table-cell",
+                (
+                    "# d\n\n"
+                    "| Action | Object |\n"
+                    "| --- | --- |\n"
+                    "| Review | input |\n"
+                ),
+                (
+                    "# d\n\n"
+                    "| Action | Object |\n"
+                    "| --- | --- |\n"
+                    "| Review | output |\n"
+                ),
+            ),
+            (
+                "opaque-block",
+                "# d\n\n> Review input conservatively.\n",
+                "# d\n\n> Delete input conservatively.\n",
+            ),
+        )
+        for label, baseline_text, changed_text in cases:
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            snapshot = CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            with self.subTest(label=label):
+                plan = CARRY.plan_exact_professional_carry_forward(
+                    current_bindings=CARRY.professional_review_bindings(changed),
+                    prior_snapshot=snapshot,
+                    prior_decision_dependencies=dependencies,
+                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
+                )
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+
+    def test_complete_structured_authority_changes_are_fresh(self) -> None:
+        cases = {
+            "responsibility": _catalog(
+                responsibility_overrides={
+                    "d": {"role_support": ["analysis-agent"]}
+                }
+            ),
+            "trigger": _catalog(
+                responsibility_overrides={
+                    "d": {"trigger_signals": ["changed trigger"]}
+                }
+            ),
+            "anti-trigger": _catalog(
+                responsibility_overrides={
+                    "d": {"anti_trigger_signals": ["changed anti-trigger"]}
+                }
+            ),
+            "required-input": _catalog(
+                responsibility_overrides={
+                    "d": {"required_inputs": ["changed input"]}
+                }
+            ),
+            "required-output": _catalog(
+                responsibility_overrides={
+                    "d": {"output_contract": ["changed output"]}
+                }
+            ),
+            "constraint": _catalog(
+                responsibility_overrides={
+                    "d": {"escalation_signals": ["changed constraint"]}
+                }
+            ),
+            "routing-boundary": _catalog(
+                responsibility_overrides={
+                    "d": {"boundary_signals": ["changed boundary"]}
+                }
+            ),
+            "layer3": _catalog(
+                responsibility_overrides={
+                    "d": {"layer3_candidates": ["a"]}
+                }
+            ),
+            "used-by": _catalog(
+                responsibility_overrides={"d": {"used_by": ["a"]}}
+            ),
+            "task-routable": _catalog(
+                responsibility_overrides={"d": {"task_routable": False}}
+            ),
+            "required-expertise": _catalog(
+                expertise={"d": ["domain", "security"]}
+            ),
+            "registry-extra-authority": _catalog(
+                registry_authority_overrides={
+                    "d": {"routing_mode": "direct"}
+                }
+            ),
+        }
+        for label, targets in cases.items():
+            with self.subTest(label=label):
+                plan = self._plan(targets)
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
+
+    def test_reference_loading_authority_changes_are_fresh(self) -> None:
+        base = copy.deepcopy(self.targets[3]["reference_authority"][0])
+        changes = {
+            "identity": ("path", "renamed-reference.md"),
+            "type": ("type", "decision-checklist"),
+            "load-when": (
+                "load_when",
+                "Reviewing d recovery evidence for this bounded task",
+            ),
+            "do-not-load-when": (
+                "do_not_load_when",
+                "The d recovery boundary is already fully evidenced",
+            ),
+            "required-by": ("required_by", ["analysis-agent"]),
+            "required-output": (
+                "required_output",
+                ["checklist-result", "residual-risk"],
+            ),
+        }
+        for label, (field, value) in changes.items():
+            reference = copy.deepcopy(base)
+            reference[field] = value
+            targets = _catalog(
+                reference_authority_overrides={"d": [reference]}
+            )
+            if field == "path":
+                targets[3]["indexed_references"][0]["path"] = (
+                    "src/d/renamed-reference.md"
+                )
+            with self.subTest(label=label):
+                plan = self._plan(targets)
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
+
+    def test_raw_material_integrity_mismatch_fails_closed(self) -> None:
+        cases = []
+        stale_content = _catalog()
+        stale_content[3]["root"]["content"] += "changed"
+        cases.append(stale_content)
+        stale_digest = _catalog()
+        stale_digest[3]["root"]["sha256"] = "0" * 64
+        cases.append(stale_digest)
+        stale_line_count = _catalog()
+        stale_line_count[3]["root"]["line_count"] += 1
+        cases.append(stale_line_count)
+        for targets in cases:
+            with self.subTest(record=targets[3]["root"]), self.assertRaises(
+                CARRY.ProfessionalCarryForwardError
+            ):
+                CARRY.professional_review_bindings(targets)
+
+    def test_missing_or_drifting_structured_authority_fails_closed(self) -> None:
+        missing_registry = _catalog()
+        missing_registry[0].pop("registry_authority")
+        missing_reference = _catalog()
+        missing_reference[0].pop("reference_authority")
+        mismatched_reference = _catalog()
+        mismatched_reference[0]["registry_authority"]["reference_index"][0][
+            "load_when"
+        ] = "A different authenticated loading condition"
+        drifting_compatibility = _catalog()
+        drifting_compatibility[0]["registry"]["responsibility_contract"][
+            "output_contract"
+        ] = ["drifted compatibility output"]
+        duplicate_reference = _catalog()
+        duplicate_reference[0]["reference_authority"].append(
+            copy.deepcopy(duplicate_reference[0]["reference_authority"][0])
+        )
+        duplicate_reference[0]["registry_authority"]["reference_index"] = (
+            copy.deepcopy(duplicate_reference[0]["reference_authority"])
+        )
+        for targets in (
+            missing_registry,
+            missing_reference,
+            mismatched_reference,
+            drifting_compatibility,
+            duplicate_reference,
+        ):
+            with self.subTest(target=targets[0]), self.assertRaises(
+                CARRY.ProfessionalCarryForwardError
+            ):
+                CARRY.professional_review_bindings(targets)
+
+    def test_currentness_contract_has_no_natural_language_inference_authority(
+        self,
+    ) -> None:
+        serialized = json.dumps(
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT,
+            sort_keys=True,
+        )
+        for forbidden in (
+            "lexical:",
+            "synonym",
+            "stemming",
+            "part-of-speech",
+            "predicate-owner",
+            "modal-passive",
+            "gerund",
+            "infinitive",
+        ):
+            self.assertNotIn(forbidden, serialized)
+        self.assertEqual(
+            "unsupported-or-ambiguous-markdown-is-opaque-and-change-is-fresh",
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT[
+                "unsupported_markdown"
+            ],
+        )
+        self.assertEqual(
+            "professional-commonmark-material-projection-v4",
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION,
+        )
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('"markdown-it-py==4.2.0"', pyproject)
+        self.assertIn('"mdurl==0.1.2"', pyproject)
+
+    def test_markdown_parser_distribution_mismatch_fails_closed(self) -> None:
+        actual = {
+            "markdown-it-py": "4.2.0",
+            "mdurl": "0.1.2",
+        }
+        for distribution in actual:
+            changed = dict(actual)
+            changed[distribution] = "unexpected"
+            with self.subTest(distribution=distribution), mock.patch.object(
+                CARRY.importlib_metadata,
+                "version",
+                side_effect=lambda name, versions=changed: versions[name],
+            ), self.assertRaisesRegex(
+                CARRY.ProfessionalCarryForwardError,
+                rf"{distribution}=={actual[distribution]}",
+            ):
+                CARRY.professional_markdown_currentness_projection(
+                    "# d\n\nReview input.\n"
+                )
+        with mock.patch.object(
+            CARRY.importlib_metadata,
+            "version",
+            side_effect=CARRY.importlib_metadata.PackageNotFoundError(
+                "markdown-it-py"
+            ),
+        ), self.assertRaisesRegex(
+            CARRY.ProfessionalCarryForwardError,
+            "markdown-it-py==4.2.0",
+        ):
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\nReview input.\n"
+            )
+
+    def test_markdown_parser_options_and_rules_match_the_contract(self) -> None:
+        parser = CARRY._verified_professional_markdown_parser()
+        parser_contract = (
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT["parser"]
+        )
+        self.assertEqual(
+            parser_contract["active_rules"], parser.get_active_rules()
+        )
+        for option, expected in parser_contract["options"].items():
+            self.assertEqual(expected, parser.options[option])
+
+    def test_unknown_parser_token_attrs_and_metadata_fall_back_to_opaque(
+        self,
+    ) -> None:
+        content = "# d\n\nReview input.\n"
+        tokens, environment = CARRY._parse_professional_markdown(content)
+        mutations = (
+            ("unknown-token", 0, "type", "plugin_block"),
+            ("unexpected-attrs", 0, "attrs", {"plugin": "value"}),
+            ("unexpected-meta", 0, "meta", {"plugin": "value"}),
+            ("unexpected-nesting", 0, "nesting", 0),
+        )
+        for label, index, field, value in mutations:
+            changed_tokens = copy.deepcopy(tokens)
+            setattr(changed_tokens[index], field, value)
+            with self.subTest(label=label), mock.patch.object(
+                CARRY,
+                "_parse_professional_markdown",
+                return_value=(changed_tokens, copy.deepcopy(environment)),
+            ):
+                projection = (
+                    CARRY.professional_markdown_currentness_projection(content)
+                )
+                self.assertEqual(
+                    [{"type": "opaque-document", "value": content}],
+                    projection,
+                )
+
+    def test_currentness_binding_rejects_forged_and_unknown_authority(self) -> None:
+        missing = _catalog()
+        missing[0]["registry"]["responsibility_contract"].pop(
+            "output_contract"
+        )
+        malformed = _catalog()
+        malformed[0]["registry"]["responsibility_contract"][
+            "required_inputs"
+        ] = "not-a-list"
+        noncanonical = _catalog()
+        noncanonical[0]["required_expertise_tags"] = ["z", "a"]
+        unknown_dependency = _catalog(
+            required={"a": ["unknown"]},
+            rankings={"a": ["b", "c", "d", "unknown"]},
+        )
+        for targets in (
+            missing,
+            malformed,
+            noncanonical,
+            unknown_dependency,
+        ):
+            with self.subTest(target=targets[0]), self.assertRaises(
+                CARRY.ProfessionalCarryForwardError
+            ):
+                CARRY.professional_review_bindings(targets)
+
+        forged = copy.deepcopy(self.bindings)
+        forged["a"]["package_material_binding"] = "0" * 64
+        with self.assertRaisesRegex(
+            CARRY.ProfessionalCarryForwardError,
+            "package_material_binding is stale",
+        ):
+            CARRY.professional_carry_snapshot(
+                forged,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
 
     def test_unselected_ranking_churn_does_not_reopen_target(self) -> None:
         rank_plan = self._plan(
@@ -495,7 +1476,14 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
                 review_contract_fingerprint=CONTRACT_FINGERPRINT,
             )["targets"]["b"]
         )
+        snapshot_target = CARRY.professional_carry_snapshot(
+            self.bindings,
+            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        )["targets"]["b"]
+        self.assertNotIn("content_fingerprint", snapshot_target)
         for forbidden in (
+            b"content_fingerprint",
+            b"own_material",
             b"required_candidates_fingerprint",
             b"full_catalog_ranking",
             b"full_catalog_ranking_fingerprint",
@@ -525,7 +1513,14 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         # b changes. a is fresh because one prior ballot added b; c reviews a,
         # but a's fresh status is not recursively propagated to c.
         plan = self._plan(
-            _catalog(roots={"b": "# b\n\nChanged b source material.\n"})
+            _catalog(
+                roots={
+                    "b": (
+                        "# b\n\n## Professional Decision Rules\n\n"
+                        "- Do not validate outputs before release.\n"
+                    )
+                }
+            )
         )
         self.assertEqual(["a", "b"], plan["fresh_target_ids"])
         self.assertIn(
@@ -707,6 +1702,38 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
                     value, **expected_arguments
                 )
 
+    def test_raw_source_change_still_invalidates_capsule_integrity(self) -> None:
+        capsule = CARRY.project_professional_review_capsule(
+            bindings=self.bindings,
+            review_targets=self.targets,
+            assigned_fresh_target_ids=["b"],
+        )
+        changed_targets = _catalog(
+            roots={"d": "# d\n\n**Review** d root behavior.\n"}
+        )
+        changed_bindings = CARRY.professional_review_bindings(
+            changed_targets
+        )
+        plan = self._plan(changed_targets)
+        self.assertEqual([], plan["fresh_target_ids"])
+        with self.assertRaisesRegex(
+            CARRY.ProfessionalCarryForwardError,
+            "projection is stale|material_catalog projection is stale",
+        ):
+            CARRY.validate_professional_review_capsule(
+                capsule,
+                bindings=changed_bindings,
+                review_targets=changed_targets,
+                assigned_fresh_target_ids=["b"],
+            )
+
+        forged_targets = copy.deepcopy(changed_targets)
+        forged_targets[3]["root"]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(
+            CARRY.ProfessionalCarryForwardError, "sha256 must bind content"
+        ):
+            CARRY.professional_review_bindings(forged_targets)
+
     def test_capsule_reviewer_added_ids_must_be_unique_ranked_and_not_required(self) -> None:
         for added in ([self._request("a", "a")], [self._request("a", "b")] * 2):
             with self.subTest(added=added), self.assertRaises(
@@ -779,7 +1806,7 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
             b"created_on",
             b"review_id",
             b"selector",
-            b"report",
+            b'"report_path"',
             b"package_fingerprint",
             b"required-candidate-material-fingerprints",
             b"full-catalog-ranking-fingerprint",
@@ -876,7 +1903,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS,
         )
         self.assertEqual(
-            {"professional": 26, "foundation": 150, "domain": 13},
+            {"professional": 25, "foundation": 150, "domain": 13},
             PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS,
         )
         self.assertTrue(
@@ -938,13 +1965,13 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
                     )
 
         invalid_cases = (
-            (current, 188),
-            (current, 190),
+            (current, 187),
+            (current, 189),
             (historical, 162.0),
-            (current, 189.0),
+            (current, 188.0),
             (current, True),
             (current, False),
-            (current, "189"),
+            (current, "188"),
             (current, None),
         )
         for source, required_target_count in invalid_cases:
@@ -968,11 +1995,11 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             packet["professional_targets"]
         )
         after = CARRY.canonical_json_bytes(packet)
-        self.assertEqual(189, len(bindings))
+        self.assertEqual(188, len(bindings))
         self.assertEqual(before, after)
         self.assertEqual(
-            "58908b36949d16299b15b0967376d06f8b0a188087e816463dae18760a076957",
-            hashlib.sha256(after).hexdigest(),
+            after,
+            CARRY.canonical_json_bytes(json.loads(after)),
         )
         self.assertEqual(
             {
@@ -1127,7 +2154,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         self.assertEqual(_sha(packet), _sha(adapted))
         self.assertEqual(
-            PANEL._professional_v3_panel_contract(target_count=189),
+            PANEL._professional_v3_panel_contract(target_count=188),
             adapted["panel_contract"],
         )
         self.assertEqual(
@@ -1244,8 +2271,8 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         self.assertEqual(before, CARRY.canonical_json_bytes(packet))
         self.assertEqual(
-            "48a88167ec4cb3af3b1604b8bbba2f0d532bddccd2d89b2849e4895e32e43f2a",
-            hashlib.sha256(before).hexdigest(),
+            before,
+            CARRY.canonical_json_bytes(json.loads(before)),
         )
 
 

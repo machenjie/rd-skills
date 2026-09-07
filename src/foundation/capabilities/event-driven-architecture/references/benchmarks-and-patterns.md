@@ -15,7 +15,7 @@ Load this reference when delivery, ordering, replay, consistency, backpressure, 
 
 ## Consistency, Workflow, And Replay
 
-- Use outbox when source state and event publication must agree.
+- When source state and event publication must agree, use the accepted atomic or recoverable publication protocol. An outbox is a candidate when the state and publication cannot share the required atomic boundary.
 - Use inbox or conditional writes for consumer deduplication.
 - For each distinct dual-write order, scan missing-event and phantom-event recovery paths.
 - Saga orchestration fits one visible workflow owner; choreography requires mature event ownership and stuck-workflow detection. Compensation must itself be ordered, idempotent, observable and recoverable when it fails.

@@ -17,33 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when API/DTO, do
 
 ## Skill Role
 
-Define representation, validation, mapping authority, preserved semantics, and forbidden leakage across transport, domain, persistence, event, view, and generated-model boundaries.
+Own mapping, validation, semantic preservation, and leakage boundaries.
 
 ## High-Value Rules
 
-- Keep DTOs separate from domain, persistence, generated-provider, and view models to prevent authority leakage.
-- Do not leak persistence models, lazy proxies, internal IDs, audit fields, or storage metadata into external contracts.
-- Domain objects must not import HTTP, JSON schema, ORM decorators, generated clients, provider SDK models, UI view models, or transport-specific serializers.
-- Mapper code owns translation, allowlisted fields, and boundary defaults, not pricing, authorization, lifecycle, or policy decisions.
-- Validation owner is named for each boundary: trust-boundary DTO validation, domain invariant validation, persistence constraint, event schema validation, or generated-client validation.
-- Preserve or intentionally test remapping of null, absent, empty, zero, false, unknown, not-applicable, and default states.
-- Event payloads, public DTOs, SDK models, and generated clients are versioned contracts; generated models stay at the generated boundary and are not hand-edited.
-- Treat current source, generated artifacts, and fresh validation as boundary evidence.
+- Define the source, target, mapping, validation, and policy owners.
+- Preserve allowed fields and null, absent, empty, false, and default meaning.
+- Select one named Reference for mapping choice, closure, or evidence.
+- If the mapping decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Returning a persistence model exposes storage metadata and lazy behavior as contract.
-- Passing an API DTO into domain behavior makes transport defaults, serialization choices, and caller-controlled fields look like trusted domain facts.
-- Letting a mapper perform authorization, pricing, lifecycle transitions, repository access, publication, or other IO hides policy and side effects inside translation.
-- Importing generated provider models into the domain makes external churn authoritative.
-- Collapsing null, absent, empty, false, and default states silently changes compatibility semantics.
-- Treating a persistence default as a domain default invents behavior when older rows, other writers, or omitted inputs do not share that meaning.
-- Reusing mutable domain objects as events rewrites historical meaning during replay.
-- Proving only a happy-path fixture misses forbidden-field leakage, generated-boundary drift, and negative null/default cases.
+- Local success substituted for boundary and leakage evidence.
 
 ## Stop Conditions
 
-Escalate public compatibility to `data-api-contract-changer`, domain semantics to `domain-impact-modeler`, and unknown consumers to `consumer-impact-analysis`. Route sensitive-field leakage to `security-privacy-gate` and mapper side effects to `data-side-effect-flow-tracing`.
+Stop on unknown boundary ownership, public-consumer impact, sensitive leakage, or hidden mapper effects.
 
 ## Output Contract
 

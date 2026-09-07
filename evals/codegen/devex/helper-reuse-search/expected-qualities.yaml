@@ -1,6 +1,5 @@
 id: helper-reuse-search
 category: devex
-complexity: L3
 focus:
   - helper reuse search
   - implementation placement rationale

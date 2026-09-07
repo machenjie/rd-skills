@@ -15,3 +15,4 @@
 - Define schema registry mode, OpenAPI/AsyncAPI/proto diff, contract test, fixture replay, generated-client compile, or manual residual-risk evidence.
 - Map every changed surface, compatibility direction, migration phase, telemetry gate, rollback path, and removal criterion to validation evidence or residual risk.
 - Name handoff boundaries, evidence limits, owner, and rollback path before completion.
+Route field semantics to `dto-schema-design`, consumer inventory to `consumer-impact-analysis`, executable contracts to `contract-testing`, migration execution to `data-migration-design`, and rollout/rollback to `release-rollback`.

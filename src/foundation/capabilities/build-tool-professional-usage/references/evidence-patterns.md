@@ -26,3 +26,9 @@ Build Tool Usage Record
 ## Blocking Conditions
 
 Block completion when generated outputs lack authority, a target depends on undeclared inputs, CI/local commands differ without explanation, release artifacts lack path/digest evidence, or validation writes outside the allowed sandbox without disclosure.
+
+## Anti-Patterns
+
+- Rely on command order, undeclared files, local caches, host-installed tools, or mutable shared output for a green build.
+- Hand-edit generated artifacts or accept broad regeneration churn without source-to-output explanation.
+- Treat local command success as proof of hosted enforcement, cross-platform reproducibility, or deployed artifact identity.

@@ -19,18 +19,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Route signing authorization, channel approval, rollout, rollback, and
   distribution decisions to `delivery-release-gate`.
 
-## Failure Proof
-
-- Exercise unsupported architecture, missing native dependency, invalid or
-  expired signature, identity mismatch, offline install, update, and rollback.
-- Record unavailable hardware, enterprise policy, Store ingestion, and direct
-  channel evidence as proof limits.
-
-## Required Record
-
-Return architecture/dependency inventory, exact artifact/signature evidence,
-channel and update owner, failure behavior, unavailable checks, and residual risk.
-
 ## Primary Sources
 
 - [.NET RID catalog](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)

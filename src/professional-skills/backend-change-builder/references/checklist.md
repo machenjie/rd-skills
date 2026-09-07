@@ -1,5 +1,6 @@
 # Backend Checklist
 
+- Trace each affected invariant through authorization, mutation, side effects, and failure outcomes.
 - Validate untrusted-boundary fields that can violate the affected invariant or contract while retaining trusted framework-derived context and documenting intentionally unconstrained reachable fields.
 - Enforce authn, authz, ownership, tenancy, and role checks.
 - Define transaction scope and isolation expectations.

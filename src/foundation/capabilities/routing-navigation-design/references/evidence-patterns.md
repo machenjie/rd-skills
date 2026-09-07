@@ -7,9 +7,9 @@ Use this reference when route closure depends on proving current route behavior,
 | Claim | Minimum evidence | Does not prove |
 | --- | --- | --- |
 | Route table is current | Router config, file-based route tree, page/layout/loader files, and route owner inspected after final edit. | Generated links, email templates, partner URLs, or SEO indexes are safe unless inspected. |
-| Guard is security-correct | Frontend guard classification plus backend/API 401/403 denial evidence or explicit not-verified handoff. | Frontend-only protection is sufficient security control. |
-| Redirect is safe | Same-origin `returnTo` validation, external URL rejection, safe fallback, loop-depth map, and browser-history proof. | Every historical redirect or third-party callback remains safe. |
-| Deep/stale link recovers | Allowed, unauthenticated, unauthorized, unavailable, invalid-param, deleted/archived, never-existed, and dependency-failure branches mapped to tests or manual checks. | Live bookmarks, emails, notifications, and search indexes are all covered. |
+| Guard is security-correct | Frontend guard classification plus backend/API denial and no-side-effect evidence matching the current authorization and disclosure contract, or explicit not-verified handoff. | Frontend-only protection is sufficient security control. |
+| Redirect is safe | The selected same-origin or explicit allowlist contract for `returnTo`, allowed and denied destinations, encoding/parser bypass tests, safe fallback, loop-depth map, and browser-history proof. | Every historical redirect or third-party callback remains safe. |
+| Deep/stale link recovers | Actual allowed, denied, unavailable, invalid-param, deleted/archived, never-existed, or dependency-failure branches mapped to tests or manual checks; retain evidence-backed inapplicability and uninspected limits. | Live bookmarks, emails, notifications, and search indexes are all covered. |
 | Public URL migration is compatible | Old/new route map, caller inventory, redirect/deprecation decision, telemetry or link-crawler proof, rollback note. | Unknown partner links or SEO cache behavior without external evidence. |
 | Generated-link/template evidence is fresh | Link builders, breadcrumbs, docs/sitemap, email/notification templates, and generated outputs inspected or regenerated after final route edit. | Runtime analytics or production dead-link rate. |
 

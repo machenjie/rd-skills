@@ -1,6 +1,5 @@
 id: backend-event-before-commit
 category: code-elements
-complexity: L3
 focus:
   - statement ordering
   - event after commit

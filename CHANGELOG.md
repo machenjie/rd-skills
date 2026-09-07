@@ -8,9 +8,9 @@ This project uses a simple release history format with an `Unreleased` section u
 
 ### Added
 
-- Added the authoritative `main-control-agent` prompt with Direct Task,
-  Analyzed Work, First Executable Slice, preparation-loop breaker,
-  isolation-aware scheduling, progress, review, repair, and re-review rules.
+- Added the authoritative `main-control-agent` prompt with implementation-first
+  dispatch, bounded discovery, fresh targeted validation, and Analysis or
+  independent Review when requested or justified by current evidence.
 - Added four static Agent Profiles: main control, analysis, task, and review.
 - Added Control, Professional, Foundation, and Domain registries with explicit
   triggers, anti-triggers, inputs, outputs, escalation, and targeted references.
@@ -18,24 +18,41 @@ This project uses a simple release history format with an `Unreleased` section u
   Foundation Skills plus 63 new References. The same phase removes one obsolete
   preexisting mobile Domain, so the current Domain inventory is 13.
 - Added the final Phase 2 inventory expansion: 2 Professional and 6 Foundation
-  Skills, making the current source inventory 1 Control, 26 Professional, 150
-  Foundation, and 13 Domain Skills: 190 total and 189 non-Control.
-- Added Markdown contracts for Direct Tasks, Engineering Briefs, Task DAGs, and
-  Review Handoffs.
+  Skills, making the current source inventory 1 Control, 25 Professional, 150
+  Foundation, and 13 Domain Skills: 189 total and 188 non-Control.
+- Added optional Markdown templates for task context, Engineering Briefs,
+  dependency plans, and handoffs when coordination or a downstream consumer
+  needs them.
 - Added Hookless architecture, AI boundary, migration, benchmark, Marketplace,
   and build-profile documentation plus structural and deterministic validators.
 
 ### Changed
 
+- Corrected Professional negative-route matching to require ordered contiguous
+  phrases, preserving real conflicts and audit-only historical rankings.
+  The changed Professional contract requires fresh evidence for all packages.
+- Made Professional release readiness consume its measured review-cost status;
+  accepted package evidence cannot hide an exceeded cost ceiling.
+- Corrected compact carry planning to compare reviewer-added candidates with
+  authenticated historical material, independently of whether each candidate's
+  own review can carry. Changed candidate material still requires fresh review.
 - Reorganized onboarding and reference documentation around reader goals,
   source-backed installation choices, copyable requests, recovery steps, and
   explicit evidence limits.
 - Reworked all Professional Skills for AI execution with concise decision rules,
   high-value failure modes, stop conditions, output contracts, and selective
   Layer 3 loading.
-- Changed `recommended`, `full`, and `dev` builds to standard Skill roots with
-  27, 40, and 190 top-level Skills respectively, with 154/9, 141/9, and 0/0
-  targeted/routing-only delivery.
+- Consolidated build, package, install, and discovery onto one 26-Skill
+  Runtime with 154 targeted and 9 routing-only Layer 3 entries. The internal
+  `recommended` manifest identity remains for compatibility; `full` and `dev`
+  are retired runtime choices.
+- Removed `routing-quality-review` from the Professional catalog and relocated
+  its reusable routing-maintenance checklist to the internal Skill-authoring
+  boundary. Registry and control-plane metadata now own any runtime routing
+  adaptation.
+- Added a Professional independence audit that hard-fails confirmed
+  rd-skills self-coupling during normal validation and offers a stable
+  report-only inventory for maintainers.
 - Changed normal Android and iOS/iPadOS routing to their successor Domains.
   Removed legacy Skill ids are unsupported and are not redirected.
 - Changed the routing inventory to 233 canonical entries and 62 capability
@@ -47,7 +64,8 @@ This project uses a simple release history format with an `Unreleased` section u
   terminal `retain-partial` gap contracts rather than transitional evaluation
   dispositions.
 - Changed routing and code-generation benchmark projections to select one Primary
-  Professional Skill, zero to three Layer 3 Skills, and one Review Skill.
+  Professional Skill and zero to three Layer 3 Skills; independent Review receives
+  a separate expertise assignment only when it is needed.
 - Changed validation reports and code-generation command output to state their
   static, fixture, harness, and host/runtime evidence limitations.
 

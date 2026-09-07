@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import importlib.util
 import json
 import subprocess
 import sys
@@ -8,6 +10,12 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+_routing_spec = importlib.util.spec_from_file_location(
+    "hookless_routing_evaluation_test", ROOT / "scripts" / "eval-routing.py"
+)
+ROUTING_EVALUATION = importlib.util.module_from_spec(_routing_spec)
+_routing_spec.loader.exec_module(ROUTING_EVALUATION)
 
 
 def load_owned_eval_report(
@@ -36,6 +44,29 @@ class HooklessEvaluationTests(unittest.TestCase):
             check=False,
         )
 
+    def test_routing_release_projection_uses_current_decision_results(self) -> None:
+        report = json.loads((ROOT / "reports/routing-eval.json").read_text())
+        report["decision_eval"] = ROUTING_EVALUATION.evaluate_decision_cases()
+        decision = report["decision_eval"]
+        self.assertEqual("pass", decision["status"])
+        self.assertNotIn("axis_count", decision)
+        for passed in (decision["case_count"], 0):
+            with self.subTest(passed=passed):
+                current = copy.deepcopy(report)
+                current["decision_eval"]["passed_count"] = passed
+                original = copy.deepcopy(current)
+                markdown = ROUTING_EVALUATION._render_markdown(current)
+                self.assertIn(
+                    f"- Decision cases passed: {passed}/{decision['case_count']}",
+                    markdown,
+                )
+                self.assertIn(report["results"][0]["id"], markdown)
+                self.assertIn(report["limitations"][0], markdown)
+                self.assertEqual(original, current)
+        del report["decision_eval"]["passed_count"]
+        with self.assertRaisesRegex(KeyError, "passed_count"):
+            ROUTING_EVALUATION._render_markdown(report)
+
     def test_routing_evaluation(self) -> None:
         report = load_owned_eval_report(
             self,
@@ -44,7 +75,7 @@ class HooklessEvaluationTests(unittest.TestCase):
             {
                 "schema_version": 6,
                 "status": "pass",
-                "negative_case_count": 69,
+                "negative_case_count": 67,
                 "domain_family_case_count": 44,
                 "domain_anti_case_count": 26,
                 "domain_transition_case_count": 13,
@@ -63,6 +94,14 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("full", report["candidate_coverage"])
         self.assertEqual("proven", report["route_once"])
         self.assertEqual(0, report["legacy_route_count"])
+        boundary_relations = report["boundary_relations"]
+        self.assertEqual("pass", boundary_relations["status"])
+        self.assertEqual(8, boundary_relations["relation_count"])
+        self.assertEqual(8, boundary_relations["passed_count"])
+        self.assertEqual(32, boundary_relations["role_count"])
+        self.assertEqual("full", boundary_relations["candidate_coverage"])
+        self.assertEqual("proven", boundary_relations["route_once"])
+        self.assertEqual([], boundary_relations["errors"])
         self.assertTrue(
             all(
                 isinstance(item.get("route_decision"), dict)
@@ -207,7 +246,7 @@ class HooklessEvaluationTests(unittest.TestCase):
         expected = {
             "schema_version": 6,
             "status": "pass",
-            "negative_case_count": 69,
+            "negative_case_count": 67,
         }
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -228,76 +267,25 @@ class HooklessEvaluationTests(unittest.TestCase):
             self.assertEqual(with_extra, loaded)
 
     def test_observable_trajectory_and_context_evaluations(self) -> None:
+        reports_root = ROOT / "reports"
         report = load_owned_eval_report(
-            self,
-            ROOT,
-            "reports/hookless-control-plane-eval.json",
-            {"status": "pass", "fixture_count": 16},
+            self, reports_root, "hookless-control-plane-eval.json",
+            {"schema_version": 2, "status": "pass", "errors": []},
         )
-        self.assertEqual("pass", report["status"])
-        self.assertEqual(16, report["fixture_count"])
-        self.assertEqual(13, report["release_fixture_count"])
-        self.assertEqual(1, report["scheduling_fixture_count"])
-        self.assertEqual(2, report["utility_fixture_count"])
-        self.assertEqual(
-            report["fixture_count"],
-            report["release_fixture_count"]
-            + report["scheduling_fixture_count"]
-            + report["utility_fixture_count"],
-        )
-        self.assertEqual(
-            "unsupported-on-declared-hosts",
-            report["parallelism_contract"]["current_write_parallelism"],
-        )
-        self.assertTrue(report["parallelism_contract"]["shared_workspace_serial_write"])
-        self.assertEqual(
-            report["orchestration_fixture_count"], len(report["semantic_traces"])
-        )
-        self.assertTrue(
-            all(
-                fixture["retained_semantic_equality"] is True
-                for fixture in report["orchestration_fixtures"]
-                if fixture["expected_valid"]
-            )
-        )
-        direct = next(
-            trace
-            for trace in report["semantic_traces"]
-            if trace["id"] == "dedup-direct-work-zero-analysis"
-        )
-        self.assertEqual("direct", direct["work_kind"])
-        self.assertEqual({"count": 0, "kinds": []}, direct["analysis"])
-        mutation_ids = {
-            "duplicate-same-scope-analysis",
-            "review-every-edit-task",
-            "skip-final-review-boundary",
-            "extra-final-review-after-covering-rereview",
-            "rerun-valid-validation-without-invalidation",
-            "reuse-validation-after-material-edit",
-            "repair-without-fresh-validation",
-            "repair-without-rereview",
-        }
-        self.assertTrue(
-            mutation_ids <= {trace["id"] for trace in report["semantic_traces"]}
-        )
-        self.assertTrue(
-            all(
-                trace["proof_limit"] == "deterministic-structural-fixture-only"
-                for trace in report["semantic_traces"]
-            )
-        )
+        authored = json.loads((ROOT / "evals/agent-light-trajectories/cases.yaml").read_text())
+        self.assertEqual({case["id"] for case in authored["cases"]}, {case["id"] for case in report["cases"]})
+        self.assertTrue(all(case["matches_expected"] and case["errors"] for case in report["negative_cases"]))
+        ordinary = next(case for case in report["cases"] if case["id"] == "local-owner-discovery")
+        self.assertEqual(0, ordinary["metrics"]["analysis_dispatch_count"])
+        self.assertEqual(0, ordinary["metrics"]["review_dispatch_count"])
         self.assertEqual("deterministic-fixtures", report["evidence_scope"])
         self.assertTrue(any("wall-clock performance" in item for item in report["limitations"]))
-        self.assertTrue(any("real-host accuracy" in item for item in report["limitations"]))
         self.assertTrue(any("installed user experience" in item for item in report["limitations"]))
-        self.assertNotIn("live_observations", report)
-        self.assertNotIn("adoption_threshold_status", report)
-        self.assertNotIn("efficiency_improvement_claim", report)
 
         rendered = load_owned_eval_report(
             self,
-            ROOT,
-            "reports/rendered-context-budget.json",
+            reports_root,
+            "rendered-context-budget.json",
             {
                 "status": "pass",
                 "evidence_scope": "deterministic-rendered-artifacts",
@@ -310,103 +298,72 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("ai-consumption-v1", rendered["compiled_layer3_format"])
         self.assertEqual("o200k_base", rendered["tokenizer"])
         self.assertEqual(report["fixture_count"], rendered["fixture_count"])
-        self.assertEqual(rendered["dispatch_count"] * 9, rendered["measurement_count"])
-        self.assertEqual([], rendered["budget_calibration"]["relaxations"])
         self.assertEqual(
-            1980,
-            rendered["budget_calibration"]["release_targets"]["main"],
+            rendered["dispatch_count"] * len(rendered["hosts"]),
+            rendered["measurement_count"],
         )
-        self.assertEqual(
-            80,
-            rendered["budget_calibration"]["minimum_release_margin_tokens"][
-                "main"
-            ],
+        budget = rendered["budget_governance"]
+        core_budget = json.loads(
+            (ROOT / "src/control-model/core-contracts.json").read_text(
+                encoding="utf-8"
+            )
+        )["context_budget_contract"]
+        self.assertEqual("conformance", budget["mode"])
+        self.assertEqual([], budget["conformance_failures"])
+        self.assertFalse(
+            budget["selection_contract"]["budget_applied_to_candidate_selection"]
         )
-        self.assertEqual(
-            1900,
-            rendered["budget_calibration"]["evolution_targets"]["main"],
-        )
-        self.assertEqual(
-            rendered["budget_calibration"]["evolution_targets"],
-            rendered["budget_calibration"]["frozen_gates"],
-        )
-        self.assertGreaterEqual(
-            rendered["aggregate"]["max_main"]["release_margin_tokens"],
-            rendered["aggregate"]["max_main"][
-                "minimum_release_margin_tokens"
-            ],
-        )
-        self.assertLessEqual(
-            rendered["aggregate"]["max_duplicate_rule_token_ratio"],
-            rendered["budget_calibration"]["duplicate_rule_token_ratio_max"],
-        )
-        transferred = rendered["transferred_context"]
         self.assertEqual(
             {
-                "authority",
-                "skill_reference",
-                "task_capsule",
-                "implementation_handoff",
-                "evidence_ledger",
-                "diff",
-                "validation",
-                "review_handoff",
-                "repair_context",
-                "duplicate_context",
-                "superseded_evidence",
+                key: value["soft_target"]
+                for key, value in core_budget["budget_classes"].items()
             },
-            set(transferred["categories"]),
-        )
-        self.assertEqual(9, transferred["long_task_selector_join_count"])
-        self.assertEqual(
-            transferred["gross_tokens"],
-            transferred["non_compressible_tokens"]
-            + transferred["compressible_tokens"],
-        )
-        self.assertGreaterEqual(
-            transferred["conservative_long_task_ratio"],
-            0.30,
-        )
-        self.assertTrue(
-            transferred["semantic_baseline"]["retained_semantic_equality"]
+            budget["soft_targets"],
         )
         self.assertEqual(
-            report["orchestration_fixture_count"],
-            transferred["semantic_baseline"]["orchestration_fixture_count"],
+            {
+                key: value["hard_ceiling"]
+                for key, value in core_budget["budget_classes"].items()
+            },
+            budget["hard_ceilings"],
         )
-        self.assertEqual(
-            "continue",
-            transferred["context_compaction_decision"]["classification"],
+        self.assertTrue(rendered["aggregate"]["max_main"]["within_hard_ceiling"])
+        self.assertLessEqual(
+            rendered["aggregate"]["max_duplicate_rule_token_ratio"],
+            budget["duplicate_rule_token_ratio_max"],
         )
-        self.assertEqual(
-            transferred["conservative_long_task_ratio"],
-            transferred["context_compaction_decision"][
-                "observed_conservative_ratio"
-            ],
-        )
-
         context = load_owned_eval_report(
             self,
-            ROOT,
-            "reports/context-control-plane-eval.json",
+            reports_root,
+            "context-control-plane-eval.json",
             {"status": "pass", "evidence_scope": "deterministic-fixtures"},
         )
         self.assertEqual("pass", context["status"])
         self.assertEqual("deterministic-fixtures", context["evidence_scope"])
         self.assertTrue(set(report["limitations"]).issubset(context["limitations"]))
         self.assertEqual(rendered["aggregate"], context["rendered_context_summary"])
-        self.assertNotIn("safe_parallel_writes", context["checks"])
-        self.assertTrue(context["checks"]["current_write_parallelism_unsupported"])
-        self.assertTrue(context["checks"]["shared_workspace_serial_write"])
-        self.assertTrue(context["checks"]["conditional_isolated_write_contract"])
-        self.assertTrue(context["checks"]["utility_no_edit_workspace_gate"])
-        self.assertTrue(context["checks"]["transferred_context_measurement_valid"])
+        self.assertEqual(report["aggregate_structural_proxies"], context["structural_proxies"])
         self.assertNotIn("live_metrics", context)
 
     def test_removed_observations_option_is_rejected(self) -> None:
         result = self.run_script("scripts/eval-agent-lightweight.py", "--observations", "unused.json")
         self.assertNotEqual(0, result.returncode)
         self.assertIn("unrecognized arguments", result.stderr)
+
+    def test_pressure_output_denies_real_host_and_copilot_execution_evidence(self) -> None:
+        result = self.run_script(
+            "scripts/eval-pressure-behavior.py",
+            "--format",
+            "json",
+            "--output-dir",
+            "none",
+        )
+        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
+        source = (ROOT / "scripts/eval-pressure-behavior.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("fixture conformance only", source)
+        self.assertIn("not real-host or Copilot execution evidence", source)
 
     def test_professional_static_evaluation_contract(self) -> None:
         report = load_owned_eval_report(
@@ -415,12 +372,12 @@ class HooklessEvaluationTests(unittest.TestCase):
             "reports/skill-professionalism-eval.json",
             {
                 "evaluation_kind": "static-authoring-structure",
-                "skills_checked": 190,
+                "skills_checked": 189,
                 "error_count": 0,
             },
         )
         self.assertEqual("static-authoring-structure", report["evaluation_kind"])
-        self.assertEqual(190, report["skills_checked"])
+        self.assertEqual(189, report["skills_checked"])
         self.assertEqual(0, report["error_count"])
 
 

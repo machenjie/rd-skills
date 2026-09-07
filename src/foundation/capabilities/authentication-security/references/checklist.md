@@ -10,3 +10,14 @@
 - `analysis-agent` defines attack paths and validation plans and inspects already-existing source/provider/config/test evidence; it does not run dynamic validation.
 - `task-agent` runs only accepted post-edit dynamic checks that the changed flow triggers: fixation, replay/reuse, logout/revocation, recovery/linking, enumeration, password verification, callback, or denied step-up.
 - `review-agent` independently inspects the actual diff/evidence and runs only host-permitted, non-modifying checks; missing dynamic proof remains an explicit residual exposure.
+
+## Anti-Patterns
+
+- Clearing a client cookie is not revocation when a refresh token or server session remains valid.
+- Recovery, email change, federation, or account linking can bypass stronger controls on the primary login path.
+
+## Execution Checklist
+
+1. Map actors, credentials, IdP trust, session/token families, privilege transitions, recovery paths, and compromise events.
+2. Verify current provider capabilities, signing/key policy, browser cookie model, revocation store, performance/UX constraints, and applicable organizational policy before choosing controls.
+3. Prove reachable attack paths and record untested paths, evidence limits, and residual takeover risk.

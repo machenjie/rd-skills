@@ -1,6 +1,5 @@
 id: configuration-runtime-policy
 category: structure
-complexity: L3
 focus:
   - typed runtime configuration
   - feature flag lifecycle

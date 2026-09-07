@@ -17,18 +17,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Keep Win32, WinUI, WPF, and Windows Forms callbacks distinct; one framework's
   order or threading proof establishes none of the others.
 
-## Failure Proof
-
-- Exercise cold start, existing-instance activation, malformed activation,
-  last-window close, dispatcher shutdown, and activation during update.
-- Prove state and effects remain correct when activation arrives before UI
-  readiness or after the prior instance becomes unreachable.
-
-## Required Record
-
-Return framework/version, lifecycle owner, activation/instance policy, thread
-boundary, failure behavior, host evidence, and untested framework paths.
-
 ## Primary Sources
 
 - [Win32 desktop apps](https://learn.microsoft.com/en-us/windows/win32/desktop-programming)

@@ -26,3 +26,7 @@ These records tie recurrence closure to the known mechanism, counterfactual proo
 - Refresh evidence after material source, test, fixture, generator, schema, feature-flag, fake, environment, or validation-command changes.
 - Preserve the first intermittent failure and record diagnostic reruns separately; quarantine records need owner, release consequence, and repair or removal trigger.
 - Close with the known mechanism protected, variants unproved, automation limits, compensating detection, and next gate.
+
+## Anti-Patterns
+
+- A green-only guard, wrong-boundary test, trigger-erasing fixture, stale evidence, incomplete current-task repair, or indiscriminate sibling fix does not prove non-recurrence.

@@ -1,6 +1,5 @@
 id: schema-registry-compatibility
 category: bigdata
-complexity: L5
 focus:
   - schema evolution
   - registry compatibility

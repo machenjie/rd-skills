@@ -1,0 +1,370 @@
+{
+  "schema_version": 1,
+  "suite_id": "structural-routing-review-old-new",
+  "cases": [
+    {
+      "id": "opaque-501",
+      "agent_input": {
+        "task_id": "opaque-001",
+        "prompt": "Change one private helper inside its existing owner; behavior, placement, and public contracts are already fixed.",
+        "evidence_refs": [
+          "evidence://opaque-001"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-001",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-301",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-502",
+      "agent_input": {
+        "task_id": "opaque-002",
+        "prompt": "Add a repository harness owner boundary because two current consumers need one shared lifecycle and compatibility contract.",
+        "evidence_refs": [
+          "evidence://opaque-002"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-002",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-302",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-503",
+      "agent_input": {
+        "task_id": "opaque-003",
+        "prompt": "Rename a private option described as cloud friendly; provider authority and platform behavior do not change.",
+        "evidence_refs": [
+          "evidence://opaque-003"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-003",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-303",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-504",
+      "agent_input": {
+        "task_id": "opaque-004",
+        "prompt": "Change a confirmed provider IAM authority boundary used by the deployment adapter.",
+        "evidence_refs": [
+          "evidence://opaque-004"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-004",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-304",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-505",
+      "agent_input": {
+        "task_id": "opaque-005",
+        "prompt": "Update a private variable named security label; permissions, sensitive data, and trust boundaries remain unchanged.",
+        "evidence_refs": [
+          "evidence://opaque-005"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-005",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-305",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-506",
+      "agent_input": {
+        "task_id": "opaque-006",
+        "prompt": "Allow a less-trusted caller to read a previously protected credential-backed resource.",
+        "evidence_refs": [
+          "evidence://opaque-006"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-006",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-306",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-507",
+      "agent_input": {
+        "task_id": "opaque-007",
+        "prompt": "A named authorization boundary may be material, but the current evidence cannot determine whether a less-trusted caller gains access.",
+        "evidence_refs": [
+          "evidence://opaque-007"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-007",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-307",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-508",
+      "agent_input": {
+        "task_id": "opaque-008",
+        "prompt": "Modify one bounded internal harness helper without changing behavior or contracts.",
+        "evidence_refs": [
+          "evidence://opaque-008"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-008",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-308",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-509",
+      "agent_input": {
+        "task_id": "opaque-009",
+        "prompt": "Keep the same owner and contracts while making a local repository utility helper change.",
+        "evidence_refs": [
+          "evidence://opaque-009"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-009",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-308",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "7777777777777777777777777777777777777777777777777777777777777777"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-510",
+      "agent_input": {
+        "task_id": "opaque-010",
+        "prompt": "Change a private harness helper in place; no shared lifecycle or owner boundary changes.",
+        "evidence_refs": [
+          "evidence://opaque-010"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-010",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-309",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "8888888888888888888888888888888888888888888888888888888888888888"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-511",
+      "agent_input": {
+        "task_id": "opaque-011",
+        "prompt": "Introduce a shared harness lifecycle boundary required by two current owners.",
+        "evidence_refs": [
+          "evidence://opaque-011"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-011",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "main-control-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-310",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "9999999999999999999999999999999999999999999999999999999999999999"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-512",
+      "agent_input": {
+        "task_id": "opaque-012",
+        "prompt": "Inspect the supplied change to the worker adapter; the evidence bundle contains only its prior validation note.",
+        "evidence_refs": [
+          "evidence://opaque-012"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-012",
+        "host_id": "opaque-102",
+        "model_id": "opaque-201",
+        "agent_profile": "review-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-311",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-513",
+      "agent_input": {
+        "task_id": "opaque-013",
+        "prompt": "Inspect the supplied worker change for duplicate publication and rollback-state loss across its changed branches.",
+        "evidence_refs": [
+          "evidence://opaque-013",
+          "evidence://opaque-014",
+          "evidence://opaque-015"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-013",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "review-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-312",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-514",
+      "agent_input": {
+        "task_id": "opaque-014",
+        "prompt": "Inspect the supplied repaired worker implementation and its current validation record for the reported retry defect.",
+        "evidence_refs": [
+          "evidence://opaque-016",
+          "evidence://opaque-017",
+          "evidence://opaque-018"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-014",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "review-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-313",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    },
+    {
+      "id": "opaque-515",
+      "agent_input": {
+        "task_id": "opaque-015",
+        "prompt": "Inspect the changed lines in a private helper that normalizes one internal cache key.",
+        "evidence_refs": [
+          "evidence://opaque-019"
+        ]
+      },
+      "controlled_bindings": {
+        "task_id": "opaque-015",
+        "host_id": "opaque-101",
+        "model_id": "opaque-201",
+        "agent_profile": "review-agent",
+        "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+        "evidence_boundary_id": "opaque-314",
+        "evaluator_id": "opaque-401",
+        "expected_behavior_definition_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      },
+      "blind_arm_ids": [
+        "arm-alpha",
+        "arm-beta"
+      ]
+    }
+  ]
+}

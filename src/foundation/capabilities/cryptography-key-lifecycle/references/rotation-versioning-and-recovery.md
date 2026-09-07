@@ -43,3 +43,9 @@ Official sources were accessed on 2026-07-26.
 ## Proof Limits
 
 NIST guidance does not prove organization policy, custody, or production restoration. AWS rotation and version selection are product-, key-type-, origin-, and configuration-specific. A local round trip cannot establish full ciphertext inventory or recovery under production access controls.
+
+## Failure Evidence
+
+- When the affected rotation drops its last readable version: Rotation removes the only decrypt path.
+- Recovery material is inaccessible when required.
+- A revoked key remains usable or retained unexpectedly.

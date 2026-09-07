@@ -1,6 +1,5 @@
 id: data-side-effect-flow-tracing
 category: structure
-complexity: L3
 focus:
   - data and side-effect flow map
   - transaction and event ordering

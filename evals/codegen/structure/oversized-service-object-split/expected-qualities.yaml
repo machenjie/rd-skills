@@ -1,6 +1,5 @@
 id: oversized-service-object-split
 category: structure
-complexity: L3
 focus:
   - oversized service object split
   - file main responsibility

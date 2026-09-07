@@ -73,17 +73,22 @@ def _neighbor_anti_errors(
         ),
         None,
     )
-    checklist_skip = (
-        str(checklist.get("do_not_load_when", "")).casefold()
-        if isinstance(checklist, dict)
-        else ""
-    )
+    if isinstance(checklist, dict):
+        third_surface = "checklist do_not_load_when"
+        third_text = str(checklist.get("do_not_load_when", "")).casefold()
+    else:
+        third_surface = "named reference do_not_load_when"
+        third_text = " ".join(
+            str(contract.get("do_not_load_when", ""))
+            for contract in contracts
+            if isinstance(contract, dict)
+        ).casefold()
     errors: list[str] = []
     for marker in markers:
         for surface, text in (
             ("registry anti_trigger_signals", anti_signals),
             ("root Do Not Use", do_not_use),
-            ("checklist do_not_load_when", checklist_skip),
+            (third_surface, third_text),
         ):
             if marker not in text:
                 errors.append(

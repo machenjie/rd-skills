@@ -31,5 +31,5 @@ Return one Markdown diagnosis containing:
   the smallest evidence-gathering step that would resolve the remaining gap.
 
 Do not include an Engineering Brief, implementation plan, First Executable
-Slice, Task Skill, Review Skill, or Task DAG. Do not recommend a repair as if it
-were authorized implementation work.
+Slice, Task Contract, Review Boundary, or Task DAG. Do not recommend a repair
+as if it were authorized implementation work.

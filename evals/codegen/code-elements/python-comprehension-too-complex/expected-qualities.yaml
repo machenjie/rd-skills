@@ -1,6 +1,5 @@
 id: python-comprehension-too-complex
 category: code-elements
-complexity: L2
 focus:
   - complex comprehension
   - expression readability

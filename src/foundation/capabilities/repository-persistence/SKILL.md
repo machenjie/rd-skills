@@ -22,7 +22,7 @@ Define the smallest repository port and adapter contract that preserves caller-v
 ## High-Value Rules
 
 - Derive methods from current use cases and name results, visibility, ordering, pagination, consistency, deletion, and partial outcomes.
-- Keep sessions, query builders, lazy behavior, rows, and provider errors behind the adapter boundary.
+- Keep sessions, query builders, lazy behavior, rows, and provider errors behind the accepted adapter boundary unless an intentionally public storage contract owns their lifecycle, query, and compatibility effects.
 - Apply record/domain mapping inside the adapter when shapes or lifecycles differ.
 - Follow the transaction owner and forbid independent commits that violate expected rollback.
 - Put tenant, permission, retention, and soft-delete predicates at the authoritative query boundary.

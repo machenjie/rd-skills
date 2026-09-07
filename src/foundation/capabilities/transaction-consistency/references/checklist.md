@@ -12,3 +12,15 @@
 - When an invariant crosses transaction managers, select a distributed transaction, local transaction plus event, outbox, saga, compensation, or reconciliation from participant guarantees and recovery evidence, with uncovered failure windows and owners recorded.
 - Select anomaly and failure tests triggered by the named invariant and topology.
 - Record unrun paths with their reason.
+
+## Anti-Patterns
+
+- An ORM annotation does not prove the effective isolation, autocommit, connection reuse, or replica-read behavior.
+- A rollback-only test can hide committed interleavings, serialization failures, write skew, stale replicas, and event-before-commit defects.
+
+## Execution Checklist
+
+1. Map the invariant, read/write/side-effect order, concurrency actors, and exact partial-failure point.
+2. Verify effective datastore and ORM semantics.
+3. Define the relevant anomaly reproduction and expected outcome.
+4. Map fresh reproduction results to the selected mechanism, retry behavior, proof limits, and residual risk.

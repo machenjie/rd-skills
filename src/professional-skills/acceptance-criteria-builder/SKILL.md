@@ -71,6 +71,6 @@ for each affected actor, state, failure path, and preserved behavior.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | A bounded L2 draft or review needs a compact coverage check for actor, precondition, action, result, normal, invalid, boundary, permission, regression, compatibility, and evidence | The body quality gate is enough or evidence mapping/sign-off freshness is material | analysis-agent | checklist-result, residual-risk |
+| [checklist](references/checklist.md) | decision-checklist | A bounded draft or review needs a compact coverage check for actor, precondition, action, result, normal, invalid, boundary, permission, regression, compatibility, and evidence | The body quality gate is enough or evidence mapping/sign-off freshness is material | analysis-agent | checklist-result, residual-risk |
 | [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on criteria-to-validation mapping, stakeholder sign-off freshness, manual/audit evidence limits, or accepted residual risk | No criterion needs proof beyond the body evidence contract and quality gate | analysis-agent | evidence-record, proof-limit, residual-risk |
 | [index](references/index.md) | index | competing acceptance criteria builder references require dependency, conflict, or output-fragment selection | the acceptance criteria builder root or a task-named reference already resolves selection | analysis-agent | reference-selection |

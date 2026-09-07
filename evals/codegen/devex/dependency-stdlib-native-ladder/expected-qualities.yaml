@@ -1,6 +1,5 @@
 id: dependency-stdlib-native-ladder
 category: devex
-complexity: L2
 focus:
   - dependency avoidance
   - standard library first

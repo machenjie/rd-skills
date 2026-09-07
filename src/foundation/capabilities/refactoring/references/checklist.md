@@ -1,5 +1,7 @@
 # Refactoring Decision Checklist
 
+- **Choose reviewable reversible steps.** Preserve a valid build and evidence boundary after each logical move, and separate renames, moves, extraction, rewiring, and deletion when combining them would hide causality.
+
 Load this checklist for a structural transformation whose behavior-preservation evidence or review sequence is material. Do not load it for a trivial rename/formatting-only edit already covered by local validation.
 
 1. Define the structural problem, target structure, and observable behavior that must not change.

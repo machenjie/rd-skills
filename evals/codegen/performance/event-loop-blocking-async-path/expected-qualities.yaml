@@ -1,6 +1,5 @@
 id: event-loop-blocking-async-path
 category: performance
-complexity: L4
 focus:
   - event-loop blocking
   - CPU-bound offload

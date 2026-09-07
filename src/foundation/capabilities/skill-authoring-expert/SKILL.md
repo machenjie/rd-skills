@@ -11,7 +11,8 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when authoring S
 
 - add, rename, split, slim, audit, or remove a Control, Professional, Foundation,
   or Domain Skill
-- change routing, references, registries, profile delivery, or Skill validation
+- change routing, references, registries, Agent Profile artifacts, Runtime
+  delivery, or Skill validation
 
 **Do not use when**
 
@@ -20,12 +21,17 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when authoring S
 
 ## Skill Role
 
-Keep rd-skills source Skills, registries, generated profiles, Marketplace output, routing, and validators aligned without adding runtime control machinery.
+Keep rd-skills source Skills and registries aligned with Agent Profile
+projections, the unique Runtime build identity, Marketplace output, routing,
+and validators. When an authoring contract changes, evaluate the affected
+prompts and fixtures for synchronized updates. Do not add runtime control
+machinery.
 
 ## Inputs
 
 - requested behavior and affected Skill layer
-- adjacent Skills, four registry entries, routing fixtures, and build profiles
+- adjacent Skills, four registry entries, routing fixtures, four Agent Profile
+  artifacts, and the unique Runtime build identity
 - current validation and generated-output boundaries
 
 ## High-Value Rules
@@ -58,7 +64,8 @@ Keep rd-skills source Skills, registries, generated profiles, Marketplace output
 ## Stop Conditions
 
 - Stop new structure when an existing Skill or reference owns the decision.
-- Escalate public profile, installation, security, or Marketplace compatibility changes.
+- Escalate public Agent Profile, Runtime delivery, installation, security, or
+  Marketplace compatibility changes.
 - Reject any user-specific corpus behavior, source installation, hidden delivery,
   interception, persistent task state, or unsupported efficacy claim.
 
@@ -75,4 +82,5 @@ Keep rd-skills source Skills, registries, generated profiles, Marketplace output
 |---|---|---|---|---|---|
 | [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Skill routing build or evaluation assertions require deterministic positive and negative proof | no Skill contract routing or generated artifact changes | analysis-agent, review-agent, task-agent | evidence-record, proof-limit, residual-risk |
 | [pressure scenarios](references/pressure-scenarios.md) | targeted | a Skill must resist pressure to violate role scope safety or evidence boundaries | no pressure or boundary behavior is under evaluation | analysis-agent, review-agent, task-agent | validation-plan, evidence-gap |
+| [routing maintenance](references/routing-maintenance-checklist.md) | decision-checklist | authoring or auditing rd-skills routing registries, fixtures, selector mappings, or owner conflicts | no rd-skills routing decision or routing claim needs authoring or assessment | analysis-agent, review-agent, task-agent | decision-record, checklist-result, residual-risk |
 | [tdd for skills](references/tdd-for-skills.md) | targeted | a Skill routing behavior build or installation contract changes and current deterministic evidence does not expose the regression | the change cannot alter Skill routing behavior build or installation contracts or existing deterministic evidence already covers the regression | analysis-agent, review-agent, task-agent | validation-plan, proof-limit |

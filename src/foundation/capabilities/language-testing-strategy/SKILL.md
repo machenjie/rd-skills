@@ -46,7 +46,7 @@ Define test-runner and runtime execution semantics through discovery, scheduling
 
 ## Output Contract
 
-- language-test execution decision with runner discovery scheduling deadline cancellation async completion isolation cache instrumentation failure artifact proof limits and specialist routes
+- Language-test execution decision with runner discovery and scheduling; deadline, cancellation, and async completion; isolation, cache, and instrumentation; failure artifacts; proof limits and specialist routes.
 
 ## Targeted References
 

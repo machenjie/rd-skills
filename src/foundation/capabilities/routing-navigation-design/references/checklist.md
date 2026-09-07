@@ -9,4 +9,4 @@
 - Define browser back, refresh, and external-link behavior.
 - Include safe landing pages for removed or inaccessible resources.
 - Check that route errors do not leak sensitive resource details.
-- Add route-level tests for permission branches, 404, stale links, and recovery.
+- Run current route-level proof for the affected permission, not-found, stale-link, or recovery behavior; add tests only where the selected checks miss a material reachable branch.

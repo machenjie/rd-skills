@@ -17,35 +17,23 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when retryable, 
 
 ## Skill Role
 
-Define stable failure meaning through typed classification, boundary translation, retryable or terminal outcomes, partial or degraded results, cause preservation, and safe representations. Exclude retry mechanics and queue disposition.
+Define typed failure meaning, boundary translation, partial/degraded ownership, authorized cause, and safe representation. Exclude retry mechanics and queue disposition.
 
 ## High-Value Rules
 
-- Define a machine-distinguishable failure contract at each changed material boundary; message text alone is not a stable contract.
-- Classify validation, permission, conflict, timeout, cancellation, dependency, partial, degraded, internal, retryable, and terminal outcomes only when the distinction changes a caller decision, disclosure, or owner.
-- Keep timeout, cancellation, unknown write outcome, and terminal rejection distinct; this Skill classifies their meaning but routes retry identity, deduplication, budgets, and backoff to the retry specialist.
-- Translate framework, provider, repository, and storage failures at the boundary that owns the abstraction while preserving the authorized diagnostic cause.
-- Represent partial and degraded outcomes explicitly so callers can distinguish completed effects, unavailable data, stale data, and work that still needs specialist-owned recovery.
-- Separate stable safe user or consumer meaning from internal cause and correlation evidence without exposing secrets, protected existence, provider payloads, SQL, paths, prompts, or tool output.
-- Treat repository inspection, generated contracts, and prior task evidence as leads; current negative paths and boundary tests determine which failure claims are verified.
+- Separate typed consumer meaning from authorized cause at each changed boundary.
+- Own partial/degraded meaning and recovery.
+- Load only the named Reference for active selection, closure, or proof.
 
 ## Anti-Patterns
 
-- Returning `null`, empty success, or a generic fallback after a failure hides degraded or terminal meaning and loses the cause.
-- Collapsing every failure into one internal category makes caller recovery, disclosure, and ownership indistinguishable.
-- Passing raw provider, SDK, database, ORM, or storage errors across an adapter or repository boundary leaks unstable internals and couples consumers to dependency wording.
-- Marking an unknown write outcome retryable before the retry specialist proves identity and reconciliation can duplicate durable effects.
-- Reporting a partial result as total success or generic failure hides which effects escaped and who owns the remaining outcome.
-- Treating cancellation as failure can resurrect caller-abandoned work or create false operational noise.
+- Local success substituted for evidence of the failure contract design contract.
 
 ## Stop Conditions
 
-- Route idempotency keys, deduplication, replay, backoff, retry budgets, and unknown-outcome reconciliation to `idempotency-retry-design`.
-- Route acknowledgement, retry exhaustion, poison messages, terminal queue disposition, and replay mechanics to `message-queue-design`.
-- Route effect ordering, compensation, reconciliation, and transaction ownership to `transaction-consistency` or `data-side-effect-flow-tracing`.
-- Route log fields, metrics, traces, alerts, dashboards, fallback operations, and incident response to `logging-error-handling`, `observability`, or `reliability-observability-gate`.
-- Route public status, error codes, SDK behavior, event/webhook compatibility, or localization to `error-code-design` and `data-api-contract-changer`.
-- Escalate to `security-privacy-gate` when any external or diagnostic representation can disclose secrets, PII, authorization state, tenant or resource existence, provider internals, SQL, paths, prompts, or tool output.
+- Route retry identity/budgets and unknown outcomes to `idempotency-retry-design`; queue disposition to `message-queue-design`.
+- Route effect recovery to `transaction-consistency` or `data-side-effect-flow-tracing`; operational diagnostics to `logging-error-handling`, `observability`, or `reliability-observability-gate`.
+- Route public failure contracts to `error-code-design` and `data-api-contract-changer`; disclosures to `security-privacy-gate`.
 
 ## Output Contract
 

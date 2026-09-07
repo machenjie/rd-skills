@@ -27,8 +27,9 @@ Official AWS, Azure, and Google Cloud documentation below was accessed on
 
 ## Required Record
 
-Return key authority and lifecycle, decrypt and recovery proof, cost dimensions,
-live estimate owner, budget limitations, unverified state, and residual risk.
+For a key decision, return key authority, lifecycle, decrypt and recovery proof.
+For a cost decision, return cost dimensions, live estimate owner, and budget limitations.
+For either decision, record unverified state and residual risk.
 
 ## Primary Sources
 

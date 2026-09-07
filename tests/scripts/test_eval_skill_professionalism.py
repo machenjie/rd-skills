@@ -31,6 +31,8 @@ class SkillProfessionalismEmptySectionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = _load_module()
+        # These assertions inspect the same unmodified canonical coverage.
+        cls.coverage_matrix = cls.module.build_coverage_matrix()
 
     def test_empty_section_records_error_and_loses_section_points(self) -> None:
         body = """# example
@@ -129,7 +131,7 @@ Role text.
         self.assertNotIn("Optional sentinel", sections["High-Value Rules"])
 
     def test_coverage_matrix_separates_authoring_and_release_gate_status(self) -> None:
-        matrix = self.module.build_coverage_matrix()
+        matrix = self.coverage_matrix
         self.assertEqual(3, matrix["schema_version"])
         self.assertEqual(0, matrix["gate_summary"]["fail_count"])
         uncovered = next(
@@ -141,7 +143,7 @@ Role text.
         self.assertNotIn("status", uncovered)
 
     def test_release_critical_targets_have_distinct_coverage_evidence(self) -> None:
-        matrix = self.module.build_coverage_matrix()
+        matrix = self.coverage_matrix
         by_name = {row["name"]: row for row in matrix["rows"]}
         for name in (
             "security-privacy-gate",
@@ -163,7 +165,7 @@ Role text.
     def test_domain_skills_require_ordinary_routing_evidence(
         self,
     ) -> None:
-        matrix = self.module.build_coverage_matrix()
+        matrix = self.coverage_matrix
         self.assertEqual(10, matrix["gate_summary"]["required_skill_count"])
         self.assertEqual(10, matrix["gate_summary"]["pass_count"])
         domain_names = {
@@ -227,7 +229,7 @@ Role text.
         self.assertEqual(6, len(set(behavior_case_ids)))
 
     def test_security_and_reliability_negative_routes_cover_adjacent_boundaries(self) -> None:
-        matrix = self.module.build_coverage_matrix()
+        matrix = self.coverage_matrix
         by_name = {row["name"]: row for row in matrix["rows"]}
         self.assertTrue(
             {
@@ -251,7 +253,7 @@ Role text.
         )
 
     def test_adversarial_negative_control_does_not_count_as_behavior(self) -> None:
-        matrix = self.module.build_coverage_matrix()
+        matrix = self.coverage_matrix
         review = next(
             row for row in matrix["rows"] if row["name"] == "ai-code-review-refactor"
         )

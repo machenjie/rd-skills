@@ -12,7 +12,7 @@ Use this reference when search or analytics closure depends on validation freshn
 | Freshness is measurable | Product freshness objective and consequence, ingestion path, source/query-visible timestamps, lag and drift metrics, stale behavior, and recovery owner | Inspected derived data has a freshness contract | Production outages, unseen backlog shapes, and regional lag remain unproven |
 | Reindex/backfill is reversible | Old/new schema, selected in-place or versioned cutover, validation comparison, containment or rollback condition, and cleanup owner | Inspected schema or mapping change has a safe migration shape | Live duration, capacity pressure, and undiscovered consumer compatibility remain unproven |
 | Relevance or metric is validated | Sample queries/judgment set, metric grain, dedupe key, reconciliation query, dashboard validator, or residual risk | Inspected result quality or metric semantics are checked for named cases | Live user satisfaction, emerging queries, and uninspected analytical consumers remain unproven |
-| Tool output is safe to retain | Action class, permission state, redaction/aggregation rule, artifact path, retention owner, and rollback/revert path | Inspected proof collection avoids obvious data leakage | Uninspected connectors, exports, and future debug output remain outside the claim |
+| Tool output is safe to retain | Actual operation and authority, output sensitivity, applicable redaction/aggregation, artifact and retention scope, and recovery only for effects caused by collection | Inspected proof collection avoids obvious data leakage | Uninspected connectors, exports, and future debug output remain outside the claim |
 
 ## Current Evidence And Freshness
 

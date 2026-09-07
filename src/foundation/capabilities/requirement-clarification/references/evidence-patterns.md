@@ -35,4 +35,4 @@ Use a not-present scan when partial proceed is allowed:
 | Hidden implementation of blocked work | Changed-path review, task diff, tests/docs scan for blocked term. |
 
 - If owner record, ticket, telemetry, connector, or production-data lookup, record account/data boundary, redaction rule, retention, and unavailable evidence.
-- If cleanup, migration, deploy, or external write, require owner approval, dry-run when available, rollback or compensation path, and stop condition.
+- If cleanup, migration, deploy, or external write, require owner approval, dry-run when available, accepted recovery or containment and explicit irreversible limits, and stop condition.

@@ -8,6 +8,7 @@ import json
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 from datetime import date, timedelta
 from pathlib import Path
 from unittest import mock
@@ -30,11 +31,11 @@ def _load_module(name: str = "audit_skill_content_test"):
 
 
 def _semantic_disposition(candidate: dict, disposition: str, *, priority: str = "P1") -> dict:
-    return {
+    entry = {
         "candidate_id": candidate["candidate_id"],
         "finding": candidate["finding"],
         "path": candidate["path"],
-        "fingerprint": candidate["fingerprint"],
+        "source_selector": deepcopy(candidate["source_selector"]),
         "skill_owner": candidate["skill_owner"],
         "priority": priority,
         "disposition": disposition,
@@ -51,6 +52,11 @@ def _semantic_disposition(candidate: dict, disposition: str, *, priority: str = 
             "2026-08-01" if disposition == "time-bounded-exception" else None
         ),
     }
+    contracts = __import__("expert_panel_contracts")
+    entry["record_fingerprint"] = contracts.semantic_disposition_record_fingerprint(
+        "reference", entry
+    )
+    return entry
 
 
 class AuditSkillContentDeterminismTests(unittest.TestCase):
@@ -59,12 +65,367 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         cls.module = _load_module()
 
     def test_current_root_schema_domains_exclude_lifecycle(self) -> None:
-        self.assertEqual(7, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
-        self.assertEqual(6, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
+        self.assertEqual(8, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
+        self.assertEqual(7, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
         self.assertEqual(9, self.module.ROOT_CONTENT_SCHEMA_VERSION)
         result = self.module._collect_root_content()
         self.assertNotIn("lifecycle", result["semantic_advisories"])
         self.assertNotIn("lifecycle_status", result["semantic_advisories"])
+
+    def test_semantic_identity_is_stable_while_evidence_requires_confirmation(self) -> None:
+        def document(text: str, *, rule: str = "example/recovery", occurrence: str = "main") -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule={rule} occurrence={occurrence} -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        first = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_text = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain its current owner and rollback evidence.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_occurrence = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.", occurrence="replacement")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_rule = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current owner and rollback record.", rule="example/retry")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(first["candidate_id"], changed_text["candidate_id"])
+        self.assertEqual(first["candidate_id"], changed_occurrence["candidate_id"])
+        self.assertNotEqual(first["candidate_id"], changed_rule["candidate_id"])
+        self.assertNotEqual(first["content_fingerprint"], changed_text["content_fingerprint"])
+        self.assertNotEqual(first["evidence_fingerprint"], changed_occurrence["evidence_fingerprint"])
+
+        entry = _semantic_disposition(first, "false-positive")
+        governed = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain its current owner and rollback evidence.")],
+            disposition_entries=[entry],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertEqual("needs-confirmation", governed["governance_status"])
+        self.assertIsNone(governed["disposition_record"])
+
+    def test_authored_marker_candidate_survives_detector_non_match(self) -> None:
+        def document(text: str) -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    "rule=example/recovery occurrence=main -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        matched = self.module._collect_reference_semantic_advisories(
+            [document("Every retry must retain a current rollback record.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        non_match = self.module._collect_reference_semantic_advisories(
+            [document("Retain a current rollback record for each retry.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(matched["candidate_id"], non_match["candidate_id"])
+        self.assertNotEqual(matched["content_fingerprint"], non_match["content_fingerprint"])
+        self.assertEqual("untriaged", non_match["governance_status"])
+        self.assertEqual([], non_match["signals"])
+
+        def root_document(text: str) -> dict:
+            return {
+                "path": "src/professional-skills/example/SKILL.md",
+                "layer": "professional-skill",
+                "owner": "example",
+                "kind": "professional-skill",
+                "document_part": "body",
+                "text": (
+                    "## Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_mechanism_candidate "
+                    "rule=example/loading occurrence=main-root -->\n"
+                    f"- {text}\n"
+                ),
+            }
+
+        matched_root = self.module._collect_root_semantic_advisories(
+            [root_document("Never load the complete catalog.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        non_match_root = self.module._collect_root_semantic_advisories(
+            [root_document("Retain a bounded catalog selection.")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertEqual(matched_root["candidate_id"], non_match_root["candidate_id"])
+        self.assertNotEqual(matched_root["fingerprint"], non_match_root["fingerprint"])
+        self.assertEqual([], non_match_root["signals"])
+
+    def test_authored_marker_identity_survives_heading_typo(self) -> None:
+        def document(heading: str) -> dict:
+            return {
+                "path": "src/foundation/example/references/rules.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    f"## {heading}\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    "rule=example/recovery occurrence=main -->\n"
+                    "- Every retry must retain a current rollback record.\n"
+                ),
+            }
+
+        original = self.module._collect_reference_semantic_advisories(
+            [document("Recovery Rules")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        typo = self.module._collect_reference_semantic_advisories(
+            [document("Recovery Rulse")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+
+        self.assertEqual(original["candidate_id"], typo["candidate_id"])
+        self.assertEqual(original["content_fingerprint"], typo["content_fingerprint"])
+        self.assertNotEqual(original["evidence_fingerprint"], typo["evidence_fingerprint"])
+
+        def unmarked(heading: str) -> dict:
+            item = document(heading)
+            item["text"] = item["text"].replace(
+                "<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=example/recovery occurrence=main -->\n",
+                "",
+            )
+            return item
+
+        unmarked_original = self.module._collect_reference_semantic_advisories(
+            [unmarked("Recovery Rules")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        unmarked_typo = self.module._collect_reference_semantic_advisories(
+            [unmarked("Recovery Rulse")],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        self.assertNotEqual(
+            unmarked_original["candidate_id"], unmarked_typo["candidate_id"]
+        )
+
+    def test_authored_marker_evidence_drift_requires_confirmation(self) -> None:
+        source = {
+            "path": "src/foundation/example/references/rules.md",
+            "layer": "foundation",
+            "owner": "example",
+            "kind": "targeted",
+            "text": (
+                "# Rules\n\n"
+                "<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=example/recovery occurrence=main -->\n"
+                "- Every retry must retain a current rollback record.\n"
+            ),
+        }
+        original = self.module._collect_reference_semantic_advisories(
+            [source], disposition_entries=[], evaluation_date=date(2026, 9, 3)
+        )["candidates"][0]
+        entry = _semantic_disposition(original, "false-positive")
+        changed = deepcopy(source)
+        changed["text"] = changed["text"].replace(
+            "Every retry must retain a current rollback record.",
+            "Retain a current rollback record for each retry.",
+        )
+        governed = self.module._collect_reference_semantic_advisories(
+            [changed], disposition_entries=[entry], evaluation_date=date(2026, 9, 3)
+        )["candidates"][0]
+
+        self.assertEqual(original["candidate_id"], governed["candidate_id"])
+        self.assertEqual("needs-confirmation", governed["governance_status"])
+        self.assertIsNone(governed["disposition"])
+        self.assertIsNone(governed["disposition_record"])
+
+    def test_semantic_marker_occurrence_collision_fails_closed(self) -> None:
+        documents = [
+            {
+                "path": f"{name}.md",
+                "layer": "foundation",
+                "owner": name,
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule={name}/recovery occurrence=shared -->\n"
+                    "- Every retry must retain a current owner.\n"
+                ),
+            }
+            for name in ("alpha", "beta")
+        ]
+        with self.assertRaisesRegex(ValueError, "duplicate.*occurrence"):
+            self.module._collect_reference_semantic_advisories(
+                documents,
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+        duplicate_rule = [
+            {
+                "path": f"src/foundation/example/references/{name}.md",
+                "layer": "foundation",
+                "owner": "example",
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    "<!-- rd-semantic-id:v2 "
+                    "finding=unconditional_absolute_candidate "
+                    f"rule=example/recovery occurrence={name} -->\n"
+                    "- Every retry must retain a current owner.\n"
+                ),
+            }
+            for name in ("alpha", "beta")
+        ]
+        with self.assertRaisesRegex(ValueError, "rule-id collision"):
+            self.module._collect_reference_semantic_advisories(
+                duplicate_rule,
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+    def test_authored_marker_selector_mutations_change_identity_or_fail_closed(self) -> None:
+        def document(*, path: str, finding: str, owner: str = "example") -> dict:
+            return {
+                "path": path,
+                "layer": "foundation",
+                "owner": owner,
+                "kind": "targeted",
+                "text": (
+                    "# Rules\n\n"
+                    f"<!-- rd-semantic-id:v2 finding={finding} "
+                    "rule=example/recovery occurrence=main -->\n"
+                    "- Every retry must retain a current rollback record.\n"
+                ),
+            }
+
+        original = self.module._collect_reference_semantic_advisories(
+            [
+                document(
+                    path="src/foundation/example/references/rules.md",
+                    finding="unconditional_absolute_candidate",
+                )
+            ],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_path = self.module._collect_reference_semantic_advisories(
+            [
+                document(
+                    path="src/foundation/example/references/moved.md",
+                    finding="unconditional_absolute_candidate",
+                )
+            ],
+            disposition_entries=[],
+            evaluation_date=date(2026, 9, 3),
+        )["candidates"][0]
+        changed_finding = next(
+            candidate
+            for candidate in self.module._collect_reference_semantic_advisories(
+                [
+                    document(
+                        path="src/foundation/example/references/rules.md",
+                        finding="fixed_number_candidate",
+                    )
+                ],
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )["candidates"]
+            if candidate["source_selector"]["selector_kind"] == "authored-rule"
+        )
+
+        self.assertNotEqual(original["candidate_id"], changed_path["candidate_id"])
+        self.assertNotEqual(original["candidate_id"], changed_finding["candidate_id"])
+        with self.assertRaisesRegex(ValueError, "owner prefix"):
+            self.module._collect_reference_semantic_advisories(
+                [
+                    document(
+                        path="src/foundation/renamed/references/rules.md",
+                        finding="unconditional_absolute_candidate",
+                        owner="renamed",
+                    )
+                ],
+                disposition_entries=[],
+                evaluation_date=date(2026, 9, 3),
+            )
+
+    def test_semantic_config_migration_is_all_or_nothing_and_legacy_is_immutable(self) -> None:
+        current = self.module.load_yaml_file(
+            self.module.SKILL_CONTENT_EXCEPTIONS_FILE
+        )
+        mutations = []
+        missing_legacy = deepcopy(current)
+        missing_legacy.pop(self.module.SEMANTIC_DISPOSITION_LEGACY_KEY)
+        mutations.append(missing_legacy)
+        partial_schema = deepcopy(current)
+        partial_schema["reference_semantic_dispositions"]["schema_version"] = 2
+        mutations.append(partial_schema)
+        duplicate_legacy = deepcopy(current)
+        duplicate_legacy[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+            "entries"
+        ].append(
+            deepcopy(
+                duplicate_legacy[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+                    "entries"
+                ][0]
+            )
+        )
+        mutations.append(duplicate_legacy)
+        tampered_anchor = deepcopy(current)
+        tampered_anchor[self.module.SEMANTIC_DISPOSITION_LEGACY_KEY][
+            "artifact_sha256"
+        ]["audit"] = "0" * 64
+        mutations.append(tampered_anchor)
+
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                with mock.patch.object(
+                    self.module, "load_yaml_file", return_value=mutation
+                ):
+                    reference, reference_errors = (
+                        self.module._load_reference_semantic_dispositions()
+                    )
+                    root, root_errors = self.module._load_root_semantic_dispositions()
+                self.assertTrue(reference_errors)
+                self.assertTrue(root_errors)
+                self.assertEqual([], reference["entries"])
+                self.assertEqual([], root["entries"])
 
     def _detector_source_change(
         self, original: str, replacement: str, *, relative: str
@@ -84,6 +445,31 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             "_detector_repository_source_text",
             side_effect=changed,
         )
+
+    def test_removed_foundation_snapshot_write_command_has_no_side_effects(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            sentinel = root / "sentinel.txt"
+            sentinel.write_text("unchanged\n", encoding="utf-8")
+            before = sentinel.read_bytes()
+            stderr = io.StringIO()
+            with (
+                mock.patch.object(self.module, "ROOT", root),
+                contextlib.redirect_stderr(stderr),
+                self.assertRaises(SystemExit),
+            ):
+                self.module.main(
+                    [
+                        "foundation-derivation-snapshot",
+                        "--write",
+                        "--date",
+                        "2026-08-30",
+                    ]
+                )
+
+            self.assertEqual(before, sentinel.read_bytes())
+            self.assertEqual([sentinel], list(root.iterdir()))
+            self.assertNotEqual("", stderr.getvalue())
 
     def test_root_detector_contract_binds_only_reachable_behavior(self) -> None:
         payload = self.module._root_semantic_detector_payload()
@@ -187,12 +573,12 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         report = self.module._collect_reference_semantic_advisories(
             [], disposition_entries=[], evaluation_date=date(2026, 8, 10)
         )
-        self.assertEqual(7, report["schema_version"])
+        self.assertEqual(8, report["schema_version"])
         self.assertEqual(contract, report["detector_contract"])
 
         baseline = contract["value"]
         self.assertEqual(
-            "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb",
+            "26a02e570c54e4a9e612685855afb608f369f7a0d7f296f588c18ff1e743ac37",
             baseline,
         )
         source_reader = self.module._detector_repository_source_text
@@ -621,6 +1007,241 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         self.assertTrue(descriptions)
         self.assertTrue(all(item["line_offset"] == 0 for item in descriptions))
 
+    def test_professional_collector_includes_all_distributed_examples(self) -> None:
+        documents = self.module._professional_skill_documents()
+        examples = [
+            item for item in documents if item["document_part"] == "example"
+        ]
+        expected = {
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "src/professional-skills").glob(
+                "*/examples/example-output.md"
+            )
+            if path.is_file()
+        }
+
+        self.assertTrue(expected)
+        self.assertEqual(len(expected), len(examples))
+        self.assertEqual(expected, {str(item["path"]) for item in examples})
+        self.assertTrue(all(item["line_offset"] == 0 for item in examples))
+        self.assertTrue(all(str(item["text"]).strip() for item in examples))
+
+    def test_professional_collector_exempts_only_current_registry_projection(self) -> None:
+        documents = self.module._professional_skill_documents()
+        body = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/security-privacy-gate/SKILL.md"
+            and item["document_part"] == "body"
+        )
+
+        self.assertIn("work needs mode-specific closure", body["text"])
+        self.assertNotIn(
+            "work needs mode-specific closure",
+            body["governed_text"],
+        )
+        self.assertEqual(
+            len(str(body["text"]).splitlines()),
+            len(str(body["governed_text"]).splitlines()),
+        )
+
+    def test_professional_collector_rejects_syntax_valid_registry_divergence(
+        self,
+    ) -> None:
+        original_load = self.module.load_yaml_file
+
+        def diverged(path: Path):
+            data = original_load(path)
+            if path != self.module.PROFESSIONAL_REGISTRY:
+                return data
+            changed = deepcopy(data)
+            row = next(
+                item
+                for item in changed["professional_skills"]
+                if item["name"] == "security-privacy-gate"
+            )
+            row["reference_index"][0]["load_when"] = (
+                "A separately accepted authorization review needs this focused "
+                "decision record"
+            )
+            return changed
+
+        with mock.patch.object(
+            self.module,
+            "load_yaml_file",
+            side_effect=diverged,
+        ):
+            with self.assertRaises(self.module.ValidationProblem):
+                self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_projection_shape_failures(self) -> None:
+        target = (
+            ROOT
+            / "src/professional-skills/security-privacy-gate/SKILL.md"
+        ).resolve()
+        original_collect = self.module._validation_utils.collect_skill_root_source
+
+        def without_projection(raw: str) -> str:
+            return self.module._validation_utils._TARGETED_REFERENCES_SECTION_RE.sub(
+                "",
+                raw,
+            )
+
+        def repeated_projection(raw: str) -> str:
+            section = self.module._validation_utils._TARGETED_REFERENCES_SECTION_RE.search(
+                raw
+            )
+            self.assertIsNotNone(section)
+            return raw.rstrip("\n") + "\n\n" + section.group(0)
+
+        mutations = {
+            "missing": without_projection,
+            "repeated": repeated_projection,
+            "malformed": lambda raw: raw.replace(
+                "| Path | Type | Load when | Do not load when | Required by | Required output |",
+                "| Path | Type | Load when | Do not load when | Required by | Outputs |",
+                1,
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                def changed(path: Path, *, root: Path):
+                    record = original_collect(path, root=root)
+                    if path.resolve() == target:
+                        record = dict(record)
+                        record["raw_source"] = mutate(record["raw_source"])
+                    return record
+
+                with mock.patch.object(
+                    self.module._validation_utils,
+                    "collect_skill_root_source",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_registry_package_authority_failures(
+        self,
+    ) -> None:
+        original_load = self.module.load_yaml_file
+
+        def remove_row(data: dict) -> None:
+            data["professional_skills"].pop()
+
+        def add_row(data: dict) -> None:
+            row = deepcopy(data["professional_skills"][-1])
+            row["name"] = "extra-professional-skill"
+            row["path"] = "src/professional-skills/extra-professional-skill"
+            data["professional_skills"].append(row)
+
+        def duplicate_name(data: dict) -> None:
+            data["professional_skills"][1]["name"] = data["professional_skills"][0][
+                "name"
+            ]
+
+        def wrong_package(data: dict) -> None:
+            data["professional_skills"][0]["path"] = (
+                "src/professional-skills/wrong-package"
+            )
+
+        mutations = {
+            "missing-registry-row": remove_row,
+            "extra-registry-row": add_row,
+            "duplicate-registry-name": duplicate_name,
+            "wrong-package-path": wrong_package,
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                def changed(path: Path):
+                    data = original_load(path)
+                    if path == self.module.PROFESSIONAL_REGISTRY:
+                        data = deepcopy(data)
+                        mutate(data)
+                    return data
+
+                with mock.patch.object(
+                    self.module,
+                    "load_yaml_file",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_root_set_and_name_mismatches(self) -> None:
+        original_files = self.module._safe_skill_files_for_root
+        actual = original_files(
+            "professional-skill",
+            self.module.PROFESSIONAL_SKILLS_DIR,
+        )
+        fake = (
+            "professional-skill",
+            self.module.PROFESSIONAL_SKILLS_DIR / "extra-root" / "SKILL.md",
+        )
+
+        for label, roots in {
+            "missing-root": actual[:-1],
+            "extra-root": [*actual, fake],
+        }.items():
+            with self.subTest(label=label):
+                def changed(kind: str, root: Path):
+                    if root == self.module.PROFESSIONAL_SKILLS_DIR:
+                        return roots
+                    return original_files(kind, root)
+
+                with mock.patch.object(
+                    self.module,
+                    "_safe_skill_files_for_root",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+        target = actual[0][1].resolve()
+        original_parse = self.module.parse_frontmatter
+
+        def wrong_name(path: Path):
+            metadata, frontmatter, body = original_parse(path)
+            if path.resolve() == target:
+                metadata = dict(metadata)
+                metadata["name"] = "wrong-frontmatter-name"
+            return metadata, frontmatter, body
+
+        with mock.patch.object(
+            self.module,
+            "parse_frontmatter",
+            side_effect=wrong_name,
+        ):
+            with self.assertRaises(self.module.ValidationProblem):
+                self.module._professional_skill_documents()
+
+    def test_professional_collector_keeps_authored_body_and_reference_content(
+        self,
+    ) -> None:
+        documents = self.module._professional_skill_documents()
+        body = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/platform-infrastructure-change-builder/SKILL.md"
+            and item["document_part"] == "body"
+        )
+        reference = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/engineering-artifact-review/references/review-checklist.md"
+        )
+
+        self.assertIn(
+            "production apply, deployment, release, and rollback approval",
+            body["governed_text"],
+        )
+        self.assertIn(
+            "bounded implementation task with no separate decision artifact",
+            reference["text"],
+        )
+
     def test_readability_spans_cover_wrapped_and_same_line_sentences_exactly(self) -> None:
         long_sentence = " ".join(f"bounded{index}" for index in range(25)) + "."
         wrapped = (
@@ -701,6 +1322,58 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
                 hashlib.sha256(exact.encode("utf-8")).hexdigest(),
                 source_span["sha256"],
             )
+
+    def test_readability_finding_identity_ignores_markdown_presentation_and_coordinates(
+        self,
+    ) -> None:
+        words = [f"bounded{index}" for index in range(25)]
+        plain = "- " + " ".join(words) + ".\n"
+        formatted = (
+            "* **"
+            + words[0]
+            + "** "
+            + " ".join(words[1:12])
+            + "\n  "
+            + " ".join(words[12:])
+            + ".\n"
+        )
+        document = {
+            "document_id": "src/example.md#reference",
+            "path": "src/example.md",
+            "document_part": "reference",
+            "surface": "foundation-reference",
+            "owner": "example",
+            "line_offset": 0,
+            "source_selector": {
+                "kind": "whole-file",
+                "path": "src/example.md",
+            },
+            "check_bullets": True,
+        }
+
+        original = self.module._collect_ai_readability(
+            [{**document, "text": plain}]
+        )
+        moved = self.module._collect_ai_readability(
+            [{**document, "text": formatted}]
+        )
+
+        self.assertNotEqual(
+            original["source_fingerprint"]["value"],
+            moved["source_fingerprint"]["value"],
+        )
+        self.assertNotEqual(
+            original["findings"][0]["sentence_fingerprint"],
+            moved["findings"][0]["sentence_fingerprint"],
+        )
+        self.assertNotEqual(
+            original["findings"][0]["source_span"],
+            moved["findings"][0]["source_span"],
+        )
+        self.assertEqual(
+            original["findings"][0]["finding_id"],
+            moved["findings"][0]["finding_id"],
+        )
 
     def test_current_readability_inventory_is_exact_and_unique(self) -> None:
         source_documents = self.module._ai_readability_documents()
@@ -830,6 +1503,42 @@ Inspect the assigned boundary.
         self.assertEqual(
             self.module._front_loaded_action_score(baseline) + 4,
             self.module._front_loaded_action_score(traced),
+        )
+
+    def test_front_window_uses_normalized_logical_units(self) -> None:
+        units = [f"- Neutral instruction {index}." for index in range(1, 60)]
+        units.extend(
+            [
+                "- **Validate** the owned\n  evidence before completion.",
+                "- Stop after excluded unit 61.",
+            ]
+        )
+        padded = "\n".join(
+            [
+                "<!-- ignored leading comment -->",
+                "",
+                *(
+                    line
+                    for unit in units
+                    for line in ("", "<!-- ignored padding -->", unit)
+                ),
+            ]
+        )
+
+        contracts = self.module._expert_panel_contracts
+        projection = (
+            contracts.readability_normalized_logical_units(
+                padded,
+                exclude_fenced=True,
+            )
+        )
+        window = self.module._front_window_text(padded)
+        self.assertEqual(61, len(projection))
+        self.assertIn("Validate the owned evidence before completion.", window)
+        self.assertNotIn("excluded unit 61", window)
+        self.assertEqual(
+            self.module._front_loaded_action_score("\n".join(units)),
+            self.module._front_loaded_action_score(padded),
         )
 
     def test_shared_scaffold_is_actionable_outside_targeted_references(self) -> None:
@@ -1646,7 +2355,8 @@ Return security authority decisions to the service that owns the protected resou
             "Level, or Level Basis."
         )
         replacement = (
-            "Domain rows add Layer 3 modifiers only after Main fixes the base route."
+            "Main owns the route. Task and Review consume their assigned expertise "
+            "and necessary Targeted References."
         )
 
         def mechanism_candidates(sentence: str) -> list[tuple[str, str]]:
@@ -1949,7 +2659,7 @@ Return security authority decisions to the service that owns the protected resou
             summary["description_checked_by_kind"],
             {
                 "control-skill": 1,
-                "professional-skill": 26,
+                "professional-skill": 25,
                 "foundation-capability": 150,
                 "domain-extension": 13,
             },
@@ -2173,31 +2883,28 @@ The root contract already settles the bounded change.
         self.assertEqual(16, blank_facts["max_decision_section_item_count"])
         self.assertEqual(2, len(blank_facts["invalid_decision_section_headings"]))
 
-    def test_payment_and_web3_checklists_report_section_aware_totals(self) -> None:
-        expected = {
-            "src/domain-extensions/payment-trading-extension/references/checklist.md": (
-                27,
-                14,
-                [3, 6, 4, 14],
-            ),
-            "src/domain-extensions/web3-product-extension/references/checklist.md": (
-                36,
-                9,
-                [9, 5, 4, 7, 1, 8, 2],
-            ),
-        }
-        for relative, (total, maximum, section_counts) in expected.items():
-            with self.subTest(path=relative):
-                facts = self.module._markdown_structural_facts(
-                    (ROOT / relative).read_text(encoding="utf-8"),
-                    "decision-checklist",
-                )
-                self.assertEqual(total, facts["decision_item_count"])
-                self.assertEqual(maximum, facts["max_decision_section_item_count"])
-                self.assertEqual(
-                    section_counts,
-                    [row["decision_item_count"] for row in facts["decision_sections"]],
-                )
+    def test_web3_custody_reference_reports_section_aware_totals(self) -> None:
+        markdown = (
+            "# Custody controls\n\n"
+            "## Signing decision\n\n"
+            "- Verify signer authority.\n"
+            "- Record the signed payload.\n\n"
+            "## Broadcast recovery checklist\n\n"
+            "- Reconcile unknown outcomes.\n"
+        )
+        facts = self.module._markdown_structural_facts(
+            markdown,
+            "decision-checklist",
+        )
+        section_counts = [
+            row["decision_item_count"] for row in facts["decision_sections"]
+        ]
+        self.assertEqual(sum(section_counts), facts["decision_item_count"])
+        self.assertEqual(max(section_counts), facts["max_decision_section_item_count"])
+        self.assertEqual(
+            [2, 1],
+            section_counts,
+        )
 
     def test_rds_006_stale_reference_dispositions_are_absent(self) -> None:
         config = self.module.load_yaml_file(
@@ -3040,9 +3747,10 @@ Never retain this example.
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
         ]
-        self.assertEqual(6, len(rows))
-        self.assertEqual(1, sum(item["governance_status"] == "untriaged" for item in rows))
-        self.assertEqual(5, sum(item["detector_status"] == "downgraded" for item in rows))
+        occurrences = [row for item in rows for row in item["occurrences"]]
+        self.assertEqual(6, len(occurrences))
+        self.assertEqual(1, sum(item["detector_status"] == "candidate" for item in occurrences))
+        self.assertEqual(5, sum(item["detector_status"] == "downgraded" for item in occurrences))
         self.assertEqual(
             {
                 "negative_or_proof_limit_table_context",
@@ -3052,8 +3760,8 @@ Never retain this example.
                 "same_sentence_conditional_language",
             },
             {
-                item["downgrade_reasons"][0]
-                for item in rows
+                item["downgrade_reason"]
+                for item in occurrences
                 if item["detector_status"] == "downgraded"
             },
         )
@@ -3063,17 +3771,19 @@ Never retain this example.
         self.assertFalse(any("retain this example" in item["preview"] for item in rows))
 
     def test_wrapped_diagnosis_condition_preserves_range_and_is_downgraded(self) -> None:
-        path = (
-            ROOT
-            / "src/professional-skills/engineering-change-analysis/references/diagnosis-only.md"
+        markdown = (
+            "# Diagnosis\n\n"
+            "## Verified Cause\n\n"
+            "- `Verified Cause`: the proven causal chain; if cause is not proved, state that\n"
+            "  explicitly and report only bounded conclusions.\n"
         )
         report = self.module._collect_reference_semantic_advisories(
             [
                 {
-                    "path": path.relative_to(ROOT).as_posix(),
+                    "path": "diagnosis-only.md",
                     "layer": "professional",
                     "owner": "engineering-change-analysis",
-                    "text": path.read_text(encoding="utf-8"),
+                    "text": markdown,
                 }
             ]
         )
@@ -3087,7 +3797,15 @@ Never retain this example.
         self.assertEqual(
             ["same_sentence_conditional_language"], rows[0]["downgrade_reasons"]
         )
-        self.assertEqual({"start": 26, "end": 27}, rows[0]["occurrences"][0]["lines"])
+        span = rows[0]["occurrences"][0]["lines"]
+        self.assertEqual(1, span["end"] - span["start"])
+        self.assertEqual(
+            [
+                "- `Verified Cause`: the proven causal chain; if cause is not proved, state that",
+                "  explicitly and report only bounded conclusions.",
+            ],
+            markdown.splitlines()[span["start"] - 1 : span["end"]],
+        )
 
     def test_scoped_only_and_preceding_context_are_downgraded(self) -> None:
         report = self.module._collect_reference_semantic_advisories(
@@ -3115,15 +3833,16 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
         ]
-        self.assertEqual(6, len(rows))
-        self.assertTrue(all(item["detector_status"] == "downgraded" for item in rows))
+        occurrences = [row for item in rows for row in item["occurrences"]]
+        self.assertEqual(6, len(occurrences))
+        self.assertTrue(all(item["detector_status"] == "downgraded" for item in occurrences))
         self.assertIn(
             "preceding_reference_loading_scope",
-            {reason for item in rows for reason in item.get("downgrade_reasons", [])},
+            {item["downgrade_reason"] for item in occurrences},
         )
         self.assertIn(
             "scoped_only_restriction",
-            {reason for item in rows for reason in item.get("downgrade_reasons", [])},
+            {item["downgrade_reason"] for item in occurrences},
         )
 
     def test_absolute_table_context_rules_have_exact_positive_and_negative_boundaries(self) -> None:
@@ -3180,33 +3899,34 @@ All external consumers are covered.
             documents, disposition_entries=[]
         )
         rows = {
-            item["preview"]: item
+            occurrence["preview"]: occurrence
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
+            for occurrence in item["occurrences"]
         }
         self.assertEqual(
-            ["exact_table_context_header"],
-            rows["Load all references."]["downgrade_reasons"],
+            "exact_table_context_header",
+            rows["Load all references."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["boundary_record_authority"],
-            rows["Read-only inspection; never refresh fixtures."]["downgrade_reasons"],
+            "boundary_record_authority",
+            rows["Read-only inspection; never refresh fixtures."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Build/test only"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Build/test only"]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Builder stage only."]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Builder stage only."]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["Never existed or unavailable"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["Never existed or unavailable"]["downgrade_reason"],
         )
         self.assertEqual(
-            ["short_classification_fragment"],
-            rows["All available actions"]["downgrade_reasons"],
+            "short_classification_fragment",
+            rows["All available actions"]["downgrade_reason"],
         )
         for preview in (
             "Every Kubernetes service must conform.",
@@ -3216,7 +3936,32 @@ All external consumers are covered.
             "Always choose PostgreSQL",
             "Only deploy Kubernetes",
         ):
-            self.assertEqual("untriaged", rows[preview]["governance_status"])
+            self.assertEqual("candidate", rows[preview]["detector_status"])
+
+    def test_quoted_pressure_and_scoped_claims_are_not_prescriptions(self) -> None:
+        for text in (
+            'Pressure: "add the trigger so we never miss it."',
+            'Claims such as “dev only”, “not reachable”, and “already approved” remain scoped.',
+            'No mandatory review matrix or signature.',
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(self.module._absolute_literal_or_compound(text))
+        for text in (
+            'Required: always skip validation.',
+            'Pressure: "never miss it"; Always trust cached reports.',
+            '"Always create a Review Contract."',
+            'No mandatory matrix; mandatory review follows.',
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(self.module._absolute_literal_or_compound(text))
+
+    def test_reversed_negated_requirement_keeps_adjacent_mandate(self) -> None:
+        masked = self.module._root_policy_clause(
+            'Questions that require no repository evidence.', anti_pattern_section=False)
+        self.assertFalse(self.module.ROOT_UNCONDITIONAL_RE.search(masked))
+        for text in ('Require a Brief.', 'Require no Brief; always create a validator.'):
+            masked = self.module._root_policy_clause(text, anti_pattern_section=False)
+            self.assertTrue(self.module._root_has_normative_mechanism_force(masked))
 
     def test_absolute_token_and_authority_rules_have_positive_and_negative_boundaries(self) -> None:
         for compound in (
@@ -3304,9 +4049,10 @@ All external consumers are covered.
             documents, disposition_entries=[]
         )
         rows = {
-            item["preview"]: item
+            occurrence["preview"]: occurrence
             for item in report["candidates"]
             if item["finding"] == "unconditional_absolute_candidate"
+            for occurrence in item["occurrences"]
         }
         expected_reasons = {
             "Treat `must` and all-or-nothing as lexical labels.": "lexical_literal_or_compound",
@@ -3323,7 +4069,7 @@ All external consumers are covered.
             "Map every accepted claim to a current command, source path, owner review, or explicit residual risk.": "map_every_evidence_closure",
         }
         for preview, reason in expected_reasons.items():
-            self.assertEqual([reason], rows[preview]["downgrade_reasons"])
+            self.assertEqual(reason, rows[preview]["downgrade_reason"])
         for preview in (
             "A must-deploy Kubernetes policy applies to every cluster.",
             "Integration evidence does not prove all deployments, every provider behavior, all consumers.",
@@ -3355,7 +4101,7 @@ All external consumers are covered.
             "Map every API to evidence and PostgreSQL.",
             "Map every API to evidence, owner review, and PostgreSQL.",
         ):
-            self.assertEqual("untriaged", rows[preview]["governance_status"])
+            self.assertEqual("candidate", rows[preview]["detector_status"])
 
     def test_fixed_number_candidates_exclude_dates_versions_code_and_baselines(self) -> None:
         report = self.module._collect_reference_semantic_advisories(
@@ -3391,12 +4137,14 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "fixed_number_candidate"
         ]
-        self.assertEqual(3, len(rows))
+        self.assertEqual(3, sum(len(item["occurrences"]) for item in rows))
         self.assertEqual(
             ["cost-slo-threshold", "money", "percent", "time"],
             sorted({signal for item in rows for signal in item["signals"]}),
         )
-        previews = " ".join(item["preview"] for item in rows)
+        previews = " ".join(
+            occurrence["preview"] for item in rows for occurrence in item["occurrences"]
+        )
         for excluded in (
             "2026",
             "RFC",
@@ -3461,7 +4209,9 @@ All external consumers are covered.
             for item in report["candidates"]
             if item["finding"] == "fixed_number_candidate"
         ]
-        previews = " ".join(item["preview"] for item in rows)
+        previews = " ".join(
+            occurrence["preview"] for item in rows for occurrence in item["occurrences"]
+        )
         for false_positive in (
             "N+1",
             "PID 1",
@@ -3481,7 +4231,7 @@ All external consumers are covered.
             "1 percent",
         ):
             self.assertIn(true_positive, previews)
-        self.assertEqual(5, len(rows))
+        self.assertEqual(5, sum(len(item["occurrences"]) for item in rows))
 
     def test_fixed_number_masks_only_inline_and_contextual_clauses(self) -> None:
         self.assertEqual(
@@ -3534,7 +4284,15 @@ All external consumers are covered.
         ):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 self.module._semantic_candidate_id(
-                    "fixed_number_candidate", path, "a" * 64
+                    {
+                        "selector_version": self.module.REFERENCE_SEMANTIC_SELECTOR_VERSION,
+                        "selector_kind": "source-rule",
+                        "owner": "owner",
+                        "finding": "fixed_number_candidate",
+                        "path": path,
+                        "semantic_section": ["document-root"],
+                        "rule_identity": "fixed_number_candidate",
+                    }
                 )
             with self.subTest(document_path=path), self.assertRaises(ValueError):
                 self.module._collect_reference_semantic_advisories(
@@ -3793,7 +4551,7 @@ All external consumers are covered.
         bad_cases = (
             ([base_entry, base_entry], "duplicate semantic disposition"),
             ([{**base_entry, "candidate_id": "f" * 64}], "candidate_id does not match"),
-            ([{**base_entry, "path": "renamed.md"}], "candidate_id does not match"),
+            ([{**base_entry, "path": "renamed.md"}], "path does not match"),
             ([{**base_entry, "path": "../escape.md"}], "canonical relative POSIX path"),
             ([{**base_entry, "skill_owner": "wrong-owner"}], "skill_owner does not match"),
             ([{**base_entry, "reason": "approved"}], "reason is blank or generic"),
@@ -3871,6 +4629,7 @@ All external consumers are covered.
         def occurrence(path: str, owner: str, start: int, body: str) -> dict:
             return {
             "fingerprint": "a" * 64,
+            "shape_identity": "b" * 64,
             "content_fingerprint": self.module._semantic_occurrence_content_fingerprint(
                 body
             ),
@@ -3996,13 +4755,8 @@ All external consumers are covered.
         stale_entry = _semantic_disposition(base, "false-positive", priority="P2")
         stale_report, _stale_candidate = group(generic_documents, [stale_entry])
         self.assertEqual(0, stale_report["disposition_contract"]["applied_count"])
-        self.assertTrue(
-            any(
-                "evidence.content_fingerprint does not match" in error
-                for error in stale_report["disposition_contract"]["errors"]
-            ),
-            stale_report["disposition_contract"]["errors"],
-        )
+        self.assertEqual([], stale_report["disposition_contract"]["errors"])
+        self.assertEqual("needs-confirmation", _stale_candidate["governance_status"])
 
     def test_yaml_template_content_includes_sequences_and_block_bodies(self) -> None:
         def document(list_item: str, block_body: str) -> dict:

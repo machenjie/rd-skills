@@ -1,25 +1,23 @@
 ---
 name: engineering-change-analysis
-description: "Use `analysis-agent`: `implementation-preparation` for changes, `diagnosis-only` for verified cause, or `source-backed-answer` for repository questions. Skip source-free, Direct Task, and accepted-Brief narrow artifacts."
+description: "`analysis-agent`: source-backed `implementation-preparation`, causal `diagnosis-only`, or repository `source-backed-answer`; skip source-free, implementation-ready, or accepted-artifact work."
 ---
 
 # engineering-change-analysis
 
 ## Role
 
-Support `analysis-agent` in the selected source-backed mode. For Analyzed Work,
-the current Engineering Brief is the only operational analysis authority;
-Specialist work is input pending Brief incorporation.
+For `analysis-agent`, return one mode's source-backed read-only result.
 
 ## When To Use
 
-- implementation-preparation for source-backed desired-behavior, affected-consumer, and verification analysis before implementation or repair
+- implementation-preparation when the user requests design or evidence leaves an important implementation decision unresolved
 - diagnosis-only for verified cause analysis
 - source-backed-answer for a repository-dependent engineering question
 
 ## Do Not Use
 
-- eligible bounded Direct Task
+- implementation whose remaining unknowns are local owner, file, test, or caller discovery
 - source-free question
 - accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis
 - module-boundary placement decision
@@ -29,38 +27,33 @@ Specialist work is input pending Brief incorporation.
 
 - selected mode
 - bounded source evidence and constraints
+- proof boundary
 
 ## Professional Decision Rules
 
-- Bind the selected mode to its `mode-contract`.
-- Apply Core `task_contract.analyzed_work_authority` for initial closure,
-  decision-invalidated Delta Analysis, transitive impact, and Skill routing.
-- Prove its owner, impact, failure, validation, and proof limits.
-- Put source-proven placement and Specialist results in the Brief.
-- Route unresolved structural placement to `architecture-impact-reviewer`.
-- Put a complete Task Contract v2 that Main can dispatch verbatim in the Brief,
-  not a derived Task DAG or handoff.
+- Load only the selected mode and active named References without preloading the index or switching modes.
+- The selected reference supplies source proof, decisions, validation, and proof limits; do not create a formal contract without a real consumer.
 
 ## High-Value Gotchas
 
-- Proximity is not ownership.
+- Prior reports and nearby code are not current source ownership proof.
 
 ## Execution Checklist
 
-1. Load the selected mode contract and triggered guidance.
-2. Return its result and proof limit under Core.
+1. Choose the analysis mode.
+2. Separate source fact, supported inference, and unknown.
+3. Prove ownership from current source rather than proximity.
+4. Establish placement from the current dependency graph.
+5. Treat earlier reports and generated graphs as selectors until current source confirms their claims.
+6. Return the selected mode contract's result with validation and explicit Proof Limits.
 
 ## Stop / Escalation Conditions
 
-- Stop for user decisions or result-invalidating gaps.
-- Brief conflict or protected change returns `blocked`.
-- Structural placement or dependency direction routes to `architecture-impact-reviewer`.
-- Foundational invalidation permits full analysis.
+- After Core evidence closure, stop only when a mode conflict, user-owned choice, or gap invalidates the result.
 
 ## Output Contract
 
-- mode result, source evidence, and proof limit
-- implementation-preparation: authoritative Brief, dispatchable Slice, Specialist input
+- Return the selected mode result with source evidence and Proof Limits.
 
 ## Targeted References
 

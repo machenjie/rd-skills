@@ -35,14 +35,11 @@ Support source-grounded documentation work with an explicit role boundary.
 
 ## Anti-Patterns
 
-- Treating repository discovery or prior summaries as factual proof.
-- Keeping stale docs because code validation passes.
-- Publishing generated examples without checking their compatibility promise.
-- Claiming no documentation impact without naming considered audiences.
+- Local success substituted for evidence of the documentation generation contract.
 
 ## Stop Conditions
 
-Escalate public APIs, security posture, compliance, migrations, production configuration, incident procedures, release impact, or operator recovery. Stop for exposed secrets, source conflicts, unvalidated generation, or ownerless release documentation.
+Return unresolved contract, security/privacy, compliance-authority, migration, production, incident, release, or recovery judgments to Main for the relevant owner. A documentation topic alone does not require another gate. Stop for exposed secrets, source conflicts, unvalidated generation, or ownerless release documentation.
 
 ## Output Contract
 

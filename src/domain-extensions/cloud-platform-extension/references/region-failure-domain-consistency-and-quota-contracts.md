@@ -19,8 +19,10 @@ Official AWS, Azure, and Google Cloud documentation below was accessed on
 
 - Treat create, update, IAM, and failover state as pending until observable
   through the required read and use path.
-- Retry only service-classified retryable and idempotent operations with bounded
-  exponential backoff, jitter, and a retry budget.
+- Retry only service-classified retryable operations whose repeat effects are safe.
+  Use the service contract and existing SDK retry owner to select schedule and
+  aggregate budget; apply exponential backoff and jitter when that policy calls
+  for them, and avoid stacking another retry loop over the SDK.
 - Handle unknown results and retry an entire read-modify-write transaction when
   its service contract requires it.
 

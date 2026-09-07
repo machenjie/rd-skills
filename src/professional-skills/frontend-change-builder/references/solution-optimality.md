@@ -12,4 +12,4 @@ Derive thresholds from the current repository baseline, representative device/ne
 2. Does the choice change main-thread work, rendering breadth, async race/cancellation behavior, retained listeners/subscriptions/timers, or memory across navigation?
 3. How does it change request count, waterfall/fan-out, payload growth, caching/staleness, asset delivery, or offline behavior at the actual route and data scale?
 4. Which local state, existing component, platform API, caching layer, worker, memoization, or split point is the smallest evidence-backed option, and what measured constraint rejects the alternative?
-5. If bundle, experience, network, and maintainability costs require a broader tradeoff decision, identify `solution-optimality-evaluation` as owner without assuming automatic loading.
+5. If bundle, experience, network, and maintainability costs require a broader cross-resource or system tradeoff decision, record that evaluation as unresolved scope with its evidence need and decision owner; do not expand this frontend boundary automatically.

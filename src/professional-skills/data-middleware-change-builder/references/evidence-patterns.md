@@ -5,9 +5,9 @@ Use this reference when a data or middleware plan needs proof beyond an unverifi
 ## Evidence Map
 - **Query or index change:** capture the validator or command, representative dataset size, `EXPLAIN` or plan output artifact, exit code, latency/cardinality judgment, and whether production distribution is still assumed.
 - **Cache change:** prove key shape, tenant isolation, TTL, invalidation, stampede control, cache-down fallback, and stale-read behavior with deterministic tests or bounded integration evidence.
-- **Queue or stream change:** prove delivery semantics, offset/ack timing, duplicate handling, retry/backoff, poison-message routing, DLQ alerting, replay safety, and ordering limits.
-- **Migration or backfill:** prove forward path, rollback path, lock behavior, batching, resumability, reconciliation, execution window, and release watch signals.
-- **Search or derived store:** prove shadow index or blue/green cutover, mapping compatibility, replay or reindex progress, alias switch rollback, and drift reconciliation.
+- **Queue or stream change:** prove delivery semantics, offset/ack timing, duplicate handling, retry/backoff, poison-message routing, the selected terminal disposition and required alerting, replay safety, and ordering limits.
+- **Migration or backfill:** prove forward path, accepted recovery or containment path and irreversible limits, lock behavior, batching, resumability, reconciliation, execution window, and release watch signals.
+- **Search or derived store:** prove the selected in-place or versioned transition, mapping compatibility, required replay or reindex progress, applicable recovery or containment, and drift reconciliation.
 
 ## Evidence Rules
 - For executable or report-backed claims, record the validator, artifact, status, dataset freshness, and exact claim; for manual review, record the procedure, result, owner, and proof limits.

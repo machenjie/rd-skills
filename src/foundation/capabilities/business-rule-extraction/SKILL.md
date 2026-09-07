@@ -27,7 +27,7 @@ Extract decisions from current policy, contracts, code, data, examples, and owne
 - **Resolve overlap and precedence explicitly.** Show how general, product, tenant, jurisdiction, temporal, and exception rules interact; do not infer precedence from file order or the last code branch inspected.
 - **Preserve precision and uncertainty.** Carry units, currency, timezone, rounding, effective dates, subject scope, and unknown or contradictory terms into the extracted result instead of silently choosing a convenient interpretation.
 - **Trace rule to enforcement and observation.** Locate current writers, validators, readers, bypasses, stored state, and externally enforced boundaries; identify duplicated or missing enforcement without assigning architecture prematurely.
-- **Test the decision surface.** Derive positive, boundary, negative, conflicting, stale, and exception cases that can falsify the normalized rule, then hand implementation and final acceptance to the relevant owners.
+- **Test the decision surface.** Derive positive, boundary, negative, conflicting, stale, and exception cases that can falsify the normalized rule. Hand implementation and final acceptance to the relevant owners.
 
 ## Anti-Patterns
 

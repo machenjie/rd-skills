@@ -53,14 +53,14 @@ class GenerateExamplesShowcaseTests(unittest.TestCase):
     def test_rendered_showcase_uses_nested_markdown_evidence(self) -> None:
         rendered = self.module.render_showcase(ROOT)
 
-        self.assertIn("- Evidence obligations:\n  - read before plan:", rendered)
+        self.assertIn("- Evidence obligations:\n  - inspect:", rendered)
         self.assertIn(
-            "compatibility note, unverified scope, residual risk, and next step.",
+            "compatibility note, unverified scope, residual risk, and next step if needed.",
             rendered,
         )
         self.assertIn(
-            "rollback result, validation output, unverified scope, residual risk, "
-            "and owner decision if a breaking change remains.",
+            "validation limits, unverified scope, residual risk, and any owner decision "
+            "needed before implementation. No change or production action is implied.",
             rendered,
         )
         self.assertNotIn("- Evidence obligations: `", rendered)
