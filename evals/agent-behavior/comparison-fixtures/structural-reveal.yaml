@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "suite_id": "structural-routing-review-old-new",
+  "cases": [
+    {
+      "id": "opaque-501",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-502",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-503",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-504",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-505",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-506",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-507",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-508",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-509",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-510",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-511",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-512",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-513",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-514",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    },
+    {
+      "id": "opaque-515",
+      "old_arm_id": "arm-alpha",
+      "new_arm_id": "arm-beta",
+      "reveal_sequence": 3
+    }
+  ]
+}

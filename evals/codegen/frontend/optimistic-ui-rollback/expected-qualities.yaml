@@ -1,6 +1,5 @@
 id: optimistic-ui-rollback
 category: frontend
-complexity: L3
 focus:
   - optimistic state
   - rollback recovery

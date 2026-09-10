@@ -21,22 +21,13 @@ Preserve named invariants under overlapping writes, retries, leases, redelivery,
 
 ## High-Value Rules
 
-- Name the resource and invariant, then choose the narrowest conditional update, compare-and-swap, transaction, partition, or scoped lock.
-- Choose optimistic or pessimistic control from measured contention, storage semantics, latency, and recovery cost; no universal conflict-rate threshold is valid.
-- Define retry, reject, merge, or escalation; when duplicate effects and the response contract require it, reuse a durable outcome, otherwise prove natural idempotence or safe re-execution.
-- Bound and release locks and leases, order multi-resource locks, and reject stale distributed-lease holders with monotonic fencing.
-- Prove the invariant with synchronized overlap and allowed-outcome assertions; add race or stress tooling when risk warrants it.
+- Select the narrowest current-store control that preserves the named invariant under reachable overlap.
+- Define conflict outcomes, retry and idempotence, lock or lease lifecycle, order, and fencing for affected actors.
+- Prove allowed and forbidden concurrent outcomes.
 
 ## Anti-Patterns
 
-- A `read → decide → act` sequence is unsafe unless the store enforces the decision atomically.
-- Enqueue deduplication does not make consumer side effects exactly once.
-
-## Execution Checklist
-
-1. Identify resources, invariants, overlap, and atomicity gaps.
-2. Specify mechanism, conflict response, retry/idempotency, lock order, and fencing.
-3. Verify deterministic race outcomes and the forbidden stale or duplicate effect.
+- Local success substituted for evidence of the concurrency control contract.
 
 ## Stop Conditions
 

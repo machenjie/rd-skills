@@ -1,6 +1,6 @@
 # Testability Seam Benchmarks And Patterns
 
-Use this reference for L3+ seam decisions where the inline rules are not enough. Keep it focused on professional seam choice, not broad testing education.
+Use this reference for seam decisions where the inline rules are not enough. Keep it focused on professional seam choice, not broad testing education.
 
 ## Seam Decision Rubric
 
@@ -21,7 +21,7 @@ Use this reference for L3+ seam decisions where the inline rules are not enough.
 4. **Spy:** use when an external boundary interaction is behavior and state output is insufficient.
 5. **Mock:** use for declared external interactions, not private choreography.
 
-Escalate to `contract-testing` or `integration-testing` when the selected double stands in for HTTP, DB, queue, cache, file storage, auth provider, SDK, generated client, event bus, or sandbox behavior that can drift.
+Use `contract-testing` or `integration-testing` when provider fidelity remains unresolved or the named risk needs real-boundary proof unavailable from the selected double. Current contract/calibration evidence may support a bounded local branch; retain its explicit provider and drift limits.
 
 ## Deterministic Source Pattern
 

@@ -18,7 +18,8 @@ For a protected route, UI guards shape navigation and recovery while server-side
 
 ## URL, Redirect, And History
 
-- Encode path identity and hierarchy intentionally; put optional view state in query/search only when share/back/reload behavior requires it, and keep sensitive values out of URLs.
+- Encode path identity and hierarchy intentionally; put optional view state in query/search only when share/back/reload behavior requires it.
+- Keep sensitive values out of URLs.
 - Validate redirect destinations and post-authentication targets against the same origin or an explicit allowlist.
 - Forward parameters required to preserve approved intent.
 - Strip unrelated or sensitive state.

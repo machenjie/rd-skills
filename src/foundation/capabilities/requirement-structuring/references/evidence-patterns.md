@@ -21,7 +21,7 @@ Use this reference only when a structured requirement needs explicit repository 
 | --- | --- | --- |
 | repository inspection | Current routes, imports, generated artifacts, tests, docs, config, jobs, contracts, and consumers are inspected or explicitly bounded. | Graph proximity is treated as source-of-truth behavior or product intent. |
 | prior task evidence | Memory has date, owner, scope, and current-source confirmation or is carried as advisory only. | Memory predates source/contract/registry/report changes, lacks owner, or conflicts with current artifacts. |
-| Observable action sequence | Commands, reviews, repairs, and validation freshness are recorded after the final relevant edit. | Evidence predates final edits or omits a repair/re-review loop. |
+| Observable action sequence | Commands, reviews, repairs, and validation freshness are recorded after the final relevant edit. | Evidence for affected behavior predates its final material edit, repair lacks fresh validation, or required independent judgment remains unresolved. |
 | Stakeholder source | Authority, date, scope, decision shape, and downstream Skill or owner are named. | Chat summary or generated summary is used as binding approval without owner. |
 | Generated artifact | Artifact is generated from current source and inspected alongside source boundary. | Artifact is treated as product intent or compatibility proof without generator/source freshness. |
 
@@ -41,4 +41,4 @@ Use not-present checks when a non-goal, deferred decision, compatibility promise
 | Docs, support macro, runbook, or release note that promises excluded behavior | Docs diff, support path review, changelog/release-note check. |
 
 - If connector, telemetry, owner record, or production-data lookup, record account, data boundary, redaction, retention, and unavailable evidence.
-- If cleanup, migration, deploy, destructive filesystem, or external write, require owner approval, dry-run where available, rollback/compensation path, and stop condition.
+- If cleanup, migration, deploy, destructive filesystem, or external write, require owner approval, dry-run where available, accepted recovery or containment and explicit irreversible limits, and stop condition.

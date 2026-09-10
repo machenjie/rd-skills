@@ -1,6 +1,7 @@
 # AI Review Pattern Catalog
 
 Load this reference when concrete examples are needed to calibrate hallucinated APIs, silent failure, over-abstraction, helper bags, side-effect pollution, mock-only tests, feature-flag debt, dependency pollution, or other recurring AI-generated failure modes.
+A summary is not the diff.
 
 ## Anti-Examples
 
@@ -33,7 +34,7 @@ Report task-specific equivalence tests for the applicable dimensions. When proof
 
 ## Failure Modes
 
-- **Hallucinated API silently returns `undefined`** in dynamic languages; the feature ships broken and is discovered in production, not code review.
+- **Hallucinated JavaScript API breaks at the access or call boundary**: reading a missing property yields `undefined`; calling a missing or non-callable method throws `TypeError`. Optional calls or swallowed exceptions can hide the failure, so inspect the actual access, invocation, and error path.
 - **Over-abstraction hides simple logic** through factory/interface layers wrapping a single branch.
 - **Dependency additions bloat attack surface** when a new package introduces transitive CVE or license risk without audit.
 - **Tests pass only on mocks** because assertions check mock call counts instead of production behavior.

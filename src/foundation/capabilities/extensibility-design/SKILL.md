@@ -28,7 +28,7 @@ Prove real variation and define extension authority, isolation, lifecycle, compa
 - **Contain extension failure.** Define validation, time and resource bounds, isolation, partial effect, retry, disablement, fallback, and host recovery according to the consequence of extension failure.
 - **Version for mixed host and extension populations.** Derive negotiation, compatibility, deprecation, and removal conditions from current consumers and policy rather than fixed notice periods or universal version rules.
 - **Make registration and discovery deterministic.** Define identity, conflict handling, precedence, loading scope, ownership, and duplicate behavior so discovery order cannot silently change business meaning.
-- **Observe and retire the boundary.** Capture attributable use, failures, cost, version adoption, and residual dependencies, then remove an extension path only when current evidence satisfies its exit condition.
+- **Observe and retire the boundary.** Capture attributable use, failures, cost, version adoption, and residual dependencies. Remove an extension path only when current evidence satisfies its exit condition.
 
 ## Anti-Patterns
 

@@ -23,19 +23,13 @@ Consume the fixed destination from `implementation-structure-design` or `module-
 
 ## High-Value Rules
 
-- **Inventory observable behavior before movement.** Include public return and error semantics, side effects, persistence, events, configuration, metrics, logs used as contracts, timing or ordering guarantees, and consumed symbols relevant to the change.
-- **Calibrate characterization to uncertainty and consequence.** Add focused pre-change evidence when behavior is weakly specified, incident-prone, stateful, concurrent, externally integrated, or consequential; record known defects rather than silently normalizing them.
 - **Separate structural and intentional behavior change.** Keep changed semantics, bug fixes, contract migration, and cleanup policy independently visible with their own authority and proof.
-- **Choose reviewable reversible steps.** Preserve a valid build and evidence boundary after each logical move, and separate renames, moves, extraction, rewiring, and deletion when combining them would hide causality.
 - **Preserve dependency and ownership direction.** Check imports, initialization, lifecycle, visibility, generated boundaries, side-effect order, and state ownership so a cleaner file shape does not create a broader architectural dependency.
-- **Honor accepted deletion readiness.** Consume `cleanup-deletion-governance` exit, residue, absence-proof, and recovery limits; verify that structural sequencing preserves them.
-- **Compare before and after with limits.** Use task-relevant behavior, public-surface, dependency, and complexity evidence, and state what hidden consumers, production timing, or external environments remain unproved.
+- Use the behavior-evidence, checklist, and split/merge References for characterization, reversible sequencing, accepted deletion, and before/after proof.
 
 ## Anti-Patterns
 
-- Label a default, error, ordering, side effect, schema, metric, or public symbol change as refactoring.
-- Combine broad movement and logic change into one diff that prevents causal review or safe rollback.
-- Delete apparently unused code from local search alone while dynamic, generated, configured, persisted, or external consumers remain uninspected.
+- Local success substituted for evidence of the refactoring contract.
 
 ## Stop Conditions
 

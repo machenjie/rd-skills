@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import importlib.util
 import hashlib
 import io
@@ -16,6 +17,7 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
+TEST_TIMEOUT_CLASS = "source-validation"
 TRACKED_REPORT_PRODUCERS = (
     "scripts/audit-skill-content.py",
     "scripts/eval-skill-professionalism.py",
@@ -218,6 +220,9 @@ def _semantic_advisories(candidates=None) -> dict:
                 item["governance_status"] == "detector-downgraded" for item in rows
             ),
             "untriaged": sum(item["governance_status"] == "untriaged" for item in rows),
+            "needs_confirmation": sum(
+                item["governance_status"] == "needs-confirmation" for item in rows
+            ),
             "rewrite": sum(item.get("disposition") == "rewrite" for item in rows),
             "valid_contextual_rule": sum(item.get("disposition") == "valid-contextual-rule" for item in rows),
             "false_positive": sum(item.get("disposition") == "false-positive" for item in rows),
@@ -234,13 +239,14 @@ def _semantic_advisories(candidates=None) -> dict:
     }
     entries = [item["disposition_record"] for item in candidates if item.get("disposition_record")]
     return {
-        "schema_version": 7,
+        "schema_version": 8,
         "detector_contract": dict(_reference_detector_contract_fixture()),
         "finding_families": list(families),
         "summary": {
             "raw_candidates": totals["raw"],
             "detector_downgraded_candidates": totals["detector_downgraded"],
             "untriaged_candidates": totals["untriaged"],
+            "needs_confirmation_candidates": totals["needs_confirmation"],
             "rewrite_candidates": totals["rewrite"],
             "valid_contextual_rule_candidates": totals["valid_contextual_rule"],
             "false_positive_candidates": totals["false_positive"],
@@ -293,7 +299,7 @@ def _semantic_advisories(candidates=None) -> dict:
         },
         "candidates": candidates,
         "disposition_contract": {
-            "schema_version": 2,
+            "schema_version": 3,
             "source": "config/skill-content-exceptions.yaml",
             "configured_count": len(entries),
             "applied_count": len(entries),
@@ -465,7 +471,7 @@ def _canonical_root_content_fixture() -> str:
             "finding": candidate["finding"],
             "path": candidate["path"],
             "document_part": candidate["document_part"],
-            "fingerprint": candidate["fingerprint"],
+            "source_selector": copy.deepcopy(candidate["source_selector"]),
             "skill_owner": candidate["skill_owner"],
             "priority": auditor.ROOT_SEMANTIC_DEFAULT_PRIORITIES[
                 candidate["finding"]
@@ -481,13 +487,17 @@ def _canonical_root_content_fixture() -> str:
             },
             "mitigation": "Rebuild the synthetic fixture after source or detector changes.",
             "review_after": None,
+            "record_fingerprint": "",
         }
+        entry["record_fingerprint"] = (
+            auditor._semantic_disposition_record_fingerprint("root", entry)
+        )
         entries.append(entry)
         candidate.update(
             {
                 "priority": entry["priority"],
                 "disposition": entry["disposition"],
-                "disposition_record": entry,
+                "disposition_record": copy.deepcopy(entry),
                 "resolved": True,
                 "unresolved": False,
                 "governance_status": "resolved-valid-contextual-rule",
@@ -500,6 +510,7 @@ def _canonical_root_content_fixture() -> str:
         by_finding[finding] = {
             "raw": len(rows),
             "untriaged": 0,
+            "needs_confirmation": 0,
             "rewrite": 0,
             "resolved": len(rows),
             "unresolved": 0,
@@ -510,6 +521,7 @@ def _canonical_root_content_fixture() -> str:
     semantic["summary"] = {
         "raw_candidates": len(entries),
         "untriaged_candidates": 0,
+        "needs_confirmation_candidates": 0,
         "rewrite_candidates": 0,
         "resolved_candidates": len(entries),
         "unresolved_candidates": 0,
@@ -538,6 +550,7 @@ def _canonical_root_content_fixture() -> str:
     summary.update(
         {
             "semantic_raw_candidates": len(entries),
+            "semantic_needs_confirmation_candidates": 0,
             "semantic_unresolved_candidates": 0,
             "semantic_p0_p1_unresolved": 0,
             "semantic_fixed_number_unresolved": 0,
@@ -557,11 +570,11 @@ def _root_content_fixture() -> dict:
 
 
 def _reference_disposition(candidate: dict, value: str) -> dict:
-    return {
+    entry = {
         "candidate_id": candidate["candidate_id"],
         "finding": candidate["finding"],
         "path": candidate["path"],
-        "fingerprint": candidate["fingerprint"],
+        "source_selector": copy.deepcopy(candidate["source_selector"]),
         "skill_owner": candidate["skill_owner"],
         "priority": candidate["priority"],
         "disposition": value,
@@ -575,7 +588,15 @@ def _reference_disposition(candidate: dict, value: str) -> dict:
         },
         "mitigation": "Re-evaluate the rule when its source contract changes.",
         "review_after": None,
+        "record_fingerprint": "",
     }
+    entry["record_fingerprint"] = (
+        _load_regression_module()
+        .expert_panel.panel_contracts.semantic_disposition_record_fingerprint(
+            "reference", entry
+        )
+    )
+    return entry
 
 
 def _release_review_config(
@@ -694,7 +715,7 @@ def _incomplete_expert_review_fixture() -> dict:
             "qualification_summary": None,
             "evidence_summary": None,
             "professional_dispositions": [],
-            "required_target_count": 189,
+            "required_target_count": 188,
             "applied_target_count": 0,
             "accepted_current_count": None,
             "correction_count": None,
@@ -709,7 +730,7 @@ def _formal_professional_dispositions_fixture(
     *, panel_review_id: str
 ) -> list[dict]:
     rows = []
-    for index in range(189):
+    for index in range(188):
         skill_id = f"fixture-skill-{index:03d}"
         target_digest = hashlib.sha256(
             f"fixture-decision:{skill_id}".encode("utf-8")
@@ -852,22 +873,22 @@ def _formal_expert_reviews_fixture() -> dict:
                     "sha256": "d" * 64,
                 }
             ],
-            "required_target_count": 189,
-            "fresh_target_count": 189,
+            "required_target_count": 188,
+            "fresh_target_count": 188,
             "carried_forward_target_count": 0,
-            "applied_target_count": 189,
-            "accepted_current_count": 189,
+            "applied_target_count": 188,
+            "accepted_current_count": 188,
             "correction_count": 0,
             "unresolved_professional_disagreement_count": 0,
             "evidence_contract_satisfied": True,
             "qualification_summary": {
-                "covered_target_count": 189,
+                "covered_target_count": 188,
                 "required_domain_experts_per_target": 2,
                 "required_architecture_experts_per_target": 1,
                 "per_target_panel_size": 3,
                 "fresh_reviewer_pool_size": 3,
-                "effective_domain_vote_count": 378,
-                "effective_architecture_vote_count": 189,
+                "effective_domain_vote_count": 376,
+                "effective_architecture_vote_count": 188,
             },
             "evidence_summary": evidence_summary,
             "review_contract_fingerprint": "e" * 64,
@@ -892,12 +913,12 @@ def _formal_expert_reviews_fixture() -> dict:
             },
             "review_cost_current": True,
             "review_cost": {
-                "fresh_vote_count": 567,
+                "fresh_vote_count": 564,
                 "carried_forward_vote_count": 0,
-                "effective_vote_count": 567,
-                "fresh_criterion_result_count": 5670,
+                "effective_vote_count": 564,
+                "fresh_criterion_result_count": 5640,
                 "carried_forward_criterion_result_count": 0,
-                "effective_criterion_result_count": 5670,
+                "effective_criterion_result_count": 5640,
                 "canonical_capsule_input_bytes_proxy": 303,
                 "full_rereview_deduplicated_capsule_input_bytes_proxy": 300,
                 "input_ratio_ppm": 1_010_000,
@@ -1386,15 +1407,34 @@ class DeterministicReportContractTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        commands = [
-            " ".join(producer["argv"])
-            for producer in contract["principle_acceptance_contract"]["producers"]
-        ]
-        self.assertEqual(33, len(commands))
-        before_lines = set(before_diagnostics.splitlines())
-        for command in commands:
-            self.assertNotIn(command, before_lines, command)
-            self.assertEqual(1, diagnostic_lines.count(command), command)
+        producers = contract["principle_acceptance_contract"]["producers"]
+        self.assertEqual(31, len(producers))
+        before_lines = before_diagnostics.splitlines()
+        for producer in producers:
+            command = " ".join(producer["argv"])
+            documented_command = command
+            if producer["id"] == "eval-rendered-context":
+                documented_command = f"{command} --mode conformance"
+                calibration_lines = [
+                    line
+                    for line in before_diagnostics.splitlines()
+                    if line.startswith(
+                        f"{command} --mode calibration --reports-dir "
+                    )
+                ]
+                self.assertEqual(1, len(calibration_lines), command)
+                self.assertEqual(
+                    1,
+                    before_lines.count(documented_command),
+                    documented_command,
+                )
+            else:
+                self.assertNotIn(documented_command, before_lines, command)
+            self.assertEqual(
+                1,
+                diagnostic_lines.count(documented_command),
+                documented_command,
+            )
 
     def test_regression_requires_prebuilt_strict_promoted_sample_report(self) -> None:
         names = {
@@ -1622,6 +1662,174 @@ class DeterministicReportContractTests(unittest.TestCase):
         self.assertIn("hard_fail_sentences=2", blockers[0].message)
         self.assertIn("compound_bullets=1", blockers[0].message)
 
+    def test_ordinary_semantic_source_currentness_requires_exact_error_contract(
+        self,
+    ) -> None:
+        section = {
+            "semantic_advisories": {
+                "disposition_contract": {
+                    "configured_count": 2,
+                    "entries": [{"candidate_id": "a"}, {"candidate_id": "b"}],
+                }
+            }
+        }
+        wrapper = "semantic_advisories.disposition_contract contains validation errors"
+        prefix = "semantic disposition contract: reference_semantic_dispositions.entries"
+        raw = [
+            f"{prefix}[0]: stale semantic disposition entry",
+            f"{prefix}[1]: stale semantic disposition entry",
+        ]
+        arguments = {
+            "formal": False,
+            "storage_status": "stale",
+            "audit_section_exact_fresh": True,
+            "section": section,
+            "configured_count": 2,
+            "disposition_error_count": 2,
+            "validator_errors": [wrapper, *raw],
+            "wrapper": wrapper,
+            "error_prefix": prefix,
+            "allowed_raw_messages": {"stale semantic disposition entry"},
+        }
+        self.assertTrue(
+            self.regression._ordinary_semantic_source_currentness(**arguments)
+        )
+
+        variants = (
+            {"formal": True},
+            {"storage_status": "current"},
+            {"storage_status": "missing"},
+            {"storage_status": "pending"},
+            {"audit_section_exact_fresh": False},
+            {"configured_count": 1},
+            {"disposition_error_count": 0, "validator_errors": []},
+            {"validator_errors": [wrapper, raw[0]]},
+            {"validator_errors": [wrapper, raw[1], raw[0]]},
+            {"validator_errors": [wrapper, raw[0], raw[0]]},
+            {
+                "validator_errors": [
+                    wrapper,
+                    raw[0],
+                    f"{prefix}[2]: stale semantic disposition entry",
+                ]
+            },
+            {"validator_errors": ["different wrapper", *raw]},
+            {
+                "validator_errors": [
+                    wrapper,
+                    raw[0],
+                    f"{prefix}[1]: disposition schema is malformed",
+                ]
+            },
+        )
+        for changes in variants:
+            with self.subTest(changes=changes):
+                candidate = {**arguments, **changes}
+                self.assertFalse(
+                    self.regression._ordinary_semantic_source_currentness(
+                        **candidate
+                    )
+                )
+
+    def test_reference_and_root_summaries_retain_trusted_stale_error_counts(
+        self,
+    ) -> None:
+        reference = _reference_content_fixture()
+        reference_validator = self.regression._load_reference_validator()
+        reference_counts, _errors = reference_validator._evaluate(
+            reference, strict=False
+        )
+        reference_contract = reference["semantic_advisories"][
+            "disposition_contract"
+        ]
+        reference_contract["configured_count"] = 2
+        reference_contract["entries"] = [{"candidate_id": "a"}, {"candidate_id": "b"}]
+        reference_counts.update(
+            {
+                "semantic_disposition_configured": 2,
+                "semantic_disposition_applied": 0,
+                "semantic_disposition_errors": 2,
+            }
+        )
+        reference_wrapper = (
+            "semantic_advisories.disposition_contract contains validation errors"
+        )
+        reference_errors = [
+            reference_wrapper,
+            "semantic disposition contract: reference_semantic_dispositions.entries[0]: stale semantic disposition entry",
+            "semantic disposition contract: reference_semantic_dispositions.entries[1]: stale semantic disposition entry",
+        ]
+        with mock.patch.object(
+            reference_validator,
+            "_semantic_contract",
+            return_value=(reference_counts, reference_errors),
+        ), mock.patch.object(
+            reference_validator,
+            "_evaluate",
+            side_effect=[
+                (reference_counts, reference_errors),
+                (reference_counts, reference_errors),
+            ],
+        ):
+            reference_summary = self.regression._reference_content_summary(
+                {"reference_content": reference},
+                fresh_reference_content=reference,
+                semantic_storage_status="stale",
+                formal=False,
+            )
+        self.assertEqual(2, reference_summary["semantic_disposition_errors"])
+        self.assertFalse(reference_summary["semantic_triage_complete"])
+        self.assertFalse(reference_summary["strict_ready"])
+
+        root = _root_content_fixture()
+        root_validator = self.regression._load_root_validator()
+        root_counts, _errors = root_validator._evaluate(root, strict=False)
+        root_contract = root["semantic_advisories"]["disposition_contract"]
+        root_contract["configured_count"] = 2
+        root_contract["entries"] = [{"candidate_id": "a"}, {"candidate_id": "b"}]
+        root_counts.update(
+            {
+                "dispositions_configured": 2,
+                "dispositions_applied": 0,
+                "disposition_errors": 2,
+            }
+        )
+        root_errors = [
+            "root semantic disposition contract: root_semantic_dispositions.entries[0]: stale root semantic disposition entry",
+            "root semantic disposition contract: root_semantic_dispositions.entries[1]: evidence.context_fingerprint does not match current candidate",
+        ]
+        with mock.patch.object(
+            root_validator,
+            "_evaluate",
+            side_effect=[
+                (root_counts, root_errors),
+                (root_counts, root_errors),
+            ],
+        ):
+            root_summary = self.regression._root_content_summary(
+                {"root_content": root},
+                fresh_root_content=root,
+                semantic_storage_status="stale",
+                formal=False,
+            )
+        self.assertEqual(2, root_summary["semantic_disposition_errors"])
+        self.assertFalse(root_summary["semantic_triage_complete"])
+        self.assertFalse(root_summary["strict_ready"])
+
+        for summarizer, key, fixture in (
+            (self.regression._reference_content_summary, "reference_content", reference),
+            (self.regression._root_content_summary, "root_content", root),
+        ):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                summarizer(
+                    {key: fixture},
+                    **{
+                        f"fresh_{key}": fixture,
+                        "semantic_storage_status": "stale",
+                        "formal": True,
+                    },
+                )
+
     def test_reference_content_summary_promotes_strict_counts_to_blockers(self) -> None:
         fixture = _reference_content_fixture()
         summary = self.regression._reference_content_summary(
@@ -1674,6 +1882,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 "semantic_raw_candidates",
                 "semantic_detector_downgraded_candidates",
                 "semantic_untriaged_candidates",
+                "semantic_needs_confirmation_candidates",
                 "semantic_rewrite_candidates",
                 "semantic_resolved_candidates",
                 "semantic_unresolved_candidates",
@@ -1707,7 +1916,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         self.assertFalse(summary["structural_strict_ready"])
         self.assertTrue(summary["semantic_triage_complete"])
         self.assertFalse(summary["strict_ready"])
-        self.assertEqual(7, summary["semantic_schema_version"])
+        self.assertEqual(8, summary["semantic_schema_version"])
         self.assertEqual(
             [
                 "unconditional_absolute_candidate",
@@ -1914,6 +2123,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                 "semantic_finding_families",
                 "semantic_raw_candidates",
                 "semantic_untriaged_candidates",
+                "semantic_needs_confirmation_candidates",
                 "semantic_rewrite_candidates",
                 "semantic_resolved_candidates",
                 "semantic_unresolved_candidates",
@@ -1985,20 +2195,24 @@ class DeterministicReportContractTests(unittest.TestCase):
                 fresh_root_content=fresh,
             )
 
-    def test_root_semantic_triage_failure_is_a_regression_blocker(self) -> None:
+    def test_root_needs_confirmation_is_a_regression_blocker(self) -> None:
         fixture = _root_content_fixture()
         summary = self.regression._root_content_summary(
             {"root_content": fixture}, fresh_root_content=fixture
         )
         summary["semantic_triage_complete"] = False
         summary["strict_ready"] = False
-        summary["semantic_untriaged_candidates"] = 1
+        summary["semantic_needs_confirmation_candidates"] = 1
         summary["semantic_p0_p1_unresolved_candidates"] = 1
         blockers, _advisories = self.regression._root_content_findings(summary)
         self.assertEqual(
             {"root-content-strict-gate", "root-semantic-triage-gate"},
             {item.category for item in blockers},
         )
+        semantic = next(
+            item for item in blockers if item.category == "root-semantic-triage-gate"
+        )
+        self.assertIn("needs_confirmation=1", semantic.message)
 
     def test_root_strict_blocker_enters_release_authoring_gate(self) -> None:
         reports = self.regression._reports(ROOT / "reports")
@@ -2036,6 +2250,14 @@ class DeterministicReportContractTests(unittest.TestCase):
             "by_surface": {},
         }
         expert_review = _incomplete_expert_review_fixture()
+        coverage_summary = {
+            "status": "pass",
+            "required_skill_count": 1,
+            "pass_count": 1,
+            "fail_count": 0,
+            "not_required_count": 0,
+            "failing_skills": [],
+        }
         locked_cost_fixture = json.loads(
             (ROOT / "reports/professionalism-regression-report.json").read_text(
                 encoding="utf-8"
@@ -2065,6 +2287,10 @@ class DeterministicReportContractTests(unittest.TestCase):
             self.regression,
             "_expert_reviews",
             return_value=expert_review,
+        ), mock.patch.object(
+            self.regression,
+            "_coverage_gate_summary",
+            return_value=coverage_summary,
         ):
             returncode = self.regression.main(
                 ["--reports-dir", raw, "--strict", "--report-only"]
@@ -2408,7 +2634,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                         "status": "pass",
                         "missing_sections": [],
                     }
-                    for index in range(26)
+                    for index in range(25)
                 ],
             },
             "depth": {"errors": []},
@@ -2457,8 +2683,8 @@ class DeterministicReportContractTests(unittest.TestCase):
         }
         coverage_summary = {
             "status": "pass",
-            "required_skill_count": 26,
-            "pass_count": 26,
+            "required_skill_count": 25,
+            "pass_count": 25,
             "fail_count": 0,
             "not_required_count": 0,
             "failing_skills": [],
@@ -2487,89 +2713,96 @@ class DeterministicReportContractTests(unittest.TestCase):
                 )
             return original_read_text(path, *args, **kwargs)
 
-        with tempfile.TemporaryDirectory() as raw, mock.patch.object(
-            Path, "read_text", new=guarded_read_text
-        ), mock.patch.object(
-            self.regression,
-            "_validate_current_expert_panel_storage",
-            return_value={
-                "readability": "current",
-                "semantic-disposition": "current",
-                "professional-completeness": "current",
-            },
-        ), mock.patch.object(
-            self.regression, "_reports", return_value=reports
-        ), mock.patch.object(
-            self.regression, "_validate_fresh_benchmark_report"
-        ), mock.patch.object(
-            self.regression,
-            "_content_audit_summary",
-            return_value=content_summary,
-        ), mock.patch.object(
-            self.regression,
-            "_ai_readability_summary",
-            return_value=ai_readability_summary,
-        ), mock.patch.object(
-            self.regression,
-            "_reference_content_summary",
-            return_value=reference_summary,
-        ), mock.patch.object(
-            self.regression,
-            "_root_content_summary",
-            return_value=root_summary,
-        ), mock.patch.object(
-            self.regression,
-            "_expert_reviews",
-            return_value=_formal_expert_reviews_fixture(),
-        ), mock.patch.object(
-            self.regression,
-            "_coverage_gate_summary",
-            return_value=coverage_summary,
-        ), mock.patch.object(
-            self.regression,
-            "_professional_review_cost_fixtures",
-            return_value=cost_fixture,
-        ), mock.patch.object(
-            self.regression,
-            "_expert_panel_release_manifest",
-            return_value=not_evaluated_manifest,
-        ), mock.patch.object(
-            self.regression,
-            "_baseline_state",
-            return_value="not-numerically-comparable",
-        ):
-            returncode = self.regression.main(
-                ["--reports-dir", raw, "--strict"]
-            )
-            report = json.loads(
-                (Path(raw) / "professionalism-regression-report.json").read_text(
-                    encoding="utf-8"
+        for cost_status in ("pass", "formal-non-current"):
+            cost_fixture["status"] = cost_status
+            with tempfile.TemporaryDirectory() as raw, mock.patch.object(
+                Path, "read_text", new=guarded_read_text
+            ), mock.patch.object(
+                self.regression,
+                "_validate_current_expert_panel_storage",
+                return_value={
+                    "readability": "current",
+                    "semantic-disposition": "current",
+                    "professional-completeness": "current",
+                },
+            ), mock.patch.object(
+                self.regression, "_reports", return_value=reports
+            ), mock.patch.object(
+                self.regression, "_validate_fresh_benchmark_report"
+            ), mock.patch.object(
+                self.regression,
+                "_content_audit_summary",
+                return_value=content_summary,
+            ), mock.patch.object(
+                self.regression,
+                "_ai_readability_summary",
+                return_value=ai_readability_summary,
+            ), mock.patch.object(
+                self.regression,
+                "_reference_content_summary",
+                return_value=reference_summary,
+            ), mock.patch.object(
+                self.regression,
+                "_root_content_summary",
+                return_value=root_summary,
+            ), mock.patch.object(
+                self.regression,
+                "_expert_reviews",
+                return_value=_formal_expert_reviews_fixture(),
+            ), mock.patch.object(
+                self.regression,
+                "_coverage_gate_summary",
+                return_value=coverage_summary,
+            ), mock.patch.object(
+                self.regression,
+                "_professional_review_cost_fixtures",
+                return_value=cost_fixture,
+            ), mock.patch.object(
+                self.regression,
+                "_expert_panel_release_manifest",
+                return_value=not_evaluated_manifest,
+            ), mock.patch.object(
+                self.regression,
+                "_baseline_state",
+                return_value="not-numerically-comparable",
+            ):
+                returncode = self.regression.main(
+                    ["--reports-dir", raw, "--strict"]
                 )
-            )
+                report = json.loads(
+                    (Path(raw) / "professionalism-regression-report.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
 
-        self.assertEqual([], forbidden_reads)
-        self.assertEqual(0, returncode)
-        self.assertEqual("current-contract-pass", report["authoring_gate"])
-        self.assertEqual(
-            "not-evaluated",
-            report["expert_panel_release_manifest"]["status"],
-        )
-        self.assertIsNone(
-            report["expert_panel_release_manifest"]["head_commit"]
-        )
-        self.assertEqual("release-not-ready", report["release_gate"])
-        self.assertEqual(
-            ["expert-panel-release-manifest-release-gate"],
-            [item["category"] for item in report["release_blockers"]],
-        )
-        self.assertEqual(1, report["summary"]["release_blocker_count"])
-        self.assertEqual(
-            [],
-            _load_productization_module()._release_gate_errors(
-                "reports/professionalism-regression-report.json",
-                report,
-            ),
-        )
+            self.assertEqual([], forbidden_reads)
+            self.assertEqual(0, returncode)
+            self.assertEqual("current-contract-pass", report["authoring_gate"])
+            self.assertEqual(
+                "not-evaluated",
+                report["expert_panel_release_manifest"]["status"],
+            )
+            self.assertIsNone(
+                report["expert_panel_release_manifest"]["head_commit"]
+            )
+            self.assertEqual("release-not-ready", report["release_gate"])
+            expected_blockers = ["expert-panel-release-manifest-release-gate"]
+            if cost_status == "formal-non-current":
+                expected_blockers.append("professional-completeness-review-release-gate")
+            self.assertEqual(
+                expected_blockers,
+                [item["category"] for item in report["release_blockers"]],
+            )
+            self.assertEqual(
+                len(expected_blockers), report["summary"]["release_blocker_count"]
+            )
+            self.assertEqual(
+                [],
+                _load_productization_module()._release_gate_errors(
+                    "reports/professionalism-regression-report.json",
+                    report,
+                ),
+            )
 
     def test_release_requirement_changes_exit_only_and_preserves_report_payload(self) -> None:
         reports = self.regression._reports(ROOT / "reports")
@@ -2586,6 +2819,13 @@ class DeterministicReportContractTests(unittest.TestCase):
             {"root_content": release_root},
             fresh_root_content=release_root,
         )
+        release_reference_summary = {
+            "source_fingerprint": "a" * 64,
+            "strict_ready_basis": "reference-strict-v4",
+            "structural_strict_ready": True,
+            "semantic_triage_complete": True,
+            "strict_ready": True,
+        }
         expert_review = _incomplete_expert_review_fixture()
         with tempfile.TemporaryDirectory() as raw, mock.patch.object(
             self.regression, "_reports", return_value=reports
@@ -2600,7 +2840,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         ), mock.patch.object(
             self.regression,
             "_reference_content_summary",
-            return_value=tracked["reference_content_summary"],
+            return_value=release_reference_summary,
         ), mock.patch.object(
             self.regression,
             "_root_content_summary",
@@ -2725,6 +2965,13 @@ class DeterministicReportContractTests(unittest.TestCase):
             {"root_content": release_root},
             fresh_root_content=release_root,
         )
+        release_reference_summary = {
+            "source_fingerprint": "a" * 64,
+            "strict_ready_basis": "reference-strict-v4",
+            "structural_strict_ready": True,
+            "semantic_triage_complete": True,
+            "strict_ready": True,
+        }
 
         with tempfile.TemporaryDirectory() as raw, mock.patch.object(
             self.regression, "_reports", return_value=reports
@@ -2739,7 +2986,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         ), mock.patch.object(
             self.regression,
             "_reference_content_summary",
-            return_value=tracked["reference_content_summary"],
+            return_value=release_reference_summary,
         ), mock.patch.object(
             self.regression,
             "_root_content_summary",
@@ -2755,7 +3002,7 @@ class DeterministicReportContractTests(unittest.TestCase):
         ), mock.patch.object(
             self.regression,
             "_professional_review_cost_fixtures",
-            return_value=tracked["professional_review_cost_fixtures"],
+            return_value={"status": "pass"},
         ), mock.patch.object(
             self.regression,
             "_validate_current_expert_panel_storage",
@@ -2855,6 +3102,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             expert_reviews,
             release_root_summary,
             current_summary,
+            professional_review_cost_fixtures={"status": "pass"},
             expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual("release-ready", gate)
@@ -2869,6 +3117,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             [],
             current,
             recorded,
+            professional_review_cost_fixtures={"status": "pass"},
             expert_panel_release_manifest=manifest,
         )
         self.assertEqual("release-ready", gate)
@@ -2895,6 +3144,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                     [],
                     current,
                     recorded,
+                    professional_review_cost_fixtures={"status": "pass"},
                     expert_panel_release_manifest=noncurrent_manifest,
                 )
                 self.assertEqual("release-not-ready", gate)
@@ -2921,6 +3171,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             [],
             legacy_maintainer,
             recorded,
+            professional_review_cost_fixtures={"status": "pass"},
             expert_panel_release_manifest=manifest,
         )
         self.assertEqual("release-not-ready", gate)
@@ -2937,6 +3188,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             [authoring_blocker],
             current,
             recorded,
+            professional_review_cost_fixtures={"status": "pass"},
             expert_panel_release_manifest=manifest,
         )
         self.assertEqual("release-not-ready", gate)
@@ -3308,8 +3560,16 @@ class DeterministicReportContractTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
             self.assertIn("Reference strict gate: `false`", markdown)
             self.assertIn("Root strict gate: `true`", markdown)
-            self.assertIn("Foundation content classes: compact=124", markdown)
-            self.assertIn("complex=26 (target<=500; hard<=600", markdown)
+            self.assertIn(
+                "Foundation content classes: "
+                f"compact={root_summary['foundation_compact_capabilities']}",
+                markdown,
+            )
+            self.assertIn(
+                f"complex={root_summary['foundation_complex_capabilities']} "
+                "(target<=500; hard<=600",
+                markdown,
+            )
             self.assertIn("target overages require readability disposition", markdown)
             self.assertIn("Readability expert review current: `false`", markdown)
             self.assertIn(
@@ -3322,26 +3582,49 @@ class DeterministicReportContractTests(unittest.TestCase):
             self.assertNotIn("not a CI release gate", markdown)
 
     def test_coverage_matrix_is_fresh_and_policy_gated(self) -> None:
-        report = json.loads(
-            (ROOT / "reports/professional-coverage-matrix.json").read_text(
-                encoding="utf-8"
+        evaluator = self.regression._load_coverage_evaluator()
+        with tempfile.TemporaryDirectory() as raw:
+            policy = Path(raw) / "release-review.yaml"
+            policy.write_text(
+                "decisions:\n"
+                "  - id: synthetic-professional-coverage\n"
+                "    kind: professional-coverage-gate\n"
+                "    schema_version: 1\n"
+                "    requirements:\n"
+                "      synthetic-skill:\n"
+                "        - registered\n",
+                encoding="utf-8",
             )
-        )
-        summary = self.regression._coverage_gate_summary(
-            report,
-            ROOT / "config/professionalism-release-review.yaml",
-        )
-        self.assertEqual("pass", summary["status"])
-        self.assertEqual(10, summary["required_skill_count"])
-        self.assertEqual(0, summary["fail_count"])
+            result = evaluator.SkillResult(
+                name="synthetic-skill",
+                kind="professional",
+                path="synthetic/SKILL.md",
+                status="pass",
+                authoring_score=100,
+                required_sections=[],
+            )
+            report = evaluator.build_coverage_matrix(policy, results=[result])
+            with mock.patch.object(
+                self.regression,
+                "validate_capability_coverage_matrix",
+                return_value=[],
+            ), mock.patch.object(
+                evaluator,
+                "build_coverage_matrix",
+                return_value=report,
+            ):
+                summary = self.regression._coverage_gate_summary(report, policy)
+                self.assertEqual("pass", summary["status"])
+                self.assertEqual(
+                    len(report["rows"]),
+                    summary["required_skill_count"],
+                )
+                self.assertEqual([], summary["failing_skills"])
 
-        stale = json.loads(json.dumps(report))
-        stale["coverage_policy"]["fingerprint"]["value"] = "0" * 64
-        with self.assertRaisesRegex(ValueError, "stale or non-canonical"):
-            self.regression._coverage_gate_summary(
-                stale,
-                ROOT / "config/professionalism-release-review.yaml",
-            )
+                tampered = json.loads(json.dumps(report))
+                tampered["coverage_policy"]["fingerprint"]["value"] = "0" * 64
+                with self.assertRaisesRegex(ValueError, "stale or non-canonical"):
+                    self.regression._coverage_gate_summary(tampered, policy)
 
     def test_benchmark_report_is_fresh(self) -> None:
         report = json.loads(

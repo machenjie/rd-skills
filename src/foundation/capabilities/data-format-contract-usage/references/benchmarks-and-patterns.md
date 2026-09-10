@@ -28,7 +28,7 @@ Use backward when new readers can read old data, and forward when old readers ca
 
 ## Parser Security
 
-Unsafe YAML loaders, XML external entities, Python pickle-like deserialization, CSV formulas, duplicate JSON keys, huge nesting, and unbounded payload size are security surfaces. Route to security when inputs are untrusted or data controls permissions, money, or execution.
+Unsafe YAML loaders, XML external entities, Python pickle-like deserialization, CSV formulas, duplicate JSON keys, huge nesting, and unbounded payload size are security surfaces. Return a specialist need to Main when a changed parser trust, authority, executable sink, resource-exhaustion, or privacy boundary leaves a material security or privacy judgment unresolved.
 
 ## CPE Decision Pattern
 

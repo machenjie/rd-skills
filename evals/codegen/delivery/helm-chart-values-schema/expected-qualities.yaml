@@ -1,6 +1,5 @@
 id: helm-chart-values-schema
 category: delivery
-complexity: L4
 focus:
   - Helm chart validation
   - values.schema.json

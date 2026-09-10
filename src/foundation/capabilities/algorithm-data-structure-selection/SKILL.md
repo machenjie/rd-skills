@@ -42,7 +42,7 @@ Choose algorithms and data structures from problem shape, scale distribution, me
 
 ## Stop Conditions
 
-Escalate SLO, batch-window, queue-lag, memory, or cost impact to `reliability-observability-gate`. Route distributed processing to `bigdata-product-extension` and adversarial complexity to `security-privacy-gate`.
+Return unresolved runtime reliability, capacity, recovery, or observability decisions involving SLO, batch-window, queue-lag, memory, or cost to Main for `reliability-observability-gate`. Route distributed processing to `bigdata-product-extension` and adversarial complexity to `security-privacy-gate`.
 
 ## Output Contract
 

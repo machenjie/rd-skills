@@ -17,18 +17,6 @@ Official GNOME, KDE, and freedesktop.org pages below were accessed on 2026-07-24
 - Do not infer AT-SPI exposure, focus, keyboard, contrast, scaling, or screen
   reader behavior across GNOME/KDE, X11/Wayland, GTK/Qt, or versions.
 
-## Failure Proof
-
-- Exercise keyboard-only use, focus restoration, high contrast/theme changes,
-  text/scaling changes, screen reader inspection, custom controls, and dialogs.
-- Prove missing accessibility bus or assistive technology fails observably and
-  record unavailable environment/user evidence.
-
-## Required Record
-
-Return Foundation owner, platform/toolkit delta, environment/assistive-technology
-matrix, normal/failure evidence, non-inferences, and residual risk.
-
 ## Primary Sources
 
 - [GNOME accessibility guidelines](https://developer.gnome.org/documentation/guidelines/accessibility.html)

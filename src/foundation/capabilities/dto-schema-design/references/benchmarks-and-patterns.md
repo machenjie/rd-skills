@@ -10,11 +10,13 @@ Load this reference when field semantics, trust-boundary strictness, mapping, co
 | Absent | No-op, default, not requested, or legacy-client behavior. | Old/new fixture and PATCH semantics. |
 | Empty | Whether empty string/list/object is a real value. | Empty does not silently mean null/default. |
 | Default | Source, application point, compatibility, and rollback behavior. | Omitted-field behavior and changed-default consumer impact. |
+
 | Data | Representation obligation |
 | --- | --- |
 | Identifier | Stable public/opaque identity; do not expose persistence identity by accident. |
-| Money/measurement | Exact decimal or minor units with currency/unit; no binary-float ambiguity. |
-| Time/date | Explicit instant/offset/timezone or date-only semantics. |
+| Money | Exact decimal or scaled integer with ISO or non-ISO currency/asset identity, authoritative scale/exponent, and explicit precision, rounding, overflow, and validation. |
+| Measurement | Choose the representation from the measured quantity, unit, precision or error tolerance, range, validation, and consumer compatibility contract. |
+| Time/date | Instants retain the accepted wire encoding, precision, and offset semantics, whether a timestamp, epoch value, or protocol-native representation. Use RFC 3339/ISO 8601 UTC when that is the selected contract. Future local date/time retains its IANA zone and DST resolution policy; date-only values remain dates. |
 | Enum | Open/closed and unknown-value behavior, including generated clients. |
 | Collection/nested/file | Typed items/named shape, bounded size where risk requires it, and empty/absent behavior. |
 ## Direction, Mapping, And Security
@@ -24,15 +26,13 @@ Load this reference when field semantics, trust-boundary strictness, mapping, co
 - Explicitly namespace, limit, and own any permitted extension fields.
 - Never spread raw input into a command, domain, or persistence object.
 - At an external response boundary, map authorized object and tenant data into an allowlisted contract shape.
-- Keep presentation formatting in an assembler.
-- Keep business decisions with domain or service owners.
+- Keep presentation formatting in an assembler and business decisions with domain or service owners.
 - DTO, domain, persistence, view, event, and generated models remain distinct when their invariants, lifecycle, consumers, or compatibility differ.
 - At an external DTO boundary, treat client-supplied tenant or object IDs as untrusted references.
 - Derive role, scope, and permission from authenticated server-side context and authoritative object or tenant data.
 - Expose allowlisted sensitive or permission-dependent fields only after object and tenant authorization.
 - Apply minimization, redaction, or tokenization to those fields.
-- Exclude credentials, secrets, tokens, and API keys from ordinary external DTOs.
-- Permit them only when an endpoint contract explicitly issues, recovers, or exchanges them.
+- Exclude credentials, secrets, tokens, and API keys from external DTOs unless an endpoint contract explicitly issues, recovers, or exchanges them.
 - Require authorized, purpose-bound, minimized one-time delivery for that endpoint.
 - Forbid logging, caching, and uncontrolled replay of the delivered material.
 - Define its scope, expiry, rotation, and recovery lifecycle.

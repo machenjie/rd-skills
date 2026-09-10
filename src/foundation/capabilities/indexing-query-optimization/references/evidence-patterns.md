@@ -12,7 +12,7 @@ Use this reference when query/index closure depends on prior task evidence, repo
 | Composite order is justified | Equality/range/sort predicates, selectivity or cardinality, stable tie-breaker, and rejected column orders | The selected order matches the inspected access pattern | Future filters or alternate sort orders are optimal |
 | Pagination is bounded | Table size, ordering columns, cursor/tie-breaker contract, and depth behavior are stated | The selected pagination strategy avoids the inspected deep-scan failure | Client compatibility or all UI/API semantics are safe |
 | Write cost is acceptable | Write rate, index count, storage growth, maintenance/vacuum cost, and read frequency/SLO budget | The read benefit has been weighed against inspected write pressure | Production write spikes or long-term storage cost are fully known |
-| Build/drop path is safe enough to propose | Online/concurrent method, lock behavior, rollback or disable path, observation window, and owner | The change has a bounded release path for the inspected table | Real production lock contention or operator response is guaranteed |
+| Build/drop path is safe enough to propose | Selected online/concurrent or authorized offline method, lock and availability behavior, recovery or disable path, observation window, and owner | The change has a bounded release path for the inspected table | Real production lock contention or operator response is guaranteed |
 | Validation is fresh | Command, working directory or environment, exit code, report/artifact path, and final-edit freshness | Evidence was produced after the material query/index change | Later source, fixture, report, or build edits are covered |
 
 ## Current Evidence And Freshness

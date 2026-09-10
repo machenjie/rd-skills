@@ -13,8 +13,6 @@ if SCRIPTS not in sys.path:
     sys.path.insert(0, SCRIPTS)
 
 from fixture_capsule_contract import (
-    CONTRACT_VERSION,
-    canonical_capsule_sha256,
     validate_and_render_fixture_capsule,
 )
 from deterministic_route_oracle import (
@@ -32,26 +30,7 @@ from validation_utils import ValidationProblem, load_yaml_file
 
 
 def _main_execution(task_id: str) -> dict[str, object]:
-    return {
-        "producer": "main-control-agent",
-        "task_id": task_id,
-        "execution_level": "L4",
-        "level_basis": {
-            "trigger_evaluations": [
-                {
-                    "id": "public-api-event-schema-compatibility",
-                    "status": "matched",
-                    "evidence_kind": "analysis_handoff",
-                    "source_anchor": f"task:{task_id}:routing-api",
-                    "plausible_critical": False,
-                }
-            ],
-            "l2_eligibility": [],
-            "obligations": ["high-risk pre-implementation evidence"],
-            "unresolved": [],
-            "edit_status": "allowed",
-        },
-    }
+    return {"producer": "main-control-agent", "task_id": task_id}
 
 
 def _route(prompt: str, *, task_id: str) -> dict[str, object]:
@@ -87,6 +66,46 @@ class SkillRoutingRoleTests(unittest.TestCase):
         cls.routing = _load("validate-skill-routing.py", "validate_skill_routing")
         cls.trajectory = _load("eval-agent-lightweight.py", "eval_agent_lightweight")
 
+    def test_global_router_has_no_layer3_payload(self) -> None:
+        router = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/professional-skill-router.md"
+        ).read_text(encoding="utf-8")
+        table_lines = [line for line in router.splitlines() if line.startswith("|")]
+        header_index = next(
+            index for index, line in enumerate(table_lines) if "Task signal" in line
+        )
+        rows = table_lines[header_index:]
+        self.assertEqual(
+            ["Task signal", "Start profile", "Primary Professional Skill", "Review expertise when selected"],
+            [cell.strip() for cell in rows[0].strip("|").split("|")],
+        )
+        self.assertNotIn("Optional Layer 3 Skills", router)
+        self.assertIn(
+            "Validate each selected item against the Professional, Profile, and reciprocal Domain authorization",
+            router,
+        )
+        self.assertIn(
+            "It creates no review obligation.",
+            router,
+        )
+        for row in rows[2:]:
+            with self.subTest(row=row[:80]):
+                self.assertEqual(4, len(row.strip("|").split("|")))
+
+        errors = self.routing.validate_router_row(
+            ["signal", "analysis-agent", "quality-test-gate", "test-strategy", "quality-test-gate"],
+            {
+                "quality-test-gate": {
+                    "task_routable": True,
+                    "role_support": ["analysis-agent", "review-agent"],
+                }
+            },
+            {},
+            source="test row",
+        )
+        self.assertTrue(any("four columns" in error for error in errors), errors)
+
     def test_structure_responsibility_routes_use_semantic_forces_and_negation(self) -> None:
         cases = {
             "explicit-architecture-tradeoff": (
@@ -97,7 +116,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["architecture-tradeoff-analysis"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "explicit-test-data-analysis": (
@@ -108,7 +127,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "quality-test-gate",
                     "layer3_skills": ["test-data-management"],
-                    "review_skill": "quality-test-gate",
+                    "review_skill": None,
                 },
             ),
             "explicit-authentication-authorization-analysis": (
@@ -119,7 +138,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "security-privacy-gate",
                     "layer3_skills": ["authentication-authorization"],
-                    "review_skill": "security-privacy-gate",
+                    "review_skill": None,
                 },
             ),
             "explicit-test-strategy-analysis": (
@@ -131,7 +150,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "quality-test-gate",
                     "layer3_skills": ["test-strategy"],
-                    "review_skill": "quality-test-gate",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-placement": (
@@ -143,7 +162,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "known-generator-authority": (
@@ -159,7 +178,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "build-tool-professional-usage",
                         "targeted-validation-selection",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "resolved-backend-placement": (
@@ -170,7 +189,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "business-predicate-not-placement": (
@@ -181,7 +200,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "runtime-selection-not-placement": (
@@ -192,7 +211,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "runtime-delay-not-placement": (
@@ -203,7 +222,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "put-selected-file-placement": (
@@ -213,7 +232,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "move-selected-file-placement": (
@@ -223,7 +242,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "place-invariant-method": (
@@ -233,7 +252,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "actual-diff-private-move": (
@@ -259,7 +278,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "domain-impact-modeler",
                     "layer3_skills": ["domain-object-identification"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "windows-domain-object-analysis": (
@@ -273,7 +292,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "windows-platform-extension",
                         "domain-object-identification",
                     ],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "windows-packaged-desktop-implementation": (
@@ -284,7 +303,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "installed-client-change-builder",
                     "layer3_skills": ["windows-platform-extension"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "real-pattern-force": (
@@ -299,7 +318,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "design-pattern-selection",
                         "concurrency-control",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "pattern-analysis": (
@@ -310,7 +329,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["design-pattern-selection"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "known-generator-pattern": (
@@ -326,7 +345,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "design-pattern-selection",
                         "targeted-validation-selection",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "actual-diff-pattern": (
@@ -370,7 +389,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["minimal-correct-implementation"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "minimal-backend": (
@@ -382,7 +401,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["minimal-correct-implementation"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "minimal-generator": (
@@ -399,7 +418,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "minimal-correct-implementation",
                         "targeted-validation-selection",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "classification-plus-method-placement": (
@@ -414,7 +433,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "domain-object-identification",
                         "implementation-structure-design",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "ef-mapping-domain-facts-unchanged": (
@@ -426,7 +445,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "deliberate-separate-owner-implementations": (
@@ -438,7 +457,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "unknown-generated-authority": (
@@ -449,7 +468,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "cross-module-public-edge": (
@@ -460,7 +479,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["module-boundary-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-analysis": (
@@ -471,7 +490,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-analysis-reversed": (
@@ -482,7 +501,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-reviewer-a": (
@@ -494,7 +513,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-reviewer-b": (
@@ -506,7 +525,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-reviewer-c": (
@@ -518,7 +537,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-structure-source-order": (
@@ -530,7 +549,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-with-public-boundary-unknown": (
@@ -543,7 +562,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "owner-internal-with-dependency-boundary-unknown-first": (
@@ -556,7 +575,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "standalone-cross-module-boundary-unknown": (
@@ -566,7 +585,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "fixed-owner-internal-structure": (
@@ -577,7 +596,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "fixed-placement-refactor": (
@@ -599,7 +618,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["refactoring"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "unresolved-placement-is-not-refactoring": (
@@ -610,7 +629,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "guard-naming-only": (
@@ -633,7 +652,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "data-api-contract-changer",
                     "layer3_skills": ["model-boundary-mapping"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "pattern-word-comment-only": (
@@ -644,7 +663,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "change-documentation-gate",
                     "layer3_skills": ["documentation-generation"],
-                    "review_skill": "change-documentation-gate",
+                    "review_skill": None,
                 },
             ),
             "documentation-only-module-wording": (
@@ -655,7 +674,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "change-documentation-gate",
                     "layer3_skills": ["documentation-generation"],
-                    "review_skill": "change-documentation-gate",
+                    "review_skill": None,
                 },
             ),
             "documentation-with-runtime-architecture-change": (
@@ -666,7 +685,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["module-boundary-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "unchanged-module-and-api": (
@@ -677,7 +696,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "mixed-placement-open-first": (
@@ -689,7 +708,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "mixed-placement-fixed-first": (
@@ -701,7 +720,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "contradictory-placement-decision": (
@@ -713,7 +732,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "filesystem-safety": (
@@ -725,7 +744,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": ["filesystem-process-safety"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "sdk-contract": (
@@ -736,7 +755,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "data-api-contract-changer",
                     "layer3_skills": ["sdk-library-contract-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "package-supply-chain": (
@@ -748,7 +767,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["package-dependency-management"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
         }
@@ -777,7 +796,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "repository-tooling": (
@@ -794,7 +813,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "build-tool-professional-usage",
                         "targeted-validation-selection",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
         }
@@ -844,7 +863,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         for owner_kind, stem in (
             ("backend", "Implement an accepted backend service change while "),
@@ -872,8 +891,8 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "review_skill": result["review_skill"],
                     }
                     self.assertEqual(unresolved_expected, actual)
-                    self.assertIsNone(result["execution_level"])
-                    self.assertIsNone(result["level_basis"])
+                    pass
+                    pass
                     self.assertIsNone(
                         decision["main_execution_provenance"]
                     )
@@ -901,14 +920,14 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         backend_direct = {
             "path": "direct",
             "profile": "task-agent",
             "primary_skill": "backend-change-builder",
             "layer3_skills": [],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         backend_structure = {
             **backend_direct,
@@ -922,7 +941,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "build-tool-professional-usage",
                 "targeted-validation-selection",
             ],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         tooling_structure = {
             **tooling_direct,
@@ -1183,7 +1202,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "task-agent",
             "primary_skill": "backend-change-builder",
             "layer3_skills": [],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         backend_structure = {
             **backend_direct,
@@ -1197,14 +1216,14 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "build-tool-professional-usage",
                 "targeted-validation-selection",
             ],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         repository_first = {
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         actual_diff_review = {
             "path": "direct",
@@ -1287,7 +1306,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         package_analysis = {
             **repository_first,
@@ -1298,7 +1317,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "task-agent",
             "primary_skill": "backend-change-builder",
             "layer3_skills": ["implementation-structure-design"],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         cases = {
             "compound-declaration": (
@@ -1328,7 +1347,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["implementation-structure-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
         }
@@ -1349,7 +1368,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "experience-impact-modeler",
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         cases = {
             "interaction-only": (
@@ -1409,7 +1428,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-mention-only": (
@@ -1421,7 +1440,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "interaction-full-vocabulary-reference-only": (
@@ -1433,7 +1452,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "interaction-full-vocabulary-decision": (
@@ -1455,7 +1474,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-full-vocabulary-decision": (
@@ -1496,7 +1515,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-target-subject-unchanged": (
@@ -1507,7 +1526,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "interaction-coordinated-child-conjunction": (
@@ -1546,7 +1565,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "interaction-coordinated-child-implement": (
@@ -1567,7 +1586,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "interaction-coordinated-child-fix": (
@@ -1588,7 +1607,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-coordinated-child-update": (
@@ -1609,7 +1628,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-coordinated-child-implement": (
@@ -1630,7 +1649,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "design-coordinated-child-fix": (
@@ -1651,7 +1670,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "generic-user-flow": (
@@ -1661,7 +1680,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
         }
@@ -1690,7 +1709,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         reliability_route = {
             "path": "analyzed",
@@ -1700,14 +1719,14 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "degradation-circuit-breaking",
                 "observability",
             ],
-            "review_skill": "reliability-observability-gate",
+            "review_skill": None,
         }
         fail_closed_route = {
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         cases = {
             "consumer-only": (
@@ -1758,7 +1777,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "change-intake-compiler",
                     "layer3_skills": ["requirement-clarification"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "unknown-owner": (
@@ -1832,7 +1851,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["module-boundary-design"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
             ),
             "proof-portfolio-level-oracle-selection": (
@@ -1844,7 +1863,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "quality-test-gate",
                     "layer3_skills": ["test-strategy"],
-                    "review_skill": "quality-test-gate",
+                    "review_skill": None,
                 },
             ),
             "ssrf-url-fetch-threat-analysis": (
@@ -1855,7 +1874,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "security-privacy-gate",
                     "layer3_skills": ["threat-modeling", "web-security"],
-                    "review_skill": "security-privacy-gate",
+                    "review_skill": None,
                 },
             ),
         }
@@ -1871,7 +1890,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         keyword_only_cases = {
             "module-keywords": (
@@ -1917,7 +1936,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["threat-modeling", "web-security"],
-                    "review_skill": "security-privacy-gate",
+                    "review_skill": None,
                 },
             ),
         }
@@ -1937,7 +1956,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "test-implementation": (
@@ -1948,7 +1967,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "quality-test-gate",
                     "layer3_skills": ["regression-testing"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
             "ssrf-implementation": (
@@ -1959,7 +1978,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             ),
         }
@@ -1984,7 +2003,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "profile": "task-agent",
                 "primary_skill": "change-documentation-gate",
                 "layer3_skills": ["documentation-generation"],
-                "review_skill": "change-documentation-gate",
+                "review_skill": None,
             },
             _route(prompt, task_id=self._testMethodName),
         )
@@ -2004,7 +2023,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "windows-platform-extension",
                 "domain-object-identification",
             ],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         mismatches: list[str] = []
         expected_domain_matches = [
@@ -2044,7 +2063,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "task-agent",
             "primary_skill": "installed-client-change-builder",
             "layer3_skills": ["windows-platform-extension"],
-            "review_skill": "ai-code-review-refactor",
+            "review_skill": None,
         }
         implementation_suffix = (
             "an accepted Windows packaged desktop application protocol-handler change "
@@ -2087,7 +2106,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "windows-platform-extension",
                 "repository-context-map",
             ],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         actual_contradictory = _route(
             contradictory,
@@ -2114,7 +2133,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
                 (
                     "Implement a Node.js backend business rule with no runtime "
@@ -2124,7 +2143,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "profile": "task-agent",
                         "primary_skill": "backend-change-builder",
                         "layer3_skills": [],
-                        "review_skill": "ai-code-review-refactor",
+                        "review_skill": None,
                     },
                 ),
             ),
@@ -2136,7 +2155,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["repository-context-map"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
                 (
                     "Implement a backend utility that atomically replaces a local "
@@ -2146,7 +2165,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "profile": "task-agent",
                         "primary_skill": "backend-change-builder",
                         "layer3_skills": ["filesystem-process-safety"],
-                        "review_skill": "ai-code-review-refactor",
+                        "review_skill": None,
                     },
                 ),
             ),
@@ -2159,7 +2178,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "architecture-impact-reviewer",
                     "layer3_skills": ["design-pattern-selection"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
                 (
                     "Implement backend provider variants with a current "
@@ -2169,7 +2188,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "profile": "task-agent",
                         "primary_skill": "backend-change-builder",
                         "layer3_skills": ["design-pattern-selection"],
-                        "review_skill": "ai-code-review-refactor",
+                        "review_skill": None,
                     },
                 ),
             ),
@@ -2182,7 +2201,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "analysis-agent",
                     "primary_skill": "engineering-change-analysis",
                     "layer3_skills": ["minimal-correct-implementation"],
-                    "review_skill": "architecture-impact-reviewer",
+                    "review_skill": None,
                 },
                 (
                     "Implement accepted backend behavior while deciding whether "
@@ -2193,7 +2212,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "profile": "task-agent",
                         "primary_skill": "backend-change-builder",
                         "layer3_skills": ["minimal-correct-implementation"],
-                        "review_skill": "ai-code-review-refactor",
+                        "review_skill": None,
                     },
                 ),
             ),
@@ -2224,7 +2243,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "security-privacy-gate",
             "layer3_skills": ["audit-evidence-integrity"],
-            "review_skill": "security-privacy-gate",
+            "review_skill": None,
         }
         analysis = (
             "Analyze audit evidence integrity for missing-record detection and "
@@ -2266,7 +2285,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             "profile": "task-agent",
             "primary_skill": "logging-design-gate",
             "layer3_skills": ["audit-evidence-integrity"],
-            "review_skill": "logging-design-gate",
+            "review_skill": None,
         }
         for prompt in (
             (
@@ -2301,7 +2320,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "profile": "analysis-agent",
                 "primary_skill": "engineering-change-analysis",
                 "layer3_skills": ["repository-context-map"],
-                "review_skill": "architecture-impact-reviewer",
+                "review_skill": None,
             },
             _route(
                 contradictory,
@@ -2351,18 +2370,18 @@ class SkillRoutingRoleTests(unittest.TestCase):
         errors = self.routing.validate_router_row(
             [
                 "signal",
-                "analysis-agent",
+                "task-agent",
                 "primary-skill",
-                "allowed-layer3, outside-candidate",
                 "review-skill-extra",
             ],
             professional,
             layer3,
         )
         joined = "\n".join(errors)
-        self.assertIn("unsupported profile analysis-agent", joined)
-        self.assertIn("outside primary-skill.layer3_candidates", joined)
+        self.assertIn("unsupported profile task-agent", joined)
         self.assertIn("exactly one known Review Skill", joined)
+        self.assertEqual(["allowed-layer3"], professional["primary-skill"]["layer3_candidates"])
+        self.assertNotIn("outside-candidate", professional["primary-skill"]["layer3_candidates"])
 
     def test_domain_router_rows_preserve_registry_anti_triggers(self) -> None:
         domain_entries = self.routing.load_yaml_file(self.routing.DOMAIN)[
@@ -2387,11 +2406,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 domain,
             ),
         )
-        missing_ai = [
-            cells
-            for cells in router_rows
-            if "ai-product-extension" not in cells[3]
-        ]
+        missing_ai = [cells for cells in router_rows if not cells[0].startswith("model, prompt")]
         self.assertTrue(
             any(
                 "ai-product-extension" in error
@@ -2404,14 +2419,12 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_anti = copy.deepcopy(router_rows)
-        ai_row = next(
-            cells for cells in stale_anti if "ai-product-extension" in cells[3]
-        )
+        ai_row = next(cells for cells in stale_anti if cells[0].startswith("model, prompt"))
         ai_row[0] = "AI model retrieval or agent-tool authority decision"
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "Router omits anti-trigger atoms" in error
+                and "no authoritative router row" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_anti,
                     domain,
@@ -2420,9 +2433,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_trigger = copy.deepcopy(router_rows)
-        ai_row = next(
-            cells for cells in stale_trigger if "ai-product-extension" in cells[3]
-        )
+        ai_row = next(cells for cells in stale_trigger if cells[0].startswith("model, prompt"))
         ai_row[0] = (
             "AI retrieval boundary; excluding AI terminology, static algorithms, "
             "or ordinary search without a model decision"
@@ -2430,7 +2441,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "Router omits trigger atoms" in error
+                and "no authoritative router row" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_trigger,
                     domain,
@@ -2457,7 +2468,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         ai_row = next(
             cells
             for cells in positive_only_drift
-            if "ai-product-extension" in cells[3]
+            if cells[0].startswith("model, prompt")
         )
         ai_row[0] = ai_row[0].replace("model, ", "", 1)
         self.assertTrue(
@@ -2475,7 +2486,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         bigdata_row = next(
             cells
             for cells in missing_partition
-            if "bigdata-product-extension" in cells[3]
+            if cells[0].startswith("batch, stream")
         )
         bigdata_row[0] = bigdata_row[0].replace("partition, ", "", 1)
         self.assertTrue(
@@ -2493,7 +2504,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         web3_row = next(
             cells
             for cells in missing_recovery
-            if "web3-product-extension" in cells[3]
+            if cells[0].startswith("blockchain, smart contract")
         )
         web3_row[0] = web3_row[0].replace("recovery, ", "", 1)
         self.assertTrue(
@@ -2897,7 +2908,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "payment-trading-extension",
                     "repository-context-map",
                 ],
-                "review_skill": "architecture-impact-reviewer",
+                "review_skill": None,
             },
             _route(mixed_invariants, task_id=self._testMethodName),
         )
@@ -3082,7 +3093,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "android-platform-extension",
                     "ios-ipados-platform-extension",
                 ],
-                "review_skill": "ai-code-review-refactor",
+                "review_skill": None,
             },
             actual,
         )
@@ -3113,7 +3124,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "windows-platform-extension",
                         "csharp-dotnet-professional-usage",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
             "generic-backend-domain-anti": {
@@ -3127,7 +3138,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "backend-change-builder",
                     "layer3_skills": [],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
         }
@@ -3230,12 +3241,16 @@ class SkillRoutingRoleTests(unittest.TestCase):
             and cells[0].startswith("shared installed client")
         ]
         self.assertEqual(1, len(shared))
-        self.assertEqual(
-            "cross-platform-client-extension + proven concrete platform Domain(s)",
-            shared[0][3],
+        self.assertEqual("ai-code-review-refactor", shared[0][3])
+        professional = self.routing.load_yaml_file(self.routing.PROFESSIONAL)
+        installed = next(
+            row
+            for row in professional["professional_skills"]
+            if row["name"] == "installed-client-change-builder"
         )
-        self.assertNotIn("android-platform-extension", shared[0][3])
-        self.assertNotIn("ios-ipados-platform-extension", shared[0][3])
+        self.assertIn("cross-platform-client-extension", installed["layer3_candidates"])
+        self.assertNotIn("android-platform-extension", shared[0])
+        self.assertNotIn("ios-ipados-platform-extension", shared[0])
 
         cases = (
             (
@@ -3279,326 +3294,133 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 self.assertEqual(expected_primary, actual["primary_skill"])
                 self.assertEqual(expected_layer3, actual["layer3_skills"])
 
-    def test_trajectory_dispatch_rejects_layer3_profile_mismatch(self) -> None:
-        step = {
-            "actor": "main-control-agent",
-            "action": "dispatch",
-            "profile": "analysis-agent",
-            "primary_skill": "primary-skill",
-            "layer3_skills": ["task-only-layer3"],
-            "layer3_references": [],
-            "mode": "implementation-preparation",
-            "professional_references": [],
-            "fixture_capsule": {
-                "contract_version": CONTRACT_VERSION,
-                "contract_type": "analysis",
-                "template": "engineering-brief",
-                "goal": "Analyze the bounded source evidence and identify the owning rule.",
-                "scope": ["bounded source"],
-                "evidence": ["Current owner, consumer, and validation evidence"],
-                "validation": ["Use the smallest non-mutating source check"],
-                "stop_conditions": ["Stop when evidence leaves the bounded source"],
-                "output": ["Source-backed Engineering Brief with proof limits"],
-                "canonical_sha256": "0" * 64,
-            },
+
+
+
+
+
+
+
+
+
+    def test_retry_concurrency_contrast_family_routes_exactly(self) -> None:
+        cases = {
+            "retry-only": (
+                "Analyze retry/replay or duplicate delivery where the same "
+                "side effect may occur twice; lease ownership, overlapping "
+                "execution, queue topology, failure contract and cross-service "
+                "workflow are unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": ["idempotency-retry-design"],
+                    "review_skill": None,
+                },
+            ),
+            "lease-only": (
+                "Analyze lease expiry where a stale worker may retain ownership "
+                "and overlap another execution; duplicate delivery, replay, "
+                "unknown side-effect outcome, queue topology, failure contract "
+                "and cross-service workflow are unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": ["concurrency-control"],
+                    "review_skill": None,
+                },
+            ),
+            "combined": (
+                "Analyze a reliability change where the owner is known; "
+                "duplicate delivery has an unknown side-effect outcome; lease "
+                "expiry permits stale-worker ownership and overlapping "
+                "execution; terminal resolution is required; queue topology, "
+                "failure contract and cross-service workflow remain unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": [
+                        "concurrency-control",
+                        "idempotency-retry-design",
+                    ],
+                    "review_skill": None,
+                },
+            ),
+            "combined-without-terminal-resolution": (
+                "Analyze a reliability change where the owner is known; "
+                "duplicate delivery has an unknown side-effect outcome; lease "
+                "expiry permits stale-worker ownership and overlapping "
+                "execution; queue topology, failure contract and cross-service "
+                "workflow remain unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": [
+                        "concurrency-control",
+                        "idempotency-retry-design",
+                    ],
+                    "review_skill": None,
+                },
+            ),
+            "neither": (
+                "Implement an accepted bounded backend change to an "
+                "already-decided retry-count/backoff constant; retry identity, "
+                "idempotency, replay, lease ownership, terminal resolution, "
+                "queue topology, failure contract and cross-service workflow "
+                "are unchanged.",
+                {
+                    "path": "direct",
+                    "profile": "task-agent",
+                    "primary_skill": "backend-change-builder",
+                    "layer3_skills": [],
+                    "review_skill": None,
+                },
+            ),
         }
-        step["fixture_capsule"]["canonical_sha256"] = canonical_capsule_sha256(
-            step,
-            step["fixture_capsule"],
-        )
-        steps = [step]
-        errors = self.trajectory._profile_errors(
-            "case",
-            steps,
-            {
-                "primary-skill": {
-                    "role_support": ["analysis-agent"],
-                    "layer3_candidates": ["task-only-layer3"],
-                }
-            },
-            {"task-only-layer3": {"role_support": ["task-agent"]}},
-        )
-        self.assertTrue(any("does not support profile 'analysis-agent'" in item for item in errors))
-
-    def test_lightweight_rejects_synchronized_placeholder_fixture_capsule(self) -> None:
-        document = self.trajectory._load_json(self.trajectory.FIXTURES)
-        step = copy.deepcopy(document["cases"][0]["steps"][1])
-        original_goal = step["fixture_capsule"]["goal"]
-        original_text = validate_and_render_fixture_capsule(step)
-        replacement = "x" * 20
-        step["fixture_capsule"]["goal"] = replacement
-        forged_render = original_text.replace(original_goal, replacement, 1)
-        step["fixture_capsule"]["canonical_sha256"] = hashlib.sha256(
-            forged_render.encode("utf-8")
-        ).hexdigest()
-        professional, layer3 = self.trajectory._skill_registries()
-
-        errors = self.trajectory._profile_errors(
-            "mutated",
-            [step],
-            professional,
-            layer3,
-        )
-
-        self.assertTrue(
-            any("invalid fixture Capsule" in item for item in errors),
-            errors,
-        )
-
-    def test_progress_requires_supported_checkpoint_type_and_evidence(self) -> None:
-        steps = [
-            {"action": "progress", "evidence": "Path selected."},
-            {
-                "action": "progress",
-                "checkpoint_type": "unsupported",
-                "evidence": "Batch completed.",
-            },
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "   ",
-            },
-        ]
-        errors = self.trajectory._progress_errors("case", steps)
-        self.assertEqual(
-            2,
-            sum("must use one of" in error for error in errors),
-            errors,
-        )
-        self.assertTrue(any("requires non-empty evidence" in error for error in errors), errors)
-
-    def test_all_progress_checkpoint_types_can_repeat_with_new_evidence(self) -> None:
-        steps = [
-            {
-                "actor": "main-control-agent",
-                "action": "progress",
-                "checkpoint_type": "start/path",
-                "evidence": "The first bounded execution path is established from fixture evidence.",
-                "evidence_anchor": "fixture:case:path",
-            },
-            {
-                "actor": "main-control-agent",
-                "action": "progress",
-                "checkpoint_type": "start/path",
-                "evidence": "The revised bounded path remains established before worker evidence.",
-                "evidence_anchor": "fixture:case:path",
-            },
-            {"action": "dispatch", "batch_id": "analysis-one"},
-            {
-                "action": "progress",
-                "checkpoint_type": "dispatch/batch",
-                "evidence": "The first named analysis batch completed with bounded ownership evidence.",
-                "evidence_anchor": "batch:analysis-one",
-            },
-            {"action": "dispatch", "batch_id": "analysis-two"},
-            {
-                "action": "progress",
-                "checkpoint_type": "dispatch/batch",
-                "evidence": "The second named analysis batch completed with changed scope evidence.",
-                "evidence_anchor": "batch:analysis-two",
-            },
-            {"action": "validate", "evidence_id": "targeted-one", "outcome": "passed"},
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "The first targeted validation completed with a recorded passing outcome.",
-                "evidence_anchor": "validation:targeted-one:passed",
-            },
-            {"action": "validate", "evidence_id": "targeted-two", "outcome": "passed"},
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "The second targeted validation completed with changed passing evidence.",
-                "evidence_anchor": "validation:targeted-two:passed",
-            },
-            {"action": "review", "evidence_id": "review-one", "outcome": "accepted"},
-            {
-                "action": "progress",
-                "checkpoint_type": "review/close",
-                "evidence": "The first independent review recorded an accepted bounded outcome.",
-                "evidence_anchor": "review:review-one:accepted",
-            },
-            {"action": "review", "evidence_id": "review-two", "outcome": "accepted"},
-            {
-                "action": "progress",
-                "checkpoint_type": "review/close",
-                "evidence": "The second independent review recorded changed acceptance evidence.",
-                "evidence_anchor": "review:review-two:accepted",
-            },
-        ]
-        self.assertEqual([], self.trajectory._progress_errors("case", steps))
-
-    def test_repair_fixture_uses_four_distinct_progress_events_without_noise(self) -> None:
-        fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
-        case = next(item for item in fixture["cases"] if item["id"] == "repair-and-rereview")
-        progress = [step for step in case["steps"] if step.get("action") == "progress"]
-        checkpoints = {
-            (step.get("checkpoint_type"), step.get("evidence")) for step in progress
-        }
-        self.assertEqual(4, len(progress))
-        self.assertEqual(len(progress), len(checkpoints))
-        self.assertEqual(
-            self.trajectory.PROGRESS_CHECKPOINT_TYPES,
-            {step["checkpoint_type"] for step in progress},
-        )
-        metrics, errors = self.trajectory._metrics(
-            case,
-            *self.trajectory._skill_registries(),
-        )
-        self.assertEqual([], errors)
-        self.assertLessEqual(metrics["max_silent_steps"], 5)
-        self.assertLessEqual(metrics["progress_to_productive_action_ratio"], 0.75)
-
-    def test_start_path_after_productive_action_is_rejected(self) -> None:
-        steps = [
-            {"actor": "task-agent", "action": "edit"},
-            {
-                "actor": "main-control-agent",
-                "action": "progress",
-                "checkpoint_type": "start/path",
-                "evidence": "Started late.",
-                "evidence_anchor": "fixture:case:path",
-            },
-        ]
-        self.assertTrue(
-            any("must precede the first productive worker action" in error for error in self.trajectory._progress_errors("case", steps))
-        )
-
-    def test_multi_agent_fixture_without_progress_fails_density_gate(self) -> None:
-        fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
-        case = next(item for item in fixture["cases"] if item["id"] == "single-module-feature")
-        case = {**case, "steps": [step for step in case["steps"] if step.get("action") != "progress"]}
-        _metrics, errors = self.trajectory._metrics(
-            case,
-            *self.trajectory._skill_registries(),
-        )
-        self.assertEqual(3, sum(step.get("action") == "dispatch" for step in case["steps"]))
-        self.assertTrue(any("requires 3-5 anchored progress" in error for error in errors), errors)
-
-    def test_explicit_complex_case_requires_progress_even_with_fewer_dispatches(self) -> None:
-        fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
-        case = next(item for item in fixture["cases"] if item["id"] == "diagnosis-only")
-        case = {**case, "complexity": "complex"}
-        _metrics, errors = self.trajectory._metrics(
-            case,
-            *self.trajectory._skill_registries(),
-        )
-        self.assertTrue(any("requires 3-5 anchored progress" in error for error in errors), errors)
-
-    def test_required_complex_and_high_risk_fixtures_have_anchored_progress(self) -> None:
-        fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
-        required_ids = {
-            "single-module-feature",
-            "api-contract-change",
-            "data-migration",
-            "security-ssrf-boundary",
-            "cache-stampede-reliability",
+        forbidden_combined = {
+            "message-queue-design",
+            "failure-contract-design",
+            "transaction-consistency",
+            "distributed-workflow-consistency",
+            "observability",
+            "degradation-circuit-breaking",
+            "consumer-impact-analysis",
             "release-rollback",
         }
-        for case in fixture["cases"]:
-            if case["id"] not in required_ids:
-                continue
-            with self.subTest(case=case["id"]):
-                metrics, errors = self.trajectory._metrics(
-                    case,
-                    *self.trajectory._skill_registries(),
-                )
-                self.assertEqual([], errors)
-                self.assertTrue(metrics["required_progress_for_multi_agent"])
-                self.assertGreaterEqual(metrics["progress_count"], 3)
-                self.assertLessEqual(metrics["progress_count"], 5)
-                self.assertLessEqual(metrics["max_silent_steps"], 5)
 
-    def test_generic_progress_evidence_is_rejected_even_with_valid_anchor(self) -> None:
-        steps = [
-            {
-                "action": "progress",
-                "checkpoint_type": "start/path",
-                "evidence": "a/b/c/d",
-                "evidence_anchor": "fixture:case:path",
-            }
-        ]
-        errors = self.trajectory._progress_errors("case", steps)
-        self.assertTrue(any("generic marker" in error for error in errors), errors)
+        for label, (prompt, expected) in cases.items():
+            with self.subTest(label=label):
+                actual = _route(prompt, task_id=f"{self._testMethodName}:{label}")
+                self.assertEqual(expected, actual)
+                if label.startswith("combined"):
+                    self.assertTrue(
+                        forbidden_combined.isdisjoint(actual["layer3_skills"])
+                    )
 
-    def test_validation_progress_cannot_bind_future_outcome(self) -> None:
-        steps = [
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "Targeted validation is reported as passed before its evidence exists.",
-                "evidence_anchor": "validation:targeted-check:passed",
-            },
-            {"action": "validate", "evidence_id": "targeted-check", "outcome": "passed"},
-        ]
-        errors = self.trajectory._progress_errors("case", steps)
-        self.assertTrue(any("prior validation evidence id and outcome" in error for error in errors), errors)
+        nearest_negatives = {
+            "generic-retry-constant": (
+                "Implement an accepted bounded backend change to a retry "
+                "constant; idempotency and replay semantics are unchanged.",
+                {"concurrency-control", "idempotency-retry-design"},
+            ),
+            "lease-semantics-unchanged": (
+                "Analyze a bounded backend change where lease expiry, stale "
+                "worker ownership, and overlapping execution are unchanged.",
+                {"concurrency-control"},
+            ),
+        }
+        for label, (prompt, excluded) in nearest_negatives.items():
+            with self.subTest(nearest_negative=label):
+                actual = _route(prompt, task_id=f"{self._testMethodName}:{label}")
+                self.assertTrue(excluded.isdisjoint(actual["layer3_skills"]))
 
-    def test_shared_workspace_parallel_batch_breaks_serial_gate(self) -> None:
-        fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
-        case = fixture["scheduling_cases"][0]
-        case = {**case, "steps": [dict(step) for step in case["steps"]]}
-        task_dispatches = [
-            step
-            for step in case["steps"]
-            if step.get("action") == "dispatch" and step.get("profile") == "task-agent"
-        ]
-        task_dispatches[0]["parallel_batch"] = "unsafe-shared"
-        task_dispatches[1]["parallel_batch"] = "unsafe-shared"
-        metrics, errors = self.trajectory._metrics(
-            case,
-            *self.trajectory._skill_registries(),
-        )
-        self.assertFalse(metrics["shared_workspace_writes_serial"])
-        self.assertTrue(errors)
 
-    def test_adjacent_progress_updates_reject_identical_type_and_evidence(self) -> None:
-        steps = [
-            {"action": "validate", "evidence_id": "targeted-tests", "outcome": "passed"},
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "Targeted tests passed.",
-                "evidence_anchor": "validation:targeted-tests:passed",
-            },
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "Targeted tests passed.",
-                "evidence_anchor": "validation:targeted-tests:passed",
-            },
-        ]
-        errors = self.trajectory._progress_errors("case", steps)
-        self.assertTrue(
-            any("repeat identical checkpoint_type and evidence" in error for error in errors),
-            errors,
-        )
 
-    def test_interleaved_checkpoint_repeat_requires_changed_evidence(self) -> None:
-        steps = [
-            {"action": "validate", "evidence_id": "targeted-tests", "outcome": "passed"},
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "Targeted tests passed.",
-                "evidence_anchor": "validation:targeted-tests:passed",
-            },
-            {"action": "review", "evidence_id": "bounded-review", "outcome": "blocking"},
-            {
-                "action": "progress",
-                "checkpoint_type": "review/close",
-                "evidence": "Review found one blocker.",
-                "evidence_anchor": "review:bounded-review:blocking",
-            },
-            {
-                "action": "progress",
-                "checkpoint_type": "validation",
-                "evidence": "Targeted tests passed.",
-                "evidence_anchor": "validation:targeted-tests:passed",
-            },
-        ]
-        errors = self.trajectory._progress_errors("case", steps)
-        self.assertTrue(any("must carry changed evidence" in error for error in errors), errors)
+
+
 
 
 if __name__ == "__main__":

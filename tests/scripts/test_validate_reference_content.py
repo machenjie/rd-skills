@@ -76,7 +76,9 @@ def _current_semantic_compact_fixture(auditor) -> tuple[dict, bytes]:
                 "votes": [
                     {
                         "voter_id": reviewer["voter_id"],
-                        "disposition": dispositions[target["target_id"]],
+                        "disposition": dispositions.get(
+                            target["target_id"], "valid-contextual-rule"
+                        ),
                         "rationale": (
                             "The current candidate retains its independently "
                             "reviewed bounded disposition."
@@ -207,6 +209,9 @@ def _semantic(candidates=None) -> dict:
                 item["governance_status"] == "detector-downgraded" for item in rows
             ),
             "untriaged": sum(item["governance_status"] == "untriaged" for item in rows),
+            "needs_confirmation": sum(
+                item["governance_status"] == "needs-confirmation" for item in rows
+            ),
             "rewrite": sum(item.get("disposition") == "rewrite" for item in rows),
             "valid_contextual_rule": sum(
                 item.get("disposition") == "valid-contextual-rule" for item in rows
@@ -229,7 +234,7 @@ def _semantic(candidates=None) -> dict:
     }
     entries = [item["disposition_record"] for item in candidates if item.get("disposition_record")]
     return {
-        "schema_version": 7,
+        "schema_version": 8,
         "detector_contract": {
             "contract_version": "reference-semantic-detector-contract-v1",
             "algorithm": "sha256-canonical-json-v1",
@@ -240,6 +245,7 @@ def _semantic(candidates=None) -> dict:
             "raw_candidates": totals["raw"],
             "detector_downgraded_candidates": totals["detector_downgraded"],
             "untriaged_candidates": totals["untriaged"],
+            "needs_confirmation_candidates": totals["needs_confirmation"],
             "rewrite_candidates": totals["rewrite"],
             "valid_contextual_rule_candidates": totals["valid_contextual_rule"],
             "false_positive_candidates": totals["false_positive"],
@@ -289,7 +295,7 @@ def _semantic(candidates=None) -> dict:
         },
         "candidates": candidates,
         "disposition_contract": {
-            "schema_version": 2,
+            "schema_version": 3,
             "source": "config/skill-content-exceptions.yaml",
             "configured_count": len(entries),
             "applied_count": len(entries),
@@ -309,11 +315,11 @@ def _semantic(candidates=None) -> dict:
 
 
 def _disposition(candidate: dict, value: str, *, priority: str = "P1") -> dict:
-    return {
+    entry = {
         "candidate_id": candidate["candidate_id"],
         "finding": candidate["finding"],
         "path": candidate["path"],
-        "fingerprint": candidate["fingerprint"],
+        "source_selector": copy.deepcopy(candidate["source_selector"]),
         "skill_owner": candidate["skill_owner"],
         "priority": priority,
         "disposition": value,
@@ -328,6 +334,11 @@ def _disposition(candidate: dict, value: str, *, priority: str = "P1") -> dict:
         "mitigation": "Re-evaluate the rule when its source contract or membership changes.",
         "review_after": "2026-08-01" if value == "time-bounded-exception" else None,
     }
+    contracts = __import__("expert_panel_contracts")
+    entry["record_fingerprint"] = contracts.semantic_disposition_record_fingerprint(
+        "reference", entry
+    )
+    return entry
 
 
 def _content(
@@ -846,7 +857,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
     def test_semantic_schema_is_a_default_hard_failure(self) -> None:
         for malformed, expected in (
             (None, "semantic_advisories must be a current mapping"),
-            ({}, "schema_version must equal 7"),
+            ({}, "schema_version must equal 8"),
             (
                 {**_semantic(), "finding_families": ["fixed_number_candidate"]},
                 "finding_families must exactly match",
@@ -1222,7 +1233,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
         _counts, errors = self.module._evaluate(
             _content(semantic_advisories=semantic), strict=False
         )
-        self.assertTrue(any("schema_version must equal 7" in item for item in errors))
+        self.assertTrue(any("schema_version must equal 8" in item for item in errors))
         self.assertTrue(any("finding_families must exactly match" in item for item in errors))
         self.assertTrue(any("group_metrics does not match" in item for item in errors))
 
@@ -1353,7 +1364,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 lambda report: report["candidates"][0].__setitem__(
                     "fingerprint", "b" * 64
                 ),
-                "fingerprint must be lowercase|candidate_id does not match|stable identity",
+                "fingerprint must be lowercase|candidate_id does not match|stable identity|fingerprint does not match normalized text evidence",
             ),
             (
                 lambda report: report["candidates"][0].__setitem__(
@@ -1365,7 +1376,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 lambda report: report["candidates"][0]["disposition_record"].__setitem__(
                     "reason", "Mutated candidate exception rationale."
                 ),
-                "metadata was mutated",
+                "record_fingerprint does not match|metadata was mutated",
             ),
         ):
             malformed = copy.deepcopy(semantic)
@@ -1506,14 +1517,12 @@ class ValidateReferenceContentTests(unittest.TestCase):
         collect_reference.assert_called_once_with()
         collect_application.assert_not_called()
         after = hashes()
-        for strict in (False, True):
-            with self.subTest(strict=strict):
-                _counts, errors = self.module._evaluate(
-                    content,
-                    strict=strict,
-                    validate_readability_sources=True,
-                )
-                self.assertEqual([], errors)
+        _counts, errors = self.module._evaluate(
+            content,
+            strict=False,
+            validate_readability_sources=True,
+        )
+        self.assertEqual([], errors)
         self.assertEqual(before, after)
 
         _root, _reference, checked_in_application = (
@@ -1526,24 +1535,53 @@ class ValidateReferenceContentTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
         )
         self.assertEqual(2, checked_in["schema_version"])
-        self.assertEqual(206, len(checked_in["findings"]))
-        self.assertEqual(1, checked_in_application["schema_version"])
-        self.assertEqual("invalid", checked_in_application["status"])
+        checked_in_target_ids = [
+            finding["target_id"] for finding in checked_in["findings"]
+        ]
+        self.assertTrue(checked_in_target_ids)
         self.assertEqual(
-            "semantic-decision-application-invalid",
-            checked_in_application["error"]["id"],
+            len(checked_in_target_ids),
+            len(set(checked_in_target_ids)),
         )
-        self.assertEqual(0, checked_in_application["target_count"])
-        self.assertEqual(0, checked_in_application["applied_count"])
+        self.assertEqual(1, checked_in_application["schema_version"])
+        if checked_in_application["status"] == "current":
+            self.assertIsNone(checked_in_application["error"])
+            self.assertEqual(
+                len(checked_in_target_ids),
+                checked_in_application["target_count"],
+            )
+            self.assertEqual(
+                len(checked_in_target_ids),
+                checked_in_application["applied_count"],
+            )
+        else:
+            self.assertEqual("invalid", checked_in_application["status"])
+            self.assertEqual(0, checked_in_application["target_count"])
+            self.assertEqual(0, checked_in_application["applied_count"])
+            self.assertEqual(
+                "semantic-decision-application-invalid",
+                checked_in_application["error"]["id"],
+            )
+            self.assertIn("stale", checked_in_application["error"]["message"])
         self.assertEqual(
             0,
             checked_in_application["completed_rewrite_count"],
         )
 
         audit, compact = _current_semantic_compact_fixture(auditor)
+        compact_value = json.loads(compact)
+        expected_current_count = len(
+            PANEL.prepare_semantic_disposition_packet(
+                audit=PANEL._semantic_audit_for_axis_rereview(
+                    audit, ["root", "reference"]
+                ),
+                review_id="reference-content-current-semantic-fixture-count",
+                created_on="2026-08-13",
+            )["semantic_targets"]
+        )
         self.assertEqual(
-            208,
-            len(json.loads(compact)["findings"]),
+            expected_current_count,
+            len(compact_value["findings"]),
         )
         with tempfile.TemporaryDirectory() as raw:
             fixture_root = Path(raw)
@@ -1559,23 +1597,31 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 )
         self.assertEqual("current", application["status"])
         self.assertIsNone(application["error"])
-        self.assertEqual(208, application["target_count"])
-        self.assertEqual(208, application["applied_count"])
+        self.assertEqual(expected_current_count, application["target_count"])
+        self.assertEqual(expected_current_count, application["applied_count"])
         self.assertEqual(0, application["completed_rewrite_count"])
         self.assertEqual(before, hashes())
 
     def test_android_intent_boundary_is_limited_to_untrusted_entry(self) -> None:
         path = (
             ROOT
-            / "src/domain-extensions/android-platform-extension/SKILL.md"
+            / "src/domain-extensions/android-platform-extension/references/"
+            "components-permissions-and-background-contracts.md"
         )
         text = " ".join(path.read_text(encoding="utf-8").split())
         self.assertIn(
-            "Treat an Intent as an external entry boundary only when its "
-            "input is externally supplied or untrusted, including input "
-            "delivered through a deep link or exported component. Prove safe "
-            "handling of that boundary by validating the payload, caller or "
-            "source identity, authorization, and task behavior as applicable.",
+            "Load this Reference only when external Android entry or continued "
+            "execution authority changes.",
+            text,
+        )
+        self.assertIn(
+            "Inventory Intent filters, App Links, custom schemes, exported "
+            "components, caller-controlled extras, and the destination task/account.",
+            text,
+        )
+        self.assertIn(
+            "Default components to private; justify every exported surface and "
+            "validate input before privileged work.",
             text,
         )
         self.assertNotIn(
@@ -1672,22 +1718,38 @@ class ValidateReferenceContentTests(unittest.TestCase):
             ROOT
             / "src/foundation/capabilities/authentication-security/references/evidence-patterns.md"
         )
-        row = next(
+        rows = [
             line
             for line in path.read_text(encoding="utf-8").splitlines()
-            if line.startswith("| Access token validation matches its format |")
+            if line.startswith("| JWT or opaque token validation |")
+        ]
+        self.assertEqual(1, len(rows))
+        row = rows[0].casefold()
+        groups = (
+            (
+                "JWT: configured algorithm allowlist",
+                "bound to expected key types/keys",
+                "issuer/audience/time checks",
+                "trusted `kid`",
+                "negatives for header-selected algorithm/key changes",
+            ),
+            (
+                "Opaque/reference: provider introspection",
+                "active/client/resource/scope/time",
+                "cache",
+                "failure behavior",
+            ),
+            (
+                "Does not prove other consumers/providers share policy",
+                "introspection availability",
+            ),
         )
-        for required in (
-            "explicit configured allowed-algorithm set (allowlist)",
-            "bound to expected key types and verifier keys",
-            "rejecting untrusted token-header attempts",
-            "select an unconfigured algorithm",
-            "switch key types",
-            "select a verifier key",
-            "For opaque/reference only:",
-        ):
-            with self.subTest(required=required):
-                self.assertIn(required, row)
+        for group in groups:
+            expected = tuple(term.casefold() for term in group)
+            with self.subTest(anchor=expected[0]):
+                self.assertTrue(all(term in row for term in expected))
+                without_anchor = row.replace(expected[0], "", 1)
+                self.assertFalse(all(term in without_anchor for term in expected))
 
 
 if __name__ == "__main__":

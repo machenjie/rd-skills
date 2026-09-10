@@ -34,7 +34,9 @@ def _catalog(
     *,
     roots: dict[str, str] | None = None,
     references: dict[str, str] | None = None,
-    registry_markers: dict[str, str] | None = None,
+    responsibility_overrides: dict[str, dict[str, object]] | None = None,
+    registry_authority_overrides: dict[str, dict[str, object]] | None = None,
+    reference_authority_overrides: dict[str, list[dict[str, object]]] | None = None,
     expertise: dict[str, list[str]] | None = None,
     layers: dict[str, str] | None = None,
     required: dict[str, list[str]] | None = None,
@@ -43,7 +45,9 @@ def _catalog(
 ) -> list[dict]:
     roots = roots or {}
     references = references or {}
-    registry_markers = registry_markers or {}
+    responsibility_overrides = responsibility_overrides or {}
+    registry_authority_overrides = registry_authority_overrides or {}
+    reference_authority_overrides = reference_authority_overrides or {}
     expertise = expertise or {}
     layers = layers or {}
     required = required or {"b": ["d"], "c": ["a"]}
@@ -80,14 +84,79 @@ def _catalog(
             for candidate_id in required_ids
         ]
         responsibility = {
-            "marker": registry_markers.get(skill_id, "baseline-registry"),
+            "role_support": ["task-agent"],
             "trigger_signals": [f"trigger {skill_id}"],
+            "anti_trigger_signals": [f"exclude {skill_id}"],
+            "required_inputs": [f"input {skill_id}"],
             "output_contract": [f"output {skill_id}"],
+            "escalation_signals": [f"constraint {skill_id}"],
+            "layer3_candidates": [],
+            "used_by": [],
+            "boundary_signals": [f"boundary {skill_id}"],
+            "group": "fixture",
+            "content_class": "professional",
+            "delivery_scope": "targeted",
+            "task_routable": True,
         }
+        responsibility.update(
+            copy.deepcopy(responsibility_overrides.get(skill_id, {}))
+        )
+        reference_authority = reference_authority_overrides.get(
+            skill_id,
+            [
+                {
+                    "path": "reference.md",
+                    "type": "evidence-pattern",
+                    "load_when": (
+                        f"Reviewing {skill_id} failure evidence for this bounded task"
+                    ),
+                    "do_not_load_when": (
+                        f"The {skill_id} failure boundary is already fully evidenced"
+                    ),
+                    "required_by": ["task-agent"],
+                    "required_output": ["evidence-record", "proof-limit"],
+                }
+            ],
+        )
         registry_row = {
             "name": skill_id,
-            "responsibility_contract": responsibility,
+            "routing_mode": "evidence-only",
+            "required_expertise_tags": copy.deepcopy(
+                expertise.get(skill_id, ["domain"])
+            ),
+            "path": f"src/{skill_id}",
+            "role_support": copy.deepcopy(responsibility["role_support"]),
+            "trigger_signals": copy.deepcopy(
+                responsibility["trigger_signals"]
+            ),
+            "anti_trigger_signals": copy.deepcopy(
+                responsibility["anti_trigger_signals"]
+            ),
+            "required_inputs": copy.deepcopy(
+                responsibility["required_inputs"]
+            ),
+            "output_contract": copy.deepcopy(
+                responsibility["output_contract"]
+            ),
+            "escalation_signals": copy.deepcopy(
+                responsibility["escalation_signals"]
+            ),
+            "reference_index": copy.deepcopy(reference_authority),
+            "layer3_candidates": copy.deepcopy(
+                responsibility["layer3_candidates"]
+            ),
+            "used_by": copy.deepcopy(responsibility["used_by"]),
+            "boundary_signals": copy.deepcopy(
+                responsibility["boundary_signals"]
+            ),
+            "group": responsibility["group"],
+            "content_class": responsibility["content_class"],
+            "delivery_scope": responsibility["delivery_scope"],
+            "task_routable": responsibility["task_routable"],
         }
+        registry_row.update(
+            copy.deepcopy(registry_authority_overrides.get(skill_id, {}))
+        )
         adjacency = {
             "algorithm": "fixture-ranking-v1",
             "document_frequency_filter": {
@@ -111,6 +180,8 @@ def _catalog(
             "indexed_references": [
                 _material(skill_id, "reference", reference_content)
             ],
+            "registry_authority": registry_row,
+            "reference_authority": copy.deepcopy(reference_authority),
             "registry": {
                 "path": "src/registry.yaml",
                 "entry_fingerprint": _sha(registry_row),
@@ -215,10 +286,295 @@ def _bootstrap_packet() -> dict:
     return copy.deepcopy(_bootstrap_packet_cached())
 
 
+def _historical_schema2_promotion_normalization_fixture() -> tuple[
+    dict, dict[str, dict]
+]:
+    """Build test-only historical relationship drift without fixed evidence.
+
+    This decoded schema-2 fixture intentionally models reviewer-added
+    candidates that a later binding made required.  It is not a current
+    attestation, carry baseline, or authority input.
+    """
+
+    targets = _catalog(
+        required={
+            "a": ["b", "c"],
+            "b": ["c"],
+            "c": [],
+            "d": [],
+        }
+    )
+    bindings = PANEL.professional_carry.professional_review_bindings(targets)
+    historical_added = {
+        "a": ["b", "c", "d"],
+        "b": ["c", "d"],
+        "c": [],
+        "d": [],
+    }
+    reviewers = [
+        "architecture-voter",
+        "domain-a-voter",
+        "domain-b-voter",
+    ]
+    findings = []
+    for skill_id in sorted(bindings):
+        added_ids = historical_added[skill_id]
+        votes = [
+            {
+                "reviewer": reviewer,
+                "review_evidence_fingerprint": _sha(
+                    {
+                        "fixture": "historical-schema2-promotion",
+                        "skill_id": skill_id,
+                        "reviewer": reviewer,
+                    }
+                ),
+                "examined_adjacent_candidates": {
+                    "count": len(added_ids),
+                    "required_count": 0,
+                    "reviewer_added_candidate_ids": copy.deepcopy(
+                        added_ids
+                    ),
+                    "defect_count": 0,
+                },
+            }
+            for reviewer in reviewers
+        ]
+        findings.append(
+            {
+                "skill_id": skill_id,
+                "dependency_ids": copy.deepcopy(added_ids),
+                "provenance": {
+                    "mode": "fresh",
+                    "origin": {
+                        "origin_review_id": (
+                            "historical-schema2-promotion-fixture"
+                        ),
+                        "origin_commit": "1" * 40,
+                        "origin_verdict_digest": _sha(
+                            {
+                                "fixture": "historical-schema2-promotion",
+                                "skill_id": skill_id,
+                            }
+                        ),
+                    },
+                },
+                "votes": votes,
+                "result": {
+                    "qualification_coverage": {
+                        "domain_voters": [
+                            "domain-a-voter",
+                            "domain-b-voter",
+                        ],
+                        "architecture_voter": "architecture-voter",
+                    },
+                    "review_dependencies": {
+                        "skill_id": skill_id,
+                        "evidence_complete": True,
+                        "prior_target_vote_count": len(reviewers),
+                        "final_disposition": (
+                            "accepted-current-professional-completeness"
+                        ),
+                        "required_candidate_ids": [],
+                        "reviewer_added_candidate_ids_union": (
+                            copy.deepcopy(added_ids)
+                        ),
+                        "dependency_candidate_ids": copy.deepcopy(
+                            added_ids
+                        ),
+                    },
+                    "evidence_metrics": {
+                        "target_vote_count": len(reviewers),
+                        "required_adjacency_candidate_count": 0,
+                        "criterion_result_count": 30,
+                        "criterion_anchor_binding_count": 30,
+                        "criterion_assertion_count": 30,
+                        "evidence_anchor_count": 0,
+                        "examined_failure_mode_count": 6,
+                        "examined_omission_candidate_count": 6,
+                        "examined_adjacency_count": (
+                            len(added_ids) * len(reviewers)
+                        ),
+                        "examined_required_adjacency_count": 0,
+                        "reviewer_added_adjacency_count": (
+                            len(added_ids) * len(reviewers)
+                        ),
+                        "proof_limit_count": 6,
+                        "qualification_claim_count": len(reviewers),
+                    },
+                },
+            }
+        )
+    return (
+        {
+            "schema_version": 2,
+            "kind": "test-only.historical-professional-attestation",
+            "review_id": "historical-schema2-promotion-fixture",
+            "findings": findings,
+            "dependency_material_catalog": {
+                skill_id: binding["package_material_binding"]
+                for skill_id, binding in bindings.items()
+            },
+        },
+        bindings,
+    )
+
+
+def _normalize_historical_reviewer_added_promotions(
+    value: dict, *, bindings: dict[str, dict]
+) -> None:
+    """Reclassify authenticated reviewer-added candidates now required."""
+
+    findings = value.get("findings")
+    if not isinstance(findings, list):
+        raise AssertionError("Professional fixture findings are missing")
+    findings_by_id = {
+        row.get("skill_id"): row
+        for row in findings
+        if isinstance(row, dict) and isinstance(row.get("skill_id"), str)
+    }
+    if len(findings_by_id) != len(findings):
+        raise AssertionError("Professional fixture findings are not unique")
+
+    catalog = value.get("dependency_material_catalog")
+    if not isinstance(catalog, dict):
+        raise AssertionError(
+            "Professional fixture dependency material catalog is missing"
+        )
+    if set(findings_by_id) != set(bindings):
+        raise AssertionError(
+            "Professional fixture finding and binding coverage differs"
+        )
+    for skill_id, row in sorted(findings_by_id.items()):
+        binding = bindings[skill_id]
+        if not isinstance(binding, dict):
+            raise AssertionError(
+                f"Professional fixture binding is invalid: {skill_id}"
+            )
+        current_required_ids = binding["adjacency"][
+            "required_candidate_ids"
+        ]
+        if current_required_ids != sorted(set(current_required_ids)):
+            raise AssertionError(
+                f"Professional fixture required candidates are not canonical: {skill_id}"
+            )
+        current_required = set(current_required_ids)
+
+        review_dependencies = row["result"]["review_dependencies"]
+        historical_added_ids = review_dependencies[
+            "reviewer_added_candidate_ids_union"
+        ]
+        if historical_added_ids != sorted(set(historical_added_ids)):
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is not canonical: {skill_id}"
+            )
+        historical_added = set(historical_added_ids)
+        promoted_ids = historical_added & current_required
+
+        observed_added: set[str] = set()
+        remaining_by_vote: list[list[str]] = []
+        for vote in row["votes"]:
+            adjacency = vote["examined_adjacent_candidates"]
+            added_ids = adjacency["reviewer_added_candidate_ids"]
+            if added_ids != sorted(set(added_ids)):
+                raise AssertionError(
+                    f"Professional fixture reviewer-added vote is not canonical: {skill_id}"
+                )
+            observed_added.update(added_ids)
+            remaining = sorted(set(added_ids) - promoted_ids)
+            adjacency["reviewer_added_candidate_ids"] = remaining
+            adjacency["required_count"] = len(current_required_ids)
+            adjacency["count"] = len(current_required_ids) + len(remaining)
+            remaining_by_vote.append(remaining)
+        if observed_added != historical_added:
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is inconsistent: {skill_id}"
+            )
+
+        remaining_union = sorted(
+            {
+                candidate_id
+                for added_ids in remaining_by_vote
+                for candidate_id in added_ids
+            }
+        )
+        expected_remaining = sorted(historical_added - promoted_ids)
+        if remaining_union != expected_remaining:
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is inconsistent: {skill_id}"
+            )
+        historical_unknown = sorted(historical_added - set(bindings))
+        if historical_unknown:
+            raise AssertionError(
+                f"Professional fixture reviewer-added candidates are unknown: {skill_id}"
+            )
+        dependency_ids = sorted(current_required | set(remaining_union))
+        unknown_dependencies = sorted(set(dependency_ids) - set(bindings))
+        if unknown_dependencies:
+            raise AssertionError(
+                f"Professional fixture promotion dependencies are unknown: {skill_id}"
+            )
+        missing_material = sorted(
+            candidate_id
+            for candidate_id in historical_added
+            if not isinstance(catalog.get(candidate_id), str)
+            or len(catalog[candidate_id]) != 64
+            or any(
+                character not in "0123456789abcdef"
+                for character in catalog[candidate_id]
+            )
+        )
+        if missing_material:
+            raise AssertionError(
+                f"Professional fixture reviewer-added material is missing or stale: {skill_id}"
+            )
+
+        review_dependencies["required_candidate_ids"] = copy.deepcopy(
+            current_required_ids
+        )
+        review_dependencies[
+            "reviewer_added_candidate_ids_union"
+        ] = remaining_union
+        review_dependencies["dependency_candidate_ids"] = dependency_ids
+        row["dependency_ids"] = dependency_ids
+        for candidate_id in dependency_ids:
+            catalog[candidate_id] = bindings[candidate_id][
+                "package_material_binding"
+            ]
+
+        metrics = row["result"]["evidence_metrics"]
+        metrics["required_adjacency_candidate_count"] = len(
+            current_required_ids
+        )
+        metrics["examined_adjacency_count"] = sum(
+            vote["examined_adjacent_candidates"]["count"]
+            for vote in row["votes"]
+        )
+        metrics["examined_required_adjacency_count"] = sum(
+            vote["examined_adjacent_candidates"]["required_count"]
+            for vote in row["votes"]
+        )
+        metrics["reviewer_added_adjacency_count"] = sum(
+            len(vote["examined_adjacent_candidates"][
+                "reviewer_added_candidate_ids"
+            ])
+            for vote in row["votes"]
+        )
+    used_dependencies = {
+        candidate_id
+        for row in findings_by_id.values()
+        for candidate_id in row["dependency_ids"]
+    }
+    value["dependency_material_catalog"] = {
+        candidate_id: catalog[candidate_id]
+        for candidate_id in sorted(used_dependencies)
+    }
+
+
 def _current_compact_professional_fixture_bytes(
     targets: list[dict], *, review_contract_fingerprint: str
 ) -> bytes:
-    """Rebind historical judgments as schema-2 test data, never authority."""
+    """Synthesize current schema-2 test data, never repository evidence."""
 
     bindings, _snapshot = PANEL._professional_v3_binding_state(
         targets,
@@ -231,6 +587,34 @@ def _current_compact_professional_fixture_bytes(
     preliminary = (
         PANEL.panel_attestation.parse_attestation_storage_selector_bytes(raw)
     )
+    current_ids = set(bindings)
+    finding_ids = {
+        row.get("skill_id")
+        for row in preliminary.get("findings", [])
+        if isinstance(row, dict) and isinstance(row.get("skill_id"), str)
+    }
+    missing = sorted(current_ids - finding_ids)
+    retired = sorted(finding_ids - current_ids)
+    if missing or not set(retired) <= {"routing-quality-review"}:
+        raise AssertionError(
+            "Professional fixture current/historical finding coverage differs: "
+            f"missing={missing}, retired={retired}"
+        )
+    preliminary["findings"] = [
+        row
+        for row in preliminary["findings"]
+        if row["skill_id"] in current_ids
+    ]
+    preliminary["dependency_material_catalog"] = {
+        skill_id: material_binding
+        for skill_id, material_binding in preliminary[
+            "dependency_material_catalog"
+        ].items()
+        if skill_id in current_ids
+    }
+    _normalize_historical_reviewer_added_promotions(
+        preliminary, bindings=bindings
+    )
     claims = PANEL._professional_authenticated_claims_from_findings(
         preliminary["findings"]
     )
@@ -238,9 +622,32 @@ def _current_compact_professional_fixture_bytes(
         current_bindings=bindings,
         authenticated_claims=claims,
     )
+    residual_overlaps = {
+        skill_id: sorted(
+            set(authority["required_candidate_ids"])
+            & set(authority["reviewer_added_candidate_ids_union"])
+        )
+        for skill_id, authority in authorities.items()
+        if set(authority["required_candidate_ids"])
+        & set(authority["reviewer_added_candidate_ids_union"])
+    }
+    if residual_overlaps:
+        raise AssertionError(
+            "Professional fixture retains reviewer-added/required overlap"
+        )
+    preliminary["review_contract_fingerprint"] = (
+        review_contract_fingerprint
+    )
+    normalized_storage = copy.deepcopy(preliminary)
+    PANEL.panel_attestation._encode_professional_storage_in_place(
+        normalized_storage
+    )
+    normalized_raw = (
+        PANEL.panel_attestation._json_body(normalized_storage) + b"\n"
+    )
     value, _eligible_ids = (
         PANEL.panel_attestation.parse_professional_baseline_bytes(
-            raw,
+            normalized_raw,
             expected_path=(
                 PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
             ),
@@ -320,6 +727,17 @@ def _materialize_empty_capsule_chain(
     voter_id: str,
     skill_ids: list[str],
 ) -> tuple[dict, Path, dict, Path, dict, Path]:
+    # These three preparation calls consume the same immutable packet. Use the
+    # production-issued handle so each call still verifies its binding without
+    # re-parsing all 188 packages. Mutated packets require a new handle.
+    canonical_state = PANEL._professional_v3_canonical_packet_state(
+        packet,
+        supplied_state=state,
+        validation_root=validation_root,
+        artifact_path=None,
+        validate_baseline=False,
+    )
+    packet = canonical_state.packet
     round_root = validation_root / packet["review_id"]
     if validation_root.resolve() == PANEL.ROOT.resolve():
         round_root = (
@@ -336,7 +754,7 @@ def _materialize_empty_capsule_chain(
         created_on="2026-07-17",
         validation_root=validation_root,
         validate_packet_plan=False,
-        packet_state=state,
+        packet_state=canonical_state,
     )
     discovery_path = round_root / "discovery-capsules" / f"{voter_id}.json"
     discovery_path.parent.mkdir(parents=True, exist_ok=True)
@@ -350,7 +768,7 @@ def _materialize_empty_capsule_chain(
         created_on="2026-07-17",
         validation_root=validation_root,
         validate_packet_plan=False,
-        packet_state=state,
+        packet_state=canonical_state,
     )
     request_path = round_root / "candidate-requests" / f"{voter_id}.json"
     request_path.parent.mkdir(parents=True, exist_ok=True)
@@ -364,7 +782,7 @@ def _materialize_empty_capsule_chain(
         created_on="2026-07-17",
         validation_root=validation_root,
         validate_packet_plan=False,
-        packet_state=state,
+        packet_state=canonical_state,
     )
     capsule_path = round_root / "capsules" / f"{voter_id}.json"
     capsule_path.parent.mkdir(parents=True, exist_ok=True)
@@ -532,12 +950,10 @@ def _synthetic_schema1_professional_decision():
         write_json(decision_path, decision)
         yield packet, packet_path, ballots, decision, decision_path
 
-@contextmanager
-def _synthetic_schema3_professional_decision(
-    *, mutate_registered_selection: bool = False
-):
-    """Materialize one minimal 189-package decision without checked-in history."""
-
+def _synthetic_schema3_professional_targets(
+    *, package_identities: list[tuple[str, str, list[str]]] | None = None
+) -> list[dict]:
+    """Build the shared small-source catalog at the full current inventory."""
     content = "\n".join(
         [
             "# Synthetic Professional Boundary",
@@ -571,7 +987,7 @@ def _synthetic_schema3_professional_decision(
     }
     target_specs = sorted(
         (f"synthetic-professional-{index:03d}", "professional")
-        for index in range(26)
+        for index in range(25)
     ) + sorted(
         (f"synthetic-foundation-{index:03d}", "foundation")
         for index in range(150)
@@ -579,22 +995,61 @@ def _synthetic_schema3_professional_decision(
         (f"synthetic-domain-{index:03d}", "domain")
         for index in range(13)
     )
-    target_specs.sort()
+    target_specs = (
+        package_identities
+        if package_identities is not None
+        else [(skill_id, layer, ["foundation-quality-testing"]) for skill_id, layer in target_specs]
+    )
+    target_specs = sorted(target_specs)
     targets = []
-    for skill_id, layer in target_specs:
+    for skill_id, layer, expertise_tags in target_specs:
         material = {
             "path": f"{skill_id}/SKILL.md",
             "sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
             "line_count": len(content.splitlines()),
             "content": content,
         }
+        registry_authority = {
+            "name": skill_id,
+            "routing_mode": "evidence-only",
+            "required_expertise_tags": copy.deepcopy(expertise_tags),
+            "path": skill_id,
+            "role_support": copy.deepcopy(responsibility["role_support"]),
+            "trigger_signals": copy.deepcopy(
+                responsibility["trigger_signals"]
+            ),
+            "anti_trigger_signals": copy.deepcopy(
+                responsibility["anti_trigger_signals"]
+            ),
+            "required_inputs": copy.deepcopy(
+                responsibility["required_inputs"]
+            ),
+            "output_contract": copy.deepcopy(
+                responsibility["output_contract"]
+            ),
+            "escalation_signals": copy.deepcopy(
+                responsibility["escalation_signals"]
+            ),
+            "reference_index": [],
+            "layer3_candidates": [],
+            "used_by": [],
+            "boundary_signals": copy.deepcopy(
+                responsibility["boundary_signals"]
+            ),
+            "group": responsibility["group"],
+            "content_class": responsibility["content_class"],
+            "delivery_scope": responsibility["delivery_scope"],
+            "task_routable": responsibility["task_routable"],
+        }
         targets.append(
             {
                 "skill_id": skill_id,
                 "layer": layer,
-                "required_expertise_tags": ["foundation-quality-testing"],
+                "required_expertise_tags": copy.deepcopy(expertise_tags),
                 "root": material,
                 "indexed_references": [],
+                "registry_authority": registry_authority,
+                "reference_authority": [],
                 "registry": {
                     "path": "synthetic-registry.yaml",
                     "entry_fingerprint": hashlib.sha256(
@@ -606,6 +1061,53 @@ def _synthetic_schema3_professional_decision(
                 },
             }
         )
+    bases, document_filter = (
+        PANEL._professional_catalog_adjacency_features(
+            targets,
+            include_historical_alias=True,
+        )
+    )
+    for target in targets:
+        ranking = PANEL._professional_catalog_ranking(
+            target["skill_id"], bases=bases
+        )
+        required_candidates = (
+            PANEL._professional_required_adjacency_candidates(
+                ranking,
+                registry_declared_skills=[],
+                source_declared_skills=[],
+            )
+        )
+        target["routing_adjacency"] = {
+            "algorithm": PANEL.PROFESSIONAL_ADJACENCY_ALGORITHM,
+            "document_frequency_filter": document_filter,
+            "declared_skills": [],
+            "registry_declared_skills": [],
+            "source_declared_skills": [],
+            "required_candidate_selection": (
+                PANEL._professional_adjacency_selection_contract(
+                    target_count=PANEL.PROFESSIONAL_PACKAGE_COUNT
+                )
+            ),
+            "required_candidates": required_candidates,
+            "required_candidates_fingerprint": (
+                PANEL._canonical_json_sha256(required_candidates)
+            ),
+            "full_catalog_count": len(ranking),
+            "full_catalog_ranking": ranking,
+            "full_catalog_ranking_fingerprint": (
+                PANEL._canonical_json_sha256(ranking)
+            ),
+        }
+    return targets
+
+
+@contextmanager
+def _synthetic_schema3_professional_decision(
+    *, mutate_registered_selection: bool = False
+):
+    """Materialize one minimal 188-package decision without checked-in history."""
+
     with (
         mock.patch.object(
             PANEL, "PROFESSIONAL_ADJACENCY_TOP_K", 0
@@ -615,44 +1117,7 @@ def _synthetic_schema3_professional_decision(
         ),
         tempfile.TemporaryDirectory() as raw,
     ):
-        bases, document_filter = (
-            PANEL._professional_catalog_adjacency_features(
-                targets,
-                include_historical_alias=True,
-            )
-        )
-        for target in targets:
-            ranking = PANEL._professional_catalog_ranking(
-                target["skill_id"], bases=bases
-            )
-            required_candidates = (
-                PANEL._professional_required_adjacency_candidates(
-                    ranking,
-                    registry_declared_skills=[],
-                    source_declared_skills=[],
-                )
-            )
-            target["routing_adjacency"] = {
-                "algorithm": PANEL.PROFESSIONAL_ADJACENCY_ALGORITHM,
-                "document_frequency_filter": document_filter,
-                "declared_skills": [],
-                "registry_declared_skills": [],
-                "source_declared_skills": [],
-                "required_candidate_selection": (
-                    PANEL._professional_adjacency_selection_contract(
-                        target_count=PANEL.PROFESSIONAL_PACKAGE_COUNT
-                    )
-                ),
-                "required_candidates": required_candidates,
-                "required_candidates_fingerprint": (
-                    PANEL._canonical_json_sha256(required_candidates)
-                ),
-                "full_catalog_count": len(ranking),
-                "full_catalog_ranking": ranking,
-                "full_catalog_ranking_fingerprint": (
-                    PANEL._canonical_json_sha256(ranking)
-                ),
-            }
+        targets = _synthetic_schema3_professional_targets()
         review_contract = (
             PANEL._professional_evidence_review_contract_fingerprint()
         )
@@ -755,6 +1220,13 @@ def _synthetic_schema3_professional_decision(
                 "state": state,
             }
             return
+        canonical_state = PANEL._professional_v3_canonical_packet_state(
+            packet,
+            supplied_state=state,
+            validation_root=Path(raw),
+            artifact_path=None,
+            validate_baseline=False,
+        )
         skill_ids = sorted(state["bindings"])
         projected = PANEL._professional_v2_projection_from_v3(
             packet, validation_mode=validation_mode
@@ -777,9 +1249,9 @@ def _synthetic_schema3_professional_decision(
                 capsule_path,
             ) = _materialize_empty_capsule_chain(
                 validation_root=validation_root,
-                packet=packet,
+                packet=canonical_state.packet,
                 packet_sha256=packet_sha256,
-                state=state,
+                state=canonical_state,
                 voter_id=voter_id,
                 skill_ids=skill_ids,
             )

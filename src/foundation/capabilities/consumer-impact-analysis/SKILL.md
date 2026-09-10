@@ -21,23 +21,17 @@ Establish known and unknown consumers of a changed contract, then select compati
 
 ## High-Value Rules
 
-- Inventory direct, generated, inferred, telemetry-observed, owner-confirmed, omitted, and unknown consumers before approving a consumer-visible change.
-- Bound a no-consumer claim by inspected repositories, graphs, generated artifacts, exports, registries, documentation, telemetry, and explicit search gaps; local caller search alone is insufficient.
-- When a consumer can still depend on old behavior, require a compatible bridge, version, coordinated migration, or no-ship decision derived from its release and retention boundary.
-- Treat generated clients, SDKs, events, webhooks, and machine-readable CLI output as versioned consumers; verify regeneration, mapping, replay, and package or schema impact where triggered.
-- Select deprecation and removal from current usage and owner evidence rather than a calendar alone, and record the evidence limits when telemetry is unavailable.
-- Validate mixed producer and consumer states, rollback after new writes, and the behavior of retained data or messages when the rollout can create version skew.
+- Own surface, consumers, compatibility/migration/rollout/rollback, and risk.
+- Bound absence/readiness/deprecation/removal to current evidence; retain unknown external risk.
+- Load only the active decision's named Reference.
 
 ## Anti-Patterns
 
-- A provider-only green test does not prove downstream compatibility.
-- A public export, package, stream, webhook, or copied example can have consumers outside repository search scope.
-- Calendar expiry without usage or owner evidence can remove a still-live contract.
-- Generated output treated as incidental hides source-schema and compatibility drift.
+- Local success substituted for evidence of the consumer impact analysis contract.
 
 ## Stop Conditions
 
-Escalate to the relevant contract owner when API, schema, event, package, or generated-client compatibility changes. Escalate to `delivery-release-gate` for coordinated rollout, publication, or removal. Escalate to `security-privacy-gate` for changed sensitive fields or tenant scope. Escalate to `quality-test-gate` when current consumer proof is missing. State unknown external-consumer risk rather than inferring absence.
+Route contract, delivery/removal, sensitive scope, and proof gaps to their contract, `delivery-release-gate`, `security-privacy-gate`, and `quality-test-gate` owners. Stop on unowned external risk.
 
 ## Output Contract
 

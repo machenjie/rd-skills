@@ -12,4 +12,4 @@ Derive thresholds from the current repository baseline, representative workload,
 2. What does the actual datastore and deployment model imply for locks, backfill, index/build cost, version skew, and old/new coexistence?
 3. Is pagination, expansion limiting, projection, indexing, versioning, tolerant reading, or a compatibility shim needed for a demonstrated boundary, and what evidence selects it?
 4. What rollback, forward-repair, or irreversible migration outcome is credible for the affected data, and which duration or impact limit comes from current policy and measured operations?
-5. If consumer, storage, and operational tradeoffs cannot be bounded locally, identify `solution-optimality-evaluation` as the broader owner without assuming this reference loads it.
+5. If consumer, storage, and operational tradeoffs cannot be bounded locally, record broader tradeoff analysis as unresolved scope with its evidence need and decision owner.

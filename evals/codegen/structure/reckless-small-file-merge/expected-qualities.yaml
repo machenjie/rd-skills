@@ -1,6 +1,5 @@
 id: reckless-small-file-merge
 category: structure
-complexity: L3
 focus:
   - small file merge
   - merge restraint

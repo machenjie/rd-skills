@@ -1,6 +1,5 @@
 id: cleanup-deletion-governance
 category: structure
-complexity: L3
 focus:
   - deletion path
   - stale flag and fallback cleanup

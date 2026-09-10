@@ -12,7 +12,7 @@
 
 - When current repository or toolchain authority requires documentation for a changed public API, use its language-standard format: godoc, rustdoc, JSDoc, Javadoc/KDoc, Python docstrings, or the project C++ convention.
 - Apply only repository-required public contract fields and examples; do not invent universal comment coverage from a generic style guide.
-- Add class, object, or non-exported function comments only when current repository authority requires them and a non-obvious contract, invariant, compatibility, or operational reason remains after naming or extraction.
+- Supply documentation required by current repository authority even when the public contract is straightforward. For additional class, object, or non-exported function explanations, let the clarity owner judge whether naming, extraction, or a comment best exposes the remaining contract, invariant, compatibility, or operational reason.
 - Route whether naming, extraction, or a comment best exposes that semantic obligation to `code-clarity-maintainability`; this Skill owns language syntax and enforced public-surface form.
 - Test names describe behavior; complex tests explain scenario, regression reason, edge case, or production bug; fixtures and golden files explain the contract they represent.
 - Under current repository authority, inline comments preserve a non-obvious business, compatibility, state, concurrency, transaction, performance, external-system, security, fallback, or algorithmic reason.

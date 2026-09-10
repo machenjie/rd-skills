@@ -1,14 +1,12 @@
 # Consumer Impact Analysis Checklist
 
-Use this checklist for concrete consumer-impact reviews. Keep routine L1/L2 routing in `SKILL.md`; load deeper references only when compatibility, telemetry, rollout, rollback, or stale-evidence risk needs more detail.
-
-- Name the changed public surface: endpoint, field, schema, event, webhook, SDK method, package export, CLI output, config key, docs/example contract, or observable behavior.
-- Classify consumers as known direct, generated, inferred, mobile/partner/public, event subscribers, jobs/reports/dashboards, docs/example users, and unknown.
-- Record search scope, repository inspection edges, generated artifact list, package metadata, docs/examples, telemetry source, registry source, and omitted boundaries.
-- Classify compatibility across structure, meaning, validation, defaults, error behavior, timing/SLA, ordering/pagination, persistence, and rollback.
-- Map old producer/new consumer, new producer/old consumer, old code/new data, new code/old data, delayed consumer/retained event, and generated client/provider behavior.
-- Choose additive, bridge/alias, expand/migrate/contract, versioned endpoint/schema, upcaster/adapter, feature flag/opt-in, dual publish/write, config bridge, or no-ship.
-- State migration docs, owner notification, deprecation/Sunset signal, telemetry threshold, removal owner, and rollback state before approving cleanup.
-- Validate changed surfaces with schema/API/export diff, generated-client compile, consumer-driven contract test, fixture replay, downstream smoke, telemetry check, or owner review.
-- Treat prior task evidence and repository inspection as selectors until current source, generated artifacts, telemetry, and command order confirm freshness.
-- Close with what evidence proves, what it does not prove, residual unknown-consumer risk, rollback note, and recommended next step.
+- Name the changed endpoint, field, schema, event, webhook, SDK, export, CLI output, config, example, or behavior.
+- Inventory direct, generated, inferred, mobile/partner/public, subscriber/job/report/dashboard, docs/example, omitted, and unknown consumers.
+- Record searched repositories/graphs, generated artifacts, exports, registries, package metadata, documentation, telemetry, owner evidence, and gaps; local caller search cannot prove absence.
+- Classify structure, meaning, validation, defaults, errors, timing/order, persistence, generated output, and rollback.
+- Map old/new producers and consumers, old/new code and data, delayed consumers and retained/replayed messages, and generated clients/providers.
+- Select additive, bridge/alias, expand/migrate/contract, version, upcaster/adapter, flag/opt-in, dual publish/write, configuration bridge, or no-ship.
+- Verify regeneration/compile, event/webhook/CLI mapping, replay, package/schema impact, contract/smoke tests, or owner review.
+- Base deprecation/removal on current usage, telemetry window and lag, owner acceptance, migration/Sunset guidance, cleanup owner, and rollback state—not a calendar alone.
+- Treat prior evidence as a selector until final source, generated artifacts, fixtures, docs, telemetry, and validation are fresh.
+- Close with covered and unknown consumers, what evidence proves and does not prove, residual risk, next owner, and rollback.

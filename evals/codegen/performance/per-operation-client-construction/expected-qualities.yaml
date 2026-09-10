@@ -1,6 +1,5 @@
 id: per-operation-client-construction
 category: performance
-complexity: L4
 focus:
   - client and pool lifecycle
   - repository and adapter hidden IO

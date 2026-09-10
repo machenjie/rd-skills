@@ -1,6 +1,5 @@
 id: minimal-correct-native-reuse
 category: devex
-complexity: L4
 focus:
   - minimal correct implementation
   - Ponytail native reuse

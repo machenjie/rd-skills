@@ -12,10 +12,11 @@
 | --- | --- | --- |
 | systemd service | user/group, restart, timeout, hardening | unit file and `systemctl show` |
 | container shutdown | signal forwarding and child reaping | SIGTERM test or runtime config |
-| cgroup limits | CPU/memory/fd/process budget | cgroup files or container inspect |
+| cgroup limits | Applicable CPU, memory, and process-count budgets | Effective cgroup controller values and runtime configuration |
+| file-descriptor limits | Effective per-process descriptor budget | Process limits plus applicable supervisor/container configuration and exhaustion evidence |
 | permissions | least privilege and explicit ownership | `stat`, unit user, install script |
 | logs | single intended sink and redaction | journald/stdout/syslog sample |
-| package script | idempotent upgrade and rollback | install/remove dry run or test |
+| package script | idempotent upgrade and accepted recovery or explicit irreversible limits | install/remove dry run or test of the selected path |
 
 ## systemd Review
 

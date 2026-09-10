@@ -1,5 +1,7 @@
 # Internal Composition By Change Reason And Lifecycle
 
+- Place code with the owner of its change reason, state, invariant, effect, protocol, lifecycle, and tests; compare co-location and private extraction before new structure.
+
 These patterns compare co-location and extraction inside one established owner using change reason, state or resource lifecycle, contracts, dependency direction, reuse, tests, and fixtures.
 
 ## Co-Location And Extraction Evidence

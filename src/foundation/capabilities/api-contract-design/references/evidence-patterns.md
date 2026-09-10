@@ -5,7 +5,8 @@ Use this reference when API contract closure depends on generated artifacts, con
 ## Evidence Map
 - **Operation shape change:** prove the old/new diff in the authoritative contract representation and implementation or provider boundary.
 - **Operation shape evidence:** include applicable examples, validation outcomes, and generated artifact or client diffs.
-- **Error, auth, or permission contract:** prove status/code matrix, denied examples, retryability, redaction, security gate outcome, and negative contract tests.
+- **Error, auth, or permission contract:** prove the applicable status/code matrix, denied examples, retryability, redaction, and negative contract tests.
+- Require a `security-privacy-gate` outcome only for a proved security boundary or privacy lifecycle impact requiring that owner's judgment.
 - **Pagination, filtering, sorting, or idempotency:** prove deterministic ordering, max bounds, replay/conflict behavior, generated examples, and client-visible compatibility.
 - **Generated client or SDK:** prove generator command, checked-in diff, representative client compile/test, versioning note, and release owner.
 - **Deprecation or breaking change:** prove consumer inventory, telemetry, migration guide, sunset/deprecation headers, rollout gate, and rollback or containment path.
@@ -18,3 +19,7 @@ Use this reference when API contract closure depends on generated artifacts, con
 - Confirm relevant consumers.
 - Include generated artifact or client evidence when the workflow produces those surfaces.
 - Disclose missing or unverified contract, implementation, provider, consumer, and deployed-version evidence.
+
+## Anti-Patterns
+
+- Do not expose internal representations or call a contract additive without consumer-semantic proof.

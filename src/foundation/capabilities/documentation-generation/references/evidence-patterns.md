@@ -24,3 +24,10 @@ Use this reference when documentation closure depends on claim-to-source mapping
 
 - If command snippets that mutate files, data, infrastructure, credentials, or external systems, record preconditions, dry-run or sandbox, rollback/forward-fix, owner, and redaction rule.
 - If connector, ticket, wiki, cloud console, or production telemetry supports documentation, treat it as external or credential-scoped, use bounded approved credentials when required, and record scope, timestamp, redaction, and owner.
+
+## Anti-Patterns
+
+- Treating repository discovery or prior summaries as factual proof.
+- Keeping stale docs because code validation passes.
+- Publishing generated examples without checking their compatibility promise.
+- Claiming no documentation impact without naming considered audiences.

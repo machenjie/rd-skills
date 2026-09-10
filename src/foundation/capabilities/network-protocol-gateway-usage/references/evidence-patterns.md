@@ -24,4 +24,6 @@ Network Protocol Gateway Record
 
 ## Blocking Conditions
 
-Block completion when timeout changes lack hop-chain evidence, untrusted proxy headers are accepted, TLS rollout lacks renewal/rollback, gateway retries non-idempotent writes, or a 5xx diagnosis lacks logs from the emitting hop.
+Block completion when timeout changes lack hop-chain evidence, untrusted proxy headers are accepted, TLS rollout lacks renewal/rollback, or a non-idempotent write is retried without proof that replay is safe within the original deadline and attempt budget. Proven non-delivery can justify retry; timeout or cancellation alone cannot.
+
+Block a 5xx causal conclusion when evidence cannot establish the emitting hop and causal chain for the diagnosed version, configuration, and event window. Use applicable logs, correlated traces, probes, or controlled configuration evidence, and state observation limits.

@@ -571,8 +571,8 @@ class CoreAffectedTests(unittest.TestCase):
             "reference": {"audit-skill-content", "validate-reference-content"},
             "docs": {
                 "build-recommended",
-                "build-full",
-                "build-dev",
+                "validate-built-links",
+                "eval-agent-lightweight",
                 "eval-rendered-context",
                 "validate-docs-consistency",
             },

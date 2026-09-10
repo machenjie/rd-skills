@@ -1,6 +1,5 @@
 id: js-nullish-default-bug
 category: code-elements
-complexity: L2
 focus:
   - nullish default semantics
   - falsey value preservation

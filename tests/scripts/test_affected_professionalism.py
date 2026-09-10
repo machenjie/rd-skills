@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import sys
+import subprocess
 import tempfile
 import unittest
 from contextlib import ExitStack, contextmanager
@@ -236,9 +237,10 @@ class AffectedProfessionalismTests(unittest.TestCase):
             "eval-pressure-behavior",
             "validate-professionalism-regression",
         ]
-        context = json.loads(
-            _context(ids=[direct_package_id])
-        )
+        context = json.loads(_context(ids=[direct_package_id]))
+        context["head_sha"] = subprocess.check_output(
+            ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True
+        ).strip()
         with tempfile.TemporaryDirectory() as raw:
             repository = Path(raw) / "repository"
             shutil.copytree(
@@ -268,48 +270,23 @@ class AffectedProfessionalismTests(unittest.TestCase):
                     ),
                 }
             )
-            expected_baseline_only_fresh = {
-                "accessibility-inclusive-design",
-                "ai-code-review-refactor",
-                "authentication-authorization",
-                "backend-change-builder",
-                "change-documentation-gate",
-                "controller-api-implementation",
-                "data-api-contract-changer",
-                "data-middleware-change-builder",
-                "design-system-rules",
-                "form-validation-design",
-                "frontend-api-integration",
-                "frontend-testing",
-                "integration-change-builder",
-                "interaction-state-modeling",
-                "page-component-decomposition",
-                "plan-execution-consistency",
-                "quality-test-gate",
-                "reliability-observability-gate",
-                "routing-navigation-design",
-                "skill-authoring-expert",
-                "solution-optimality-evaluation",
-                "state-management-design",
-                "typescript-professional-usage",
-                "web-platform-professional-usage",
-            }
-            self.assertEqual(56, len(expected_direct_fresh))
-            self.assertEqual(24, len(expected_baseline_only_fresh))
-            self.assertTrue(
-                set(expected_direct_fresh).isdisjoint(
-                    expected_baseline_only_fresh
-                )
-            )
-            expected_fresh = sorted(
-                set(expected_direct_fresh) | expected_baseline_only_fresh
-            )
-            expected_carried = sorted(
-                set(expected_bindings) - set(expected_fresh)
-            )
             contract = json.loads(
                 (repository / "src/control-model/core-contracts.json").read_text()
             )
+            # Authoring evaluates the full affected closure. The separate
+            # Formal review-cost ceiling must not truncate that closure or
+            # turn stale evidence into carry authorization.
+            baseline = json.loads(
+                (repository / "evals/expert-panel/professional-completeness.json")
+                .read_text(encoding="utf-8")
+            )
+            expected_stale = baseline["review_contract_fingerprint"] != (
+                panel._professional_evidence_review_contract_fingerprint()
+            )
+            expected_fresh = expected_direct_fresh
+            remaining = sorted(set(expected_bindings) - set(expected_fresh))
+            expected_carried = [] if expected_stale else remaining
+            expected_unevaluated = remaining if expected_stale else []
             audit_fixture = repository / "scripts/fixture-pass-content-audit.py"
             audit_fixture.write_text(
                 "from pathlib import Path\n"
@@ -335,6 +312,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 contract,
                 selected_ids,
                 affected_context=context,
+                source_repository=ROOT,
             )
             regression = json.loads(
                 (
@@ -400,16 +378,22 @@ class AffectedProfessionalismTests(unittest.TestCase):
             expected_carried,
             execution_scope["carried_package_ids"],
         )
-        self.assertEqual([], execution_scope["unevaluated_package_ids"])
         self.assertEqual(
-            (80, 109, 0),
+            expected_unevaluated, execution_scope["unevaluated_package_ids"]
+        )
+        self.assertEqual(
+            (
+                len(expected_fresh),
+                len(expected_carried),
+                len(expected_unevaluated),
+            ),
             (
                 len(execution_scope["fresh_package_ids"]),
                 len(execution_scope["carried_package_ids"]),
                 len(execution_scope["unevaluated_package_ids"]),
             ),
         )
-        self.assertFalse(execution_scope["baseline_stale_no_carry"])
+        self.assertEqual(expected_stale, execution_scope["baseline_stale_no_carry"])
         self.assertIn(
             direct_package_id,
             execution_scope["fresh_package_ids"],
@@ -417,6 +401,77 @@ class AffectedProfessionalismTests(unittest.TestCase):
         self.assertEqual(execution_scope, regression["execution_scope"])
         self.assertEqual("affected-partial-json", regression["evidence_scope"])
         self.assertEqual(markdown_before, markdown_after)
+
+    def test_stale_baseline_proof_uses_captured_commit_and_ignores_live_tree(self) -> None:
+        relative = "evals/expert-panel/professional-completeness.json"
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            def git(*args):
+                return subprocess.check_output(["git", "-C", str(root), *args], stderr=subprocess.DEVNULL).decode().strip()
+            git("init")
+            git("config", "user.email", "fixture@example.invalid")
+            git("config", "user.name", "Fixture")
+            target = root / relative
+            target.parent.mkdir(parents=True)
+            original = b'{"findings":[{"skill_id":"original"}]}\n'
+            target.write_bytes(original)
+            git("add", ".")
+            git("commit", "-m", "selected evidence")
+            selected = git("rev-parse", "HEAD")
+            target.write_bytes(b'{"findings":[]}\n')
+            git("commit", "-am", "later head")
+            target.write_bytes(b'live uncommitted bytes')
+            context = json.loads(_context(ids=["direct"]))
+            context["head_sha"] = selected
+            with mock.patch.dict(os.environ, {
+                EVALUATOR.AFFECTED_CONTEXT_ENV: json.dumps(context),
+                EVALUATOR.AFFECTED_SOURCE_REPOSITORY_ENV: str(root),
+            }):
+                self.assertTrue(EVALUATOR._baseline_matches_selected_commit(original, relative))
+                for changed in (b'{"findings":[]}\n', b'{"findings":[{},{}]}\n', b'live uncommitted bytes'):
+                    self.assertFalse(EVALUATOR._baseline_matches_selected_commit(changed, relative))
+                self.assertFalse(EVALUATOR._baseline_matches_selected_commit(original, "src/registry/professional-skills.yaml"))
+                context["head_sha"] = "f" * 40
+                os.environ[EVALUATOR.AFFECTED_CONTEXT_ENV] = json.dumps(context)
+                self.assertFalse(EVALUATOR._baseline_matches_selected_commit(original, relative))
+            with mock.patch.dict(os.environ, {EVALUATOR.AFFECTED_SOURCE_REPOSITORY_ENV: ""}):
+                self.assertFalse(EVALUATOR._baseline_matches_selected_commit(original, relative))
+
+    def test_only_proven_currentness_drift_uses_no_carry_fallback(self) -> None:
+        panel = EVALUATOR._load_evaluator(EVALUATOR.EXPERT_PANEL_REVIEW, "affected-drift-boundary")
+        drift = panel.PanelReviewError("Professional current authority is invalid")
+        drift.__cause__ = panel.professional_carry.ProfessionalCarryForwardError(
+            "Professional current package authority coverage is stale"
+        )
+        bindings = {
+            "direct": {"dependency_material_bindings": {}},
+            "dependent": {"dependency_material_bindings": {"direct": "a" * 64}},
+            "other": {"dependency_material_bindings": {}},
+        }
+        for label, error, proven, changed in (
+            ("old-target-set", drift, True, False),
+            ("untrusted", drift, False, False),
+            ("changed-during-read", drift, True, True),
+            ("malformed-targets", panel.PanelReviewError("Professional authenticated finding identities are duplicated"), True, False),
+            ("incomplete-votes", panel.PanelReviewError("Professional authenticated compact claims are invalid"), True, False),
+        ):
+            with self.subTest(label=label), ExitStack() as stack:
+                stack.enter_context(mock.patch.object(EVALUATOR, "_load_evaluator", return_value=panel))
+                stack.enter_context(mock.patch.object(panel, "prepare_professional_completeness_packet_v3", side_effect=error))
+                stack.enter_context(mock.patch.object(EVALUATOR, "_baseline_matches_selected_commit", return_value=proven))
+                stack.enter_context(mock.patch.object(panel, "_professional_package_targets", return_value=[]))
+                stack.enter_context(mock.patch.object(panel.professional_carry, "professional_review_bindings", return_value=bindings))
+                if changed:
+                    stack.enter_context(mock.patch.object(panel.reviewer_manifest, "recheck_bound_file", return_value=b"changed"))
+                if label == "old-target-set":
+                    plan = EVALUATOR._affected_review_plan(EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG, direct_package_ids=["direct"])
+                    self.assertTrue(plan["baseline_stale_no_carry"])
+                    self.assertEqual(["dependent", "direct"], plan["fresh_target_ids"])
+                    self.assertEqual([], plan["carry_target_ids"])
+                    self.assertEqual(["other"], plan["unevaluated_target_ids"])
+                else:
+                    with self.assertRaises(EVALUATOR.ValidationProblem):
+                        EVALUATOR._affected_review_plan(EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG, direct_package_ids=["direct"])
 
     def test_core_passes_only_canonical_affected_context_to_selected_producers(self) -> None:
         context = json.loads(_context(ids=["direct"]))
@@ -556,16 +611,14 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 panel._professional_evidence_review_contract_fingerprint()
             ),
         )
-        expected_fresh = sorted(
-            {
-                direct,
-                *(
-                    skill_id
-                    for skill_id, binding in bindings.items()
-                    if direct in binding["dependency_material_bindings"]
-                ),
-            }
+        reverse_dependencies = sorted(
+            skill_id
+            for skill_id, binding in bindings.items()
+            if direct in binding["dependency_material_bindings"]
         )
+        self.assertIn(direct, bindings)
+        self.assertTrue(reverse_dependencies)
+        expected_fresh = sorted({direct, *reverse_dependencies})
         self.assertTrue(scope["baseline_stale_no_carry"])
         self.assertEqual(expected_fresh, scope["fresh_package_ids"])
         self.assertEqual([], scope["carried_package_ids"])
@@ -577,14 +630,17 @@ class AffectedProfessionalismTests(unittest.TestCase):
             expected_fresh,
             sorted(entry["name"] for _kind, entry in selected),
         )
-        self.assertIn(
-            direct,
-            bindings["data-middleware-change-builder"][
-                "dependency_material_bindings"
-            ],
-        )
+        for skill_id in reverse_dependencies:
+            self.assertIn(
+                direct,
+                bindings[skill_id]["dependency_material_bindings"],
+            )
         self.assertEqual(
-            (27, 0, 162),
+            (
+                len(expected_fresh),
+                0,
+                len(bindings) - len(expected_fresh),
+            ),
             (
                 len(scope["fresh_package_ids"]),
                 len(scope["carried_package_ids"]),
@@ -808,8 +864,8 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 entries,
                 release_review_config=EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
             )
-        self.assertEqual(189, len(selected_entries))
-        self.assertEqual(189, len(execution_scope["fresh_package_ids"]))
+        self.assertEqual(188, len(selected_entries))
+        self.assertEqual(188, len(execution_scope["fresh_package_ids"]))
         self.assertEqual([], execution_scope["carried_package_ids"])
         self.assertEqual([], execution_scope["unevaluated_package_ids"])
         self.assertFalse(execution_scope["baseline_stale_no_carry"])

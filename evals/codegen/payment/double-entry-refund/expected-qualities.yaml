@@ -1,6 +1,5 @@
 id: double-entry-refund
 category: payment
-complexity: L5
 focus:
   - double entry ledger
   - refund idempotency

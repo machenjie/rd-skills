@@ -23,19 +23,12 @@ Protect named invariants through explicit transaction boundaries, isolation assu
 
 - Start from the named invariant and target anomaly. Confirm the actual database, storage engine, ORM behavior, connection settings, default isolation, and retry semantics before selecting isolation or locking.
 - Bound atomic work to writes and reads that must succeed together. A transaction, conditional write, optimistic check, outbox, saga, or compensation is a candidate only when actual atomic boundaries and partial-failure consequences justify it.
-- Keep remote or slow I/O outside held locks when latency and contention evidence make it unsafe; define intent, commit, side-effect ordering, conflict handling, and recovery explicitly.
+- Keep remote or slow I/O outside held locks when latency and contention evidence make it unsafe.
+- Define intent, commit, side-effect ordering, conflict handling, and recovery explicitly for the accepted transaction protocol.
 
 ## Anti-Patterns
 
-- An ORM annotation does not prove the effective isolation, autocommit, connection reuse, or replica-read behavior.
-- A rollback-only test can hide committed interleavings, serialization failures, write skew, stale replicas, and event-before-commit defects.
-
-## Execution Checklist
-
-1. Map the invariant, read/write/side-effect order, concurrency actors, and exact partial-failure point.
-2. Verify effective datastore and ORM semantics.
-3. Define the relevant anomaly reproduction and expected outcome.
-4. Map fresh reproduction results to the selected mechanism, retry behavior, proof limits, and residual risk.
+- Local success substituted for evidence of the transaction consistency contract.
 
 ## Stop Conditions
 

@@ -38,13 +38,7 @@ ACTIVATION_FIELDS = frozenset(
         "negative_families",
     }
 )
-REVIEW_SELECTOR_INPUT = {
-    "registry_selector": {
-        "registry": "professional-skills.yaml",
-        "field": "role_support",
-        "contains": "review-agent",
-    }
-}
+
 COMMON_NEGATIVE_FAMILIES = (
     "lexical-near-miss",
     "explicit-anti-or-adjacent",
@@ -62,7 +56,6 @@ ACTIVATION_COMBINATIONS = {
         "negative": "artifact-authority-invalid",
     },
 }
-
 
 def _activation(
     foundation: dict[str, object],
@@ -191,17 +184,11 @@ class FoundationActivationAuthorityRedTests(unittest.TestCase):
 
         review_ids = professional_review_skill_ids(
             cls.professionals,
-            REVIEW_SELECTOR_INPUT,
         )
         cls.routable_review = sorted(
             name
             for name in review_ids
             if cls.professional_by_name[name].get("task_routable") is True
-        )[0]
-        cls.nonroutable_review = sorted(
-            name
-            for name in review_ids
-            if cls.professional_by_name[name].get("task_routable") is False
         )[0]
         cls.nonreview_professional = sorted(
             row["name"]
@@ -884,27 +871,14 @@ class FoundationActivationAuthorityRedTests(unittest.TestCase):
         self.assertEqual([], literal_exact_target_tables)
 
     def test_source_derived_nonroutable_review_is_rejected(self) -> None:
-        review_ids = professional_review_skill_ids(
-            self.professionals,
-            REVIEW_SELECTOR_INPUT,
-        )
-        self.assertIn(self.nonroutable_review, review_ids)
-        self.assertIs(
-            self.professional_by_name[self.nonroutable_review][
-                "task_routable"
-            ],
-            False,
-        )
-        self.assertIn(
-            "review-agent",
-            self.professional_by_name[self.nonroutable_review][
-                "role_support"
-            ],
-        )
+        professionals = copy.deepcopy(self.professionals)
+        target = next(row for row in professionals if row["name"] == self.routable_review)
+        target["task_routable"] = False
+        self.assertIn(target["name"], professional_review_skill_ids(professionals))
         row = self._analysis_row()
-        row["activation"]["review_skill"] = self.nonroutable_review
+        row["activation"]["review_skill"] = target["name"]
         self._assert_contract_marker(
-            self._complete_errors(row),
+            self._complete_errors(row, professionals=professionals),
             "activation.review_skill",
             "review-not-routable",
         )

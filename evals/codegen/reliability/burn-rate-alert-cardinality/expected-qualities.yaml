@@ -1,6 +1,5 @@
 id: burn-rate-alert-cardinality
 category: reliability
-complexity: L4
 focus:
   - SLO burn rate
   - metric cardinality

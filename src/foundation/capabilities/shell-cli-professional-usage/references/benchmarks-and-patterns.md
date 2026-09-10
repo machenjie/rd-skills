@@ -1,6 +1,6 @@
 # Shell CLI Benchmarks And Patterns
 
-Use this reference after `cli-daemon-interface-design` supplies the applicable CLI representation and compatibility decision. Verify shell execution, portability, and evidence against that decision; route unresolved interface design back to its owner. Keep evidence mapping in `evidence-patterns.md`.
+Use this reference with an accepted CLI representation and compatibility decision from the current caller contract or `cli-daemon-interface-design`. Verify shell execution, portability, and evidence against that decision; route unresolved interface design back to its owner. Keep evidence mapping in `evidence-patterns.md`.
 
 ## Benchmark Anchors
 
@@ -14,9 +14,9 @@ Use this reference after `cli-daemon-interface-design` supplies the applicable C
 
 | Mode | Strong pattern | Reject |
 | --- | --- | --- |
-| Destructive command | Shared argv array for dry-run/apply, scoped selector, explicit `--apply`, confirmation token, rollback note, target-guard test. | Preview string differs from applied command, implicit current kube/cloud context, or broad glob/delete without guard. |
+| Destructive command | Scoped selector and target-guard proof, accepted execution/confirmation interface, and recovery policy. Where dry-run/apply exists, share argv construction and prove preview matches execution. | Preview string differs from applied command, implicit current kube/cloud context, or broad glob/delete without guard. |
 | Automation output evidence | Accepted machine schema on stdout, diagnostics on stderr, accepted exit-code table, and parser/golden compatibility test. | Progress or warnings corrupt machine stdout, undocumented non-zero codes, or human text is parsed by automation. |
-| Path/temp/rerun | Quoted arrays, null-delimited paths, `mktemp`, trap cleanup, `flock` when shared state exists, hostile filename fixture. | Predictable temp files, unquoted loops, newline-unsafe `xargs`, or ShellCheck as the only proof. |
+| Path/temp/rerun | Quoted arrays, null-delimited paths, `mktemp`, trap cleanup, supported conflict exclusion only for shared mutations that require it, hostile filename fixture. | Predictable temp files, unquoted loops, newline-unsafe `xargs`, or ShellCheck as the only proof. |
 | Secret-sensitive command | Secrets pass by env/file/stdin, tracing disabled before secret scope, redacted log sample, no raw values in retained artifacts. | Token in argv/history/logs, `set -x` around secrets, or post-run redaction as the main control. |
 | Portability decision | POSIX constraint documented, Bash features version-gated, OS/tool assumptions checked, migration threshold named. | BusyBox/Alpine assumptions untested or Bash-only syntax in `sh` scripts. |
 

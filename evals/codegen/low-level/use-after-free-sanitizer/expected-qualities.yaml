@@ -1,6 +1,5 @@
 id: use-after-free-sanitizer
 category: low-level
-complexity: L5
 focus:
   - memory ownership
   - use after free prevention

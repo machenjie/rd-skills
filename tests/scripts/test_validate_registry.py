@@ -70,7 +70,7 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
         )
         self.assertEqual(
             Counter(entry["content_class"] for entry in self.foundation),
-            {"compact": 124, "complex": 26},
+            {"compact": 128, "complex": 22},
         )
         self.assertEqual(
             [
@@ -156,16 +156,13 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
     def test_review_skill_selector_is_dynamic_and_covers_current_registry(self) -> None:
         selector = getattr(VALIDATION, "professional_review_skill_ids", None)
         self.assertTrue(callable(selector), "dynamic Review Skill selector is missing")
-        matrix = VALIDATION.CORE_CONTRACTS["review_discipline_contract"][
-            "professional_risk_matrix"
-        ]
         expected = {
             entry["name"]
             for entry in self.professional
             if "review-agent" in entry["role_support"]
         }
-        self.assertEqual(11, len(expected))
-        self.assertEqual(expected, set(selector(self.professional, matrix)))
+        self.assertEqual(10, len(expected))
+        self.assertEqual(expected, set(selector(self.professional)))
 
         future = copy.deepcopy(self.professional)
         candidate = copy.deepcopy(future[0])
@@ -174,7 +171,7 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
         future.append(candidate)
         self.assertEqual(
             expected | {"future-review-skill"},
-            set(selector(future, matrix)),
+            set(selector(future)),
         )
 
     def test_content_class_rationale_contract_fails_closed(self) -> None:

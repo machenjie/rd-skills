@@ -4,66 +4,45 @@ rd-skills quality is the combination of control correctness, professional judgme
 
 ## Control Correctness
 
-- Direct Tasks begin after one classification.
-- Analyzed Work receives one complete source-backed initial Analysis.
-- Accepted decisions remain authoritative until new evidence invalidates a
-  protected decision; then Delta Analysis covers only its transitive impact.
-- The First Executable Slice is found before unnecessary plan breadth.
-- Task completion, Task switching, ordinary discovery, and an unreached Review
-  Boundary do not repeat Analysis.
-- Writes are parallel only with safe host isolation and non-overlap.
+Start simple, inspect current source, and implement once important decisions
+are clear. Analysis, stable briefs, dependency planning, formal contracts, and
+independent review are available when the user asks or evidence justifies them.
+There is no execution-level hierarchy or replacement score/state system.
+Shared writes remain serial unless the Host supplies isolated workspaces and
+there is no dependency or shared write surface.
 
 ## Professional Judgment
 
-- Every Task is a complete semantic change with one primary Professional Skill;
-  mechanically different files, functions, layers, tests, or edit steps do not
-  create separate Tasks.
-- Work with materially different Primary Professional Skills remains separate
-  even when Tasks share a combined Review Boundary.
-- Implementation Layer 3 Skills are triggered by Task risks or technologies.
-  Review assignments independently select zero to three Layer 3 Skills from
-  review risk; review selection is not a Task-side union.
-- Combined review preserves all required Review Skills, Specialist obligations,
-  and professional-risk dimensions.
-- Owner, invariant, placement, failure behavior, and validation are explicit.
-- New material risk stops or escalates instead of silently widening scope.
+Engineering correctness comes first, followed by accurate Professional routing,
+professional substance, token cost, and execution time. Each assignment uses
+one Primary Professional and zero to three authorized Layer 3 Skills, with
+positive and anti-trigger evidence. When independent Review is needed, Main
+selects its Professional and Layer 3 expertise separately. The reviewer consumes
+that assignment without rerouting or copying the implementation's Layer 3 selection.
+Current shared state, consumers, financial invariants,
+concurrency, transaction, migration, recovery, and security boundaries require
+enough depth to implement and verify them correctly.
+
+Prefer existing owners and structures. New abstractions or dependencies need a
+current requirement, real variation, a shared boundary, or repository
+architecture evidence. Hypothetical future reuse or safety is insufficient.
 
 ## Evidence Quality
 
-- Validation runs after the latest material edit.
-- Fresh, scope-correct validation with a trustworthy oracle is reused unless a
-  concrete freshness, coverage, oracle, flake, environment, reviewer-doubt, or
-  independent-reproduction trigger requires another run.
-- Implementation review examines the actual diff and every changed file;
-  artifact review examines the bounded artifact, decision criteria, and
-  supporting source evidence.
-- Effective Level sets review depth; minimum sufficient Review/Risk Boundaries
-  set frequency. L1-L3 related scope defaults to one combined independent final
-  review, L4 adds triggered specialist depth rather than automatic rounds, and
-  L5 retains its pre-implementation and final requirements.
-- A current Review Boundary carries its Boundary and Review Round IDs, strategy,
-  Effective Level, required Review Skills, Specialist obligations, Covered Task
-  IDs, changed scope, professional-risk dimensions, current validation binding,
-  assignment schedule, and primary-close ordering. Exactly one primary and zero
-  or more specialist review-agent assignments share the round; each assignment
-  has one registered Review Skill and bounded review-risk Layer 3 selection.
-  Specialists do not close Tasks or add rounds. The primary consumes their
-  current results and emits one artifact referenced exactly by every covered
-  Task projection.
-- Only material current-task findings require bounded Repair. Fundamental
-  failure may stop `blocked` with Reviewed and Unreviewed Scope; `pass` still
-  requires the complete required changed-scope review.
-- Any scoped material edit invalidates validation and review evidence for
-  intersecting scope and transitive Task dependencies only, retaining
-  unaffected current evidence. Repair receives fresh targeted validation and
-  scoped independent re-review; a re-review covering the final obligation
-  subsumes another Final Review.
-- Unverified scope and residual risk are stated plainly.
+Validation must follow the final material edit. Preserve the validation oracle
+and distinguish behavioral failures from environment failures. Inspect current
+owners, tests, and relevant consumers; inherited selectors and truncated
+searches do not prove absence or completeness. State proof limits explicitly.
+
+Use independent review for a concrete reason, and inspect the current diff or
+artifact when doing so. Findings retain the defect, evidence, reachable failure,
+and required action. Fix ordinary defects within the current direction. New
+evidence can justify redesign or another review; a repair alone does not.
 
 ## Evidence Privacy
 
 rd-skills has no required product-runtime or private telemetry channel.
-Ordinary agents use visible task contracts, source, diffs, commands, validation,
+Ordinary agents use visible assignments, source, diffs, commands, validation,
 review, repair, and handoff evidence. They do not write private event streams,
 internal task identities, prompt transcripts, or hidden evidence records.
 

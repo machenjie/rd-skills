@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "jsonschema>=4.18,<5",
+  "markdown-it-py==4.2.0",
+  "mdurl==0.1.2",
   "tiktoken>=0.7,<1",
 ]
 license = { text = "MIT" }
@@ -41,8 +43,3 @@ repository_kind = "skill-authoring"
 runtime_source = "dist"
 install_src_directly = false
 personal_asset_mapping = false
-
-[tool.changeforge.profiles]
-recommended = "Professional skills with compiled foundation references."
-full = "Professional skills plus eligible domain extensions."
-dev = "Authoring profile with development visibility into foundation capabilities."

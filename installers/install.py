@@ -9,19 +9,17 @@ from pathlib import Path
 
 from changeforge_install import (
     AGENTS,
-    PROFILES,
     SCOPES,
     InstallError,
     backup_existing,
     cleanup_legacy_residue,
+    classify_installed_manifest,
     find_unmanaged_conflicts,
     list_profile_files,
     list_skill_dirs,
     legacy_managed_profile_files,
     legacy_residue_paths,
     make_manifest,
-    managed_profile_files,
-    managed_skill_names,
     read_manifest,
     replace_profiles,
     replace_skills,
@@ -30,6 +28,7 @@ from changeforge_install import (
     resolve_targets,
     validate_built_source,
     validate_install_path_separation,
+    validate_managed_artifact_paths,
     validate_openai_bundles,
     write_json,
 )
@@ -40,7 +39,6 @@ def main() -> int:
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path, help="Project root, or explicit user/admin Skill directory.")
-    parser.add_argument("--profile", choices=PROFILES, default="recommended")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--backup", action="store_true")
@@ -50,21 +48,36 @@ def main() -> int:
         scope = args.scope or ("project" if args.agent == "openai-api" else None)
         if scope is None:
             raise InstallError("--scope is required for runtime installs")
-        source = resolve_source_profile_dir(args.agent, scope, args.profile)
+        source = resolve_source_profile_dir(args.agent, scope)
         if args.agent == "openai-api":
-            count = validate_openai_bundles(args.profile, source)
-            print(f"install: {count} {args.profile} zip(s) are available in {source}")
+            count = validate_openai_bundles(source)
+            print(f"install: {count} runtime zip(s) are available in {source}")
             return 0
         targets = resolve_targets(args.agent, scope, args.target)
         source_profiles = resolve_source_profiles(args.agent, scope)
         validate_install_path_separation(source, source_profiles, targets)
-        validate_built_source(args.agent, args.profile, source, source_profiles)
+        validate_built_source(args.agent, source, source_profiles)
         skill_names = {path.name for path in list_skill_dirs(source)}
         profile_files = {path.name for path in list_profile_files(source_profiles)}
         old = read_manifest(targets.skills)
-        old_skills = managed_skill_names(old)
-        old_profiles = managed_profile_files(old)
+        if old is None:
+            old_skills: set[str] = set()
+            old_profiles: set[str] = set()
+        else:
+            classified = classify_installed_manifest(
+                old,
+                agent=args.agent,
+                scope=scope,
+                targets=targets,
+            )
+            old_skills = set(classified.skill_names)
+            old_profiles = set(classified.profile_files)
         old_profiles |= legacy_managed_profile_files(args.agent, scope, args.target)
+        validate_managed_artifact_paths(
+            targets,
+            skill_names | old_skills,
+            profile_files | old_profiles,
+        )
         conflicts = find_unmanaged_conflicts(targets.skills, skill_names, old_skills)
         if targets.profiles is not None:
             conflicts.extend(find_unmanaged_conflicts(targets.profiles, profile_files, old_profiles))
@@ -87,7 +100,6 @@ def main() -> int:
         manifest = make_manifest(
             agent=args.agent,
             scope=scope,
-            profile=args.profile,
             targets=targets,
             source_dir=source,
             profile_files=installed_profiles,

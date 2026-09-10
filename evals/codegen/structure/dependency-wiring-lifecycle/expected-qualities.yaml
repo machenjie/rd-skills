@@ -1,6 +1,5 @@
 id: dependency-wiring-lifecycle
 category: structure
-complexity: L3
 focus:
   - composition root
   - dependency graph lifecycle

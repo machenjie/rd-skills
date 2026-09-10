@@ -1,42 +1,44 @@
 # PowerShell Pipeline, Error, And Native Contracts
 
-Use this checklist when object flow, errors, native processes, or text/byte boundaries can change automation outcomes.
+Load when object flow, errors, native processes, or text/byte boundaries can change automation outcomes.
 
-## Boundary Checklist
+## Boundary Decision Map
 
-- **Pipeline object:** record emitted .NET types, scalar/collection cardinality, automatic enumeration, `ByValue`/`ByPropertyName` binding, null/empty behavior, and where formatting begins.
-- **Streams:** assign success, error, warning, verbose, debug, information, and progress consumers; define redirection without confusing stderr with a PowerShell error record.
-- **PowerShell error:** classify terminating and non-terminating cases, local `-ErrorAction` versus preference scope, `try/catch/finally`, preserved `ErrorRecord`, retryability, and final exit.
-- **Native argument:** construct an argument vector for the actual edition/OS and prove spaces, quotes, empty values, wildcards, and secret redaction at the invoked program.
-- **Native result:** capture stdout/stderr or bytes intentionally, inspect `$LASTEXITCODE` immediately, define accepted codes, and translate timeout/cancellation/failure once.
-- **Encoding:** state source, destination, BOM, newline, console/process encoding, append behavior, and the exact cmdlet or native boundary selecting it.
-- **Function contract:** use advanced-function parameter validation and pipeline methods only when their binding/cardinality behavior is tested; emit data rather than display formatting.
+| Boundary | Required decision |
+| --- | --- |
+| Object | Bind emitted .NET type, cardinality/enumeration, parameter binding, null/empty behavior, and formatting boundary. |
+| Streams/errors | Assign stream consumers; classify terminating and non-terminating cases; bind `-ErrorAction`, preference scope, catch/finally, `ErrorRecord`, retryability, and final exit. |
+| Native | Bind argument vector to edition/OS; prove quoting/empty/wildcards/redaction, immediate `$LASTEXITCODE`, accepted codes, timeout, cancellation, and one failure translation. |
+| Encoding/function | Bind text/byte source, destination, BOM/newline, console/process encoding and append behavior; test advanced-function binding/cardinality before use. |
 
 ## Failure Probes
 
-- Pipe zero, one, and many typed objects, plus an object whose property name binds unexpectedly.
-- Generate terminating and non-terminating errors under the actual preference values and verify the process exit observed by automation.
-- Invoke the native tool with spaces, quotes, empty arguments, nonzero accepted/rejected codes, separate stderr, and cancellation.
-- Round-trip non-ASCII text and raw bytes through the exact PowerShell edition, cmdlet, redirection, and native pipeline used in production.
+- Exercise zero/one/many/null objects, unexpected property binding, effective error preferences, and caller-observed exit.
+- Exercise native quoting, empty arguments, accepted/rejected codes, separate stderr, timeout, and cancellation.
+- Round-trip non-ASCII text and bytes through the exact edition, cmdlet, redirection, and native boundary.
 
 ## Primary Sources
 
-- [about_Pipelines](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-7.6)
-- [about_CommonParameters](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_commonparameters?view=powershell-7.6)
-- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.6)
-- [about_Automatic_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-7.6)
-- [about_Parsing](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing?view=powershell-7.6)
-- [about_Quoting_Rules](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.6)
-- [about_Character_Encoding](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-7.6)
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipelines?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_commonparameters?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_parsing?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_quoting_rules?view=powershell-7.6
+- https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-7.6
 
-Official pages in this reference were recorded as accessed on 2026-07-24.
+Official pages were recorded as accessed on 2026-07-24.
 
 ## Version And Inference Limits
 
-- Microsoft Learn is rolling; record `$PSVersionTable`, edition, OS, host, native-tool version, effective preferences, and the selected `view` limitation.
-- Windows PowerShell 5.1 and PowerShell 7 differ in encoding, native parsing, and pipeline behavior; do not generalize evidence from one edition or OS.
-- Documentation does not prove a native program's argument parser, accepted exit codes, byte/text protocol, locale, or the caller's interpretation.
+- Record PowerShell edition/version, OS, host, native-tool version, effective preferences, and selected documentation view.
+- Do not generalize Windows PowerShell 5.1 evidence to PowerShell 7, or one edition/OS to another.
+- Documentation does not prove a native parser, accepted codes, byte/text protocol, locale, or caller interpretation.
 
 ## Required Record
 
-- Record object/cardinality and stream contracts, effective error preferences, native arguments and exit mapping, encoding/edition evidence, exercised failures, proof limits, and residual risk.
+Record object/cardinality and stream contracts, error preferences, native arguments/exit mapping, encoding/edition evidence, exercised failures, limits, and residual risk.
+
+## Anti-Patterns
+
+- Success flags, text conversion, command strings, syntax portability, and blind reruns do not prove contracts.

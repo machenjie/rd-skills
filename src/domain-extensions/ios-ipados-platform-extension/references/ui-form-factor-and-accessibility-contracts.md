@@ -10,8 +10,6 @@ accessed on 2026-07-24.
 
 - Name the UIKit, SwiftUI, or bridged owner for navigation, presentation, state,
   lifecycle integration, and dismissal; do not create two owners.
-- Prove compact and regular layouts, rotation, multitasking, keyboard/pointer
-  input, multiple scenes, and changed iPhone/iPad navigation where supported.
 - Keep Swift isolation, actor, value, ARC, and `Sendable` decisions in
   `swift-professional-usage`; framework choice does not transfer language rules.
 
@@ -19,14 +17,7 @@ accessed on 2026-07-24.
 
 - Preserve semantic identity, reading and focus order, actionable labels,
   announcements, and activation for changed UIKit/SwiftUI controls.
-- Exercise VoiceOver navigation and actions plus Dynamic Type at supported
-  content sizes without clipped, hidden, or unreachable required content.
 - Reuse `accessibility-inclusive-design` for platform-independent requirements.
-
-## Required Record
-
-Return framework/state owner, iPhone/iPad behavior matrix, bridge boundary,
-VoiceOver and Dynamic Type evidence, device/OS scope, limits, and residual risk.
 
 ## Primary Sources
 

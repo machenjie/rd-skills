@@ -13,6 +13,7 @@ import zipfile
 import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -22,10 +23,52 @@ MANIFEST_NAME = ".changeforge-install-manifest.json"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
 COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
 HOST_ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
+HOST_PRODUCT_SURFACES_SOURCE = (
+    ROOT / "src" / "agent-profiles" / "host-product-surfaces.json"
+)
 CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
-PROFILES = ("recommended", "full", "dev")
-EXPECTED_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
+RUNTIME_PROFILE = "recommended"
+RUNTIME_SKILL_COUNT = 26
+CURRENT_RUNTIME_PROFILE_COUNTS = {"recommended": 26}
+HISTORICAL_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
+CURRENT_INVENTORY_GENERATION = "runtime-26"
+HISTORICAL_INVENTORY_GENERATION = "runtime-27"
+HISTORICAL_UNCHANGED_LAYER_SHA256 = {
+    "control": "46f66196a4887257b390bbd6302c1160dab50b6c078b4afacac520b8ee3c04e4",
+    "foundation": "bed21019ab7e9e802252638fde77d90b850904620031460f0d6499b01defee66",
+    "domain": "3a8d304206971885fe7a6f5cbfdf17ee6c0d3eec8e836de6ab8e7c2b252d231b",
+}
+HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS = frozenset(
+    {
+        "acceptance-criteria-builder",
+        "ai-code-review-refactor",
+        "architecture-impact-reviewer",
+        "backend-change-builder",
+        "change-documentation-gate",
+        "change-intake-compiler",
+        "data-api-contract-changer",
+        "data-middleware-change-builder",
+        "delivery-release-gate",
+        "domain-impact-modeler",
+        "engineering-artifact-review",
+        "engineering-change-analysis",
+        "experience-impact-modeler",
+        "frontend-change-builder",
+        "high-risk-design-review",
+        "incident-response-coordinator",
+        "installed-client-change-builder",
+        "integration-change-builder",
+        "logging-design-gate",
+        "platform-infrastructure-change-builder",
+        "quality-test-gate",
+        "reliability-observability-gate",
+        "repository-tooling-change-builder",
+        "routing-quality-review",
+        "security-privacy-gate",
+        "task-dag-planner",
+    }
+)
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -41,18 +84,39 @@ ENFORCEMENT_STATUSES = {
     "prompt-enforced",
     "unsupported",
 }
+PRODUCT_ARTIFACT_DELIVERY = {
+    "skills-and-agent-profiles",
+    "skills-only",
+    "zip-packages",
+}
+PRODUCT_LIVE_SKILL_INVOCATION = {
+    "supported",
+    "not-established",
+    "not-applicable",
+}
+PRODUCT_FULL_WORKFLOW = {
+    "available",
+    "not-established",
+    "integration-owned",
+}
+PRODUCT_LIMITATION_CODES = {
+    "artifact-health-only",
+    "copilot-cli-only",
+    "artifact-delivery-only",
+    "api-integration-only",
+}
 HOST_ENFORCEMENT_CAPABILITIES = {
     "profile_delivery",
     "skill_loading",
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 }
 ROLE_ENFORCEMENT_CAPABILITIES = {
     "tool_allowlist",
     "workspace_write_protection",
     "read_only_command_semantics",
+    "external_source_read",
 }
 LEGACY_PROFILE_NAMES = (
     "analysis-worker",
@@ -192,6 +256,23 @@ class InstallTargets:
     profiles: Path | None
 
 
+@dataclass(frozen=True)
+class InstalledManifestClassification:
+    """Validated ownership facts from a current or supported historical manifest."""
+
+    profile: str
+    inventory_generation: str
+    skill_names: frozenset[str]
+    profile_files: frozenset[str]
+
+    @property
+    def migration_required(self) -> bool:
+        return (
+            self.inventory_generation != CURRENT_INVENTORY_GENERATION
+            or self.profile != RUNTIME_PROFILE
+        )
+
+
 def _path_lexists(path: Path) -> bool:
     """Return true for regular paths and for live or dangling symlinks."""
     return path.exists() or path.is_symlink()
@@ -311,7 +392,7 @@ def source_version() -> str:
 
 
 def utc_stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
 def utc_iso() -> str:
@@ -330,43 +411,60 @@ def validate_agent_scope(agent: str, scope: str) -> None:
         raise InstallError(f"{agent} supports scope(s): {supported}")
 
 
-def resolve_source_profile_dir(agent: str, scope: str, profile: str) -> Path:
+def resolve_source_profile_dir(agent: str, scope: str) -> Path:
     validate_agent_scope(agent, scope)
-    if profile not in PROFILES:
-        raise InstallError(f"unsupported profile: {profile}")
     if agent == "openai-api":
-        source = ROOT / "dist" / "openai-api" / "zips" / profile
+        source = ROOT / "dist" / "openai-api" / "zips" / RUNTIME_PROFILE
     else:
-        source = SOURCE_SKILL_ROOTS[(agent, scope)] / profile
+        source = SOURCE_SKILL_ROOTS[(agent, scope)] / RUNTIME_PROFILE
     if not source.is_dir():
         raise InstallError(
-            f"missing built profile {source.relative_to(ROOT)}; "
-            f"run python3 scripts/build.py --profile {profile}"
+            f"missing built runtime {source.relative_to(ROOT)}; "
+            "run python3 scripts/build.py"
         )
     return source
 
 
-def validate_openai_bundles(profile: str, source: Path) -> int:
+def validate_openai_bundles(source: Path) -> int:
     _reject_symlink_chain(source, ROOT / "dist", "OpenAI API bundle root")
     _ensure_path_within(source, ROOT / "dist", "OpenAI API bundle root")
-    expected_count = EXPECTED_PROFILE_COUNTS[profile]
     zips = sorted(source.glob("*.zip"))
-    if len(zips) != expected_count:
-        raise InstallError(f"expected {expected_count} OpenAI API zip files, found {len(zips)}")
-    manifest_root = ROOT / "dist" / "universal" / "skills" / profile
+    if len(zips) != RUNTIME_SKILL_COUNT:
+        raise InstallError(
+            f"expected {RUNTIME_SKILL_COUNT} OpenAI API zip files, found {len(zips)}"
+        )
+    manifest_root = (
+        ROOT / "dist" / "universal" / "skills" / RUNTIME_PROFILE
+    )
     manifest = read_build_manifest(manifest_root)
     validate_authoritative_build_inputs(manifest)
     validate_build_core_model(manifest)
-    declared = set(manifest.get("top_level_skills") or [])
+    if manifest.get("profile") != RUNTIME_PROFILE:
+        raise InstallError("OpenAI API build manifest is not the runtime build")
+    declared_values = manifest.get("top_level_skills")
+    if (
+        not isinstance(declared_values, list)
+        or len(declared_values) != RUNTIME_SKILL_COUNT
+        or any(
+            not isinstance(name, str) or not _valid_skill_name(name)
+            for name in declared_values
+        )
+        or len(set(declared_values)) != RUNTIME_SKILL_COUNT
+    ):
+        raise InstallError("OpenAI API build manifest has invalid runtime Skills")
+    declared = set(declared_values)
     if declared != {path.stem for path in zips}:
         raise InstallError("OpenAI API zip names do not match the built Skill manifest")
     for path in zips:
         _reject_symlink(path, "OpenAI API bundle")
-        _validate_openai_bundle(path)
+        _validate_openai_bundle(path, manifest)
     return len(zips)
 
 
-def _validate_openai_bundle(path: Path) -> None:
+def _validate_openai_bundle(
+    path: Path,
+    build: dict[str, Any] | None = None,
+) -> None:
     try:
         with zipfile.ZipFile(path) as archive:
             entries = [item for item in archive.infolist() if item.filename]
@@ -405,6 +503,15 @@ def _validate_openai_bundle(path: Path) -> None:
                 raise InstallError(
                     f"OpenAI API zip {path} failed CRC validation at {bad_member}"
                 )
+            professional_skills = set(build.get("professional_skills") or []) if build else set()
+            if path.stem in professional_skills:
+                prefix = f"{path.stem}/"
+                files = {
+                    name.removeprefix(prefix): archive.read(name)
+                    for name in names
+                    if name.startswith(prefix)
+                }
+                _validate_runtime_asset_files(path.stem, files, build)
     except InstallError:
         raise
     except (EOFError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error) as exc:
@@ -423,8 +530,14 @@ def resolve_targets(agent: str, scope: str, target: Path | None) -> InstallTarge
         profile_subpath = PROJECT_PROFILE_SUBPATHS.get(agent)
         profiles = project / profile_subpath if profile_subpath is not None else None
         _ensure_path_within(skills, project, "project Skill target")
+        _reject_symlink_chain(skills, project, "project Skill target")
         if profiles is not None:
             _ensure_path_within(profiles, project, "project Agent Profile target")
+            _reject_symlink_chain(
+                profiles,
+                project,
+                "project Agent Profile target",
+            )
         return InstallTargets(
             skills=skills,
             profiles=profiles,
@@ -481,7 +594,6 @@ def profile_file_sha256(root: Path | None, agent: str) -> dict[str, str]:
 
 def validate_built_source(
     agent: str,
-    profile: str,
     source: Path,
     source_profiles: Path | None,
 ) -> dict[str, Any]:
@@ -507,9 +619,10 @@ def validate_built_source(
         or enforcement_source.get("sha256") != expected_digest
     ):
         raise InstallError("build manifest host enforcement source digest is stale or invalid")
-    if build.get("profile") != profile:
-        raise InstallError(f"built profile is {build.get('profile')!r}, expected {profile!r}")
-    expected_count = EXPECTED_PROFILE_COUNTS[profile]
+    if build.get("profile") != RUNTIME_PROFILE:
+        raise InstallError(
+            f"built runtime is {build.get('profile')!r}, expected {RUNTIME_PROFILE!r}"
+        )
     declared = build.get("top_level_skills")
     if not isinstance(declared, list) or any(not isinstance(name, str) or not _valid_skill_name(name) for name in declared):
         raise InstallError("build manifest has invalid top_level_skills")
@@ -519,10 +632,16 @@ def validate_built_source(
         path.name for path in source.iterdir()
         if path.is_dir() and not path.name.startswith(".")
     }
-    if len(declared) != len(declared_names) or len(declared_names) != expected_count:
-        raise InstallError(f"build manifest must declare exactly {expected_count} unique Skills")
+    if (
+        len(declared) != len(declared_names)
+        or len(declared_names) != RUNTIME_SKILL_COUNT
+    ):
+        raise InstallError(
+            f"build manifest must declare exactly {RUNTIME_SKILL_COUNT} unique Skills"
+        )
     if actual_names != declared_names or visible_directories != declared_names:
         raise InstallError("built Skill directories do not match the build manifest")
+    validate_runtime_asset_bundles(source, build)
     if source_profiles is not None:
         _reject_symlink_chain(
             source_profiles,
@@ -558,7 +677,30 @@ def validate_built_source(
 def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
     """Use the build authority's sole comparator and fail closed if unavailable."""
 
+    module = _load_validation_authority()
+    try:
+        errors = module.authoritative_build_input_snapshot_errors(
+            build.get("authoritative_build_inputs"),
+            ROOT,
+        )
+    except Exception as exc:
+        raise InstallError(
+            f"authoritative build input freshness validation failed: {exc}"
+        ) from exc
+    if errors:
+        raise InstallError("; ".join(str(error) for error in errors))
+
+
+def _load_validation_authority() -> Any:
+    """Load the single source/build validation authority for non-Runtime checks."""
+
     validation_path = ROOT / "scripts" / "validation_utils.py"
+    return _load_validation_authority_from(str(validation_path))
+
+
+@lru_cache(maxsize=8)
+def _load_validation_authority_from(validation_path_value: str) -> Any:
+    validation_path = Path(validation_path_value)
     if not validation_path.is_file():
         raise InstallError(
             "authoritative build input comparator is unavailable; source freshness is unverified"
@@ -571,29 +713,113 @@ def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
     sys.modules[module_name] = module
     try:
         spec.loader.exec_module(module)
-        errors = module.authoritative_build_input_snapshot_errors(
-            build.get("authoritative_build_inputs"),
-            ROOT,
-        )
     except Exception as exc:
         raise InstallError(
-            f"authoritative build input freshness validation failed: {exc}"
+            f"cannot load authoritative validation helpers: {exc}"
         ) from exc
     finally:
         sys.modules.pop(module_name, None)
+    return module
+
+
+def _runtime_asset_files(skill_root: Path) -> dict[str, bytes]:
+    try:
+        return {
+            path.relative_to(skill_root).as_posix(): path.read_bytes()
+            for path in sorted(skill_root.rglob("*"))
+            if path.is_file()
+        }
+    except OSError as exc:
+        raise InstallError(f"cannot read Runtime bundle {skill_root}: {exc}") from exc
+
+
+def _validate_runtime_asset_files(
+    professional: str,
+    professional_root: Path,
+    files: dict[str, bytes],
+    metadata: dict[str, Any],
+) -> None:
+    """Validate one Professional-local closure through the sole byte verifier."""
+
+    validation = _load_validation_authority()
+    reference_errors = validation.runtime_reference_record_tree_errors(
+        professional_root,
+        expected_professional_skill=professional,
+    )
+    if reference_errors:
+        raise InstallError(
+            f"{professional}: invalid Professional-local Runtime Reference targets: "
+            + "; ".join(reference_errors)
+        )
+    integrity_path = validation.RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+    integrity_bytes = files.get(integrity_path)
+    delivery_assets = {
+        path: raw
+        for path, raw in files.items()
+        if path != integrity_path
+    }
+    authoritative = metadata.get("authoritative_build_inputs")
+    full_digest = (
+        authoritative.get("sha256") if isinstance(authoritative, dict) else None
+    )
+    bindings = metadata.get("runtime_asset_bindings")
+    binding = bindings.get(professional) if isinstance(bindings, dict) else None
+    errors = validation.runtime_asset_bundle_metadata_errors(
+        integrity_bytes,
+        delivery_assets,
+        binding,
+        expected_source_version=str(metadata.get("source_version", "")),
+        expected_authoritative_build_inputs_sha256=full_digest,
+        expected_professional_skill=professional,
+    )
     if errors:
-        raise InstallError("; ".join(str(error) for error in errors))
+        raise InstallError(
+            f"{professional}: invalid Professional-local Runtime bundle: "
+            + "; ".join(errors)
+        )
+
+
+def validate_runtime_asset_bundles(
+    skill_root: Path,
+    metadata: dict[str, Any],
+) -> int:
+    """Validate every selected-root Professional closure without cross-root lookup."""
+
+    professionals = metadata.get("professional_skills")
+    bindings = metadata.get("runtime_asset_bindings")
+    if (
+        not isinstance(professionals, list)
+        or len(professionals) != 25
+        or any(not isinstance(name, str) or not _valid_skill_name(name) for name in professionals)
+        or len(set(professionals)) != len(professionals)
+        or not isinstance(bindings, dict)
+        or set(bindings) != set(professionals)
+    ):
+        raise InstallError("build/install metadata lacks the exact Professional Runtime binding set")
+    for professional in sorted(professionals):
+        professional_root = skill_root / professional
+        if professional_root.is_symlink() or not professional_root.is_dir():
+            raise InstallError(
+                f"missing Professional Runtime root in selected installation: {professional}"
+            )
+        _validate_runtime_asset_files(
+            professional,
+            professional_root,
+            _runtime_asset_files(professional_root),
+            metadata,
+        )
+    return len(professionals)
 
 
 def validated_built_profile_sha256(
-    agent: str, scope: str, profile: str
+    agent: str, scope: str
 ) -> dict[str, str]:
     """Return Profile digests anchored in the current validated build output."""
 
-    source = resolve_source_profile_dir(agent, scope, profile)
+    source = resolve_source_profile_dir(agent, scope)
     source_profiles = resolve_source_profiles(agent, scope)
-    build = validate_built_source(agent, profile, source, source_profiles)
-    module = _load_current_profile_renderer()
+    build = validate_built_source(agent, source, source_profiles)
+    module = _load_current_build_authority()
     try:
         source_digests = module._agent_profile_digests(
             module._load_agent_profiles(), module._load_host_enforcement()
@@ -612,12 +838,12 @@ def validated_built_profile_sha256(
     return {str(role): str(digest) for role, digest in rendered.items()}
 
 
-def _load_current_profile_renderer() -> Any:
-    """Load the canonical build renderer without duplicating its capability rules."""
+def _load_current_build_authority() -> Any:
+    """Load the canonical build owner without duplicating source contracts."""
 
     build_script = ROOT / "scripts" / "build.py"
     spec = importlib.util.spec_from_file_location(
-        "changeforge_doctor_source_renderer", build_script
+        "changeforge_installer_build_authority", build_script
     )
     if spec is None or spec.loader is None:
         raise InstallError("cannot load the current Agent Profile renderer")
@@ -630,32 +856,21 @@ def _load_current_profile_renderer() -> Any:
     try:
         spec.loader.exec_module(module)
     except Exception as exc:
-        raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
+        raise InstallError(
+            f"cannot render current authoritative Agent Profiles: {exc}"
+        ) from exc
     finally:
         if inserted_scripts_path:
             sys.path.remove(scripts_path)
     return module
 
 
-def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
-    """Return the exact Main projection from the canonical build renderer."""
-
-    module = _load_current_profile_renderer()
-    try:
-        capabilities = module._normalized_decision_capabilities(enforcement)
-        return str(module._render_decision_capability_facts(capabilities))
-    except Exception as exc:
-        raise InstallError(
-            f"cannot render current authoritative capability facts: {exc}"
-        ) from exc
-
-
-def validated_built_core_model(agent: str, scope: str, profile: str) -> dict[str, Any]:
+def validated_built_core_model(agent: str, scope: str) -> dict[str, Any]:
     """Return core-model metadata anchored in the current validated build."""
 
-    source = resolve_source_profile_dir(agent, scope, profile)
+    source = resolve_source_profile_dir(agent, scope)
     source_profiles = resolve_source_profiles(agent, scope)
-    build = validate_built_source(agent, profile, source, source_profiles)
+    build = validate_built_source(agent, source, source_profiles)
     return dict(validate_build_core_model(build))
 
 
@@ -733,58 +948,34 @@ def validate_build_core_model(build: dict[str, Any]) -> dict[str, Any]:
 
 def read_host_enforcement_source() -> dict[str, Any]:
     value = load_json(HOST_ENFORCEMENT_SOURCE)
-    if value is None or value.get("schema_version") != 4:
-        raise InstallError("host enforcement source must use schema_version 4")
+    if value is None or value.get("schema_version") != 5:
+        raise InstallError("host enforcement source must use schema_version 5")
     statuses = value.get("status_values")
     if not isinstance(statuses, list) or set(statuses) != ENFORCEMENT_STATUSES:
         raise InstallError("host enforcement source has an invalid status enum")
     hosts = value.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(AGENTS):
         raise InstallError("host enforcement source must contain every supported agent")
-    expected_mode_values = {
-        "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
-        "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
-    }
-    if value.get("mode_values") != expected_mode_values:
-        raise InstallError("host enforcement source has invalid adapter mode values")
-    expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {
-        "diff_input_mode",
-        "validation_mode",
-        "native_diff_safeguards",
-        "roles",
-    }
-    host_mode_values = {
-        field: set(values) for field, values in expected_mode_values.items()
-    }
+    expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {"roles"}
     for agent in AGENTS:
         entry = hosts[agent]
         if not isinstance(entry, dict) or set(entry) != expected_host_fields:
-            raise InstallError(f"{agent}: host enforcement fields must match schema v4")
+            raise InstallError(f"{agent}: host enforcement fields must match schema v5")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise InstallError(f"{agent}: invalid {capability} enforcement")
-        diff_input_mode = entry.get("diff_input_mode")
-        validation_mode = entry.get("validation_mode")
-        utility_no_edit = entry.get("utility_no_edit")
-        if diff_input_mode not in host_mode_values["diff_input_mode"]:
-            raise InstallError(f"{agent}: invalid diff_input_mode")
-        if validation_mode not in host_mode_values["validation_mode"]:
-            raise InstallError(f"{agent}: invalid validation_mode")
-        if utility_no_edit not in ENFORCEMENT_STATUSES:
-            raise InstallError(f"{agent}: invalid utility_no_edit enforcement")
-        expected_safeguards = (
-            ["--no-pager", "--no-ext-diff", "--no-textconv"]
-            if diff_input_mode == "native"
-            else []
-        )
-        if entry.get("native_diff_safeguards") != expected_safeguards:
-            raise InstallError(f"{agent}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(AGENT_PROFILE_NAMES):
             raise InstallError(f"{agent}: enforcement roles must be the four static Profiles")
         for role, role_entry in roles.items():
-            if not isinstance(role_entry, dict):
-                raise InstallError(f"{agent}:{role}: enforcement entry must be an object")
+            expected_role_fields = ROLE_ENFORCEMENT_CAPABILITIES | {
+                "rendered_tools",
+                "limitations",
+            }
+            if not isinstance(role_entry, dict) or set(role_entry) != expected_role_fields:
+                raise InstallError(
+                    f"{agent}:{role}: enforcement entry must match schema v5"
+                )
             for capability in ROLE_ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
                     raise InstallError(f"{agent}:{role}: invalid {capability} enforcement")
@@ -799,6 +990,141 @@ def host_enforcement_for_agent(agent: str) -> dict[str, Any]:
     if agent not in AGENTS:
         raise InstallError(f"unsupported agent {agent!r}")
     return dict(read_host_enforcement_source()["hosts"][agent])
+
+
+def read_host_product_surfaces(source: Path | None = None) -> dict[str, Any]:
+    """Load the closed product-surface projection over installer agent identities."""
+
+    value = load_json(source or HOST_PRODUCT_SURFACES_SOURCE)
+    if value is None:
+        raise InstallError("missing host product-surface authority")
+    if set(value) != {"schema_version", "kind", "surfaces"}:
+        raise InstallError("host product-surface authority has unexpected fields")
+    if value.get("schema_version") != 1:
+        raise InstallError("host product-surface authority must use schema_version 1")
+    if value.get("kind") != "rd-skills-host-product-surfaces":
+        raise InstallError("host product-surface authority has an invalid kind")
+    surfaces = value.get("surfaces")
+    if not isinstance(surfaces, dict) or set(surfaces) != set(AGENTS):
+        raise InstallError("host product-surface authority must contain every installer agent")
+
+    expected_fields = {
+        "label",
+        "artifact_delivery",
+        "live_skill_invocation",
+        "invocation",
+        "full_workflow",
+        "host_enforcement_id",
+        "limitation_code",
+    }
+    skill_hosts = {agent for agent, _scope in SOURCE_SKILL_ROOTS}
+    profile_hosts = {agent for agent, _scope in SOURCE_PROFILE_ROOTS}
+    enforcement_hosts = read_host_enforcement_source()["hosts"]
+    enforcement_ids: set[str] = set()
+    for agent in AGENTS:
+        surface = surfaces[agent]
+        if not isinstance(surface, dict) or set(surface) != expected_fields:
+            raise InstallError(f"{agent}: product-surface fields must match schema 1")
+        label = surface.get("label")
+        enforcement_id = surface.get("host_enforcement_id")
+        limitation_code = surface.get("limitation_code")
+        if not isinstance(label, str) or not label.strip():
+            raise InstallError(f"{agent}: product-surface label must be non-empty")
+        if enforcement_id != agent or enforcement_id not in enforcement_hosts:
+            raise InstallError(f"{agent}: host enforcement reference must match its agent")
+        if enforcement_id in enforcement_ids:
+            raise InstallError(f"{agent}: duplicate host enforcement reference")
+        enforcement_ids.add(enforcement_id)
+        if limitation_code not in PRODUCT_LIMITATION_CODES:
+            raise InstallError(f"{agent}: invalid product limitation code")
+
+        delivery = surface.get("artifact_delivery")
+        live = surface.get("live_skill_invocation")
+        invocation = surface.get("invocation")
+        workflow = surface.get("full_workflow")
+        if delivery not in PRODUCT_ARTIFACT_DELIVERY:
+            raise InstallError(f"{agent}: invalid artifact delivery class")
+        if live not in PRODUCT_LIVE_SKILL_INVOCATION:
+            raise InstallError(f"{agent}: invalid live Skill invocation status")
+        if workflow not in PRODUCT_FULL_WORKFLOW:
+            raise InstallError(f"{agent}: invalid full workflow status")
+        if live == "supported":
+            if not isinstance(invocation, str) or not invocation.strip():
+                raise InstallError(f"{agent}: supported live invocation requires syntax")
+        elif invocation is not None:
+            raise InstallError(f"{agent}: invocation syntax requires supported live loading")
+        if (
+            live == "supported"
+            and enforcement_hosts[enforcement_id]["skill_loading"] == "unsupported"
+        ):
+            raise InstallError(f"{agent}: live invocation exceeds host skill-loading ceiling")
+
+        has_skills = agent in skill_hosts
+        has_profiles = agent in profile_hosts
+        expected_delivery = (
+            "zip-packages"
+            if agent == "openai-api"
+            else "skills-and-agent-profiles"
+            if has_profiles
+            else "skills-only"
+        )
+        if delivery != expected_delivery or (agent != "openai-api" and not has_skills):
+            raise InstallError(f"{agent}: artifact delivery conflicts with installer sources")
+        if agent == "openai-api" and (has_skills or has_profiles):
+            raise InstallError("openai-api: package delivery must not have install sources")
+        if workflow == "available" and (live != "supported" or not has_profiles):
+            raise InstallError(
+                f"{agent}: full workflow requires Agent Profile delivery and live invocation"
+            )
+        if agent == "openai-api" and workflow != "integration-owned":
+            raise InstallError("openai-api: workflow must remain integration-owned")
+        if agent != "openai-api" and workflow == "integration-owned":
+            raise InstallError(f"{agent}: integration-owned workflow is API-only")
+        expected_limit = (
+            "api-integration-only"
+            if workflow == "integration-owned"
+            else "artifact-delivery-only"
+            if workflow == "not-established"
+            else "copilot-cli-only"
+            if agent == "copilot"
+            else "artifact-health-only"
+        )
+        if limitation_code != expected_limit:
+            raise InstallError(f"{agent}: product limitation conflicts with surface status")
+    if enforcement_ids != set(enforcement_hosts):
+        raise InstallError("host product surfaces must map every enforcement host exactly once")
+    return value
+
+
+def host_product_surface_for_agent(agent: str) -> dict[str, Any]:
+    if agent not in AGENTS:
+        raise InstallError(f"unsupported agent {agent!r}")
+    return dict(read_host_product_surfaces()["surfaces"][agent])
+
+
+def product_next_step_lines(agent: str) -> tuple[str, ...]:
+    """Project a truthful successful follow-up from the structured authority."""
+
+    surface = host_product_surface_for_agent(agent)
+    workflow = surface["full_workflow"]
+    if workflow == "available":
+        return (
+            f"Open or restart {surface['label']}.",
+            f"Start with {surface['invocation']} and describe the task in natural language.",
+            f"The full rd-skills workflow is available on {surface['label']}.",
+        )
+    if workflow == "not-established":
+        return (
+            f"Installed {surface['label']} Skill artifacts are healthy.",
+            f"For {surface['label']}, live Skill invocation and the full rd-skills "
+            "workflow are not established.",
+        )
+    if workflow == "integration-owned":
+        return (
+            "The rd-skills packages were generated and verified.",
+            "Use them through your OpenAI API integration.",
+        )
+    raise InstallError(f"{agent}: unsupported full workflow status")
 
 
 def _manifest_names(
@@ -817,6 +1143,8 @@ def _manifest_names(
     for value in values:
         if not isinstance(value, str) or not validator(value):
             raise InstallError(f"install manifest field {field} contains unsafe name {value!r}")
+        if value in names:
+            raise InstallError(f"install manifest field {field} contains duplicate name {value!r}")
         names.add(value)
     return names
 
@@ -847,6 +1175,282 @@ def managed_profile_files(manifest: dict[str, Any] | None) -> set[str]:
     return _manifest_names(manifest, "installed_agent_profile_files", _valid_profile_file_name)
 
 
+def _profile_skill_inventories(layers: dict[str, set[str]]) -> dict[str, set[str]]:
+    return {
+        "recommended": layers["control"] | layers["professional"],
+        "full": layers["control"] | layers["professional"] | layers["domain"],
+        "dev": set().union(*layers.values()),
+    }
+
+
+def _inventory_sha256(names: set[str]) -> str:
+    payload = "".join(f"{name}\n" for name in sorted(names)).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _authoritative_current_skill_inventories() -> dict[str, Any]:
+    """Return the current exact ownership sets from the build-owned registries."""
+
+    module = _load_current_build_authority()
+    try:
+        registries = module._load_registries()
+    except Exception as exc:
+        raise InstallError(f"cannot load authoritative Skill registries: {exc}") from exc
+    expected_counts = {
+        "control": 1,
+        "professional": 25,
+        "foundation": 150,
+        "domain": 13,
+    }
+    layers: dict[str, set[str]] = {}
+    all_names: set[str] = set()
+    for layer, expected_count in expected_counts.items():
+        entries = registries.get(layer)
+        if not isinstance(entries, list):
+            raise InstallError(f"authoritative {layer} registry is unavailable")
+        names: list[str] = []
+        for entry in entries:
+            name = entry.get("name") if isinstance(entry, dict) else None
+            if not isinstance(name, str) or not _valid_skill_name(name):
+                raise InstallError(f"authoritative {layer} registry has an unsafe Skill name")
+            names.append(name)
+        layer_names = set(names)
+        if len(names) != expected_count or len(layer_names) != expected_count:
+            raise InstallError(
+                f"authoritative {layer} registry must contain exactly "
+                f"{expected_count} unique Skills"
+            )
+        overlap = all_names & layer_names
+        if overlap:
+            raise InstallError(
+                "authoritative Skill registries contain duplicate ownership: "
+                + ", ".join(sorted(overlap))
+            )
+        all_names |= layer_names
+        layers[layer] = layer_names
+    profiles = {
+        RUNTIME_PROFILE: layers["control"] | layers["professional"],
+    }
+    if {
+        profile: len(names) for profile, names in profiles.items()
+    } != CURRENT_RUNTIME_PROFILE_COUNTS:
+        raise InstallError("authoritative current Skill inventories have invalid counts")
+    return {"layers": layers, "profiles": profiles}
+
+
+def _historical_runtime_27_skill_inventories(
+    current_layers: dict[str, set[str]],
+) -> dict[str, Any]:
+    """Return the closed 27-Skill predecessor generation without Git history.
+
+    Control, Foundation, and Domain were unchanged in the 27-to-26 transition.
+    Their exact sorted-name fingerprints bind that fact and fail closed if a
+    future Registry generation drifts. The historical Professional set is
+    explicit because it owns the retired top-level Skill.
+    """
+
+    for layer, expected_digest in HISTORICAL_UNCHANGED_LAYER_SHA256.items():
+        observed = current_layers.get(layer)
+        if not isinstance(observed, set) or _inventory_sha256(observed) != expected_digest:
+            raise InstallError(
+                "historical Runtime inventory bridge is stale for "
+                f"the {layer} Registry"
+            )
+    layers = {
+        "control": set(current_layers["control"]),
+        "professional": set(HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS),
+        "foundation": set(current_layers["foundation"]),
+        "domain": set(current_layers["domain"]),
+    }
+    profiles = _profile_skill_inventories(layers)
+    if {
+        profile: len(names) for profile, names in profiles.items()
+    } != HISTORICAL_PROFILE_COUNTS:
+        raise InstallError("historical Runtime inventory bridge has invalid counts")
+    return {"layers": layers, "profiles": profiles}
+
+
+def _expected_manifest_inventory_fields(
+    layers: dict[str, set[str]],
+    profiles: dict[str, set[str]],
+    profile: str,
+) -> dict[str, set[str]]:
+    return {
+        "installed_skills": profiles[profile],
+        "installed_control_skills": layers["control"],
+        "installed_professional_skills": layers["professional"],
+        "installed_foundation_skills": (
+            layers["foundation"] if profile == "dev" else set()
+        ),
+        "installed_domain_skills": (
+            layers["domain"] if profile in {"full", "dev"} else set()
+        ),
+    }
+
+
+def _manifest_role_names(manifest: dict[str, Any]) -> set[str]:
+    return _manifest_names(
+        manifest,
+        "installed_agent_profiles",
+        lambda value: value in AGENT_PROFILE_NAMES,
+    )
+
+
+def expected_agent_profile_files(agent: str) -> set[str]:
+    extension = {
+        "codex": ".toml",
+        "claude": ".md",
+        "copilot": ".agent.md",
+    }.get(agent)
+    if extension is None:
+        return set()
+    return {f"{role}{extension}" for role in AGENT_PROFILE_NAMES}
+
+
+def classify_installed_manifest(
+    manifest: dict[str, Any],
+    *,
+    agent: str,
+    scope: str,
+    targets: InstallTargets,
+) -> InstalledManifestClassification:
+    """Validate exact current/legacy ownership before any managed deletion."""
+
+    if manifest.get("architecture") != "hookless-control-plane-v1":
+        raise InstallError("installed manifest is not hookless-control-plane-v1")
+    if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        raise InstallError(
+            f"installed manifest compiled_layer3_format must equal {COMPILED_LAYER3_FORMAT!r}"
+        )
+    profile = manifest.get("profile")
+    if not isinstance(profile, str) or profile not in HISTORICAL_PROFILE_COUNTS:
+        raise InstallError(f"installed manifest has unsupported profile identity {profile!r}")
+    if manifest.get("agent") != agent:
+        raise InstallError("installed manifest agent does not match the requested agent")
+    if manifest.get("scope") != scope:
+        raise InstallError("installed manifest scope does not match the requested scope")
+    if manifest.get("target_path") != str(targets.skills):
+        raise InstallError("installed manifest target_path does not match the resolved target")
+    expected_profile_target = (
+        str(targets.profiles) if targets.profiles is not None else None
+    )
+    if manifest.get("agent_profile_target") != expected_profile_target:
+        raise InstallError(
+            "installed manifest agent_profile_target does not match the resolved target"
+        )
+
+    authority = _authoritative_current_skill_inventories()
+    current_layers = authority["layers"]
+    current_profiles = authority["profiles"]
+    if not isinstance(current_layers, dict) or not isinstance(current_profiles, dict):
+        raise InstallError("authoritative current Skill inventories are malformed")
+    inventory_fields = (
+        "installed_skills",
+        "installed_control_skills",
+        "installed_professional_skills",
+        "installed_foundation_skills",
+        "installed_domain_skills",
+    )
+    observed_fields = {
+        field: _manifest_names(manifest, field, _valid_skill_name)
+        for field in inventory_fields
+    }
+    current_fields = (
+        _expected_manifest_inventory_fields(
+            current_layers,
+            current_profiles,
+            profile,
+        )
+        if profile == RUNTIME_PROFILE
+        else None
+    )
+    if current_fields is not None and observed_fields == current_fields:
+        generation = CURRENT_INVENTORY_GENERATION
+        expected_skills = current_profiles[profile]
+    else:
+        historical = _historical_runtime_27_skill_inventories(current_layers)
+        historical_layers = historical["layers"]
+        historical_profiles = historical["profiles"]
+        if not isinstance(historical_layers, dict) or not isinstance(
+            historical_profiles, dict
+        ):
+            raise InstallError("historical Runtime inventory bridge is malformed")
+        historical_fields = _expected_manifest_inventory_fields(
+            historical_layers,
+            historical_profiles,
+            profile,
+        )
+        if observed_fields != historical_fields:
+            raise InstallError(
+                "installed manifest inventory fields do not match one exact "
+                f"supported {profile} generation"
+            )
+        generation = HISTORICAL_INVENTORY_GENERATION
+        expected_skills = historical_profiles[profile]
+
+    expected_profile_files = expected_agent_profile_files(agent)
+    observed_profile_files = managed_profile_files(manifest)
+    if observed_profile_files != expected_profile_files:
+        raise InstallError(
+            "installed manifest Agent Profile files are not the exact managed host set"
+        )
+    expected_roles = set(AGENT_PROFILE_NAMES) if expected_profile_files else set()
+    if _manifest_role_names(manifest) != expected_roles:
+        raise InstallError(
+            "installed manifest Agent Profiles are not the exact four-role host set"
+        )
+    return InstalledManifestClassification(
+        profile=profile,
+        inventory_generation=generation,
+        skill_names=frozenset(expected_skills),
+        profile_files=frozenset(expected_profile_files),
+    )
+
+
+def validate_managed_artifact_paths(
+    targets: InstallTargets,
+    skill_names: set[str],
+    profile_files: set[str],
+) -> None:
+    """Reject link traversal and path-shape failures before backup or deletion."""
+
+    _reject_symlink(targets.skills, "managed Skill root")
+    if targets.skills.exists() and not targets.skills.is_dir():
+        raise InstallError(f"managed Skill root is not a directory: {targets.skills}")
+    if targets.profiles is not None:
+        _reject_symlink(targets.profiles, "managed Agent Profile root")
+        if targets.profiles.exists() and not targets.profiles.is_dir():
+            raise InstallError(
+                f"managed Agent Profile root is not a directory: {targets.profiles}"
+            )
+    for name in sorted(skill_names):
+        path = _safe_child(targets.skills, name)
+        _reject_symlink(path, "managed Skill")
+        if not path.exists():
+            continue
+        if not path.is_dir():
+            raise InstallError(f"managed Skill path is not a directory: {path}")
+        try:
+            nested_link = next(
+                (candidate for candidate in path.rglob("*") if candidate.is_symlink()),
+                None,
+            )
+        except OSError as exc:
+            raise InstallError(f"cannot inspect managed Skill path {path}: {exc}") from exc
+        if nested_link is not None:
+            raise InstallError(
+                f"managed Skill directory cannot contain symlinks: {nested_link}"
+            )
+    if targets.profiles is not None:
+        for name in sorted(profile_files):
+            path = _safe_child(targets.profiles, name, profile=True)
+            _reject_symlink(path, "managed Agent Profile")
+            if path.exists() and not path.is_file():
+                raise InstallError(
+                    f"managed Agent Profile path is not a file: {path}"
+                )
+
+
 def _safe_child(root: Path, name: str, *, profile: bool = False) -> Path:
     valid = _valid_profile_file_name(name) if profile else _valid_skill_name(name)
     if not valid:
@@ -872,6 +1476,7 @@ def backup_existing(
     dry_run: bool,
     extra_paths: list[Path] | None = None,
 ) -> Path | None:
+    validate_managed_artifact_paths(targets, skill_names, profile_names)
     existing_skills = [
         path for name in sorted(skill_names)
         if _path_lexists(path := _safe_child(targets.skills, name))
@@ -904,30 +1509,46 @@ def backup_existing(
         raise InstallError(f"backup destination already exists: {backup}")
     if dry_run:
         return backup
-    (backup / "skills").mkdir(parents=True, exist_ok=False)
-    for path in existing_skills:
-        destination = backup / "skills" / path.name
-        if path.is_dir():
-            shutil.copytree(path, destination)
-        else:
-            shutil.copy2(path, destination)
-    if existing_profiles:
-        (backup / "profiles").mkdir(parents=True)
-        for path in existing_profiles:
-            shutil.copy2(path, backup / "profiles" / path.name)
-    if extras:
-        (backup / "legacy").mkdir(parents=True)
-        seen: set[Path] = set()
-        for index, path in enumerate(extras, start=1):
-            resolved = path.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            destination = backup / "legacy" / f"{index:03d}-{path.name}"
+    try:
+        (backup / "skills").mkdir(parents=True, exist_ok=False)
+        for path in existing_skills:
+            destination = backup / "skills" / path.name
             if path.is_dir():
                 shutil.copytree(path, destination)
             else:
                 shutil.copy2(path, destination)
+        if existing_profiles:
+            (backup / "profiles").mkdir(parents=True)
+            for path in existing_profiles:
+                shutil.copy2(path, backup / "profiles" / path.name)
+        if extras:
+            (backup / "legacy").mkdir(parents=True)
+            seen: set[Path] = set()
+            for index, path in enumerate(extras, start=1):
+                resolved = path.resolve()
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                destination = backup / "legacy" / f"{index:03d}-{path.name}"
+                if path.is_dir():
+                    shutil.copytree(path, destination)
+                else:
+                    shutil.copy2(path, destination)
+    except (OSError, shutil.Error) as exc:
+        cleanup_error: OSError | None = None
+        try:
+            if backup.is_dir() and not backup.is_symlink():
+                shutil.rmtree(backup)
+            if (
+                backup_root.is_dir()
+                and not backup_root.is_symlink()
+                and not any(backup_root.iterdir())
+            ):
+                backup_root.rmdir()
+        except OSError as cleanup_exc:
+            cleanup_error = cleanup_exc
+        detail = f"; partial backup cleanup also failed: {cleanup_error}" if cleanup_error else ""
+        raise InstallError(f"cannot create complete backup {backup}: {exc}{detail}") from exc
     return backup
 
 
@@ -984,7 +1605,6 @@ def make_manifest(
     *,
     agent: str,
     scope: str,
-    profile: str,
     targets: InstallTargets,
     source_dir: Path,
     profile_files: list[str],
@@ -1002,9 +1622,12 @@ def make_manifest(
         "compiled_layer3_format": str(build["compiled_layer3_format"]),
         "install_time": utc_iso(),
         "source_version": str(build.get("source_version", source_version())),
+        "authoritative_build_inputs": dict(build["authoritative_build_inputs"]),
+        "professional_skills": list(build["professional_skills"]),
+        "runtime_asset_bindings": dict(build["runtime_asset_bindings"]),
         "agent": agent,
         "scope": scope,
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "target_path": str(targets.skills),
         "agent_profile_target": str(targets.profiles) if targets.profiles is not None else None,
         "installed_skills": sorted(installed),

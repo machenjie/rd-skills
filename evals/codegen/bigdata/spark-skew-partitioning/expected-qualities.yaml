@@ -1,6 +1,5 @@
 id: spark-skew-partitioning
 category: bigdata
-complexity: L3
 focus:
   - Spark skew handling
   - shuffle partitioning

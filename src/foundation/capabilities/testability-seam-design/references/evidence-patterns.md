@@ -23,8 +23,9 @@ Use this reference when closure depends on current repository inspection, prior 
 - For each final confidence claim about a seam changed or inspected by the current task, cite a command, test path, report, fixture source, or owner review. An unsupported claim remains unverified with named residual seam risk.
 
 - If fixture, snapshot, golden, generated input, or test-data regeneration is involved, cite the accepted `test-data-management` decision and record only seam-specific reset/observation evidence here.
-- If external provider, shared database, telemetry, production sample, or connector export, treat it as not seam evidence by itself; require owner, bounded dataset, redaction, and integration/contract/security handoff.
+- Material from an external provider, shared database, telemetry, production sample, or connector export does not prove a seam by itself.
+- For that material, require owner, bounded dataset, redaction, and integration/contract/security handoff.
 
 ## Blocking Conditions
 
-Block closure when private-helper export lacks a public-boundary attempt, provider doubles lack fidelity limits, nondeterminism remains uncontrolled, or the accepted test-data decision is absent. Also block late characterization, stale prior evidence, and state-mutating validation without permission, isolation, and rollback disclosure.
+Block closure when private-helper export lacks a public-boundary attempt, provider doubles lack fidelity limits, nondeterminism remains uncontrolled, or a test-data lifecycle decision required by the seam is absent. Existing unchanged ownership or a single inline value may be sufficient when no lifecycle decision remains. Also block late characterization, stale prior evidence, and state-mutating validation without permission, isolation, and rollback disclosure.

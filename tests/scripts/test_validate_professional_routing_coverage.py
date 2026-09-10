@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -11,26 +12,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/validate-professional-routing-coverage.py"
 ROUTE_SCRIPT = ROOT / "scripts/eval-routing.py"
+SCRIPTS = str(ROOT / "scripts")
+if SCRIPTS not in sys.path:
+    sys.path.insert(0, SCRIPTS)
+
+import validation_utils as VALIDATION  # noqa: E402
 
 
-def _l4_main_execution_yaml(task_id: str) -> str:
-    return (
-        "    main_execution:\n"
-        "      producer: main-control-agent\n"
-        f"      task_id: {task_id}\n"
-        "      execution_level: L4\n"
-        "      level_basis:\n"
-        "        trigger_evaluations:\n"
-        "          - id: public-api-event-schema-compatibility\n"
-        "            status: matched\n"
-        "            evidence_kind: analysis_handoff\n"
-        f"            source_anchor: task:{task_id}:routing-api\n"
-        "            plausible_critical: false\n"
-        "        l2_eligibility: []\n"
-        "        obligations: [high-risk pre-implementation evidence]\n"
-        "        unresolved: []\n"
-        "        edit_status: allowed\n"
-    )
+def _main_assignment_yaml(task_id: str) -> str:
+    return "    main_execution: " + json.dumps({"producer": "main-control-agent", "task_id": task_id}) + "\n"
 
 
 def _load_module():
@@ -92,7 +82,7 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                 "path": "direct",
                 "primary_skill": "primary-skill",
                 "layer3_skills": [],
-                "review_skill": "review-skill",
+                "review_skill": None,
             },
             "passed": True,
             "errors": [],
@@ -108,6 +98,55 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
         )
         self.assertEqual([], result.errors)
         self.assertEqual(["excluded-skill"], result.excluded_skills)
+
+    def test_optional_review_preserves_role_authorization(self) -> None:
+        raw = self._raw([])
+        raw['actual'].update(profile='review-agent', primary_skill='review-skill', review_skill='review-skill')
+        self.assertEqual([], self.module._case(raw, self.professional, {}).errors)
+        raw['actual']['review_skill'] = None
+        self.assertIn('review-agent requires a Review Skill', self.module._case(raw, self.professional, {}).errors)
+        raw['actual']['review_skill'] = 'primary-skill'
+        self.assertIn("Review Skill 'primary-skill' does not support review-agent",
+                      self.module._case(raw, self.professional, {}).errors)
+
+    def test_layer3_cardinality_diagnostics_are_hard_and_never_allow_rationale(
+        self,
+    ) -> None:
+        layer3 = {
+            f"layer-{index}": {"role_support": ["task-agent"]}
+            for index in range(4)
+        }
+        professional = copy.deepcopy(self.professional)
+        professional["primary-skill"]["layer3_candidates"] = list(layer3)
+        overflow = self._raw([])
+        overflow["actual"]["layer3_skills"] = list(layer3)
+
+        overflow_result = self.module._case(overflow, professional, layer3)
+
+        self.assertIn(
+            (
+                "selected Layer 3 list exceeds the hard maximum of three; "
+                "selection must fail closed and must never be truncated"
+            ),
+            overflow_result.errors,
+        )
+        self.assertFalse(
+            any("rationale" in error.casefold() for error in overflow_result.errors),
+            overflow_result.errors,
+        )
+
+        duplicate = self._raw([])
+        duplicate["actual"]["layer3_skills"] = ["layer-0", "layer-0"]
+
+        duplicate_result = self.module._case(duplicate, professional, layer3)
+
+        self.assertIn(
+            (
+                "selected Layer 3 list contains duplicates; selection must be "
+                "unique and fail closed"
+            ),
+            duplicate_result.errors,
+        )
 
     def test_domain_positive_and_negative_fixture_counts_are_required(self) -> None:
         domains = set(self.module._canonical_domain_specs())
@@ -540,12 +579,14 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                 "cases:\n"
                 "  - id: selected-exclusion\n"
                 "    prompt: Implement a local backend service behavior fix with a targeted test.\n"
-                f"{_l4_main_execution_yaml('selected-exclusion')}"
+                f"{_main_assignment_yaml('selected-exclusion')}"
                 "    excluded_skills: [backend-change-builder]\n"
-                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}\n",
+                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: null}\n",
                 encoding="utf-8",
             )
-            report = self.route_module.evaluate_routes(path)
+            report = self.route_module.evaluate_routes(
+                path, _validate_capability_matrix=False, _validate_boundary_relations=False
+            )
         self.assertEqual("fail", report["status"])
         self.assertFalse(report["results"][0]["negative_passed"])
         self.assertTrue(
@@ -562,33 +603,35 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                 "cases:\n"
                 "  - id: first-fragile-owner-failure\n"
                 "    prompt: Review the actual diff after its first failure in a fragile owner file; still perform the ordinary same-pattern scan.\n"
-                f"{_l4_main_execution_yaml('first-fragile-owner-failure')}"
+                f"{_main_assignment_yaml('first-fragile-owner-failure')}"
                 "    excluded_skills: [repeat-failure-analysis]\n"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [code-review], review_skill: ai-code-review-refactor}\n"
                 "  - id: same-repair-path-failed-twice\n"
                 "    prompt: Review the actual diff after the same repair path failed twice and require a new hypothesis.\n"
-                f"{_l4_main_execution_yaml('same-repair-path-failed-twice')}"
+                f"{_main_assignment_yaml('same-repair-path-failed-twice')}"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [repeat-failure-analysis], review_skill: ai-code-review-refactor}\n"
                 "  - id: same-cause-failed-twice\n"
                 "    prompt: Review the actual diff after the same cause failed twice and require a different proof path.\n"
-                f"{_l4_main_execution_yaml('same-cause-failed-twice')}"
+                f"{_main_assignment_yaml('same-cause-failed-twice')}"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [repeat-failure-analysis], review_skill: ai-code-review-refactor}\n"
                 "  - id: same-patch-and-validator-failed-twice\n"
                 "    prompt: Review the actual diff after the same patch shape and same validator failed twice and require a new hypothesis.\n"
-                f"{_l4_main_execution_yaml('same-patch-and-validator-failed-twice')}"
+                f"{_main_assignment_yaml('same-patch-and-validator-failed-twice')}"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [repeat-failure-analysis], review_skill: ai-code-review-refactor}\n"
                 "  - id: contradicted-repair-repeats\n"
                 "    prompt: Review the actual diff because the repair repeats an approach contradicted by current evidence.\n"
-                f"{_l4_main_execution_yaml('contradicted-repair-repeats')}"
+                f"{_main_assignment_yaml('contradicted-repair-repeats')}"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [repeat-failure-analysis], review_skill: ai-code-review-refactor}\n"
                 "  - id: first-verified-failure-different-action\n"
                 "    prompt: Review the actual diff after the first failure has a verified cause and a materially different next action.\n"
-                f"{_l4_main_execution_yaml('first-verified-failure-different-action')}"
+                f"{_main_assignment_yaml('first-verified-failure-different-action')}"
                 "    excluded_skills: [repeat-failure-analysis]\n"
                 "    expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [code-review], review_skill: ai-code-review-refactor}\n",
                 encoding="utf-8",
             )
-            report = self.route_module.evaluate_routes(path)
+            report = self.route_module.evaluate_routes(
+                path, _validate_capability_matrix=False, _validate_boundary_relations=False
+            )
         self.assertEqual("pass", report["status"])
         self.assertEqual([], report["errors"])
         self.assertTrue(all(row["passed"] for row in report["results"]))
@@ -609,7 +652,7 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                 "ai-product-extension",
                 "permission-boundary-modeling",
             ],
-            "review_skill": "security-privacy-gate",
+            "review_skill": None,
         }
         errors: list[str] = []
         self.route_module._domain_metadata(
@@ -655,12 +698,14 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                 "cases:\n"
                 "  - id: unknown-exclusion\n"
                 "    prompt: Implement a local backend service behavior fix with a targeted test.\n"
-                f"{_l4_main_execution_yaml('unknown-exclusion')}"
+                f"{_main_assignment_yaml('unknown-exclusion')}"
                 "    excluded_skills: [not-a-skill]\n"
-                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}\n",
+                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: null}\n",
                 encoding="utf-8",
             )
-            report = self.route_module.evaluate_routes(path)
+            report = self.route_module.evaluate_routes(
+                path, _validate_capability_matrix=False, _validate_boundary_relations=False
+            )
         row = report["results"][0]
         self.assertTrue(row["positive_passed"])
         self.assertTrue(row["negative_passed"])
@@ -673,11 +718,13 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
             case = (
                 "  - id: duplicate-route\n"
                 "    prompt: Implement a local backend service behavior fix with a targeted test.\n"
-                f"{_l4_main_execution_yaml('duplicate-route')}"
-                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}\n"
+                f"{_main_assignment_yaml('duplicate-route')}"
+                "    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: null}\n"
             )
             path.write_text("cases:\n" + case + case, encoding="utf-8")
-            report = self.route_module.evaluate_routes(path)
+            report = self.route_module.evaluate_routes(
+                path, _validate_capability_matrix=False, _validate_boundary_relations=False
+            )
         self.assertEqual("fail", report["status"])
         self.assertTrue(all(not row["passed"] for row in report["results"]))
         self.assertTrue(

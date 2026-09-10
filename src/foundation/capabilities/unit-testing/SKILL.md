@@ -21,7 +21,7 @@ Prove local observable behavior through deterministic seams, faithful doubles, s
 
 ## High-Value Rules
 
-- **Separate ordinary behavior proof from regression proof.** Recreate changed inputs, states, branches, or dependency responses and assert observable allowed and denied outcomes without inventing a prior failure.
+- **Separate ordinary behavior proof from regression proof.** Recreate changed inputs, states, branches, or dependency responses and assert applicable caller-visible success, error, state, event, or forbidden-effect outcomes without inventing a prior failure.
 - **Consume known-failure evidence conditionally.** When an accepted defect, incident, or review finding exists, use `regression-testing` for causal trigger, counterfactual, fixture, and same-pattern decisions.
 - **Assert stable observable behavior.** Prefer public outcomes and important invariants over private call order or helper structure, and cover denied or absent effects where silent mutation would matter.
 - **Control relevant nondeterminism.** Place owned seams around clock, randomness, identifiers, scheduling, environment, and mutable global state only where they affect the rule under test.
@@ -42,7 +42,7 @@ Escalate when behavior or invariants are unclear, the causal failure cannot be r
 
 ## Output Contract
 
-- unit behavior proof with changed local behavior or invariant, observable and denied outcomes, deterministic seams, double-fidelity limits, proportionate assertion challenge, cleanup evidence, and explicit proof boundary
+- unit behavior proof with changed local behavior or invariant, observable outcomes and required denied or forbidden effects, deterministic seams, double-fidelity limits, proportionate assertion challenge, cleanup evidence, and explicit proof boundary
 
 ## Targeted References
 

@@ -41,7 +41,7 @@ Escalate when a style decision materially changes deployment, data ownership, re
 
 ## Output Contract
 
-- architecture style decision with forces tradeoffs constraints selected style operating owner transition migration coexistence freeze recovery deletion retirement evidence proof limits and residual owner
+- Architecture style decision with forces, tradeoffs, constraints, and selected style; operating owner; transition, migration, coexistence, freeze, recovery, deletion, and retirement evidence; proof limits and residual owner.
 
 ## Targeted References
 

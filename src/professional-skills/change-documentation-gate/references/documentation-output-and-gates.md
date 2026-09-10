@@ -8,7 +8,7 @@ Use this reference when `change-documentation-gate` needs deeper output structur
 | --- | --- | --- |
 | README or developer guide | Setup, local workflow, feature usage, dependency, or command behavior changes. | Before/after behavior, command or example freshness, owner, and reviewed path. |
 | API or schema docs | Endpoint, event, SDK, CLI, error, config, or generated contract changes. | Spec path, changed fields, compatibility stance, migration note, and consumer owner. |
-| Migration guide | Upgrade, schema migration, deprecation, rollout, rollback, or compatibility branch changes. | Who is affected, pre-upgrade action, post-upgrade action, rollback, and deadline. |
+| Migration guide | Upgrade, schema migration, deprecation, rollout, rollback, or compatibility branch changes. | Who is affected, pre/post-upgrade actions, rollback or validated alternative recovery with rollback limits, and deadline. |
 | Runbook or troubleshooting | Alert, SLO, dashboard, operational dependency, support flow, or failure mode changes. | Trigger, impact, triage steps, expected output, escalation, and validation command. |
 | ADR | Architecture decision is hard to reverse or changes team-level constraints. | Status, context, decision, rejected alternatives, consequences, owner, and supersession rule. |
 | Changelog or release notes | External or operator-visible behavior changes before release. | Audience-specific category, user impact, migration link if needed, and release owner. |
@@ -51,7 +51,7 @@ documentation_matrix:
 ## Anti-Patterns To Reject
 
 - Public docs expose internal service names, IPs, tokens, provider error bodies, or tenant-sensitive detail.
-- Migration docs omit rollback, compatibility window, owner, or validation command.
+- Migration docs omit executable recovery, rollback limits, compatibility window, owner, or validation command; recovery may use a validated restore, forward repair, or containment path.
 - Runbook says "check logs" without query, dashboard, expected signal, or escalation.
 - Changelog says "miscellaneous fixes" for behavior that affects users or API consumers.
 - ADR records only the chosen decision and omits rejected alternatives or consequences.

@@ -42,3 +42,9 @@ Do not infer that every client receives the same background or termination event
 ## Required Record
 
 Return the affected lifecycle states, last reliable persistence point, snapshot contents and exclusions, identity and version binding, duplicate-initialization behavior, stale-work handling, effect reconciliation, exercised interruption paths, and explicit non-inferences.
+
+## Anti-Patterns
+
+- Treat an in-memory resume, process recreation, and cold launch as the same path.
+- Restore captured credentials, permissions, server responses, or completed commands as current truth.
+- Use one global startup flag while multiple scenes, windows, activations, or tests can initialize independently.

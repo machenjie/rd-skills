@@ -126,6 +126,7 @@ EXPECTED_RECIPROCITY = {
     "bigdata-product-extension": {
         "data-middleware-change-builder",
         "engineering-change-analysis",
+        "quality-test-gate",
     },
     "cloud-platform-extension": {
         "backend-change-builder",
@@ -154,6 +155,7 @@ EXPECTED_RECIPROCITY = {
         "installed-client-change-builder",
     },
     "low-level-systems-extension": {
+        "ai-code-review-refactor",
         "backend-change-builder",
         "engineering-change-analysis",
     },
@@ -168,6 +170,7 @@ EXPECTED_RECIPROCITY = {
         "security-privacy-gate",
     },
     "web3-product-extension": {
+        "ai-code-review-refactor",
         "engineering-change-analysis",
         "integration-change-builder",
     },
@@ -294,7 +297,7 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
             for row in domains
         }
         self.assertEqual(EXPECTED_RECIPROCITY, actual)
-        self.assertEqual(44, sum(len(owners) for owners in actual.values()))
+        self.assertEqual(47, sum(len(owners) for owners in actual.values()))
         domain_names = set(actual)
         professional_edges = {
             (row["name"], candidate)
@@ -853,7 +856,7 @@ class DomainModifierClassifierTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         for case_id, expected_domains in (
             DOCUMENTATION_ORDER_CLIENT_DOMAIN_EXPECTATIONS.items()
@@ -979,7 +982,7 @@ class DomainModifierClassifierTests(unittest.TestCase):
                     expected_domain,
                     "repository-context-map",
                 ],
-                "review_skill": "architecture-impact-reviewer",
+                "review_skill": None,
             }
             if actual_route != expected_route:
                 mismatches.append(
@@ -1069,7 +1072,7 @@ class DomainModifierClassifierTests(unittest.TestCase):
                 "profile": "task-agent",
                 "primary_skill": "installed-client-change-builder",
                 "layer3_skills": [expected_domain],
-                "review_skill": "ai-code-review-refactor",
+                "review_skill": None,
             }
             if actual_route != expected_route:
                 mismatches.append(
@@ -1702,7 +1705,7 @@ class DomainModifierRouteTests(unittest.TestCase):
                 route["layer3_skills"],
             )
             self.assertEqual(
-                "ai-code-review-refactor",
+                None,
                 route["review_skill"],
             )
         self.assertEqual(
@@ -1735,7 +1738,7 @@ class DomainModifierRouteTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "installed-client-change-builder",
                     "layer3_skills": ["android-platform-extension"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
             "android:inline": {
@@ -1760,7 +1763,7 @@ class DomainModifierRouteTests(unittest.TestCase):
                     "profile": "task-agent",
                     "primary_skill": "installed-client-change-builder",
                     "layer3_skills": ["android-platform-extension"],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
             "windows-service:tail": {
@@ -1781,7 +1784,7 @@ class DomainModifierRouteTests(unittest.TestCase):
                         "windows-platform-extension",
                         "csharp-dotnet-professional-usage",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
             "windows-service:inline": {
@@ -1807,7 +1810,7 @@ class DomainModifierRouteTests(unittest.TestCase):
                         "windows-platform-extension",
                         "csharp-dotnet-professional-usage",
                     ],
-                    "review_skill": "ai-code-review-refactor",
+                    "review_skill": None,
                 },
             },
             "ordinary-backend:no-windows": {
@@ -1974,7 +1977,7 @@ class DomainModifierRouteTests(unittest.TestCase):
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
             "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": None,
         }
         mixed_errors: list[str] = []
         for order, left, right in (

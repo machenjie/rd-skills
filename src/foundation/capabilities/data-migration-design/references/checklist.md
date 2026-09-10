@@ -1,7 +1,8 @@
 # Data Migration Design Checklist
 
 - Define migration goal, affected data, and estimated volume.
-- Split expand, migrate, contract, and cleanup phases.
+- Select expand, migrate, contract, or cleanup phases from actual version skew, consumer control, and recovery needs.
+- Define each selected phase's exit.
 - Define code and schema deployment order.
 - Make migration repeatable or guarded with checkpoints.
 - Define batching, rate limits, locks, and runtime limits.

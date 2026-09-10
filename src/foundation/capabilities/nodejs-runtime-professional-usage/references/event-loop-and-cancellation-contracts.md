@@ -22,7 +22,7 @@ Select one scheduling and cancellation contract that preserves fairness, termina
 | Timer | Deadline meaning, drift tolerance, cancellation owner, late result, and whether `ref()`/`unref()` transfers process-liveness responsibility to a named owner | `unref()` is treated as cancellation or cleanup while work can still complete |
 | Cancellation | Signal source, propagation path, irreversible boundary, cleanup, and terminal error | Abort is accepted but owned work continues silently |
 | Async context | Store owner, `run()` scope, custom-boundary bridge, missing-store outcome, and cleanup | Context leaks between requests or disappears without detection |
-| Offload | CPU evidence, Worker pool bound, queue limit, transfer/clone ownership, and termination | A Worker is added for ordinary asynchronous I/O |
+| Offload | CPU or synchronous-blocking evidence, caller benefit, Worker pool bound, queue limit, transfer/clone ownership, and termination limits | A Worker is added for ordinary asynchronous I/O |
 
 ## Verification
 

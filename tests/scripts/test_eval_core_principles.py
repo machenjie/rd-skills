@@ -87,6 +87,32 @@ def assert_core_producer_outcomes_passed(
 
 
 class CorePrinciplesOutcomeTests(unittest.TestCase):
+    def test_single_runtime_build_and_expanded_layer3_proof_are_core_bound(self) -> None:
+        acceptance = json.loads(
+            (ROOT / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_text(encoding="utf-8")
+        )["principle_acceptance_contract"]
+        producers = {row["id"]: row for row in acceptance["producers"]}
+        outcomes = {row["id"]: row for row in acceptance["outcomes"]}
+
+        build_producers = sorted(
+            producer_id for producer_id in producers if producer_id.startswith("build-")
+        )
+        self.assertEqual(["build-recommended"], build_producers)
+        self.assertEqual(
+            ["python3", "scripts/build.py"],
+            producers["build-recommended"]["argv"],
+        )
+        self.assertEqual(
+            ["build-recommended"],
+            producers["validate-built-links"]["depends_on"],
+        )
+        self.assertIn(
+            "expanded-layer3-temporary-projection-validation",
+            outcomes["built-links-valid"]["capabilities"],
+        )
+        self.assertNotIn("build-full-valid", outcomes)
+        self.assertNotIn("build-dev-valid", outcomes)
+
     def _root(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
         temporary = tempfile.TemporaryDirectory()
         root = Path(temporary.name)
@@ -1010,7 +1036,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                                 "evidence_contract_satisfied": False,
                                 "qualification_summary": None,
                                 "evidence_summary": None,
-                                "required_target_count": 189,
+                                "required_target_count": 188,
                                 "applied_target_count": 0,
                                 "accepted_current_count": None,
                                 "correction_count": None,
@@ -1165,6 +1191,9 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         authority_values = {
             "final-goal-authority": contract["final_goal_contract"]
         }
+        thresholds = authority_values["final-goal-authority"][
+            "professional_review_cost_fixtures"
+        ]["thresholds"]
         self.assertEqual(
             {"thresholds", "formal_round_policy"},
             set(
@@ -1187,7 +1216,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             }
         }
 
-        def outcome_status(candidate: dict) -> str:
+        def outcome_result(candidate: dict) -> dict:
             synthetic_report_path.write_text(
                 json.dumps(candidate),
                 encoding="utf-8",
@@ -1198,16 +1227,19 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 producer_results,
                 authority_values,
             )
-            return results[0]["status"]
+            return results[0]
 
-        self.assertEqual("pass", outcome_status(positive_report))
+        self.assertEqual("pass", outcome_result(positive_report)["status"])
 
         digest_only = copy.deepcopy(positive_report)
         digest_only["professional_review_cost_fixtures"][
             "routing_neutral_isolated_material_binding_sensitivity"
         ]["cases_fingerprint"] = "f" * 64
-        self.assertEqual("pass", outcome_status(digest_only))
+        self.assertEqual("pass", outcome_result(digest_only)["status"])
 
+        case_count = positive_report["professional_review_cost_fixtures"][
+            "routing_neutral_isolated_material_binding_sensitivity"
+        ]["case_count"]
         mutations = {
             "status": lambda report: report[
                 "professional_review_cost_fixtures"
@@ -1215,12 +1247,12 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             "case-count": lambda report: report[
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"].update(
-                {"case_count": 188}
+                {"case_count": case_count + 1}
             ),
             "float-count": lambda report: report[
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"].update(
-                {"case_count": 189.0}
+                {"case_count": float(case_count)}
             ),
             "panel-size": lambda report: report["content_readiness"]["expert"][
                 "professional_completeness"
@@ -1232,18 +1264,33 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"][
                 "fresh_target_count"
-            ].update({"max": 57}),
+            ].update(
+                {
+                    "max": (
+                        thresholds["maximum_fresh_target_count"] + 1
+                    )
+                }
+            ),
             "ratio-threshold": lambda report: report[
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"][
                 "input_ratio_ppm"
-            ].update({"max": 450001}),
+            ].update(
+                {"max": thresholds["maximum_input_ratio_ppm"] + 1}
+            ),
         }
         for label, mutate in mutations.items():
             candidate = copy.deepcopy(positive_report)
             mutate(candidate)
             with self.subTest(label=label):
-                self.assertEqual("fail", outcome_status(candidate))
+                result = outcome_result(candidate)
+                self.assertEqual("fail", result["status"])
+                if label in {"case-count", "float-count"}:
+                    self.assertTrue(any(
+                        predicate["pointer"].endswith("/case_count")
+                        and predicate["status"] == "fail"
+                        for predicate in result["predicates"]
+                    ), result)
 
     def test_report_must_be_fresh_json_without_scalar_hashes(self) -> None:
         temporary, root = self._root()

@@ -16,18 +16,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Preserve logical reading, keyboard, focus, names, roles, values, states, and
   notifications for custom controls and native/framework bridges.
 
-## Failure Proof
-
-- Exercise startup and movement across claimed scale factors/monitors, text
-  scaling, keyboard-only use, high contrast, Narrator/UI Automation, touch, and pen.
-- Prove no clipped content, lost focus, inaccessible custom control, stale
-  coordinates, or mouse-only recovery.
-
-## Required Record
-
-Return Foundation owner, Windows/framework delta, DPI/input/accessibility matrix,
-normal and failure evidence, unavailable hardware/tools, and proof limits.
-
 ## Primary Sources
 
 - [High DPI](https://learn.microsoft.com/en-us/windows/win32/api/_hidpi/)

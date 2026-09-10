@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
+import json
 import shutil
 import sys
 import tempfile
@@ -32,6 +34,8 @@ def load_build_module():
 
 BUILD = load_build_module()
 
+import validation_utils as VALIDATION  # noqa: E402
+
 from validation_utils import (  # noqa: E402
     AUTHORITATIVE_BUILD_INPUT_FILES,
     CONTEXT_BUDGET_MODEL,
@@ -42,6 +46,265 @@ from validation_utils import (  # noqa: E402
 
 
 class BuildSafetyTests(unittest.TestCase):
+    @staticmethod
+    def _current_handoff(kind: str) -> dict[str, object]:
+        artifact: object = (
+            "diff --git a/owner.py b/owner.py\n"
+            "--- a/owner.py\n"
+            "+++ b/owner.py\n"
+            "@@ -1 +1 @@\n-old\n+new\n"
+        )
+        if kind == "reviewer-accessible-native-reference":
+            artifact = {
+                "reference": "native-change://codex/current-worktree",
+                "generation": 7,
+                "reviewer": "review-agent",
+                "changed_paths": ["owner.py"],
+                "readable": True,
+            }
+        return {
+            "latest_changed_paths": ["owner.py"],
+            "exact_change_evidence": {
+                "kind": kind,
+                "artifact": artifact,
+                "generation": 7,
+            },
+            "reviewer_artifact_accessibility": {
+                "reviewer": "review-agent",
+                "generation": 7,
+                "changed_paths": ["owner.py"],
+                "readable": True,
+            },
+            "validation_after_latest_material_edit": {
+                "evidence_id": "focused-projection-test",
+                "result": "passed",
+                "generation": 7,
+            },
+            "fixed_review_scope": ["owner.py"],
+        }
+
+
+    def test_runtime_strips_source_only_semantic_identity_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "sample" / "SKILL.md"
+            reference = root / "sample" / "references" / "rule.md"
+            reference.parent.mkdir(parents=True)
+            skill.write_text(
+                "# Sample\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=sample/rule occurrence=root -->\n"
+                "- Every operation retains an owner.\n",
+                encoding="utf-8",
+            )
+            reference.write_text(
+                "# Rule\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_absolute_candidate "
+                "rule=sample/evidence occurrence=reference -->\n"
+                "- Record current evidence.\n",
+                encoding="utf-8",
+            )
+
+            BUILD._strip_runtime_semantic_markers(root / "sample")
+
+            self.assertNotIn("rd-semantic-id:", skill.read_text(encoding="utf-8"))
+            self.assertNotIn(
+                "rd-semantic-id:", reference.read_text(encoding="utf-8")
+            )
+
+    def test_runtime_rejects_malformed_semantic_identity_marker_leakage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "SKILL.md"
+            skill.write_text(
+                "# Sample\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=bad--rule occurrence=root -->\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(BUILD.BuildError, "malformed semantic identity"):
+                BUILD._strip_runtime_semantic_markers(root)
+
+    def test_semantic_marker_inventory_preflight_accepts_valid_sources(self) -> None:
+        class SnapshotReached(RuntimeError):
+            pass
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root):
+                registries = BUILD._load_registries()
+                BUILD._preflight_registry_entries(registries)
+                BUILD._preflight_semantic_marker_inventory(registries)
+                with mock.patch.object(
+                    BUILD,
+                    "authoritative_build_input_snapshot",
+                    side_effect=SnapshotReached,
+                ) as snapshot:
+                    with self.assertRaises(SnapshotReached):
+                        BUILD.build_profile("recommended")
+
+            snapshot.assert_called_once_with(root)
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def _assert_marker_preflight_failure_preserves_outputs(
+        self, mutate, message: str
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            # This negative fixture owns its marker; authored Skills may retire
+            # old findings without weakening marker inventory validation.
+            skill = root / "src/professional-skills/engineering-change-analysis/SKILL.md"
+            skill.write_text(
+                skill.read_text(encoding="utf-8").rstrip()
+                + "\n\n<!-- rd-semantic-id:v2 finding=unconditional_mechanism_candidate "
+                "rule=engineering-change-analysis/fixture-baseline occurrence=fixture-baseline -->\n"
+                "- Retain the bounded source decision.\n",
+                encoding="utf-8",
+            )
+            mutate(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root), mock.patch.object(
+                BUILD, "authoritative_build_input_snapshot"
+            ) as snapshot, self.assertRaisesRegex(BUILD.BuildError, message):
+                BUILD.build_profile("recommended")
+
+            snapshot.assert_not_called()
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_semantic_marker_wrong_owner_and_orphan_fail_before_mutation(self) -> None:
+        relative = Path(
+            "src/professional-skills/engineering-change-analysis/SKILL.md"
+        )
+
+        def wrong_owner(root: Path) -> None:
+            path = root / relative
+            source = path.read_text(encoding="utf-8")
+            path.write_text(
+                source.replace(
+                    "rule=engineering-change-analysis/fixture-baseline",
+                    "rule=wrong-owner/fixture-baseline",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+        def orphan(root: Path) -> None:
+            path = root / relative
+            path.write_text(
+                path.read_text(encoding="utf-8").rstrip()
+                + "\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                "rule=engineering-change-analysis/orphan occurrence=r4-orphan -->\n",
+                encoding="utf-8",
+            )
+
+        self._assert_marker_preflight_failure_preserves_outputs(
+            wrong_owner, "owner prefix"
+        )
+        self._assert_marker_preflight_failure_preserves_outputs(orphan, "orphan")
+
+    def test_semantic_marker_rule_and_occurrence_collisions_fail_before_mutation(
+        self,
+    ) -> None:
+        relative = Path(
+            "src/professional-skills/engineering-change-analysis/SKILL.md"
+        )
+
+        def append_marker(root: Path, *, rule: str, occurrence: str) -> None:
+            path = root / relative
+            path.write_text(
+                path.read_text(encoding="utf-8").rstrip()
+                + "\n\n<!-- rd-semantic-id:v2 "
+                "finding=unconditional_mechanism_candidate "
+                f"rule={rule} occurrence={occurrence} -->\n"
+                "- Retain the bounded source decision.\n",
+                encoding="utf-8",
+            )
+
+        self._assert_marker_preflight_failure_preserves_outputs(
+            lambda root: append_marker(
+                root,
+                rule="engineering-change-analysis/fixture-baseline",
+                occurrence="r4-second",
+            ),
+            "rule-id collision",
+        )
+        self._assert_marker_preflight_failure_preserves_outputs(
+            lambda root: append_marker(
+                root,
+                rule="engineering-change-analysis/r4-second",
+                occurrence="fixture-baseline",
+            ),
+            "duplicate.*occurrence",
+        )
+
+    def test_build_marker_preflight_does_not_consume_audit_or_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            observed: list[Path] = []
+            original = Path.read_bytes
+
+            def tracked(path: Path) -> bytes:
+                observed.append(path)
+                return original(path)
+
+            with self._layout(root), mock.patch.object(
+                Path, "read_bytes", tracked
+            ), mock.patch.object(
+                BUILD,
+                "validate_semantic_identity_marker_inventory",
+                wraps=VALIDATION.validate_semantic_identity_marker_inventory,
+            ) as validator:
+                registries = BUILD._load_registries()
+                BUILD._preflight_registry_entries(registries)
+                BUILD._preflight_semantic_marker_inventory(registries)
+
+            self.assertTrue(observed)
+            self.assertTrue(
+                all(path.is_relative_to(root / "src") for path in observed)
+            )
+            expected: dict[str, tuple[str, str]] = {
+                "src/control-prompts/main-control-agent.md": (
+                    "main-control-agent",
+                    "root",
+                )
+            }
+            for entries in registries.values():
+                for entry in entries:
+                    skill_root = root / entry["path"]
+                    expected[(skill_root / "SKILL.md").relative_to(root).as_posix()] = (
+                        entry["name"],
+                        "root",
+                    )
+                    references = skill_root / "references"
+                    if references.is_dir():
+                        for path in references.rglob("*.md"):
+                            expected[path.relative_to(root).as_posix()] = (
+                                entry["name"],
+                                "reference",
+                            )
+            records = validator.call_args.args[0]
+            actual = {
+                record["path"]: (record["owner"], record["axis"])
+                for record in records
+            }
+            self.assertEqual(expected, actual)
+            self.assertNotIn("audit-skill-content", BUILD.__dict__)
+
+
+
+
+
     @staticmethod
     def _windows_translating_write_text(
         path: Path,
@@ -140,36 +403,420 @@ class BuildSafetyTests(unittest.TestCase):
                     BUILD.build_profile("recommended")
             self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
-    def test_all_profiles_build_with_canonical_manifest_in_isolated_layout(self) -> None:
+    def test_compact_runtime_roots_omit_routing_and_keep_source_authority(self) -> None:
+        professional_source = """---
+name: sample-professional
+description: synthetic
+---
+
+# sample-professional
+
+## Role
+
+Support `task-agent` at the bounded owner.
+
+## When To Use
+
+- authoring positive trigger
+
+## Do Not Use
+
+- authoring anti-trigger
+
+## Required Inputs
+
+- accepted task input
+
+## Professional Decision Rules
+
+- Preserve the accepted owner and decision.
+
+## Stop / Escalation Conditions
+
+- Stop when authority is unknown.
+
+## Output Contract
+
+- bounded result and proof limit
+
+## Targeted References
+
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [sample](references/sample.md) | targeted | a named decision is open | no named decision is open | task-agent | proof-limit |
+"""
+        foundation_source = """---
+name: sample-foundation
+description: synthetic
+---
+
+# sample-foundation
+
+## Registry Trigger
+
+**Use when**
+
+- authoring positive trigger
+
+**Do not use when**
+
+- authoring anti-trigger
+
+## Skill Role
+
+Own one bounded decision.
+
+## Inputs
+
+- accepted task input
+
+## High-Value Rules
+
+- Preserve the accepted decision.
+- Prove the negative path.
+- Record the proof limit.
+
+## Anti-Patterns
+
+- Local success substituted for boundary evidence.
+
+## Stop Conditions
+
+- Stop when authority is unknown.
+
+## Output Contract
+
+- bounded result and proof limit
+
+## Targeted References
+
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [sample](references/sample.md) | targeted | a named decision is open | no named decision is open | task-agent | proof-limit |
+"""
+
+        def headings(text: str) -> list[str]:
+            return [
+                line.removeprefix("## ").strip()
+                for line in text.splitlines()
+                if line.startswith("## ")
+            ]
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            professional = root / "sample-professional"
+            professional.mkdir()
+            professional_file = professional / "SKILL.md"
+            professional_file.write_text(professional_source, encoding="utf-8")
+            professional_item = BUILD.SkillItem(
+                name="sample-professional",
+                path=professional,
+                layer="professional",
+                description="synthetic",
+                metadata={},
+                body=professional_source,
+                registry={"reference_index": []},
+            )
+            BUILD._write_compact_professional_projection(professional, professional_item)
+            rendered_professional = professional_file.read_text(encoding="utf-8")
+            self.assertEqual(
+                [*BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "JIT Reference Delivery"],
+                headings(rendered_professional),
+            )
+            for omitted in ("When To Use", "Do Not Use", "Required Inputs"):
+                self.assertIn(f"## {omitted}", professional_source)
+                self.assertNotIn(f"## {omitted}", rendered_professional)
+
+            foundation = root / "sample-foundation"
+            foundation.mkdir()
+            foundation_file = foundation / "SKILL.md"
+            foundation_file.write_text(foundation_source, encoding="utf-8")
+            foundation_item = BUILD.SkillItem(
+                name="sample-foundation",
+                path=foundation,
+                layer="foundation",
+                description="synthetic",
+                metadata={},
+                body=foundation_source,
+                registry={"reference_index": []},
+            )
+            BUILD._write_compact_layer3_root_projection(foundation, foundation_item)
+            rendered_foundation = foundation_file.read_text(encoding="utf-8")
+            self.assertEqual(
+                list(BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS),
+                headings(rendered_foundation),
+            )
+            for forbidden in (
+                "## JIT Reference Delivery",
+                "Current-Professional JIT",
+                "engineering-control-plane/references/selectors/",
+                "never select/reroute/preload",
+                "index/catalog",
+            ):
+                self.assertNotIn(forbidden, rendered_foundation)
+            for source_only in ("Registry Trigger", "Inputs", "Output Contract"):
+                self.assertIn(f"## {source_only}", foundation_source)
+                self.assertNotIn(f"## {source_only}", rendered_foundation)
+
+            professional_file.write_text(
+                professional_source.replace(
+                    "## Output Contract\n\n- bounded result and proof limit\n\n",
+                    "",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                BUILD.BuildError,
+                "exactly one non-empty 'Output Contract'",
+            ):
+                BUILD._write_compact_professional_projection(professional, professional_item)
+
+    def test_single_runtime_build_has_canonical_manifest_in_isolated_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "repo"
             self._copy_source(root)
-            expected_counts = {"recommended": 27, "full": 40, "dev": 190}
 
             with self._layout(root) as dist:
-                for profile in BUILD.PROFILES:
-                    with self.subTest(profile=profile):
-                        result = BUILD.build_profile(profile)
-                        manifest_path = (
-                            dist
-                            / "universal/skills"
-                            / profile
-                            / BUILD.BUILD_MANIFEST_NAME
-                        )
-                        manifest = BUILD.json.loads(
-                            manifest_path.read_text(encoding="utf-8")
-                        )
-                        self.assertEqual(profile, result["profile"])
-                        self.assertEqual(expected_counts[profile], result["top_level_count"])
-                        self.assertEqual(profile, manifest["profile"])
-                        self.assertEqual(
-                            "changeforge.authoritative_build_inputs",
-                            manifest["authoritative_build_inputs"]["kind"],
-                        )
-                        self.assertEqual(
-                            expected_counts[profile], len(manifest["top_level_skills"])
-                        )
-                        self.assertEqual(4, len(manifest["agent_profiles"]))
+                result = BUILD.build_profile("recommended")
+                manifest_path = (
+                    dist
+                    / "universal/skills/recommended"
+                    / BUILD.BUILD_MANIFEST_NAME
+                )
+                manifest = BUILD.json.loads(
+                    manifest_path.read_text(encoding="utf-8")
+                )
+                self.assertEqual("recommended", result["profile"])
+                self.assertEqual(26, result["top_level_count"])
+                self.assertEqual("recommended", manifest["profile"])
+                self.assertEqual(
+                    "changeforge.authoritative_build_inputs",
+                    manifest["authoritative_build_inputs"]["kind"],
+                )
+                self.assertEqual(26, len(manifest["top_level_skills"]))
+                self.assertEqual(1, len(manifest["control_skills"]))
+                self.assertEqual(25, len(manifest["professional_skills"]))
+                self.assertEqual(150, len(manifest["foundation_skills"]))
+                self.assertEqual(13, len(manifest["domain_skills"]))
+                self.assertEqual("targeted-product-references", manifest["foundation_mode"])
+                self.assertEqual("targeted-references", manifest["domain_mode"])
+                self.assertEqual(4, len(manifest["agent_profiles"]))
+
+    def test_retired_profiles_are_rejected_before_managed_output_mutation(self) -> None:
+        for retired in ("full", "dev"):
+            with self.subTest(profile=retired), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / "repo"
+                self._copy_source(root)
+                sentinel = root / "dist/sentinel.bin"
+                sentinel.parent.mkdir(parents=True)
+                sentinel.write_bytes(b"unchanged")
+
+                with self._layout(root), self.assertRaisesRegex(
+                    BUILD.BuildError,
+                    f"unsupported profile: {retired}",
+                ):
+                    BUILD.build_profile(retired)
+
+                self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_build_cli_rejects_profile_selection_before_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root), mock.patch.object(
+                sys,
+                "argv",
+                ["build.py", "--profile", "full"],
+            ), self.assertRaises(SystemExit):
+                BUILD.main()
+
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_build_removes_only_preflighted_retired_profile_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                managed_roots = (
+                    dist / "universal/skills",
+                    *BUILD.AGENT_SKILL_ROOTS,
+                    dist / "openai-api/zips",
+                )
+                sentinels: list[Path] = []
+                for managed_root in managed_roots:
+                    for retired in ("full", "dev"):
+                        residue = managed_root / retired / "managed.bin"
+                        residue.parent.mkdir(parents=True, exist_ok=True)
+                        residue.write_bytes(retired.encode("ascii"))
+                    sentinel = managed_root / "user-sentinel.bin"
+                    sentinel.write_bytes(b"preserve")
+                    sentinels.append(sentinel)
+
+                BUILD.build_profile("recommended")
+
+                for managed_root in managed_roots:
+                    self.assertFalse((managed_root / "full").exists())
+                    self.assertFalse((managed_root / "dev").exists())
+                for sentinel in sentinels:
+                    self.assertEqual(b"preserve", sentinel.read_bytes())
+
+    def test_invalid_retired_profile_root_fails_before_any_cleanup_or_reset(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                first_residue = dist / "universal/skills/full/managed.bin"
+                first_residue.parent.mkdir(parents=True)
+                first_residue.write_bytes(b"preserve")
+                invalid = BUILD.AGENT_SKILL_ROOTS[-1] / "dev"
+                invalid.parent.mkdir(parents=True)
+                invalid.write_bytes(b"not-a-directory")
+                current = dist / "universal/skills/recommended/prior.bin"
+                current.parent.mkdir(parents=True)
+                current.write_bytes(b"current")
+
+                with self.assertRaisesRegex(
+                    BUILD.BuildError,
+                    "retired profile output.*regular directory",
+                ):
+                    BUILD.build_profile("recommended")
+
+                self.assertEqual(b"preserve", first_residue.read_bytes())
+                self.assertEqual(b"not-a-directory", invalid.read_bytes())
+                self.assertEqual(b"current", current.read_bytes())
+
+    def test_build_removes_exact_pre_hookless_dist_and_zip_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                hook_roots = (
+                    dist / "codex/project/.codex",
+                    dist / "codex/user/.codex",
+                    dist / "claude/project/.claude",
+                    dist / "claude/user/.claude",
+                    dist / "copilot/project/.github",
+                    dist / "copilot/user/.copilot",
+                )
+                legacy_directories = [
+                    *(hook_root / "hooks" for hook_root in hook_roots),
+                    dist / "universal/bootstrap",
+                    dist / "copilot/project/.github/copilot/agents",
+                    dist
+                    / "universal/skills/recommended/.changeforge-packs",
+                    dist
+                    / "universal/skills/recommended/.changeforge-control",
+                ]
+                for directory in legacy_directories:
+                    directory.mkdir(parents=True, exist_ok=True)
+                    (directory / "legacy.bin").write_bytes(b"legacy")
+
+                legacy_file_names = (
+                    ".changeforge-hook-manifest.json",
+                    "hooks.json",
+                    "settings.changeforge-hooks.fragment.json",
+                    "changeforge-route-preflight.md",
+                    "changeforge-professional-contract.md",
+                )
+                legacy_files = []
+                for hook_root in hook_roots:
+                    hook_root.mkdir(parents=True, exist_ok=True)
+                    for name in legacy_file_names:
+                        path = hook_root / name
+                        path.write_bytes(b"legacy")
+                        legacy_files.append(path)
+
+                legacy_root_zip = dist / "openai-api/zips/legacy-skill.zip"
+                legacy_root_zip.parent.mkdir(parents=True, exist_ok=True)
+                legacy_root_zip.write_bytes(b"legacy zip")
+
+                sentinels = (
+                    dist / "codex/project/.codex/user-owned.txt",
+                    dist / "unrelated/hooks/user-owned.txt",
+                    dist / "openai-api/zips/vendor/user-owned.zip",
+                )
+                for sentinel in sentinels:
+                    sentinel.parent.mkdir(parents=True, exist_ok=True)
+                    sentinel.write_bytes(b"preserve")
+
+                BUILD.build_profile("recommended")
+
+                self.assertTrue(all(not path.exists() for path in legacy_directories))
+                self.assertTrue(all(not path.exists() for path in legacy_files))
+                self.assertFalse(legacy_root_zip.exists())
+                for sentinel in sentinels:
+                    self.assertEqual(b"preserve", sentinel.read_bytes())
+                runtime = dist / "universal/skills/recommended"
+                self.assertEqual(
+                    26,
+                    len(
+                        [
+                            path
+                            for path in runtime.iterdir()
+                            if path.is_dir() and (path / "SKILL.md").is_file()
+                        ]
+                    ),
+                )
+
+    def test_legacy_cleanup_ambiguity_fails_before_any_mutation(self) -> None:
+        scenarios = {
+            "directory-is-file": Path("universal/bootstrap"),
+            "file-is-directory": Path("codex/project/.codex/hooks.json"),
+            "root-zip-is-directory": Path("openai-api/zips/legacy.zip"),
+        }
+        for scenario, relative in scenarios.items():
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / "repo"
+                self._copy_source(root)
+
+                with self._layout(root) as dist:
+                    invalid = dist / relative
+                    invalid.parent.mkdir(parents=True, exist_ok=True)
+                    if scenario == "directory-is-file":
+                        invalid.write_bytes(b"ambiguous")
+                    else:
+                        invalid.mkdir()
+                    earlier = dist / "codex/project/.codex/hooks/legacy.bin"
+                    earlier.parent.mkdir(parents=True, exist_ok=True)
+                    earlier.write_bytes(b"preserve")
+                    current = dist / "universal/skills/recommended/prior.bin"
+                    current.parent.mkdir(parents=True, exist_ok=True)
+                    current.write_bytes(b"current")
+
+                    with self.assertRaises(BUILD.BuildError):
+                        BUILD.build_profile("recommended")
+
+                    self.assertEqual(b"preserve", earlier.read_bytes())
+                    self.assertEqual(b"current", current.read_bytes())
+
+    def test_legacy_cleanup_symlink_fails_before_any_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                outside = root / "outside"
+                outside.mkdir()
+                legacy = dist / "codex/project/.codex/hooks"
+                legacy.parent.mkdir(parents=True)
+                legacy.symlink_to(outside, target_is_directory=True)
+                current = dist / "universal/skills/recommended/prior.bin"
+                current.parent.mkdir(parents=True)
+                current.write_bytes(b"current")
+
+                with self.assertRaises(BUILD.BuildError):
+                    BUILD.build_profile("recommended")
+
+                self.assertTrue(legacy.is_symlink())
+                self.assertEqual(b"current", current.read_bytes())
 
     def test_agent_profiles_remain_lf_canonical_with_windows_text_translation(
         self,
@@ -207,41 +854,39 @@ class BuildSafetyTests(unittest.TestCase):
                     dist / "universal/skills",
                     *BUILD.AGENT_SKILL_ROOTS,
                 )
-                for build_profile in BUILD.PROFILES:
-                    with self.subTest(build_profile=build_profile):
-                        BUILD.build_profile(build_profile)
-                        observed_files = 0
-                        for platform, profile_root in BUILD.AGENT_PROFILE_OUTPUTS:
-                            for role, profile in by_name.items():
-                                raw = (
-                                    profile_root
-                                    / f"{role}{suffixes[platform]}"
-                                ).read_bytes()
-                                expected = renderers[platform](
-                                    profile,
-                                    enforcement,
-                                ).encode("utf-8")
-                                self.assertEqual(expected, raw)
-                                self.assertNotIn(b"\r", raw)
-                                self.assertEqual(
-                                    expected_digests[platform][role],
-                                    hashlib.sha256(raw).hexdigest(),
-                                )
-                                observed_files += 1
-                        self.assertEqual(28, observed_files)
+                BUILD.build_profile("recommended")
+                observed_files = 0
+                for platform, profile_root in BUILD.AGENT_PROFILE_OUTPUTS:
+                    for role, profile in by_name.items():
+                        raw = (
+                            profile_root
+                            / f"{role}{suffixes[platform]}"
+                        ).read_bytes()
+                        expected = renderers[platform](
+                            profile,
+                            enforcement,
+                        ).encode("utf-8")
+                        self.assertEqual(expected, raw)
+                        self.assertNotIn(b"\r", raw)
+                        self.assertEqual(
+                            expected_digests[platform][role],
+                            hashlib.sha256(raw).hexdigest(),
+                        )
+                        observed_files += 1
+                self.assertEqual(28, observed_files)
 
-                        for skills_root in manifest_roots:
-                            manifest = BUILD.json.loads(
-                                (
-                                    skills_root
-                                    / build_profile
-                                    / BUILD.BUILD_MANIFEST_NAME
-                                ).read_bytes()
-                            )
-                            self.assertEqual(
-                                expected_digests,
-                                manifest["agent_profile_sha256"],
-                            )
+                for skills_root in manifest_roots:
+                    manifest = BUILD.json.loads(
+                        (
+                            skills_root
+                            / "recommended"
+                            / BUILD.BUILD_MANIFEST_NAME
+                        ).read_bytes()
+                    )
+                    self.assertEqual(
+                        expected_digests,
+                        manifest["agent_profile_sha256"],
+                    )
 
     def test_agent_profile_cr_fails_preflight_before_managed_output_mutation(
         self,
@@ -320,8 +965,8 @@ class BuildSafetyTests(unittest.TestCase):
 
     def test_non_product_foundation_candidate_fails_before_reset(self) -> None:
         self._assert_registry_failure_preserves_dist(
-            "layer3_candidates: []",
-            'layer3_candidates: ["skill-authoring-expert"]',
+            'layer3_candidates: ["task-dag-decomposition", "release-rollback"]',
+            'layer3_candidates: ["task-dag-decomposition", "release-rollback", "skill-authoring-expert"]',
             "professional-skills.yaml",
         )
 
@@ -411,7 +1056,7 @@ class BuildSafetyTests(unittest.TestCase):
 
             with self._layout(root):
                 with self.assertRaises(BUILD.BuildError):
-                    BUILD.build_profile("dev")
+                    BUILD.build_profile("recommended")
             self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
     def test_main_profile_embeds_prompt_once_and_preserves_fallback(self) -> None:
@@ -432,8 +1077,8 @@ class BuildSafetyTests(unittest.TestCase):
                 rendered,
             )
             self.assertIn(
-                "Never reload references/main-control-agent.md.",
-                rendered,
+                "never reload references/main-control-agent.md.",
+                rendered.casefold(),
             )
             worker = renderer(profiles["analysis-agent"])
             BUILD._validate_rendered_prompt_embedding(
@@ -451,7 +1096,7 @@ class BuildSafetyTests(unittest.TestCase):
         self.assertIn("host without an Agent Profile", control)
         self.assertIn("references/main-control-agent.md", control)
 
-    def test_all_source_rendered_main_contexts_meet_evolution_target(self) -> None:
+    def test_all_source_rendered_main_contexts_meet_core_hard_ceiling(self) -> None:
         profiles = {
             profile["name"]: profile for profile in BUILD._load_agent_profiles()
         }
@@ -470,7 +1115,7 @@ class BuildSafetyTests(unittest.TestCase):
             control_text = (destination / "SKILL.md").read_text(encoding="utf-8")
 
         gate = derived_context_budget_limits(CONTEXT_BUDGET_MODEL)["main"][
-            "evolution_target"
+            "hard_ceiling"
         ]
         observed: dict[str, int] = {}
         for host, renderer in (
@@ -479,40 +1124,14 @@ class BuildSafetyTests(unittest.TestCase):
             ("copilot", BUILD._render_copilot_profile),
         ):
             rendered = renderer(profiles["main-control-agent"], enforcement)
-            for build_profile in BUILD.PROFILES:
-                key = f"{host}:{build_profile}"
-                observed[key] = count_o200k_base_tokens(
-                    rendered.rstrip() + "\n\n" + control_text.rstrip()
-                )
+            key = f"{host}:recommended"
+            observed[key] = count_o200k_base_tokens(
+                rendered.rstrip() + "\n\n" + control_text.rstrip()
+            )
 
-        self.assertEqual(9, len(observed))
+        self.assertEqual(3, len(observed))
         self.assertLessEqual(max(observed.values()), gate, observed)
 
-    def test_build_preflight_rejects_stale_prompt_before_dist_mutation(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary) / "repo"
-            self._copy_source(root)
-            prompt = root / "src/control-prompts/main-control-agent.md"
-            original = prompt.read_text(encoding="utf-8")
-            mutated = original.replace(
-                "State: current, superseded, invalid",
-                "State: stale, superseded, invalid",
-                1,
-            )
-            self.assertNotEqual(original, mutated)
-            prompt.write_text(mutated, encoding="utf-8")
-            dist = root / "dist"
-            dist.mkdir()
-            sentinel = dist / "sentinel.txt"
-            sentinel.write_text("unchanged\n", encoding="utf-8")
-
-            with self._layout(root), self.assertRaisesRegex(
-                BUILD.BuildError,
-                "authoritative control prompt projection is stale",
-            ):
-                BUILD.build_profile("recommended")
-
-            self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
     def test_build_preflight_rejects_post_build_unreachable_template(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -559,16 +1178,12 @@ class BuildSafetyTests(unittest.TestCase):
             shutil.copytree(item.path, destination)
             BUILD._write_compact_control_projection(destination, item)
             text = (destination / "SKILL.md").read_text(encoding="utf-8")
+            BUILD._write_compact_control_projection(destination, item)
+            repeated = (destination / "SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("Reference Contract v2; Prompt owns rules.", text)
-        encoded = text.encode("utf-8")
-        self.assertEqual(
-            "f67957d0f282d0ee3b91eb0fce7045c205cbaccfa558e84c33d51dacd4406c3d",
-            hashlib.sha256(encoded).hexdigest(),
-        )
-        self.assertEqual(1546, len(encoded))
-        self.assertEqual(18, sum(bool(line.strip()) for line in text.splitlines()))
-        self.assertEqual(342, count_o200k_base_tokens(text))
+        self.assertEqual(text, repeated)
+        self.assertLessEqual(count_o200k_base_tokens(text), 400)
         for contract in contracts:
             with self.subTest(path=contract["path"]):
                 row = next(
@@ -597,51 +1212,21 @@ class BuildSafetyTests(unittest.TestCase):
             "prompt-enforced",
             matrix["hosts"]["codex"]["roles"]["main-control-agent"]["tool_allowlist"],
         )
-        self.assertEqual(4, matrix["schema_version"])
-        self.assertEqual(
-            {
-                "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
-                "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
-            },
-            matrix["mode_values"],
-        )
-        self.assertEqual(
-            ["--no-pager", "--no-ext-diff", "--no-textconv"],
-            matrix["hosts"]["codex"]["native_diff_safeguards"],
-        )
-        for host in ("claude", "copilot", "cline", "openai-api"):
-            self.assertEqual([], matrix["hosts"][host]["native_diff_safeguards"])
-        self.assertEqual(
-            {capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
-            BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
-        )
-        unknown_adapter = dict(matrix["hosts"]["codex"])
-        unknown_adapter.update(
-            {
-                "profile_delivery": "unknown-native-id",
-                "diff_input_mode": "unknown-native-id",
-                "validation_mode": "unknown-native-id",
-                "utility_no_edit": "unknown-native-id",
-            }
-        )
-        self.assertEqual(
-            {capability: "unsupported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
-            BUILD._normalized_decision_capabilities(unknown_adapter),
-        )
+        self.assertEqual(5, matrix["schema_version"])
+        self.assertNotIn("mode_values", matrix)
+        for host in matrix["hosts"].values():
+            self.assertNotIn("native_diff_safeguards", host)
+            self.assertNotIn("diff_input_mode", host)
+            self.assertNotIn("validation_mode", host)
         renderer_hosts = {
             BUILD._render_codex_profile: "codex",
             BUILD._render_claude_profile: "claude",
             BUILD._render_copilot_profile: "copilot",
         }
         for renderer, host in renderer_hosts.items():
-            host_contract = matrix["hosts"][host]
-            capability_facts = BUILD._normalized_decision_capabilities(host_contract)
             rendered = renderer(profiles["main-control-agent"], matrix)
-            self.assertIn(
-                BUILD._render_decision_capability_facts(capability_facts),
-                rendered,
-            )
-            self.assertEqual(1, rendered.count("Current capability facts:"))
+            self.assertNotIn("Current capability facts:", rendered)
+            self.assertNotIn("Current external-read mode:", rendered)
         claude = BUILD._render_claude_profile(profiles["review-agent"], matrix)
         copilot = BUILD._render_copilot_profile(profiles["review-agent"], matrix)
         self.assertNotIn("Current capability facts:", claude)
@@ -650,6 +1235,21 @@ class BuildSafetyTests(unittest.TestCase):
         self.assertNotIn("Bash", claude.split("---", 2)[1])
         self.assertIn('tools: ["read","search"]', copilot)
         self.assertNotIn('"execute"', copilot.split("---", 2)[1])
+
+    def test_main_profile_has_no_runtime_capability_projection(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        profiles = {
+            profile["name"]: profile for profile in BUILD._load_agent_profiles()
+        }
+        for host in ("codex", "claude", "copilot"):
+            with self.subTest(host=host):
+                rendered = {
+                    "codex": BUILD._render_codex_profile,
+                    "claude": BUILD._render_claude_profile,
+                    "copilot": BUILD._render_copilot_profile,
+                }[host](profiles["main-control-agent"], matrix)
+                self.assertNotIn("Current capability facts:", rendered)
+                self.assertNotIn("CAPABILITY_MISMATCH", rendered)
 
     def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
         matrix = BUILD._load_host_enforcement()
@@ -696,23 +1296,23 @@ class BuildSafetyTests(unittest.TestCase):
                     matrix["hosts"]["copilot"]["roles"][role]["rendered_tools"],
                 )
 
-    def test_host_enforcement_rejects_stale_schema_and_unknown_modes(self) -> None:
+    def test_host_enforcement_rejects_stale_schema_and_invalid_enforcement(self) -> None:
         mutations = (
-            ('"schema_version": 4', '"schema_version": 3', "schema_version 4"),
+            ('"schema_version": 5', '"schema_version": 4', "schema_version 5"),
             (
-                '"diff_input_mode": "supplied-artifact"',
-                '"diff_input_mode": "stale-mode"',
-                "invalid diff_input_mode",
+                '"profile_delivery": "native-enforced"',
+                '"profile_delivery": "stale-mode"',
+                "invalid profile_delivery enforcement",
             ),
             (
-                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"]',
-                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff"]',
-                "native diff safeguards",
+                '"tool_allowlist": "prompt-enforced"',
+                '"tool_allowlist": "stale-mode"',
+                "invalid tool_allowlist enforcement status",
             ),
             (
                 '"rendered_tools": ["read", "search", "web"]',
                 '"rendered_tools": ["read", "search", "web", "execute"]',
-                "copilot:analysis-agent must expose only read, search, and web",
+                "copilot-vscode: analysis tools do not match the surface ceiling",
             ),
         )
         for old, new, error in mutations:
@@ -727,22 +1327,41 @@ class BuildSafetyTests(unittest.TestCase):
                     BUILD._load_host_enforcement()
 
     def test_layer3_entrypoint_describes_only_the_current_build(self) -> None:
-        expected = {
-            "recommended": "compiles assigned Foundation and Domain guidance",
-            "full": "delivers Domain guidance as",
-            "dev": "delivers assigned Foundation and Domain guidance as top-level",
-        }
+        expected = (
+            (
+                False,
+                "No Foundation or Domain Layer 3 items are assigned to this Skill.",
+            ),
+            (
+                True,
+                "Foundation and Domain items are compiled at `references/layer3/<name>.md`.",
+            ),
+        )
         with tempfile.TemporaryDirectory() as temporary:
             skill_root = Path(temporary) / "professional"
             skill_root.mkdir()
-            for profile, phrase in expected.items():
-                with self.subTest(profile=profile):
+            for compiled, expected_body in expected:
+                with self.subTest(compiled=compiled):
                     (skill_root / "SKILL.md").write_text("# Professional\n", encoding="utf-8")
-                    BUILD._append_layer3_entrypoint(skill_root, profile)
+                    layer3_root = skill_root / "references/layer3"
+                    if layer3_root.exists():
+                        shutil.rmtree(layer3_root)
+                    if compiled:
+                        layer3_root.mkdir(parents=True)
+                        (layer3_root / "index.md").write_text(
+                            "# Layer 3 Reference Index\n",
+                            encoding="utf-8",
+                        )
+                    BUILD._append_layer3_entrypoint(skill_root)
                     text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
                     self.assertEqual(1, text.count("## Layer 3 Delivery"))
-                    self.assertIn(phrase, text)
-                    self.assertIn("Never preload Layer 3", text)
+                    self.assertEqual(
+                        expected_body,
+                        text.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
+                    )
+                    self.assertNotIn(BUILD.GENERATED_MARKER, text)
+                    self.assertNotIn("Never preload Layer 3", text)
+                    self.assertNotIn("index or catalog", text)
                     self.assertNotIn("## Compiled Layer 3 References", text)
 
     def test_foundation_layer3_projection_keeps_exact_runtime_sections(self) -> None:
@@ -801,7 +1420,7 @@ Preserve this second paragraph because the complete role defines the decision bo
                     "path": "analyzed",
                     "profile": "analysis-agent",
                     "primary_skill": "sample-primary",
-                    "review_skill": "sample-review",
+                    "review_skill": 'sample-review',
                     "semantic_atoms": [
                         "activation-registry-non-render-sentinel"
                     ],
@@ -855,7 +1474,6 @@ Preserve this second paragraph because the complete role defines the decision bo
                 "High-Value Rules",
                 "Anti-Patterns",
                 "Stop Conditions",
-                "Targeted References",
             ],
             list(sections),
         )
@@ -879,12 +1497,15 @@ Preserve this second paragraph because the complete role defines the decision bo
         )
         self.assertNotIn("foundation-semantic-matcher/v1", rendered)
         self.assertNotIn("runtime matcher metadata sentinel", rendered)
-        self.assertIn(
-            "| [checklist](sample-foundation/references/checklist.md) | "
-            "decision-checklist | boundary evidence remains unresolved | "
-            "the root proves the bounded decision | task-agent | checklist-result |",
-            rendered,
-        )
+        self.assertNotIn("## Targeted References", rendered)
+        for forbidden in (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/",
+            "never select/reroute/preload",
+            "index/catalog",
+        ):
+            self.assertNotIn(forbidden, rendered)
 
     def test_occurrence_activation_metadata_is_not_rendered(self) -> None:
         body = """# sample-occurrence-activation
@@ -938,7 +1559,7 @@ Own the occurrence-render-body-sentinel boundary.
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "domain-impact-modeler",
-            "review_skill": "architecture-impact-reviewer",
+            "review_skill": 'architecture-impact-reviewer',
             "semantic_atoms": ["business-rule-occurrence"],
             "matcher_evidence": [
                 "analysis-action",
@@ -1039,14 +1660,9 @@ Own the occurrence-render-body-sentinel boundary.
         ):
             self.assertNotIn(forbidden, rendered_with)
         self.assertIn("occurrence-render-body-sentinel", rendered_with)
-        self.assertIn(
-            "| [occurrence]"
-            "(sample-occurrence-activation/references/occurrence-checklist.md) | "
-            "decision-checklist | occurrence-reference-load-sentinel | "
-            "occurrence-reference-skip-sentinel | task-agent | "
-            "checklist-result |",
-            rendered_with,
-        )
+        self.assertNotIn("## Targeted References", rendered_with)
+        self.assertNotIn("## JIT Reference Delivery", rendered_with)
+        self.assertNotIn("Current-Professional JIT", rendered_with)
 
     def test_domain_layer3_projection_uses_domain_decision_sections(self) -> None:
         body = """# sample-domain
@@ -1109,7 +1725,6 @@ Own the complete domain boundary. Keep this second sentence.
                 "Professional Decision Rules",
                 "High-Value Gotchas",
                 "Stop / Escalation Conditions",
-                "Targeted References",
             ],
             list(sections),
         )
@@ -1117,9 +1732,56 @@ Own the complete domain boundary. Keep this second sentence.
             "Own the complete domain boundary. Keep this second sentence.",
             sections["Decision Boundary"][0],
         )
-        self.assertIn("No task-local Reference is indexed", rendered)
+        self.assertNotIn("No task-local Reference is indexed", rendered)
         for heading in BUILD.LAYER3_PROJECTION_FORBIDDEN_HEADINGS:
             self.assertNotIn(f"## {heading}", rendered)
+
+    def test_four_foundation_replacement_rules_are_exact_and_decision_bearing(self) -> None:
+        expected = {
+            "data-migration-design": (
+                "Block destructive cleanup until readers retire and reconciliation, "
+                "recovery, and ownership are proven.",
+            ),
+            "release-rollback": (
+                "Choose rollback only while old code reads current durable, provider, "
+                "and retained state.",
+            ),
+            "version-compatibility": (
+                "Select a bridge from each failing producer-consumer or data direction "
+                "using current evidence.",
+            ),
+            "permission-boundary-modeling": (
+                "Enforce permissions before collection outputs.",
+                "Define explicit behavior for mixed tenant bulk actions.",
+            ),
+        }
+        generic = (
+            "Load the named benchmark, checklist, or evidence Reference according to "
+            "the open output."
+        )
+        source_occurrences = 0
+        registries = BUILD._load_registries()
+        foundation_items = {
+            item.name: item
+            for item in BUILD._load_items("foundation", registries["foundation"])
+        }
+        for skill_name, required_rules in expected.items():
+            with self.subTest(skill=skill_name):
+                path = foundation_items[skill_name].path / "SKILL.md"
+                source = path.read_text(encoding="utf-8")
+                source_occurrences += source.count(generic)
+                _h1, sections = BUILD._markdown_heading_sections(source)
+                rules = [
+                    line.removeprefix("- ")
+                    for line in sections["High-Value Rules"][0].splitlines()
+                    if line.startswith("- ")
+                ]
+                self.assertEqual(list(required_rules), rules[-len(required_rules):])
+                self.assertEqual([], VALIDATION.foundation_content_class_errors(
+                    foundation_items[skill_name].registry,
+                    f"foundation_skills.{skill_name}",
+                ))
+        self.assertEqual(0, source_occurrences)
 
     def test_layer3_projection_fails_closed_on_missing_or_duplicate_sections(self) -> None:
         body = """# sample-foundation
@@ -1161,60 +1823,57 @@ Second role.
             BUILD._render_layer3_reference(item)
 
     def test_rendered_professional_body_over_budget_fails_before_reset(self) -> None:
-        for profile in BUILD.PROFILES:
-            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary) / "repo"
-                self._copy_source(root)
-                skill_file = (
-                    root
-                    / "src/professional-skills/engineering-change-analysis/SKILL.md"
-                )
-                registry = BUILD.load_yaml_file(
-                    root / "src/registry/professional-skills.yaml"
-                )
-                entry = next(
-                    item
-                    for item in registry["professional_skills"]
-                    if item["name"] == "engineering-change-analysis"
-                )
-                rendered_source = BUILD._render_targeted_reference_section(
-                    skill_file.read_text(encoding="utf-8"),
-                    BUILD._item_reference_contracts(
-                        entry, "engineering-change-analysis", "engineering-change-analysis"
-                    ),
-                    "engineering-change-analysis",
-                )
-                skill_file.write_text(rendered_source, encoding="utf-8")
-                _metadata, raw_frontmatter, body = BUILD.parse_frontmatter(skill_file)
-                body_lines = body.splitlines()
-                self.assertLessEqual(len(body_lines), 115)
-                targeted_index = body_lines.index("## Targeted References")
-                padding = [
-                    f"Rendered-budget fixture line {index}"
-                    for index in range(115 - len(body_lines))
-                ]
-                body_lines[targeted_index:targeted_index] = padding
-                self.assertEqual(115, len(body_lines))
-                skill_file.write_text(
-                    "---\n"
-                    + raw_frontmatter
-                    + "\n---\n"
-                    + "\n".join(body_lines)
-                    + "\n",
-                    encoding="utf-8",
-                )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            skill_file = (
+                root
+                / "src/professional-skills/engineering-change-analysis/SKILL.md"
+            )
+            registry = BUILD.load_yaml_file(
+                root / "src/registry/professional-skills.yaml"
+            )
+            entry = next(
+                item
+                for item in registry["professional_skills"]
+                if item["name"] == "engineering-change-analysis"
+            )
+            rendered_source = BUILD._render_targeted_reference_section(
+                skill_file.read_text(encoding="utf-8"),
+                BUILD._item_reference_contracts(
+                    entry, "engineering-change-analysis", "engineering-change-analysis"
+                ),
+                "engineering-change-analysis",
+            )
+            skill_file.write_text(rendered_source, encoding="utf-8")
+            _metadata, raw_frontmatter, body = BUILD.parse_frontmatter(skill_file)
+            body_lines = body.splitlines()
+            kernel_index = body_lines.index("## Professional Decision Rules") + 1
+            padding = [
+                f"Rendered-budget fixture line {index}"
+                for index in range(121)
+            ]
+            body_lines[kernel_index:kernel_index] = padding
+            skill_file.write_text(
+                "---\n"
+                + raw_frontmatter
+                + "\n---\n"
+                + "\n".join(body_lines)
+                + "\n",
+                encoding="utf-8",
+            )
 
-                dist = root / "dist"
-                dist.mkdir()
-                sentinel = dist / "sentinel.txt"
-                sentinel.write_text("unchanged\n", encoding="utf-8")
+            dist = root / "dist"
+            dist.mkdir()
+            sentinel = dist / "sentinel.txt"
+            sentinel.write_text("unchanged\n", encoding="utf-8")
 
-                with self._layout(root), self.assertRaisesRegex(
-                    BUILD.BuildError,
-                    r"rendered Professional SKILL\.md body has \d+ lines; maximum is 120",
-                ):
-                    BUILD.build_profile(profile)
-                self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
+            with self._layout(root), self.assertRaisesRegex(
+                BUILD.BuildError,
+                r"rendered Professional SKILL\.md body has \d+ lines; maximum is 120",
+            ):
+                BUILD.build_profile("recommended")
+            self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

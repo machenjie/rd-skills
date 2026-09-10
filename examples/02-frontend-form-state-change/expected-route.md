@@ -2,8 +2,9 @@
 
 ## Path
 
-Direct Task, because behavior, local scope, owner, placement, observable acceptance,
-non-production verification, rollback, and consumer impact are explicit.
+One Task: inspect, edit, self-check, targeted validation, then done. The change
+uses the existing form and API behavior. Local discovery stays with the Task;
+no separate Analysis or independent Review is needed under the stated facts.
 
 ## Task Assignment
 
@@ -15,9 +16,6 @@ non-production verification, rollback, and consumer impact are explicit.
   in the non-production test environment for dirty, submitting, failed, and
   successful states
 
-## Independent Review
-
-- Profile: `review-agent`
-- Review Skill: `ai-code-review-refactor`
-- Boundary: actual diff, every changed file, state transitions, accessibility,
-  design-system reuse, and validation freshness
+If inspection reveals a changed public contract or unresolved interaction rule,
+resolve that specific gap before the affected edit. Such evidence can change the
+assignment; completing a local edit does not itself trigger another stage.

@@ -9,9 +9,9 @@ Official D-Bus and XDG Desktop Portal pages below were accessed on 2026-07-24.
 
 - Record session/system bus, well-known and unique names, object paths,
   interfaces, signatures, activation, ownership transitions, and versioning.
-- For D-Bus methods, validate arguments and caller authorization; define timeout,
-  cancellation, disconnect, and retry behavior where the method supports it and
-  is safe to repeat.
+- For D-Bus methods, validate arguments and caller authorization.
+- Define supported timeout, cancellation, and disconnect behavior. Permit retry
+  only when the method is safe to repeat under its operation and recovery contract.
 - For D-Bus signals, validate payload and sender identity where available, and
   define subscription lifetime, filtering, ordering, duplication, disconnect,
   and reconnect behavior.
@@ -21,18 +21,6 @@ Official D-Bus and XDG Desktop Portal pages below were accessed on 2026-07-24.
   request handle, response, document/token lifetime, and desktop backend.
 - Do not silently replace denied or unavailable portal behavior with broader
   filesystem, capture, notification, or host access.
-
-## Failure Proof
-
-- Exercise name contention, service activation failure, malformed/unknown
-  messages, disconnect/reconnect, timeout, cancellation, denial, and missing backend.
-- Prove stale responses and objects cannot mutate a new session or application
-  instance.
-
-## Required Record
-
-Return bus/portal contract, identity/consent boundary, lifecycle and cancellation,
-failure behavior, desktop/backend evidence, and proof limits.
 
 ## Primary Sources
 

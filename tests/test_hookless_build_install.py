@@ -12,14 +12,19 @@ import unittest
 import zipfile
 from collections import Counter
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = ROOT
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from validation_utils import (  # noqa: E402
     authoritative_build_input_snapshot_errors,
+    count_o200k_base_tokens,
+    runtime_asset_build_identity,
+    runtime_asset_bundle_metadata_errors,
 )
 
 
@@ -33,6 +38,119 @@ def load_script(name: str, relative: str):
 
 
 BUILD = load_script("hookless_build_install_build", "scripts/build.py")
+
+_RUNTIME_TEMPORARY: tempfile.TemporaryDirectory[str] | None = None
+_BUILD_LAYOUT_PATCHER: mock._patch | None = None
+
+
+def _copy_runtime_inputs(destination: Path) -> None:
+    ignored = shutil.ignore_patterns("__pycache__", "*.pyc")
+    # Installer freshness reloads the Core graph and verifies its declared test
+    # and evaluation paths, so those tracked authorities belong to this fixture
+    # even though the canonical build itself only consumes src/ and scripts/.
+    for name in ("src", "scripts", "installers", "tests", "evals"):
+        shutil.copytree(SOURCE_ROOT / name, destination / name, ignore=ignored)
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", destination / "pyproject.toml")
+
+
+def _build_layout(root: Path) -> dict[str, object]:
+    source = root / "src"
+    dist = root / "dist"
+    return {
+        "ROOT": root,
+        "SRC_DIR": source,
+        "REGISTRY_DIR": source / "registry",
+        "DIST_DIR": dist,
+        "UNIVERSAL_SKILLS_ROOT": dist / "universal/skills",
+        "OPENAI_ZIP_DIR": dist / "openai-api/zips",
+        "PROFILE_SOURCE": source / "agent-profiles/role-agents.json",
+        "HOST_ENFORCEMENT_SOURCE": (
+            source / "agent-profiles/host-enforcement.json"
+        ),
+        "CONTROL_PROMPT_SOURCE": source / "control-prompts/main-control-agent.md",
+        "CORE_CONTRACTS_PATH": source / "control-model/core-contracts.json",
+        "LAYER_SOURCE_ROOTS": {
+            "control": source / "control-skills",
+            "professional": source / "professional-skills",
+            "foundation": source / "foundation/capabilities",
+            "domain": source / "domain-extensions",
+        },
+        "AGENT_SKILL_ROOTS": (
+            dist / "codex/project/.agents/skills",
+            dist / "codex/user/.agents/skills",
+            dist / "codex/admin/skills",
+            dist / "claude/project/.claude/skills",
+            dist / "claude/user/.claude/skills",
+            dist / "copilot/project/.github/skills",
+            dist / "copilot/user/.copilot/skills",
+            dist / "cline/project/.cline/skills",
+            dist / "cline/user/.cline/skills",
+        ),
+        "AGENT_PROFILE_OUTPUTS": (
+            ("codex", dist / "codex/project/.codex/agents"),
+            ("codex", dist / "codex/user/.codex/agents"),
+            ("codex", dist / "codex/admin/agents"),
+            ("claude", dist / "claude/project/.claude/agents"),
+            ("claude", dist / "claude/user/.claude/agents"),
+            ("copilot", dist / "copilot/project/.github/agents"),
+            ("copilot", dist / "copilot/user/.copilot/agents"),
+        ),
+    }
+
+
+def _cleanup_runtime_fixture() -> None:
+    global ROOT, SCRIPTS, _BUILD_LAYOUT_PATCHER, _RUNTIME_TEMPORARY
+
+    ROOT = SOURCE_ROOT
+    SCRIPTS = SOURCE_ROOT / "scripts"
+    if _BUILD_LAYOUT_PATCHER is not None:
+        _BUILD_LAYOUT_PATCHER.stop()
+        _BUILD_LAYOUT_PATCHER = None
+    if _RUNTIME_TEMPORARY is not None:
+        _RUNTIME_TEMPORARY.cleanup()
+        _RUNTIME_TEMPORARY = None
+
+
+def setUpModule() -> None:
+    global ROOT, SCRIPTS, _BUILD_LAYOUT_PATCHER, _RUNTIME_TEMPORARY
+
+    runtime = tempfile.TemporaryDirectory(prefix="changeforge-hookless-build-install-")
+    root = (Path(runtime.name) / "repo").resolve()
+    root.mkdir()
+    try:
+        root.relative_to(SOURCE_ROOT.resolve())
+    except ValueError:
+        pass
+    else:
+        runtime.cleanup()
+        raise AssertionError("temporary Runtime fixture must be outside the source tree")
+
+    try:
+        _copy_runtime_inputs(root)
+        patcher = mock.patch.multiple(BUILD, **_build_layout(root))
+        patcher.start()
+        ROOT = root
+        SCRIPTS = root / "scripts"
+        result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
+        if result != {
+            "profile": "recommended",
+            "top_level_count": 26,
+            "compiled_layer3_reference_count": 154,
+            "agent_profile_count": 4,
+            "zip_count": 26,
+        }:
+            raise AssertionError(f"unexpected canonical Runtime build result: {result}")
+    except BaseException:
+        ROOT = SOURCE_ROOT
+        SCRIPTS = SOURCE_ROOT / "scripts"
+        if "patcher" in locals():
+            patcher.stop()
+        runtime.cleanup()
+        raise
+
+    _RUNTIME_TEMPORARY = runtime
+    _BUILD_LAYOUT_PATCHER = patcher
+    unittest.addModuleCleanup(_cleanup_runtime_fixture)
 
 
 def assert_build_profile_artifact_semantics(
@@ -71,9 +189,8 @@ def assert_build_profile_artifact_semantics(
         Counter(manifest["foundation_delivery_scopes"].values()),
         {"product": 141, "authoring-only": 1, "dev-only": 8},
     )
-    expected_compiled_foundation = 0 if profile == "dev" else 141
     test_case.assertEqual(
-        expected_compiled_foundation,
+        141,
         len(manifest["compiled_foundation_skills"]),
     )
     return manifest
@@ -95,7 +212,7 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
         def fixture(directory: Path) -> Path:
             root = directory / "recommended"
             root.mkdir()
-            for index in range(27):
+            for index in range(26):
                 skill = root / f"skill-{index:02d}"
                 skill.mkdir()
                 (skill / "SKILL.md").write_text("# fixture\n", encoding="utf-8")
@@ -109,13 +226,13 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
             manifest_path = root / ".changeforge-build-manifest.json"
             self.assertEqual(
                 "hookless-control-plane-v1",
-                consumer(self, root, "recommended", 27)["architecture"],
+                consumer(self, root, "recommended", 26)["architecture"],
             )
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             manifest["architecture"] = "mutated"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaises(AssertionError):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
@@ -126,192 +243,285 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 AssertionError, "authoritative build inputs are stale"
             ):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
             (root / ".changeforge-build-manifest.json").unlink()
             with self.assertRaisesRegex(AssertionError, "build manifest is missing"):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
             (root / "skill-00/SKILL.md").unlink()
             with self.assertRaises(AssertionError):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
 
 class HooklessBuildInstallTests(unittest.TestCase):
+    @staticmethod
+    def _runtime_bundle(root: Path, professional: str) -> tuple[bytes, dict[str, bytes], dict]:
+        skill_root = root / professional
+        integrity_path = skill_root / "references/runtime/integrity-manifest.json"
+        build_manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        assets = {
+            path.relative_to(skill_root).as_posix(): path.read_bytes()
+            for path in sorted(skill_root.rglob("*"))
+            if path.is_file() and path != integrity_path
+        }
+        return (
+            integrity_path.read_bytes(),
+            assets,
+            build_manifest["runtime_asset_bindings"][professional],
+        )
+
+    def test_professional_local_runtime_bundle_has_inline_identity_and_complete_closure(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        full_digest = manifest["authoritative_build_inputs"]["sha256"]
+        professional = "engineering-change-analysis"
+        bundle = self._runtime_bundle(root, professional)
+        professional_root = root / professional
+        self.assertFalse(
+            (professional_root / "references/runtime/identity.json").exists()
+        )
+        self.assertIn(
+            f"Runtime: `{manifest['source_version']}/{runtime_asset_build_identity(full_digest)}`.",
+            (professional_root / "SKILL.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(
+            [],
+            runtime_asset_bundle_metadata_errors(
+                *bundle,
+                expected_source_version=manifest["source_version"],
+                expected_authoritative_build_inputs_sha256=full_digest,
+                expected_professional_skill=professional,
+            ),
+        )
+        self.assertTrue(
+            (root / professional / "references/runtime/selector.json").is_file()
+        )
+        self.assertTrue(
+            (root / professional / "references/runtime/selectors/complete.json").is_file()
+        )
+
+    def test_root_runtime_binding_uses_full_digest_and_prefix_comparator(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        full_digest = manifest["authoritative_build_inputs"]["sha256"]
+        bindings = manifest["runtime_asset_bindings"]
+        self.assertEqual(set(manifest["professional_skills"]), set(bindings))
+        for professional, binding in bindings.items():
+            with self.subTest(professional=professional):
+                self.assertEqual(full_digest, binding["authoritative_build_inputs_sha256"])
+                self.assertEqual(
+                    runtime_asset_build_identity(full_digest),
+                    binding["build_identity"],
+                )
+                self.assertEqual(
+                    "sha256-prefix-128-base64url-nopad",
+                    binding["build_identity_algorithm"],
+                )
+
+    def test_runtime_bundle_verifier_rejects_declared_asset_byte_mutation(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        professional = "engineering-change-analysis"
+        integrity, assets, binding = self._runtime_bundle(root, professional)
+        assets["SKILL.md"] += b"\nmutated"
+        errors = runtime_asset_bundle_metadata_errors(
+            integrity,
+            assets,
+            binding,
+            expected_source_version=manifest["source_version"],
+            expected_authoritative_build_inputs_sha256=manifest[
+                "authoritative_build_inputs"
+            ]["sha256"],
+            expected_professional_skill=professional,
+        )
+        self.assertTrue(any("bytes mismatch" in error for error in errors), errors)
+
+    def test_retry_lease_selector_authority_projects_for_supported_builds(
+        self,
+    ) -> None:
+        foundation = BUILD.load_yaml_file(
+            ROOT / "src/registry/foundation-skills.yaml"
+        )
+        professional = BUILD.load_yaml_file(
+            ROOT / "src/registry/professional-skills.yaml"
+        )
+        domain = BUILD.load_yaml_file(
+            ROOT / "src/registry/domain-skills.yaml"
+        )
+        authority = BUILD.layer3_selector_authority(
+            foundation,
+            professional,
+            domain,
+            context="temporary generated retry/lease selector projection",
+        )
+        alias = next(
+            row
+            for row in authority["aliases"]
+            if row["candidate_id"]
+            == "retry-lease-terminal-resolution-analysis"
+        )
+        self.assertEqual(
+            ["backend-idempotency-analysis", "concurrency-control-analysis"],
+            alias["source_selector_ids"],
+        )
+        self.assertEqual(
+            ["concurrency-control", "idempotency-retry-design"],
+            authority["alias_member_subsets"][
+                "retry-lease-terminal-resolution-analysis"
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as raw:
+            temporary_root = Path(raw)
+            destination = temporary_root / "engineering-control-plane"
+            BUILD._write_control_layer3_selector_projections(destination)
+            complete = json.loads(
+                (
+                    destination
+                    / "references/selectors/engineering-change-analysis/complete.json"
+                ).read_text(encoding="utf-8")
+            )
+            analysis_surface = next(
+                row
+                for row in complete["profile_authority"]
+                if row["profile"] == "analysis-agent"
+            )
+            selectors = {
+                row["selector_id"]: row
+                for row in analysis_surface["selectors"]
+            }
+            self.assertEqual(
+                ["idempotency-retry-design"],
+                selectors["backend-idempotency-analysis"]["selectable_layer3"],
+            )
+            self.assertEqual(
+                ["concurrency-control"],
+                selectors["concurrency-control-analysis"]["selectable_layer3"],
+            )
+            self.assertNotIn("cache-stampede-analysis", selectors)
+
     def test_profile_counts_and_standard_skill_roots(self) -> None:
-        expected = {"recommended": 27, "full": 40, "dev": 190}
-        for profile, count in expected.items():
-            root = ROOT / "dist/universal/skills" / profile
-            manifest = assert_build_profile_artifact_semantics(
-                self, root, profile, count
-            )
-            self.assertEqual(
-                "prompt-enforced",
-                manifest["agent_profile_enforcement"]["codex"]["roles"]
-                ["main-control-agent"]["tool_allowlist"],
-            )
-            self.assertEqual(
-                "src/agent-profiles/host-enforcement.json",
-                manifest["agent_profile_enforcement_source"]["path"],
-            )
-            self.assertEqual(
-                    4,
-                    manifest["agent_profile_enforcement_source"]["schema_version"],
-            )
-            self.assertEqual(
-                {
-                    "path": "src/control-model/core-contracts.json",
-                    "schema_version": 1,
-                    "kind": "changeforge.core_contracts",
-                    "sha256": hashlib.sha256(
-                        (ROOT / "src/control-model/core-contracts.json").read_bytes()
-                    ).hexdigest(),
-                },
-                manifest["core_model"],
-            )
-            enforcement_source = json.loads(
-                (ROOT / "src/agent-profiles/host-enforcement.json").read_text()
-            )
-            self.assertEqual(
-                enforcement_source["hosts"],
-                manifest["agent_profile_enforcement"],
-            )
-            for host, expected in enforcement_source["hosts"].items():
-                enforcement = manifest["agent_profile_enforcement"][host]
-                self.assertEqual(expected, enforcement)
-                self.assertNotIn("diff_inspection", enforcement)
-                self.assertNotIn("validation_execution", enforcement)
-            for obsolete in ("runtime_engine", "hidden_role_packs", "executable_interception"):
-                self.assertNotIn(obsolete, manifest)
+        profile = "recommended"
+        root = ROOT / "dist/universal/skills" / profile
+        manifest = assert_build_profile_artifact_semantics(
+            self, root, profile, 26
+        )
+        for retired in ("full", "dev"):
+            self.assertFalse((ROOT / "dist/universal/skills" / retired).exists())
+            self.assertFalse((ROOT / "dist/openai-api/zips" / retired).exists())
+        self.assertEqual(
+            "prompt-enforced",
+            manifest["agent_profile_enforcement"]["codex"]["roles"]
+            ["main-control-agent"]["tool_allowlist"],
+        )
+        self.assertEqual(
+            "src/agent-profiles/host-enforcement.json",
+            manifest["agent_profile_enforcement_source"]["path"],
+        )
+        self.assertEqual(
+                5,
+                manifest["agent_profile_enforcement_source"]["schema_version"],
+        )
+        self.assertEqual(
+            {
+                "path": "src/control-model/core-contracts.json",
+                "schema_version": 1,
+                "kind": "changeforge.core_contracts",
+                "sha256": hashlib.sha256(
+                    (ROOT / "src/control-model/core-contracts.json").read_bytes()
+                ).hexdigest(),
+            },
+            manifest["core_model"],
+        )
+        enforcement_source = json.loads(
+            (ROOT / "src/agent-profiles/host-enforcement.json").read_text()
+        )
+        self.assertEqual(
+            enforcement_source["hosts"],
+            manifest["agent_profile_enforcement"],
+        )
+        for host, expected in enforcement_source["hosts"].items():
+            enforcement = manifest["agent_profile_enforcement"][host]
+            self.assertEqual(expected, enforcement)
+            self.assertNotIn("diff_inspection", enforcement)
+            self.assertNotIn("validation_execution", enforcement)
+        for obsolete in ("runtime_engine", "hidden_role_packs", "executable_interception"):
+            self.assertNotIn(obsolete, manifest)
 
     def test_recommended_exposes_control_and_all_professional_skills(self) -> None:
         root = ROOT / "dist/universal/skills/recommended"
         names = {path.name for path in root.iterdir() if (path / "SKILL.md").is_file()}
         self.assertIn("engineering-control-plane", names)
-        self.assertEqual(26, len(names - {"engineering-control-plane"}))
+        self.assertEqual(25, len(names - {"engineering-control-plane"}))
         self.assertTrue((root / "backend-change-builder/references/layer3/transaction-consistency.md").is_file())
 
-    def test_execution_level_runtime_reference_reaches_profiles_fallback_and_zip_exactly(self) -> None:
-        source = (
-            ROOT
-            / "src/control-skills/engineering-control-plane/references/execution-level-contract.md"
-        ).read_bytes()
-        skill_roots = (
-            ROOT / "dist/universal/skills/recommended",
-            ROOT / "dist/codex/project/.agents/skills/recommended",
-            ROOT / "dist/claude/project/.claude/skills/recommended",
-            ROOT / "dist/copilot/project/.github/skills/recommended",
-        )
-        for root in skill_roots:
-            with self.subTest(root=root):
-                control = root / "engineering-control-plane/references"
-                self.assertEqual(source, (control / "execution-level-contract.md").read_bytes())
-                self.assertIn(
-                    "references/execution-level-contract.md",
-                    (control / "main-control-agent.md").read_text(encoding="utf-8"),
-                )
-        profile_paths = (
-            ROOT / "dist/codex/project/.codex/agents/main-control-agent.toml",
-            ROOT / "dist/claude/project/.claude/agents/main-control-agent.md",
-            ROOT / "dist/copilot/project/.github/agents/main-control-agent.agent.md",
-        )
-        for profile in profile_paths:
-            self.assertIn(
-                "references/execution-level-contract.md",
-                profile.read_text(encoding="utf-8"),
-            )
-        for profile in ("recommended", "full", "dev"):
-            with self.subTest(openai_archive_profile=profile):
-                zip_path = (
-                    ROOT
-                    / f"dist/openai-api/zips/{profile}/engineering-control-plane.zip"
-                )
-                with zipfile.ZipFile(zip_path) as archive:
-                    self.assertEqual(
-                        source,
-                        archive.read(
-                            "engineering-control-plane/references/execution-level-contract.md"
-                        ),
-                    )
-                    fallback = archive.read(
-                        "engineering-control-plane/references/main-control-agent.md"
-                    ).decode("utf-8")
-                    self.assertIn("references/execution-level-contract.md", fallback)
 
-    def test_build_copy_gate_rejects_runtime_reference_drift(self) -> None:
-        build = load_script("runtime_reference_build_gate", "scripts/build.py")
+    def test_build_copies_current_control_prompt_bytes(self) -> None:
+        build = load_script("runtime_prompt_build_copy", "scripts/build.py")
         with tempfile.TemporaryDirectory() as raw:
             destination = Path(raw) / "engineering-control-plane"
-            shutil.copytree(
-                ROOT / "src/control-skills/engineering-control-plane",
-                destination,
-            )
-            runtime = destination / "references/execution-level-contract.md"
-            runtime.write_text(
-                runtime.read_text(encoding="utf-8").replace(
-                    '"default_level":"L3"',
-                    '"default_level":"L2"',
-                    1,
-                ),
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(
-                build.BuildError,
-                "not an exact source copy",
-            ):
-                build._copy_control_prompt(destination)
+            prompt = destination / "references/main-control-agent.md"
+            prompt.parent.mkdir(parents=True)
+            prompt.write_text("stale prompt", encoding="utf-8")
+            build._copy_control_prompt(destination)
+            self.assertEqual(build.CONTROL_PROMPT_SOURCE.read_bytes(), prompt.read_bytes())
 
     def test_compiled_layer3_is_selectively_reachable_from_professional_root(self) -> None:
-        for profile in ("recommended", "full", "dev"):
-            root = ROOT / "dist/universal/skills" / profile
-            manifest = json.loads((root / ".changeforge-build-manifest.json").read_text())
-            for skill_name, candidates in manifest["compiled_layer3_references"].items():
-                skill_root = root / skill_name
-                skill_text = (skill_root / "SKILL.md").read_text()
-                self.assertEqual(1, skill_text.count("## Layer 3 Delivery"))
-                self.assertNotIn("## Compiled Layer 3 References", skill_text)
-                self.assertIn("Never preload Layer 3", skill_text)
-                if not candidates:
-                    self.assertFalse((skill_root / "references/layer3").exists())
-                    self.assertNotIn("(references/layer3/index.md)", skill_text)
-                    continue
-                self.assertIn("(references/layer3/index.md)", skill_text, (profile, skill_name))
-                index_text = (skill_root / "references/layer3/index.md").read_text()
-                for candidate in candidates:
-                    self.assertIn(f"- [{candidate}]({candidate}.md)", index_text)
-                    self.assertTrue((skill_root / f"references/layer3/{candidate}.md").is_file())
-                self.assertNotIn("- Trigger:", index_text)
-                self.assertNotIn("- Do not load:", index_text)
-                self.assertLessEqual(len(index_text.encode("utf-8")), 4096)
-                self.assertIn("`references/layer3/<name>.md`", skill_text)
-
+        root = ROOT / "dist/universal/skills/recommended"
         recommended_manifest = json.loads(
-            (ROOT / "dist/universal/skills/recommended/.changeforge-build-manifest.json").read_text()
+            (root / ".changeforge-build-manifest.json").read_text()
         )
-        full_manifest = json.loads(
-            (ROOT / "dist/universal/skills/full/.changeforge-build-manifest.json").read_text()
-        )
+        for skill_name, candidates in recommended_manifest[
+            "compiled_layer3_references"
+        ].items():
+            skill_root = root / skill_name
+            skill_text = (skill_root / "SKILL.md").read_text()
+            self.assertEqual(1, skill_text.count("## Layer 3 Delivery"))
+            self.assertNotIn("## Compiled Layer 3 References", skill_text)
+            expected_delivery = (
+                "Foundation and Domain items are compiled at "
+                "`references/layer3/<name>.md`."
+                if candidates
+                else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+            )
+            self.assertEqual(
+                expected_delivery,
+                skill_text.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
+            )
+            self.assertNotIn("Never preload Layer 3", skill_text)
+            self.assertNotIn("Layer 3 index or catalog", skill_text)
+            if not candidates:
+                self.assertFalse((skill_root / "references/layer3").exists())
+                self.assertNotIn("(references/layer3/index.md)", skill_text)
+                continue
+            self.assertNotIn("(references/layer3/index.md)", skill_text)
+            index_text = (skill_root / "references/layer3/index.md").read_text()
+            for candidate in candidates:
+                self.assertIn(f"- [{candidate}]({candidate}.md)", index_text)
+                self.assertTrue(
+                    (skill_root / f"references/layer3/{candidate}.md").is_file()
+                )
+            self.assertNotIn("- Trigger:", index_text)
+            self.assertNotIn("- Do not load:", index_text)
+            self.assertLessEqual(len(index_text.encode("utf-8")), 4096)
+            self.assertIn("`references/layer3/<name>.md`", skill_text)
+
         self.assertFalse(
             set(recommended_manifest["top_level_skills"])
             & set(recommended_manifest["foundation_skills"] + recommended_manifest["domain_skills"])
-        )
-        self.assertFalse(
-            set(full_manifest["top_level_skills"])
-            & set(full_manifest["foundation_skills"])
-        )
-        domain = set(full_manifest["domain_skills"])
-        self.assertTrue(domain <= set(full_manifest["top_level_skills"]))
-        self.assertFalse(
-            domain
-            & {
-                candidate
-                for candidates in full_manifest["compiled_layer3_references"].values()
-                for candidate in candidates
-            }
         )
         self.assertIn(
             "payment-trading-extension",
@@ -329,23 +539,12 @@ class HooklessBuildInstallTests(unittest.TestCase):
             if scope != "product"
         }
         self.assertEqual(9, len(non_product))
-        for manifest in (recommended_manifest, full_manifest):
-            compiled = {
-                candidate
-                for candidates in manifest["compiled_layer3_references"].values()
-                for candidate in candidates
-            }
-            self.assertFalse(non_product & compiled)
-        dev_manifest = json.loads(
-            (ROOT / "dist/universal/skills/dev/.changeforge-build-manifest.json").read_text()
-        )
-        self.assertTrue(
-            set(dev_manifest["foundation_skills"] + dev_manifest["domain_skills"])
-            <= set(dev_manifest["top_level_skills"])
-        )
-        self.assertTrue(
-            all(not candidates for candidates in dev_manifest["compiled_layer3_references"].values())
-        )
+        compiled = {
+            candidate
+            for candidates in recommended_manifest["compiled_layer3_references"].values()
+            for candidate in candidates
+        }
+        self.assertFalse(non_product & compiled)
 
     def test_compiled_projection_and_top_level_authoring_boundaries(self) -> None:
         expected_foundation = [
@@ -353,14 +552,12 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "Targeted References",
         ]
         expected_domain = [
             "Decision Boundary",
             "Professional Decision Rules",
             "High-Value Gotchas",
             "Stop / Escalation Conditions",
-            "Targeted References",
         ]
         forbidden = {
             "Registry Trigger",
@@ -376,12 +573,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "recommended-foundation": (
                 ROOT
                 / "dist/universal/skills/recommended/backend-change-builder"
-                / "references/layer3/transaction-consistency.md",
-                expected_foundation,
-            ),
-            "full-foundation": (
-                ROOT
-                / "dist/universal/skills/full/backend-change-builder"
                 / "references/layer3/transaction-consistency.md",
                 expected_foundation,
             ),
@@ -402,143 +593,255 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 ]
                 self.assertEqual(expected, headings)
                 self.assertFalse(forbidden & set(headings))
+                for forbidden_control in (
+                    "## JIT Reference Delivery",
+                    "Current-Professional JIT",
+                    "engineering-control-plane/references/selectors/",
+                    "never select/reroute/preload",
+                    "index/catalog",
+                ):
+                    self.assertNotIn(forbidden_control, text)
 
         nested = compiled_paths["recommended-foundation"][0]
-        nested_text = nested.read_text(encoding="utf-8")
-        self.assertIn(
-            "transaction-consistency/references/evidence-patterns.md",
-            nested_text,
-        )
         self.assertTrue(
             (
                 nested.parent
                 / "transaction-consistency/references/evidence-patterns.md"
             ).is_file()
         )
+        selector = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/backend-change-builder"
+                / "references/runtime/selector.json"
+            ).read_text(encoding="utf-8")
+        )
+        partition = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/backend-change-builder"
+                / "references/runtime/reference-records"
+                / "transaction-consistency.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            "changeforge.layer3-selector-normalized-control/v1",
+            selector["contract"],
+        )
+        self.assertNotIn("reference_records", selector)
+        self.assertTrue(
+            any(
+                record.get("owner_skill") == "transaction-consistency"
+                and record.get("path")
+                == "references/layer3/transaction-consistency/references/evidence-patterns.md"
+                and record.get("required_output")
+                for record in partition["reference_records"]
+            )
+        )
 
-        full_domain = (
-            ROOT
-            / "dist/universal/skills/full/bigdata-product-extension/SKILL.md"
+        source_domain = (
+            ROOT / "src/domain-extensions/bigdata-product-extension/SKILL.md"
         ).read_text(encoding="utf-8")
-        dev_foundation = (
-            ROOT
-            / "dist/universal/skills/dev/transaction-consistency/SKILL.md"
+        for heading in ("When To Use", "Do Not Use", "Required Inputs"):
+            self.assertIn(f"## {heading}", source_domain)
+        source_foundation_without_inputs = (
+            ROOT / "src/foundation/capabilities/transaction-consistency/SKILL.md"
         ).read_text(encoding="utf-8")
-        dev_domain = (
+        source_foundation_with_inputs = (
             ROOT
-            / "dist/universal/skills/dev/bigdata-product-extension/SKILL.md"
+            / "src/foundation/capabilities/targeted-validation-selection/SKILL.md"
         ).read_text(encoding="utf-8")
-        for text in (full_domain, dev_domain):
-            for heading in (
-                "Role",
-                "When To Use",
-                "Do Not Use",
-                "Required Inputs",
-                "Execution Checklist",
-                "Output Contract",
-            ):
-                self.assertIn(f"## {heading}", text)
-            self.assertNotIn("## Decision Boundary", text)
-        for heading in (
-            "Registry Trigger",
-            "Skill Role",
-            "Execution Checklist",
-            "Output Contract",
+        self.assertIn("## Registry Trigger", source_foundation_without_inputs)
+        self.assertNotIn("## Inputs", source_foundation_without_inputs)
+        self.assertIn("## Inputs", source_foundation_with_inputs)
+        for source in (
+            source_foundation_without_inputs,
+            source_foundation_with_inputs,
         ):
-            self.assertIn(f"## {heading}", dev_foundation)
-        self.assertNotIn("## Decision Boundary", dev_foundation)
+            self.assertIn("## Output Contract", source)
+
+        def without_section(text: str, heading: str) -> str:
+            marker = f"\n## {heading}\n"
+            self.assertIn(marker, text)
+            prefix, remainder = text.split(marker, 1)
+            next_heading = remainder.find("\n## ")
+            if next_heading < 0:
+                return prefix.rstrip() + "\n"
+            return prefix + remainder[next_heading:]
+
+        with tempfile.TemporaryDirectory() as raw:
+            fixture_root = Path(raw) / "transaction-consistency"
+            fixture_root.mkdir()
+            fixture_file = fixture_root / "SKILL.md"
+            item = BUILD.SkillItem(
+                name="transaction-consistency",
+                path=fixture_root,
+                layer="foundation",
+                description="synthetic",
+                metadata={},
+                body=source_foundation_without_inputs,
+                registry={"reference_index": []},
+            )
+            for required_heading in (
+                "Skill Role",
+                "High-Value Rules",
+                "Anti-Patterns",
+                "Stop Conditions",
+                "Output Contract",
+                "Targeted References",
+            ):
+                fixture_file.write_text(
+                    without_section(
+                        source_foundation_without_inputs,
+                        required_heading,
+                    ),
+                    encoding="utf-8",
+                )
+                expected_error = (
+                    "complete source Targeted References authority"
+                    if required_heading == "Targeted References"
+                    else f"one non-empty {required_heading!r} section"
+                )
+                with self.subTest(required_heading=required_heading):
+                    with self.assertRaisesRegex(BUILD.BuildError, expected_error):
+                        BUILD._write_compact_layer3_root_projection(
+                            fixture_root,
+                            item,
+                        )
+
+    def test_temporary_generated_install_has_unique_professional_jit_and_no_layer3_control(self) -> None:
+        registries = BUILD._load_registries()
+        professional_items = BUILD._load_items(
+            "professional", registries["professional"]
+        )
+        layer3_items = [
+            *BUILD._load_items("foundation", registries["foundation"]),
+            *BUILD._load_items("domain", registries["domain"]),
+        ]
+        forbidden = (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/",
+            "never select/reroute/preload",
+            "index/catalog",
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            profile_root = Path(raw) / BUILD.RUNTIME_PROFILE
+            selector_projections, reference_partitions = (
+                BUILD._selector_projection_assets()
+            )
+            snapshot = BUILD.authoritative_build_input_snapshot(ROOT)
+            build_identity = runtime_asset_build_identity(snapshot["sha256"])
+            runtime_version = BUILD._source_version()
+            for item in professional_items:
+                with self.subTest(professional=item.name):
+                    skill_root = profile_root / item.name
+                    BUILD._copy_skill_tree(item.path, skill_root)
+                    BUILD._write_compact_professional_projection(
+                        skill_root,
+                        item,
+                        runtime_version=runtime_version,
+                        build_identity=build_identity,
+                    )
+                    BUILD._write_professional_runtime_selector_closure(
+                        skill_root,
+                        item.name,
+                        selector_projections,
+                        reference_partitions,
+                        build_identity,
+                    )
+                    rendered = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+                    self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
+                    self.assertEqual(
+                        1,
+                        rendered.count("references/runtime/selector.json"),
+                    )
+                    self.assertEqual(1, rendered.count(f"Runtime: `{runtime_version}/{build_identity}`."))
+                    self.assertNotIn("references/runtime/identity.json", rendered)
+                    self.assertTrue(
+                        (skill_root / "references/runtime/selector.json").is_file()
+                    )
+            for item in layer3_items:
+                with self.subTest(layer3=item.name):
+                    top_level = profile_root / f"layer3-{item.name}"
+                    BUILD._copy_skill_tree(item.path, top_level)
+                    BUILD._write_compact_layer3_root_projection(top_level, item)
+                    projections = [
+                        (top_level / "SKILL.md").read_text(encoding="utf-8")
+                    ]
+                    if (
+                        item.layer == "domain"
+                        or item.registry.get("delivery_scope") == "product"
+                    ):
+                        projections.append(
+                            BUILD._render_layer3_reference(item, build_identity)
+                        )
+                    for rendered in projections:
+                        for value in forbidden:
+                            self.assertNotIn(value, rendered)
 
     def test_source_profiles_use_compact_role_and_generated_delivery_rules(self) -> None:
         data = json.loads((ROOT / "src/agent-profiles/role-agents.json").read_text())
         core = json.loads((ROOT / "src/control-model/core-contracts.json").read_text())
+        roles = core["roles"]
+        profile_contract = core["profile_contract"]
         limits = core["profile_contract"]["instruction_rule_count"]
-        expected_counts = {
-            "main-control-agent": 6,
-            "analysis-agent": 16,
-            "task-agent": 38,
-            "review-agent": 21,
-        }
         profiles = {item["name"]: item for item in data["profiles"]}
-        self.assertEqual(set(expected_counts), set(profiles))
-        for name, profile in profiles.items():
-            rules = profile["instructions"].splitlines()
-            maximum = limits["maximum_by_role"].get(name, limits["maximum"])
-            self.assertGreaterEqual(len(rules), limits["minimum"])
-            self.assertLessEqual(len(rules), maximum)
-            self.assertEqual(expected_counts[name], len(rules))
-            self.assertTrue(all(rule.startswith("- ") for rule in rules))
-            for obsolete in ("In a recommended build", "In a full build", "In a dev build"):
-                self.assertNotIn(obsolete, profile["instructions"])
-        for name in ("analysis-agent", "task-agent", "review-agent"):
-            instructions = profiles[name]["instructions"]
-            self.assertIn("generated `## Layer 3 Delivery` section", instructions)
-            self.assertIn("Never preload Layer 3", instructions)
-            self.assertIn("Layer 3 index or catalog", instructions)
-        review = profiles["review-agent"]["instructions"]
-        self.assertIn("actual diff or an accessible host-native diff reference", review)
-        self.assertIn("inspect the diff and every changed file", review)
-        self.assertIn("pre-implementation design", review)
-        self.assertIn("no implementation diff is required", review)
-        self.assertIn("assigned Review Handoff", review)
-        task = profiles["task-agent"]["instructions"]
-        task_casefold = task.casefold()
-        task_rules = task.splitlines()
-        capability_rules = core["profile_contract"]["capability_terms"]
-        projected_rules = [
-            rule
-            for group in (
-                "layer3-jit-delivery",
-                "task-normal-mode",
-                "task-utility-mode",
-                "task-scope-boundary",
-            )
-            for rule in capability_rules[group]
-        ]
-        projected_rules.extend(
-            core["implementation_discipline_contract"]["profile_projection"]
-        )
-        canonical_task_rules = []
-        for rule in projected_rules:
-            matches = [
-                line
-                for line in task_rules
-                if all(
-                    term.casefold() in line.casefold()
-                    for term in rule["required_terms"]
-                )
-            ]
-            self.assertEqual(1, len(matches), rule["rule_id"])
-            if "exact_rule" in rule:
-                self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
-            canonical_task_rules.append(matches[0])
+        self.assertEqual(set(roles), set(profiles))
 
-        built_task_profiles = {
-            "codex": ROOT / "dist/codex/project/.codex/agents/task-agent.toml",
-            "claude": ROOT / "dist/claude/project/.claude/agents/task-agent.md",
+        built_profile_roots = {
+            "codex": (ROOT / "dist/codex/project/.codex/agents", ".toml"),
+            "claude": (ROOT / "dist/claude/project/.claude/agents", ".md"),
             "copilot": (
-                ROOT
-                / "dist/copilot/project/.github/agents/task-agent.agent.md"
+                ROOT / "dist/copilot/project/.github/agents",
+                ".agent.md",
             ),
         }
-        for host, path in built_task_profiles.items():
-            built_lines = path.read_text(encoding="utf-8").splitlines()
-            for rule in task_rules:
-                self.assertIn(rule, built_lines, (host, rule))
-            for rule in canonical_task_rules:
-                self.assertIn(rule, built_lines, (host, rule))
-        analysis = profiles["analysis-agent"]["instructions"]
-        for phrase in (
-            "no-repo direct-answer",
-            "fully determined by user-supplied facts",
-            "Control prompt files are ineligible and require source-backed analysis.",
-            "do not load a named Skill, inspect repository or source evidence, or produce an Engineering Brief or First Executable Slice",
-            "only user-supplied facts",
-            "answer, assumptions, limits, and four-state Status",
-            "Remain read-only",
-            "one bounded scope in one pass",
-            "minimum safe slice handoff",
-        ):
-            self.assertIn(phrase, analysis)
+        for name, profile in profiles.items():
+            role = roles[name]
+            expected_fields = set(profile_contract["profile_fields"]) | set(
+                profile_contract["optional_fields_by_role"][name]
+            )
+            self.assertEqual(expected_fields, set(profile))
+            self.assertEqual(role["sandbox"], profile["sandbox"])
+            self.assertEqual(role["tools"], profile["tools"])
+            tools = set(profile["tools"])
+            self.assertEqual("dispatch" in tools, role["may_dispatch"])
+            self.assertEqual({"edit", "execute"} <= tools, role["may_edit"])
+            self.assertEqual("execute-read-only" in tools, role["may_review"])
+
+            rules = profile["instructions"].splitlines()
+            maximum = limits["maximum"]
+            self.assertGreaterEqual(len(rules), limits["minimum"])
+            self.assertLessEqual(len(rules), maximum)
+            self.assertTrue(all(rule.startswith("- ") for rule in rules))
+            for forbidden in profile_contract["forbidden_instruction_terms"]:
+                self.assertNotIn(forbidden, profile["instructions"])
+
+            for host, (root, suffix) in built_profile_roots.items():
+                rendered = {
+                    "codex": BUILD._render_codex_profile,
+                    "claude": BUILD._render_claude_profile,
+                    "copilot": BUILD._render_copilot_profile,
+                }[host](profile, BUILD._load_host_enforcement())
+                built_lines = rendered.splitlines()
+                for rule in rules:
+                    self.assertIn(rule, built_lines, (host, name, rule))
+
+        self.assertEqual(
+            core["prompt_contract"]["path"],
+            profiles["main-control-agent"]["prompt"],
+        )
+        external = core["external_read_contract"]
+        self.assertEqual("analysis-agent", external["exclusive_role"])
+        self.assertEqual("external-source-read", external["operation"])
+        for name, profile in profiles.items():
+            self.assertEqual(
+                name == external["exclusive_role"],
+                external["operation"] in profile["tools"],
+            )
+        for name in ("task-agent", "review-agent"):
+            self.assertNotIn(external["operation"], profiles[name]["tools"])
 
     def test_no_built_runtime_or_hidden_delivery(self) -> None:
         forbidden_names = {".changeforge-packs", ".changeforge-control", "hooks", "runtime_governance"}
@@ -563,25 +866,20 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for host, root in roots.items():
             suffix = expected_suffixes[host]
             main = (root / f"main-control-agent{suffix}").read_text()
-            capabilities = {
-                "bounded-source-read": "supported",
-                "workspace-mutation": "supported",
-                "non-mutating-validation": "supported",
-                "exact-change-evidence-read": "supported",
-                "exact-change-evidence-export": "supported",
-                "reviewer-accessible-change-reference": "supported",
-                "workspace-state-observation": "supported",
-            }
-            self.assertIn(
-                BUILD._render_decision_capability_facts(capabilities),
-                main,
-            )
             self.assertNotIn("Current host modes:", main)
             self.assertNotIn("diff_input_mode=", main)
             self.assertNotIn("validation_mode=", main)
-            for name in ("analysis-agent", "task-agent", "review-agent"):
-                worker = (root / f"{name}{suffix}").read_text()
-                self.assertNotIn("Current capability facts:", worker)
+            for name in (
+                "main-control-agent",
+                "analysis-agent",
+                "task-agent",
+                "review-agent",
+            ):
+                profile = (root / f"{name}{suffix}").read_text()
+                self.assertIn("Declared tool boundary:", profile)
+                self.assertNotIn("Current capability facts:", profile)
+                self.assertNotIn("Current external-read mode:", profile)
+                self.assertNotIn("external_source_read=", profile)
         for path in (ROOT / "dist/codex/project/.codex/agents").glob("*.toml"):
             self.assertNotIn("permission_enforcement", path.read_text())
         copilot = ROOT / "dist/copilot/project/.github/agents"
@@ -594,8 +892,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
             'tools: ["read","search","web"]',
             copilot_analysis_frontmatter,
         )
+        self.assertNotIn("Current external-read mode:", copilot_analysis)
         self.assertIn(
-            "Current external-read mode: external_source_read=prompt-enforced.",
+            "Declared tool boundary: read, search, external-source-read.",
             copilot_analysis,
         )
         for forbidden in ("edit", "execute", "agent", "*", "mcp"):
@@ -618,15 +917,20 @@ class HooklessBuildInstallTests(unittest.TestCase):
             agent="codex",
             scope="project",
             target=Path("/tmp/project"),
-            profile="auto",
             dry_run=True,
             no_doctor=False,
         )
         plan = quickstart.build_plan(args)
         command_text = " ".join(" ".join(command) for command in plan.commands)
-        self.assertEqual("recommended", plan.selected_profile)
-        self.assertEqual(27, plan.expected_skill_count)
-        for token in ("--with-hooks", "--without-hooks", "--hook-profile", "activation-level"):
+        self.assertFalse(hasattr(plan, "selected_profile"))
+        self.assertEqual(26, plan.expected_skill_count)
+        for token in (
+            "--profile",
+            "--with-hooks",
+            "--without-hooks",
+            "--hook-profile",
+            "activation-level",
+        ):
             self.assertNotIn(token, command_text)
 
         for agent in ("cline", "openai-api"):
@@ -634,7 +938,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 agent=agent,
                 scope="project" if agent == "cline" else None,
                 target=Path("/tmp/project") if agent == "cline" else None,
-                profile="auto",
                 dry_run=True,
                 no_doctor=False,
             )
@@ -644,13 +947,21 @@ class HooklessBuildInstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             target = Path(raw) / "project"
             install = subprocess.run(
-                [sys.executable, "installers/install.py", "--agent", "codex", "--scope", "project", "--profile", "recommended", "--target", str(target)],
+                [sys.executable, "installers/install.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
             )
             self.assertEqual(0, install.returncode, install.stderr or install.stdout)
             manifest = json.loads(
                 (target / ".agents/skills/.changeforge-install-manifest.json").read_text()
             )
+            self.assertEqual("recommended", manifest["profile"])
+            self.assertEqual(26, len(manifest["installed_skills"]))
+            self.assertEqual(1, len(manifest["installed_control_skills"]))
+            self.assertEqual(25, len(manifest["installed_professional_skills"]))
+            self.assertEqual([], manifest["installed_foundation_skills"])
+            self.assertEqual([], manifest["installed_domain_skills"])
+            self.assertEqual(4, len(manifest["installed_agent_profiles"]))
+            self.assertEqual(4, len(manifest["installed_agent_profile_files"]))
             self.assertEqual(
                 "ai-consumption-v1",
                 manifest["compiled_layer3_format"],
@@ -672,14 +983,49 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 manifest["core_model"],
             )
             doctor = subprocess.run(
-                [sys.executable, "installers/doctor.py", "--agent", "codex", "--scope", "project", "--profile", "recommended", "--target", str(target)],
+                [sys.executable, "installers/doctor.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
             )
             self.assertEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
-            self.assertIn("tool_allowlist=prompt-enforced", doctor.stdout)
-            self.assertIn("diff_input_mode=native", doctor.stdout)
-            self.assertIn("validation_mode=native-read-only", doctor.stdout)
-            self.assertIn("utility_no_edit=prompt-enforced", doctor.stdout)
+            self.assertIn("✓ rd-skills installed", doctor.stdout)
+            self.assertIn("✓ expected configuration found", doctor.stdout)
+            self.assertIn("✓ installation healthy", doctor.stdout)
+            self.assertNotIn("tool_allowlist=", doctor.stdout)
+            self.assertNotIn("diff_input_mode=", doctor.stdout)
+            self.assertNotIn("validation_mode=", doctor.stdout)
+            self.assertNotIn("utility_no_edit=", doctor.stdout)
+
+            verbose_doctor = subprocess.run(
+                [
+                    sys.executable,
+                    "installers/doctor.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(target),
+                    "--verbose",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(
+                0,
+                verbose_doctor.returncode,
+                verbose_doctor.stderr or verbose_doctor.stdout,
+            )
+            self.assertIn(
+                "doctor: declared-default profile enforcement "
+                "host=codex delivery=native-enforced",
+                verbose_doctor.stdout,
+            )
+            self.assertIn("tool_allowlist=prompt-enforced", verbose_doctor.stdout)
+            self.assertNotIn("diff_input_mode=", verbose_doctor.stdout)
+            self.assertNotIn("validation_mode=", verbose_doctor.stdout)
+            self.assertNotIn("utility_no_edit=", verbose_doctor.stdout)
             uninstall = subprocess.run(
                 [sys.executable, "installers/uninstall.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
@@ -698,8 +1044,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     "codex",
                     "--scope",
                     "project",
-                    "--profile",
-                    "recommended",
                     "--target",
                     str(target),
                 ],
@@ -727,8 +1071,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     "codex",
                     "--scope",
                     "project",
-                    "--profile",
-                    "recommended",
                     "--target",
                     str(target),
                 ],
@@ -775,8 +1117,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         agent,
                         "--scope",
                         "project",
-                        "--profile",
-                        "recommended",
                         "--target",
                         str(target),
                     ],
@@ -799,8 +1139,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         agent,
                         "--scope",
                         "project",
-                        "--profile",
-                        "recommended",
                         "--target",
                         str(target),
                     ],
@@ -845,8 +1183,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         agent,
                         "--scope",
                         "project",
-                        "--profile",
-                        "recommended",
                         "--target",
                         str(target),
                     ],
@@ -878,8 +1214,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         agent,
                         "--scope",
                         "project",
-                        "--profile",
-                        "recommended",
                         "--target",
                         str(target),
                     ],
@@ -898,17 +1232,20 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     doctor.stdout,
                 )
 
-    def test_doctor_rejects_legacy_host_mode_marker_for_every_host(self) -> None:
+    def test_doctor_rejects_static_runtime_capability_projection_for_every_profile(self) -> None:
         layouts = {
-            "codex": Path(".codex/agents/main-control-agent.toml"),
-            "claude": Path(".claude/agents/main-control-agent.md"),
-            "copilot": Path(".github/agents/main-control-agent.agent.md"),
+            "codex": (Path(".codex/agents"), ".toml"),
+            "claude": (Path(".claude/agents"), ".md"),
+            "copilot": (Path(".github/agents"), ".agent.md"),
         }
-        legacy = (
-            "Current host modes: diff_input_mode=native; "
-            "validation_mode=native-read-only; utility_no_edit=prompt-enforced."
+        roles = (
+            "main-control-agent",
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
         )
-        for agent, relative in layouts.items():
+        marker = "Current capability facts: invocation-scoped value must not be static."
+        for agent, (relative, suffix) in layouts.items():
             with self.subTest(agent=agent), tempfile.TemporaryDirectory() as raw:
                 target = Path(raw) / "project"
                 install = subprocess.run(
@@ -919,8 +1256,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         agent,
                         "--scope",
                         "project",
-                        "--profile",
-                        "recommended",
                         "--target",
                         str(target),
                     ],
@@ -930,38 +1265,46 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(0, install.returncode, install.stderr or install.stdout)
-                profile = target / relative
-                profile.write_text(
-                    profile.read_text(encoding="utf-8") + f"\n# {legacy}\n",
-                    encoding="utf-8",
-                )
-
-                doctor = subprocess.run(
-                    [
-                        sys.executable,
-                        "installers/doctor.py",
-                        "--agent",
-                        agent,
-                        "--scope",
-                        "project",
-                        "--profile",
-                        "recommended",
-                        "--target",
-                        str(target),
-                    ],
-                    cwd=ROOT,
-                    text=True,
-                    capture_output=True,
-                    check=False,
-                )
-                self.assertNotEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
-                self.assertIn("legacy host mode projection is forbidden", doctor.stdout)
+                for role in roles:
+                    with self.subTest(agent=agent, role=role):
+                        profile = target / relative / f"{role}{suffix}"
+                        original = profile.read_text(encoding="utf-8")
+                        profile.write_text(
+                            original + f"\n# {marker}\n",
+                            encoding="utf-8",
+                        )
+                        doctor = subprocess.run(
+                            [
+                                sys.executable,
+                                "installers/doctor.py",
+                                "--agent",
+                                agent,
+                                "--scope",
+                                "project",
+                                "--target",
+                                str(target),
+                            ],
+                            cwd=ROOT,
+                            text=True,
+                            capture_output=True,
+                            check=False,
+                        )
+                        self.assertNotEqual(
+                            0,
+                            doctor.returncode,
+                            doctor.stderr or doctor.stdout,
+                        )
+                        self.assertIn(
+                            "static runtime capability projection is forbidden",
+                            doctor.stdout,
+                        )
+                        profile.write_text(original, encoding="utf-8")
 
     def test_doctor_ignores_unrelated_user_profile(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             target = Path(raw) / "project"
             install = subprocess.run(
-                [sys.executable, "installers/install.py", "--agent", "codex", "--scope", "project", "--profile", "recommended", "--target", str(target)],
+                [sys.executable, "installers/install.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
             )
             self.assertEqual(0, install.returncode, install.stderr or install.stdout)
@@ -969,7 +1312,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 'name = "user-owned"\n', encoding="utf-8"
             )
             doctor = subprocess.run(
-                [sys.executable, "installers/doctor.py", "--agent", "codex", "--scope", "project", "--profile", "recommended", "--target", str(target)],
+                [sys.executable, "installers/doctor.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
             )
             self.assertEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)

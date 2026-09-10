@@ -1,6 +1,5 @@
 id: idempotent-payment-create
 category: backend
-complexity: L5
 focus:
   - payment idempotency
   - transaction consistency

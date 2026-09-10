@@ -1,5 +1,7 @@
 # Split, Merge, And Cleanup Patterns
 
+- **Honor accepted deletion readiness.** Consume `cleanup-deletion-governance` exit, residue, absence-proof, and recovery limits; verify that structural sequencing preserves them.
+
 Use this reference when a refactor changes file/object/module shape, merges small files, sequences an accepted deletion decision, or claims complexity reduction. `cleanup-deletion-governance` owns deletion readiness, exit conditions, residue, absence proof, and irreversible recovery limits.
 
 ## Split Decision Matrix
@@ -15,7 +17,7 @@ Use this reference when a refactor changes file/object/module shape, merges smal
 
 | Candidate | Merge only if | Keep separate when |
 | --- | --- | --- |
-| Small helper file | It has no independent owner, lifecycle, invariant, side effect, public contract, generated boundary, or focused test. | It protects adapter/client/gateway/repository/protocol boundaries, value-object invariants, strategy variants, public behavior tests, or dependency direction. |
+| Small helper file | It has no independent owner, lifecycle, invariant, side effect, public contract, or generated boundary. Retain focused behavior tests; their existence alone does not prevent the merge. | It protects adapter/client/gateway/repository/protocol boundaries, value-object invariants, strategy variants, public behavior tests, or dependency direction. |
 | Tiny policy object | The policy is not independently named by domain, config, tests, or callers. | It expresses an authorization, pricing, validation, routing, retry, or state-machine rule. |
 | Generated or barrel file | The source-of-truth and consumers remain unchanged after merge. | Generated clients, public exports, reflection, plugin loading, or package entry points depend on it. |
 | Test fixture/helper | It is pure technical setup with one owner. | It carries business cases, golden data, tenant/security behavior, or cross-module contracts. |

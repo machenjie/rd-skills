@@ -1,6 +1,6 @@
 # Engineering Artifact Review Checklist
 
-Use for an independent review of an ordinary Engineering Brief, Task Plan, acceptance, or contract artifact before implementation. Do not load it for implementation-diff review, a Direct Task, high-risk design, or release/deployment/migration readiness.
+Use for an independent review of an ordinary Engineering Brief, Task Plan, acceptance, or contract artifact before implementation. Do not load it for implementation-diff review, a bounded implementation task with no separate decision artifact, high-risk design, or release/deployment/migration readiness.
 
 ## Review Checklist
 
@@ -10,15 +10,9 @@ Use for an independent review of an ordinary Engineering Brief, Task Plan, accep
 - For a Task Plan, check dependencies, write scopes, integration and conflict owners, stop conditions, and validation ownership.
 - For an acceptance artifact, check falsifiable outcomes, rejection conditions, validator, evidence owner, freshness, and release consequence.
 - For a contract artifact, check producers, consumers, versions, compatibility, null or default semantics, errors, rollout, and deprecation.
-- Route a high-risk Engineering Brief to `high-risk-design-review` as unreviewed specialist scope.
-- Route release, deployment, or migration readiness to `delivery-release-gate` as unreviewed specialist scope.
+- Record high-risk Engineering Brief decisions as unreviewed specialist scope.
+- Record release, deployment, or migration readiness as unreviewed approval scope.
 - Establish implementation readiness from resolved blockers, owned dependencies, and one safe executable slice.
 - Match validation and rollback evidence to artifact claims, failure boundaries, and proof limits.
-- Route security, privacy, money, destructive, privileged, irreversible, or public-contract decisions to their authoritative owners.
+- Mark security, privacy, money, destructive, privileged, irreversible, or public-contract decisions outside review authority unless their authoritative decisions are supplied.
 - Return the verdict, severity-ranked findings, reviewed and unverified scope, downstream impact, residual risk, and next owner.
-
-## Legacy Review Handoff Migration
-
-When an explicitly supplied legacy Review Handoff is migrated, treat its acceptance, changed paths, validation, and open findings as historical inputs.
-Revalidate those inputs against the current artifact and source. Omit internal identifiers, digests, provenance fields, and machine state.
-New artifacts do not require a legacy handoff.

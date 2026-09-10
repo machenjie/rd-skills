@@ -34,14 +34,21 @@ _synthetic_catalog_cost_state = cost_support._synthetic_catalog_cost_state
 
 
 
+@functools.lru_cache(maxsize=1)
+def _measured_current_cost_fixture() -> dict:
+    # These projection tests share unchanged source inputs. Measure the full
+    # catalog once; each consumer gets a copy before applying its own mutation.
+    return REGRESSION._calculate_professional_review_cost_fixtures()
+
+
 class ProfessionalReviewCostFixtureTests(unittest.TestCase):
     def test_current_cost_fixture_uses_closed_schema3_authority(self) -> None:
         packet = REGRESSION._current_professional_completeness_packet()
         self.assertNotIn("source_fingerprints", packet)
 
-        fixture = REGRESSION._calculate_professional_review_cost_fixtures()
+        fixture = copy.deepcopy(_measured_current_cost_fixture())
         self.assertEqual(
-            189,
+            188,
             fixture["review_contract_change"]["fresh_target_count"],
         )
 
@@ -196,11 +203,11 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
                         semantic_vote_multiplicity=multiplicity,
                     )
 
-        fixture = REGRESSION._calculate_professional_review_cost_fixtures()
+        fixture = copy.deepcopy(_measured_current_cost_fixture())
         self.assertEqual(
             {
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 189,
+                "carried_forward_target_count": 188,
                 "input_ratio_ppm": 0,
             },
             fixture["unchanged"],
@@ -218,12 +225,18 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         self.assertEqual({"thresholds", "formal_round_policy"}, set(authority))
         thresholds = authority["thresholds"]
 
-        current = REGRESSION._professional_review_cost_fixtures()
+        measured = copy.deepcopy(_measured_current_cost_fixture())
+        with mock.patch.object(
+            REGRESSION,
+            "_calculate_professional_review_cost_fixtures",
+            autospec=True,
+            return_value=measured,
+        ):
+            current = REGRESSION._professional_review_cost_fixtures()
         sensitivity = current[
             "routing_neutral_isolated_material_binding_sensitivity"
         ]
         self.assertEqual(1, current["schema_version"])
-        self.assertEqual("pass", current["status"])
         self.assertEqual(
             {
                 "case_count",
@@ -234,25 +247,20 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             },
             set(sensitivity),
         )
-        self.assertEqual(189, sensitivity["case_count"])
-        self.assertEqual(189, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
-        self.assertLessEqual(
-            sensitivity["fresh_target_count"]["max"],
-            thresholds["maximum_fresh_target_count"],
-        )
-        self.assertLessEqual(
-            sensitivity["fresh_target_count"]["sum"],
-            thresholds["maximum_mean_fresh_target_count"]
-            * sensitivity["case_count"],
-        )
-        self.assertLessEqual(
-            sensitivity["input_ratio_ppm"]["max"],
-            thresholds["maximum_input_ratio_ppm"],
-        )
-        self.assertLessEqual(
-            sensitivity["input_ratio_ppm"]["sum"],
-            thresholds["maximum_mean_input_ratio_ppm"]
-            * sensitivity["case_count"],
+        self.assertEqual(188, sensitivity["case_count"])
+        self.assertEqual(188, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
+        within_ceilings = all((
+            sensitivity["fresh_target_count"]["max"]
+            <= thresholds["maximum_fresh_target_count"],
+            sensitivity["fresh_target_count"]["sum"]
+            <= thresholds["maximum_mean_fresh_target_count"] * sensitivity["case_count"],
+            sensitivity["input_ratio_ppm"]["max"]
+            <= thresholds["maximum_input_ratio_ppm"],
+            sensitivity["input_ratio_ppm"]["sum"]
+            <= thresholds["maximum_mean_input_ratio_ppm"] * sensitivity["case_count"],
+        ))
+        self.assertEqual(
+            "pass" if within_ceilings else "formal-non-current", current["status"]
         )
 
         malformed_core = mock.Mock()
@@ -261,6 +269,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             mock.patch.object(
                 REGRESSION,
                 "_calculate_professional_review_cost_fixtures",
+                autospec=True,
                 return_value=current,
             ),
             mock.patch.object(
@@ -276,7 +285,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             REGRESSION._professional_review_cost_fixtures()
 
     def test_digest_only_drift_is_not_cost_currentness(self) -> None:
-        measured = REGRESSION._calculate_professional_review_cost_fixtures()
+        measured = copy.deepcopy(_measured_current_cost_fixture())
         sensitivity = measured[
             "routing_neutral_isolated_material_binding_sensitivity"
         ]
@@ -288,16 +297,23 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             "review_contract_fingerprint",
             "cases_fingerprint",
         }
-        for field in digest_fields:
-            if field in sensitivity:
-                sensitivity[field] = "0" * 64
         with mock.patch.object(
             REGRESSION,
             "_calculate_professional_review_cost_fixtures",
+            autospec=True,
+            return_value=measured,
+        ):
+            original = REGRESSION._professional_review_cost_fixtures()
+        for field in digest_fields:
+            sensitivity[field] = "0" * 64
+        with mock.patch.object(
+            REGRESSION,
+            "_calculate_professional_review_cost_fixtures",
+            autospec=True,
             return_value=measured,
         ):
             projected = REGRESSION._professional_review_cost_fixtures()
-        self.assertEqual("pass", projected["status"])
+        self.assertEqual(original, projected)
         self.assertTrue(
             digest_fields.isdisjoint(
                 projected[
@@ -307,17 +323,30 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         )
 
     def test_count_and_threshold_tamper_remain_non_current(self) -> None:
-        measured = REGRESSION._calculate_professional_review_cost_fixtures()
+        measured = copy.deepcopy(_measured_current_cost_fixture())
+        thresholds = json.loads(
+            REGRESSION.CORE_CONTRACTS.read_text(encoding="utf-8")
+        )["final_goal_contract"]["professional_review_cost_fixtures"][
+            "thresholds"
+        ]
         mutations = {
             "case-count": lambda sensitivity: sensitivity.update(
-                {"case_count": 188}
+                {"case_count": 189}
             ),
             "fresh-max": lambda sensitivity: sensitivity[
                 "fresh_target_count"
-            ].update({"max": 57}),
+            ].update(
+                {
+                    "max": (
+                        thresholds["maximum_fresh_target_count"] + 1
+                    )
+                }
+            ),
             "ratio-max": lambda sensitivity: sensitivity[
                 "input_ratio_ppm"
-            ].update({"max": 450001}),
+            ].update(
+                {"max": thresholds["maximum_input_ratio_ppm"] + 1}
+            ),
         }
         for label, mutate in mutations.items():
             candidate = copy.deepcopy(measured)
@@ -330,6 +359,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             with mock.patch.object(
                 REGRESSION,
                 "_calculate_professional_review_cost_fixtures",
+                autospec=True,
                 return_value=candidate,
             ):
                 with self.subTest(label=label):

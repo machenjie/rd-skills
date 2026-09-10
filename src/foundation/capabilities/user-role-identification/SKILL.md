@@ -37,7 +37,7 @@ Identify actors and authority only to the depth required by affected behavior, r
 
 ## Stop Conditions
 
-Escalate when an actor crosses tenant or ownership boundaries, or can read or export regulated, financial, private, or cross-actor data. Also escalate when an actor can mutate money, legal, compliance, identity, subscription, deletion, or role-grant state, or can impersonate or elevate. Escalate when an actor uses a broad service account, depends on unsigned external claims, or relies on stale evidence, UI-only filtering, or internal-system trust without current-source proof.
+Escalate when tenant/ownership crossing, protected data visibility, consequential mutation, impersonation, or elevation leaves a material authority/risk judgment unresolved or triggers an explicit policy requirement. Financial or cross-actor data labels alone do not establish protected scope; retain current public-data and accepted authority evidence. Escalate when an actor uses a broad service account, depends on unsigned external claims, or relies on stale evidence, UI-only filtering, or internal-system trust without current-source proof.
 
 ## Output Contract
 

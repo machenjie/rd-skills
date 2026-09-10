@@ -31,4 +31,4 @@ Load this reference when repository contract, persistence mapping, transaction p
 
 Route domain ownership to `domain-logic-implementation`, model translation to `model-boundary-mapping`, query/index depth to `indexing-query-optimization`, atomicity to `transaction-consistency`, and API-visible absence/errors to `data-api-contract-changer`.
 
-Reject repositories that return ORM/query builders, infrastructure-owned domain ports without rationale, unbounded lists, hidden transactions, raw storage failures, business rules in SQL/mapper code, mocked-only persistence proof, or tenant/delete filters left to callers.
+Reject repositories that expose ORM/query builders without an accepted public storage contract, infrastructure-owned domain ports without rationale, unbounded lists, hidden transactions, raw storage failures, business rules in SQL/mapper code, mocked-only persistence proof, or tenant/delete filters left to callers.

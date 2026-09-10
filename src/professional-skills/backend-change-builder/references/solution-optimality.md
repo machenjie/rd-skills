@@ -12,4 +12,4 @@ Derive thresholds from the current repository baseline, representative workload,
 2. How does the choice change query/call count, CPU, allocation, storage I/O, connection/lock contention, queue growth, or degradation at the affected boundary?
 3. Does current storage and framework behavior support the selected cache, batch, stream, lock, pool, or backpressure mechanism, including failure and cleanup paths?
 4. What simpler repository-consistent implementation was inspected, and which measured saturation, correctness, or operability constraint rules it out?
-5. When acceptable limits depend on future load, record the evidence-backed trigger, owner, and any broader `solution-optimality-evaluation` escalation without implicitly loading that Skill.
+5. When acceptable limits depend on future load, record the evidence-backed trigger, decision owner, and broader tradeoff-analysis need as unresolved scope.

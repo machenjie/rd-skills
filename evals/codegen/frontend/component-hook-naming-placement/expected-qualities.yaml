@@ -1,6 +1,5 @@
 id: component-hook-naming-placement
 category: frontend
-complexity: L3
 focus:
   - component naming and ownership
   - hook placement and state scope

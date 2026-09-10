@@ -11,12 +11,12 @@ from changeforge_install import (
     AGENTS,
     SCOPES,
     InstallError,
+    classify_installed_manifest,
     cleanup_legacy_residue,
-    managed_profile_files,
-    managed_skill_names,
     read_manifest,
     remove_installed,
     resolve_targets,
+    validate_managed_artifact_paths,
 )
 
 
@@ -33,8 +33,19 @@ def main() -> int:
             return 0
         targets = resolve_targets(args.agent, args.scope, args.target)
         manifest = read_manifest(targets.skills)
-        skills = managed_skill_names(manifest)
-        profiles = managed_profile_files(manifest)
+        if manifest is None:
+            skills: set[str] = set()
+            profiles: set[str] = set()
+        else:
+            classified = classify_installed_manifest(
+                manifest,
+                agent=args.agent,
+                scope=args.scope,
+                targets=targets,
+            )
+            skills = set(classified.skill_names)
+            profiles = set(classified.profile_files)
+        validate_managed_artifact_paths(targets, skills, profiles)
         legacy = cleanup_legacy_residue(args.agent, args.scope, args.target, targets.skills, args.dry_run)
         if args.dry_run:
             print(f"uninstall: dry run; would remove {len(skills)} Skill(s), {len(profiles)} Profile(s), and {len(legacy)} legacy artifact(s)")

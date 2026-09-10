@@ -38,45 +38,14 @@ and any unavailable external-consumer proof.
 Unknown external consumers remain explicit. Rollback would revert the validator
 and schema together so mixed contract behavior is not left behind.
 
-## First Executable Slice
+## Implementation and Coordination
 
-Task ID: example-api-validation-001
-Status: in_progress
-Level: requested=unspecified; automatic=L3; default=L3; effective=L3; edit=allowed
-Basis: source=analysis_handoff:example-brief; triggers=[]; l2=[]; unresolved=[]
-L5 Evidence: not applicable — effective L3
-Goal: enforce the accepted field rule at the owning service boundary
-Owner: service validation owner
-Inputs: current Engineering Brief, schema, validator, focused tests
-Allowed Read Scope: schema, validator, direct consumers, and focused tests
-Allowed Write Scope: owning validator and focused regression tests
-Non-goals: unrelated request validation or consumer cleanup
-Dependencies: none
-Expected Output: accepted validation behavior and regression evidence
-Acceptance: valid, invalid, boundary, and forbidden outcomes above
-Verification: focused service contract tests after the latest material edit
-Evidence Requirements: current red/green proof and same-pattern scan result
-Parallel Safety: no parallel writes
-Workspace Requirement: shared; serialize writes
-Integration Owner: service validation owner
-Review Owner: independent review-agent
-Stop Conditions: ownership, contract, or write scope conflicts with this Brief
-Professional Skill: backend-change-builder
-Layer 3 Skills: none
-
-## Task Dependencies
-
-The First Executable Slice has no dependency. Consumer documentation is a
-remaining task only if its existing source proves a required contract update.
-
-## Integration Boundary
-
-The service validation owner integrates schema and validator behavior.
-
-## Review Boundary
-
-One independent implementation review covers the latest diff and every changed
-file; no Specialist review is triggered by this example.
+Update the existing service validator and focused regression tests. Inspect the
+schema and direct consumers as needed; keep edits within the validator and test
+owner. Consumer documentation needs a separate change only if current source
+establishes a changed public contract. The service owner integrates schema and
+validator behavior. Independent review is useful if consumer compatibility
+cannot be established through contract tests and source inspection.
 
 ## Evidence Gaps and Proof Limits
 

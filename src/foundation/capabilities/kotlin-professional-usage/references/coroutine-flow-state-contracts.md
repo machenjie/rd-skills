@@ -40,7 +40,7 @@ Official pages in this reference were recorded as accessed on 2026-07-24.
 
 ## Version And Inference Limits
 
-- Kotlin and Android documentation is rolling; coroutine, Compose, lifecycle, compiler, and platform versions must be taken from the repository or runtime evidence.
+- Use repository or runtime evidence to establish coroutine, Compose, lifecycle, compiler, and platform versions because Kotlin and Android documentation is rolling.
 - The sources establish API contracts and documented guidance, not the project's dispatcher capacity, lifecycle owner, delivery guarantee, or measured performance.
 - Do not infer Android lifecycle behavior for platform-neutral Compose or backend Kotlin.
 - Do not infer Kotlin/JVM behavior for other Kotlin targets.
@@ -48,3 +48,8 @@ Official pages in this reference were recorded as accessed on 2026-07-24.
 ## Required Record
 
 - Record the owner, selected stream/state model, cancellation and failure outcomes, version evidence, exercised boundary, proof limits, and residual risk.
+
+## Anti-Patterns
+
+- `GlobalScope`, an unowned scope, or a default dispatcher hides cancellation, failure, or shutdown.
+- A cold `Flow` is assumed to cache work, or `StateFlow`/`SharedFlow` is assumed to preserve every event.

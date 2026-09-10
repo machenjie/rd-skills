@@ -1,6 +1,5 @@
 id: pattern-selection-with-real-variation
 category: structure
-complexity: L4
 focus:
   - real provider variation
   - strategy or adapter selection

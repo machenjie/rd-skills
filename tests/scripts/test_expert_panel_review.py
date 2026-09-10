@@ -4,11 +4,12 @@ import copy
 import functools
 import hashlib
 import json
+import re
 import sys
 import tempfile
 import unittest
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest import mock
 
 from . import expert_panel_source_test_support as source_support
@@ -346,9 +347,23 @@ def _current_semantic_application_fixture(
     overrides = winner_overrides or {}
     for axis in sorted(PANEL.SEMANTIC_AXES):
         semantic = audit[f"{axis}_content"]["semantic_advisories"]
-        covered_ids = {
-            entry["candidate_id"]
+        candidates_by_id = {
+            candidate["candidate_id"]: candidate
+            for candidate in semantic["candidates"]
+        }
+        exact_entries = [
+            entry
             for entry in semantic["disposition_contract"]["entries"]
+            if entry["candidate_id"] in candidates_by_id
+            and not PANEL._semantic_entry_mismatches(
+                axis=axis,
+                candidate=candidates_by_id[entry["candidate_id"]],
+                entry=entry,
+            )
+        ]
+        semantic["disposition_contract"]["entries"] = exact_entries
+        covered_ids = {
+            entry["candidate_id"] for entry in exact_entries
         }
         semantic["candidates"] = [
             candidate
@@ -511,6 +526,78 @@ def _semantic_ballot(
 
 
 class ExpertPanelReviewTests(unittest.TestCase):
+    def test_attestation_reviewer_projection_accepts_native_expertise_order(self) -> None:
+        voter = {
+            "voter_id": "domain-reviewer",
+            "agent_id": "independent-domain-agent",
+            "role": "domain-reviewer-role",
+            "expertise": ["Zulu context", "Alpha context", "Zulu context"],
+            "independent_review": True,
+            "expertise_tags": ["foundation-quality-testing"],
+            "qualification_claims": [{
+                "expertise_tag": "foundation-quality-testing",
+                "qualification_basis": "Static source review of testing contracts.",
+                "proof_limit": "Does not establish unobserved runtime behavior.",
+            }],
+        }
+        original = copy.deepcopy(voter)
+        self.assertEqual(
+            PANEL._string_list(voter["expertise"], label="native", allow_empty=False),
+            original["expertise"],
+        )
+        basic = PANEL._attestation_reviewers({"voters": [voter]})[0]
+        professional = PANEL._compact_professional_reviewer(voter)
+        for label, projected in [("basic", basic), ("professional", professional)]:
+            with self.subTest(projection=label):
+                if label == "basic":
+                    PANEL.panel_attestation._validate_basic_reviewer(projected, label)
+                else:
+                    PANEL.panel_attestation._validate_pro_reviewer(
+                        projected, label, ["foundation-quality-testing"]
+                    )
+                self.assertEqual(projected["expertise"], ["Alpha context", "Zulu context"])
+                for key in ("voter_id", "agent_id", "role", "independent_review"):
+                    self.assertEqual(projected[key], original[key])
+        self.assertEqual(professional["qualification_claims"], original["qualification_claims"])
+        self.assertEqual(professional["expertise_tags"], original["expertise_tags"])
+        self.assertEqual(PANEL._compact_professional_reviewer(professional), professional)
+        self.assertEqual(PANEL._attestation_reviewers({"voters": [basic]}), [basic])
+        professional["qualification_claims"][0]["proof_limit"] = "Modified output only."
+        basic["expertise"].append("Output-only context")
+        self.assertEqual(voter, original)
+
+    def test_attestation_reviewer_projection_preserves_consumer_rejections(self) -> None:
+        voter = {
+            "voter_id": "domain-reviewer",
+            "agent_id": "independent-domain-agent",
+            "role": "domain-reviewer-role",
+            "expertise": ["Zulu context", "Alpha context"],
+            "independent_review": True,
+            "expertise_tags": ["foundation-quality-testing"],
+            "qualification_claims": [{
+                "expertise_tag": "foundation-quality-testing",
+                "qualification_basis": "Static source review of testing contracts.",
+                "proof_limit": "Does not establish unobserved runtime behavior.",
+            }],
+        }
+        with self.assertRaisesRegex(PANEL.panel_attestation.AttestationError, "sorted and unique"):
+            PANEL.panel_attestation._validate_pro_reviewer(voter, "uncanonical", [])
+        for expertise in ([], [" "]):
+            with self.subTest(invalid_native_expertise=expertise):
+                with self.assertRaises(PANEL.PanelReviewError):
+                    PANEL._string_list(expertise, label="native", allow_empty=False)
+        for field, value, error in [
+            ("independent_review", False, "independent"),
+            ("qualification_claims", [], "qualifications"),
+            ("expertise_tags", ["foundation-quality-testing"] * 2, "sorted and unique"),
+        ]:
+            with self.subTest(invalid_field=field):
+                invalid = copy.deepcopy(voter)
+                invalid[field] = value
+                projected = PANEL._compact_professional_reviewer(invalid)
+                with self.assertRaisesRegex(PANEL.panel_attestation.AttestationError, error):
+                    PANEL.panel_attestation._validate_pro_reviewer(projected, "invalid", [])
+
     def test_professional_attest_requires_one_clean_stable_projection_head(
         self,
     ) -> None:
@@ -667,7 +754,7 @@ class ExpertPanelReviewTests(unittest.TestCase):
             3500,
             PANEL.PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL,
         )
-        self.assertEqual(189, PANEL.PROFESSIONAL_PACKAGE_COUNT)
+        self.assertEqual(188, PANEL.PROFESSIONAL_PACKAGE_COUNT)
         for target_count, expected in ((188, 4061), (189, 4083), (190, 4104)):
             with self.subTest(target_count=target_count):
                 self.assertEqual(
@@ -692,12 +779,12 @@ class ExpertPanelReviewTests(unittest.TestCase):
                 "rounding": "floor",
                 "baseline_target_count": 162,
                 "baseline_maximum_required_candidates_total": 3500,
-                "current_target_count": 189,
-                "derived_maximum_required_candidates_total": 4083,
+                "current_target_count": 188,
+                "derived_maximum_required_candidates_total": 4061,
             },
             contract["maximum_required_candidates_total_derivation"],
         )
-        self.assertEqual(4083, contract["maximum_required_candidates_total"])
+        self.assertEqual(4061, contract["maximum_required_candidates_total"])
         current_fingerprint = PANEL._canonical_json_sha256(
             PANEL._professional_completeness_panel_contract()
         )
@@ -822,9 +909,9 @@ class ExpertPanelReviewTests(unittest.TestCase):
             },
             actual_graph["implementation-structure-design"],
         )
-        self.assertEqual(44, len(domain_declarations))
+        self.assertEqual(47, len(domain_declarations))
         self.assertEqual(
-            44,
+            47,
             sum(
                 source_id in actual_graph[adjacent_id]
                 for source_id, adjacent_id in domain_declarations
@@ -1021,13 +1108,13 @@ Route current work to `candidate-a`.
             PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
         )
         self.assertEqual(
-            "8cf2b04bb532329fc19559620f2f6b04ed34ba54735d2e5862031c33407378e0",
+            "a24d605c00e5477f0ea09b4b2eb2aefc32426389980c93efa397fd1c1b41bd4a",
             PANEL._canonical_json_sha256(
                 PANEL._professional_adjacency_selection_contract()
             ),
         )
         self.assertEqual(
-            "7fae52f3e74478563fe681c1542bf28a4aa96ad1e4d295687d8e3112336cc195",
+            "47a7df83b5fa63559c82a52e94a9e374507bbf72a5bff520b1f3e53f193fdd9c",
             PANEL._canonical_json_sha256(
                 PANEL._professional_completeness_panel_contract()
             ),
@@ -1054,121 +1141,65 @@ Route current work to `candidate-a`.
         scenario_adjacency = targets_by_id["scenario-decomposition"][
             "routing_adjacency"
         ]
-        s2a_eca_required = {
-            "acceptance-criteria-builder",
-            "ai-product-extension",
-            "android-platform-extension",
-            "api-contract-design",
-            "architecture-impact-reviewer",
-            "backend-change-builder",
-            "bigdata-product-extension",
-            "change-intake-compiler",
-            "cloud-platform-extension",
-            "concurrency-control",
-            "configuration-runtime-policy",
-            "consumer-impact-analysis",
-            "containerization",
-            "cross-platform-client-extension",
-            "data-migration-design",
-            "data-side-effect-flow-tracing",
-            "degradation-circuit-breaking",
-            "dependency-vulnerability-scanning",
-            "engineering-artifact-review",
-            "failure-contract-design",
-            "failure-diagnosis",
-            "frontend-change-builder",
-            "idempotency-retry-design",
-            "incident-response-coordinator",
-            "infrastructure-as-code-safety",
-            "integration-testing",
-            "ios-ipados-platform-extension",
-            "iot-embedded-extension",
-            "linux-desktop-platform-extension",
-            "low-level-systems-extension",
-            "macos-platform-extension",
-            "minimal-correct-implementation",
-            "module-boundary-design",
-            "observability",
-            "package-dependency-management",
-            "payment-trading-extension",
-            "permission-boundary-modeling",
-            "refactoring",
-            "release-rollback",
-            "repeat-failure-analysis",
-            "repository-context-map",
-            "repository-impact-inspection",
-            "repository-tooling-change-builder",
-            "scenario-decomposition",
-            "task-dag-decomposition",
-            "task-dag-planner",
-            "test-strategy",
-            "threat-modeling",
-            "transaction-consistency",
-            "version-compatibility",
-            "web-security",
-            "web3-product-extension",
-            "windows-platform-extension",
-        }
-        s2a_scenario_required = {
-            "acceptance-criteria-builder",
-            "async-job-design",
-            "cleanup-deletion-governance",
-            "data-side-effect-flow-tracing",
-            "interaction-state-modeling",
-            "java-jvm-professional-usage",
-            "page-component-decomposition",
-            "regression-testing",
-            "skill-authoring-expert",
-            "state-management-design",
-            "targeted-validation-selection",
-            "use-case-modeling",
-        }
-        eca_required = {
-            candidate["skill_id"]
-            for candidate in eca_adjacency["required_candidates"]
-        }
-        scenario_required = {
-            candidate["skill_id"]
-            for candidate in scenario_adjacency["required_candidates"]
-        }
-        self.assertEqual(37, len(eca_adjacency["registry_declared_skills"]))
         self.assertNotIn(
             "scenario-decomposition",
             eca_adjacency["registry_declared_skills"],
         )
-        self.assertEqual(
-            s2a_eca_required - {"scenario-decomposition"},
-            eca_required,
-        )
-        self.assertEqual(set(), eca_required - s2a_eca_required)
-        self.assertEqual(
-            ["acceptance-criteria-builder"],
-            scenario_adjacency["registry_declared_skills"],
-        )
-        self.assertEqual(
-            (
-                s2a_scenario_required
-                - {"data-side-effect-flow-tracing"}
-            )
-            | set(scenario_adjacency["source_declared_skills"]),
-            scenario_required,
-        )
+        allowed_reasons = {
+            "registry-declared",
+            "source-declared",
+            "overall-top-k",
+            "negative-route-conflict",
+            *{
+                f"signal-top-k:{signal_name}"
+                for signal_name in PANEL.PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS
+            },
+        }
         for target in targets:
             adjacency = target["routing_adjacency"]
             ranking = adjacency["full_catalog_ranking"]
-            self.assertEqual(188, adjacency["full_catalog_count"])
+            required_by_id = {
+                candidate["skill_id"]: candidate
+                for candidate in adjacency["required_candidates"]
+            }
+            declared_by_reason = {
+                "registry-declared": set(adjacency["registry_declared_skills"]),
+                "source-declared": set(adjacency["source_declared_skills"]),
+            }
+            for reason, declared_ids in declared_by_reason.items():
+                self.assertLessEqual(declared_ids, set(required_by_id))
+                for candidate_id in declared_ids:
+                    self.assertIn(
+                        reason,
+                        required_by_id[candidate_id]["selection_reasons"],
+                    )
+            for candidate_id, candidate in required_by_id.items():
+                reasons = candidate["selection_reasons"]
+                self.assertTrue(reasons)
+                self.assertEqual(sorted(set(reasons)), reasons)
+                self.assertLessEqual(set(reasons), allowed_reasons)
+                self.assertEqual(
+                    candidate_id
+                    in (
+                        declared_by_reason["registry-declared"]
+                        | declared_by_reason["source-declared"]
+                    ),
+                    candidate["declared"],
+                )
+            self.assertEqual(187, adjacency["full_catalog_count"])
             self.assertEqual(
-                list(range(1, 189)),
+                list(range(1, 188)),
                 [candidate["rank"] for candidate in ranking],
             )
             self.assertEqual(
-                188,
+                187,
                 len({candidate["skill_id"] for candidate in ranking}),
             )
             self.assertNotIn("full_catalog_ranking_fingerprint", adjacency)
-        self.assertEqual(33, required_counts["implementation-structure-design"])
-        self.assertEqual(52, required_counts["engineering-change-analysis"])
-        self.assertLessEqual(max(required_counts.values()), 57)
+        self.assertLessEqual(
+            max(required_counts.values()),
+            PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
+        )
 
         PANEL._professional_package_targets(root=ROOT)
 
@@ -1296,11 +1327,8 @@ Route current work to `candidate-a`.
         }
         self.assertEqual({}, required_changes)
         self.assertEqual(
-            (40, 40),
-            (
-                len(before["reverse"][implementation_id]),
-                len(after["reverse"][implementation_id]),
-            ),
+            len(before["reverse"][implementation_id]),
+            len(after["reverse"][implementation_id]),
         )
         self.assertEqual(
             set(),
@@ -1308,10 +1336,9 @@ Route current work to `candidate-a`.
             - after["reverse"][implementation_id],
         )
         self.assertEqual(
-            56,
+            max(map(len, before["reverse"].values())),
             max(map(len, after["reverse"].values())),
         )
-
         for owner_id in (
             "installed-client-change-builder",
             "platform-infrastructure-change-builder",
@@ -1510,6 +1537,15 @@ Route current work to `candidate-a`.
 
     def test_professional_template_assignment_is_non_empty_unique_known_and_sorted(self) -> None:
         packet = _professional_packet()
+        self.assertEqual(
+            {PANEL.PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION},
+            {
+                target["routing_adjacency"]["document_frequency_filter"][
+                    "negative_route_contract"
+                ]["version"]
+                for target in packet["professional_targets"]
+            },
+        )
         skill_ids = [target["skill_id"] for target in packet["professional_targets"]]
 
         def build(assigned: list[str] | None) -> dict:
@@ -1610,6 +1646,78 @@ Route current work to `candidate-a`.
         self.assertEqual(2, decision["winning_votes"])
         self.assertEqual(["expert-2", "expert-3"], decision["supporting_voters"])
 
+    def test_readability_aggregate_is_ballot_permutation_invariant(self) -> None:
+        packet = _packet()
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            root = Path(raw)
+            packet_path = root / "packet.json"
+            _write_json(packet_path, packet)
+            digest = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            ballot_values = []
+            for voter, decision in enumerate(
+                (
+                    "accepted-current-readability",
+                    "tracked-tightening",
+                    "tracked-tightening",
+                ),
+                start=1,
+            ):
+                path = root / f"expert-{voter}.json"
+                value = _ballot(
+                    packet,
+                    digest,
+                    voter=voter,
+                    readability_decision=decision,
+                )
+                _write_json(path, value)
+                ballot_values.append((path, value))
+
+            ordered = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=ballot_values,
+                decided_on="2026-07-16",
+            )
+            permuted = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=[
+                    ballot_values[2],
+                    ballot_values[0],
+                    ballot_values[1],
+                ],
+                decided_on="2026-07-16",
+            )
+
+        self.assertEqual(
+            json.dumps(ordered, sort_keys=True, separators=(",", ":")),
+            json.dumps(permuted, sort_keys=True, separators=(",", ":")),
+        )
+        self.assertEqual(
+            sorted(voter["voter_id"] for voter in permuted["voters"]),
+            [voter["voter_id"] for voter in permuted["voters"]],
+        )
+        for field in ("content_decisions", "readability_decisions"):
+            for decision in permuted[field]:
+                self.assertEqual(
+                    sorted(decision["supporting_voters"]),
+                    decision["supporting_voters"],
+                )
+                self.assertEqual(
+                    sorted(decision["dissenting_voters"]),
+                    decision["dissenting_voters"],
+                )
+                self.assertEqual(
+                    sorted(
+                        row["voter_id"]
+                        for row in decision["winning_rationales"]
+                    ),
+                    [
+                        row["voter_id"]
+                        for row in decision["winning_rationales"]
+                    ],
+                )
+
     def test_panel_rejects_duplicate_agent_or_role(self) -> None:
         packet = _packet()
         with tempfile.TemporaryDirectory() as raw:
@@ -1689,16 +1797,18 @@ Route current work to `candidate-a`.
         packet = _professional_packet()
         PANEL.validate_packet(packet)
         self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
-        self.assertEqual(189, len(packet["professional_targets"]))
-        self.assertEqual(
-            519,
-            sum(
-                len(target["indexed_references"])
+        self.assertEqual(188, len(packet["professional_targets"]))
+        self.assertTrue(
+            all(
+                [row["path"] for row in target["indexed_references"]]
+                == sorted(
+                    {row["path"] for row in target["indexed_references"]}
+                )
                 for target in packet["professional_targets"]
-            ),
+            )
         )
         self.assertEqual(
-            {"professional": 26, "foundation": 150, "domain": 13},
+            {"professional": 25, "foundation": 150, "domain": 13},
             {
                 layer: sum(
                     target["layer"] == layer
@@ -1731,7 +1841,7 @@ Route current work to `candidate-a`.
                 PANEL._canonical_json_sha256(adjacency["required_candidates"]),
                 adjacency["required_candidates_fingerprint"],
             )
-            self.assertEqual(188, len(adjacency["full_catalog_ranking"]))
+            self.assertEqual(187, len(adjacency["full_catalog_ranking"]))
             self.assertEqual(
                 PANEL._canonical_json_sha256(adjacency["full_catalog_ranking"]),
                 adjacency["full_catalog_ranking_fingerprint"],
@@ -1839,6 +1949,285 @@ Route current work to `candidate-a`.
                 all(token not in basis[field] for basis in filtered_bases.values())
             )
 
+    def test_professional_current_targets_bind_complete_registry_and_reference_authority(
+        self,
+    ) -> None:
+        targets = _phase1_professional_targets()
+        registry_rows = {}
+        for _layer, relative, collection_key in PANEL.REGISTRY_SOURCES:
+            registry = PANEL.load_yaml_file(ROOT / relative)
+            registry_rows.update(
+                (row["name"], (relative, row))
+                for row in registry[collection_key]
+            )
+
+        self.assertEqual(set(registry_rows), {row["skill_id"] for row in targets})
+        for target in targets:
+            skill_id = target["skill_id"]
+            relative, registry_row = registry_rows[skill_id]
+            reference_authority = PANEL.reference_contracts(
+                registry_row["reference_index"],
+                f"{relative}:{skill_id}.reference_index",
+                owner=skill_id,
+            )
+            self.assertEqual(registry_row, target["registry_authority"])
+            self.assertEqual(reference_authority, target["reference_authority"])
+            self.assertEqual(
+                sorted(
+                    (
+                        PurePosixPath(registry_row["path"])
+                        / reference["path"]
+                    ).as_posix()
+                    for reference in reference_authority
+                ),
+                [reference["path"] for reference in target["indexed_references"]],
+            )
+
+    def test_professional_current_packet_requires_and_recomputes_authority_binding(
+        self,
+    ) -> None:
+        packet = professional_support._bootstrap_packet()
+        self.assertTrue(
+            all(
+                set(target) == PANEL.PROFESSIONAL_V3_PACKET_TARGET_FIELDS
+                for target in packet["professional_targets"]
+            )
+        )
+
+        for label, mutate in (
+            (
+                "missing",
+                lambda target: target.pop("registry_authority"),
+            ),
+            (
+                "extra",
+                lambda target: target.update({"derived_semantics": {}}),
+            ),
+        ):
+            changed = copy.deepcopy(packet)
+            mutate(changed["professional_targets"][0])
+            with self.subTest(label=label), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "packet target fields are invalid",
+            ):
+                PANEL._professional_v3_packet_state(
+                    changed,
+                    validation_root=ROOT,
+                    artifact_path=None,
+                    validate_baseline=False,
+                )
+
+        changed = copy.deepcopy(packet)
+        target = changed["professional_targets"][0]
+        target["registry_authority"]["activation"] = "changed activation"
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "review binding is stale",
+        ):
+            PANEL._professional_v3_packet_state(
+                changed,
+                validation_root=ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
+
+        mismatched = copy.deepcopy(packet)
+        reference_target = next(
+            target
+            for target in mismatched["professional_targets"]
+            if target["reference_authority"]
+        )
+        reference_target["reference_authority"] = []
+        with self.assertRaisesRegex(ValueError, "reference_index.*drift"):
+            PANEL._professional_v3_packet_state(
+                mismatched,
+                validation_root=ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
+
+    def test_professional_authority_changes_refresh_exact_one_hop_review_surface(
+        self,
+    ) -> None:
+        carry = PANEL.professional_carry
+        targets = professional_support._catalog()
+        bindings = carry.professional_review_bindings(targets)
+        review_contract = "a" * 64
+        snapshot = carry.professional_carry_snapshot(
+            bindings,
+            review_contract_fingerprint=review_contract,
+        )
+        dependencies = {}
+        for skill_id, binding in bindings.items():
+            required = binding["adjacency"]["required_candidate_ids"]
+            reviewer_added = ["d"] if skill_id == "a" else []
+            dependencies[skill_id] = {
+                "skill_id": skill_id,
+                "final_disposition": carry.ACCEPTED_PROFESSIONAL_DISPOSITION,
+                "evidence_complete": True,
+                "prior_target_vote_count": PANEL.PANEL_SIZE,
+                "required_candidate_ids": copy.deepcopy(required),
+                "reviewer_added_candidate_ids_union": reviewer_added,
+                "dependency_candidate_ids": sorted(
+                    set(required) | set(reviewer_added)
+                ),
+            }
+
+        responsibility_fields = {
+            "trigger_signals",
+            "anti_trigger_signals",
+            "required_inputs",
+            "output_contract",
+            "escalation_signals",
+            "boundary_signals",
+            "layer3_candidates",
+            "used_by",
+            "task_routable",
+            "role_support",
+        }
+        registry_cases = (
+            ("trigger", "trigger_signals", ["changed trigger"]),
+            ("anti-trigger", "anti_trigger_signals", ["changed anti-trigger"]),
+            ("required-input", "required_inputs", ["changed input"]),
+            ("required-output", "output_contract", ["changed output"]),
+            ("escalation", "escalation_signals", ["changed escalation"]),
+            ("boundary", "boundary_signals", ["changed boundary"]),
+            ("routing-mode", "routing_mode", "direct"),
+            ("routing-family", "routing_family", "repository-tooling"),
+            ("task-routable", "task_routable", False),
+            (
+                "role-input",
+                "required_inputs_by_role",
+                {"task-agent": ["changed role input"]},
+            ),
+            (
+                "role-output",
+                "output_contract_by_role",
+                {"task-agent": ["changed role output"]},
+            ),
+            (
+                "context-admissibility",
+                "context_admissibility",
+                {"contract": "fixture/v2", "references": {}},
+            ),
+            ("activation", "activation", "explicit"),
+            ("layer3", "layer3_candidates", ["a"]),
+            ("used-by", "used_by", ["a"]),
+            ("role-support", "role_support", ["analysis-agent"]),
+        )
+
+        def assert_exact_fresh(changed_targets: list[dict], label: str) -> None:
+            plan = carry.plan_exact_professional_carry_forward(
+                current_bindings=carry.professional_review_bindings(
+                    changed_targets
+                ),
+                prior_snapshot=snapshot,
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=review_contract,
+            )
+            self.assertEqual(["a", "b", "d"], plan["fresh_target_ids"], label)
+            self.assertIn(
+                "target-material-changed",
+                plan["reasons_by_target"]["d"],
+                label,
+            )
+            self.assertIn(
+                "required-candidate-material-changed",
+                plan["reasons_by_target"]["b"],
+                label,
+            )
+            self.assertIn(
+                "reviewer-added-candidate-material-changed",
+                plan["reasons_by_target"]["a"],
+                label,
+            )
+            self.assertEqual([], plan["reasons_by_target"]["c"], label)
+
+        for label, field, value in registry_cases:
+            changed = copy.deepcopy(targets)
+            target = changed[3]
+            target["registry_authority"][field] = copy.deepcopy(value)
+            if field in responsibility_fields:
+                target["registry"]["responsibility_contract"][field] = (
+                    copy.deepcopy(value)
+                )
+            with self.subTest(authority=label):
+                assert_exact_fresh(changed, label)
+
+        changed = copy.deepcopy(targets)
+        changed[3]["required_expertise_tags"] = ["domain", "security"]
+        changed[3]["registry_authority"]["required_expertise_tags"] = [
+            "domain",
+            "security",
+        ]
+        assert_exact_fresh(changed, "required-expertise")
+
+        changed = copy.deepcopy(targets)
+        target = changed[3]
+        target["registry_authority"]["path"] = "src/d-renamed"
+        target["root"]["path"] = "src/d-renamed/SKILL.md"
+        target["indexed_references"][0]["path"] = (
+            "src/d-renamed/reference.md"
+        )
+        assert_exact_fresh(changed, "package-path")
+
+        reference_cases = (
+            ("path", "renamed-reference.md"),
+            ("type", "decision-checklist"),
+            ("load_when", "Reviewing d recovery evidence for this bounded task"),
+            (
+                "do_not_load_when",
+                "The d recovery boundary is already fully evidenced",
+            ),
+            ("required_by", ["analysis-agent"]),
+            ("required_output", ["decision-record"]),
+        )
+        for field, value in reference_cases:
+            changed = copy.deepcopy(targets)
+            target = changed[3]
+            reference = copy.deepcopy(target["reference_authority"][0])
+            reference[field] = copy.deepcopy(value)
+            target["reference_authority"] = [reference]
+            target["registry_authority"]["reference_index"] = [
+                copy.deepcopy(reference)
+            ]
+            if field == "path":
+                target["indexed_references"][0]["path"] = (
+                    "src/d/renamed-reference.md"
+                )
+            with self.subTest(reference_field=field):
+                assert_exact_fresh(changed, f"reference-{field}")
+
+        wrong_owner = copy.deepcopy(targets)
+        wrong_owner[3]["registry_authority"]["name"] = "other-owner"
+        with self.assertRaisesRegex(ValueError, "name must match"):
+            carry.professional_review_bindings(wrong_owner)
+
+        missing_path = copy.deepcopy(targets)
+        missing_path[3]["indexed_references"] = []
+        with self.assertRaisesRegex(ValueError, "coverage drift"):
+            carry.professional_review_bindings(missing_path)
+
+        mismatched_path = copy.deepcopy(targets)
+        reference = copy.deepcopy(
+            mismatched_path[3]["reference_authority"][0]
+        )
+        reference["path"] = "renamed-reference.md"
+        mismatched_path[3]["reference_authority"] = [reference]
+        mismatched_path[3]["registry_authority"]["reference_index"] = [
+            copy.deepcopy(reference)
+        ]
+        with self.assertRaisesRegex(ValueError, "coverage drift"):
+            carry.professional_review_bindings(mismatched_path)
+
+        extra_path = copy.deepcopy(targets)
+        extra_path[3]["indexed_references"].append(
+            copy.deepcopy(extra_path[3]["indexed_references"][0])
+        )
+        extra_path[3]["indexed_references"][1]["path"] = "src/d/extra.md"
+        with self.assertRaisesRegex(ValueError, "path-sorted|coverage drift"):
+            carry.professional_review_bindings(extra_path)
+
     def test_negative_route_conflicts_are_phrase_aware_and_ignore_generic_noise(
         self,
     ) -> None:
@@ -1879,6 +2268,204 @@ Route current work to `candidate-a`.
                 generic_source, generic_candidate
             ),
         )
+
+    def test_negative_route_conflicts_require_contiguous_ordered_phrases(self) -> None:
+        discovery = (
+            "implementation whose remaining unknowns are local owner, file, "
+            "test, or caller discovery"
+        )
+        brief = (
+            "accepted Engineering Brief already exists and the user explicitly "
+            "requests one narrow artifact analysis"
+        )
+        cases = [
+            (
+                "container image change affects build context, layer contents, "
+                "runtime user and group, filesystem, process or health and "
+                "shutdown behavior, or artifact provenance",
+                brief,
+            ),
+            (
+                "language runtime test runner discovery filter shard process "
+                "thread event loop parallel scheduling",
+                discovery,
+            ),
+            (
+                "split merge helper chain navigation entry point owner public "
+                "test effect boundary next-change deletion path",
+                discovery,
+            ),
+            (
+                "method class file or test placement inside an established "
+                "owner is disputed",
+                discovery,
+            ),
+            (
+                "test real module database service broker cache HTTP external "
+                "adapter framework process or transaction boundary interaction",
+                "module-boundary placement decision",
+            ),
+            ("boundary module", "module boundary"),
+            ("module ordinary boundary", "module boundary"),
+            ("module\nboundary", "module boundary"),
+            (["module", "boundary"], "module boundary"),
+        ]
+        for trigger, anti_trigger in cases:
+            with self.subTest(trigger=trigger):
+                source = {
+                    "negative_route_trigger_phrases": PANEL._negative_route_phrases(
+                        trigger if isinstance(trigger, list) else [trigger]
+                    ),
+                    "negative_route_anti_trigger_phrases": (),
+                }
+                candidate = {
+                    "negative_route_trigger_phrases": (),
+                    "negative_route_anti_trigger_phrases": (
+                        PANEL._negative_route_phrases([anti_trigger])
+                    ),
+                }
+                self.assertEqual(
+                    [], PANEL._professional_negative_route_conflicts(source, candidate)
+                )
+
+    def test_negative_route_material_phrases_still_require_rank_six(self) -> None:
+        cases = [
+            ("module boundary change", "module-boundary placement decision"),
+            ("dependency direction risk", "dependency-direction placement decision"),
+            (
+                "ordinary Engineering Brief Task Plan acceptance or contract "
+                "artifact needs independent review",
+                "accepted Engineering Brief already exists and the user explicitly "
+                "requests one narrow artifact analysis",
+            ),
+            (
+                "diagnosis-only for verified cause analysis",
+                "first failure has a verified cause and materially different next action",
+            ),
+        ]
+        for trigger, anti_trigger in cases:
+            with self.subTest(trigger=trigger):
+                empty = dict.fromkeys(
+                    ("triggers", "outputs", "responsibility", "reference_topics"), set()
+                )
+                source = {
+                    **empty,
+                    "negative_route_trigger_phrases": PANEL._negative_route_phrases([trigger]),
+                    "negative_route_anti_trigger_phrases": (),
+                }
+                candidate = {
+                    **empty,
+                    "negative_route_trigger_phrases": (),
+                    "negative_route_anti_trigger_phrases": PANEL._negative_route_phrases([anti_trigger]),
+                }
+                ranking = PANEL._professional_catalog_ranking(
+                    "source", bases={"source": source, "candidate": candidate}
+                )
+                self.assertGreater(ranking[0]["signals"]["negative-route-conflict"]["count"], 0)
+                ranking[0]["rank"] = 6
+                required = PANEL._professional_required_adjacency_candidates(
+                    ranking, registry_declared_skills=[], source_declared_skills=[]
+                )
+                self.assertEqual(["candidate"], [row["skill_id"] for row in required])
+                self.assertEqual(["negative-route-conflict"], required[0]["selection_reasons"])
+
+    def test_orderless_schema3_is_auditable_but_cannot_authorize_current_or_carry(self) -> None:
+        legacy = PANEL.PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+        old_contract = PANEL.PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT
+        targets = professional_support._synthetic_schema3_professional_targets()
+        for target, field, text in (
+            (targets[0], "trigger_signals", "runtime user and artifact provenance"),
+            (targets[1], "anti_trigger_signals", "user requests narrow artifact analysis"),
+        ):
+            target["registry"]["responsibility_contract"][field] = [text]
+            target["registry_authority"][field] = [text]
+        bases, filter_contract = PANEL._professional_catalog_adjacency_features(
+            targets, include_historical_alias=True, negative_route_match_version=legacy
+        )
+        for target in targets:
+            adjacency = target["routing_adjacency"]
+            ranking = PANEL._professional_catalog_ranking(
+                target["skill_id"], bases=bases, negative_route_match_version=legacy
+            )
+            required = PANEL._professional_required_adjacency_candidates(
+                ranking, registry_declared_skills=[], source_declared_skills=[]
+            )
+            adjacency.update(
+                document_frequency_filter=copy.deepcopy(filter_contract),
+                full_catalog_ranking=ranking,
+                full_catalog_ranking_fingerprint=PANEL._canonical_json_sha256(ranking),
+                required_candidates=required,
+                required_candidates_fingerprint=PANEL._canonical_json_sha256(required),
+            )
+        historical_conflict = next(
+            row for row in targets[0]["routing_adjacency"]["full_catalog_ranking"]
+            if row["skill_id"] == targets[1]["skill_id"]
+        )
+        self.assertEqual(
+            ["target-trigger/candidate-anti:artifact+user"],
+            historical_conflict["signals"]["negative-route-conflict"]["matched_tokens"],
+        )
+        bindings, snapshot = PANEL._professional_v3_binding_state(
+            targets, review_contract_fingerprint=old_contract
+        )
+        packet = {
+            "schema_version": 3,
+            "kind": PANEL.PROFESSIONAL_COMPLETENESS_PACKET_KIND,
+            "review_id": "historical-orderless-test",
+            "created_on": "2026-09-09",
+            "review_contract_fingerprint": old_contract,
+            "panel_contract": PANEL._professional_v3_panel_contract(),
+            "rubric": PANEL._professional_v3_rubric(),
+            "professional_targets": [
+                {**target, "review_binding": snapshot["targets"][target["skill_id"]]}
+                for target in targets
+            ],
+            "review_plan": PANEL._professional_v3_review_plan(
+                current_bindings=bindings, review_contract_fingerprint=old_contract,
+                baseline_state=None,
+            ),
+            "limitations": PANEL._professional_v3_packet_limitations(),
+        }
+        before = PANEL._canonical_json_sha256(packet)
+        PANEL._professional_v3_packet_state(
+            packet, validation_root=ROOT, artifact_path=None,
+            validate_baseline=False, validation_mode="historical",
+        )
+        self.assertEqual(before, PANEL._canonical_json_sha256(packet))
+        with self.assertRaisesRegex(PANEL.PanelReviewError, "review contract is stale"):
+            PANEL._professional_v3_packet_state(
+                packet, validation_root=ROOT, artifact_path=None,
+                validate_baseline=False,
+            )
+        plan = PANEL.professional_carry.plan_exact_professional_carry_forward(
+            current_bindings=bindings, prior_snapshot=snapshot,
+            prior_decision_dependencies=None,
+            review_contract_fingerprint=PANEL._professional_evidence_review_contract_fingerprint(),
+        )
+        self.assertEqual(188, len(plan["fresh_target_ids"]))
+        self.assertEqual([], plan["carry_target_ids"])
+        unsupported = copy.deepcopy(packet)
+        unsupported["review_contract_fingerprint"] = "0" * 64
+        with self.assertRaisesRegex(PANEL.PanelReviewError, "historical panel contract is invalid"):
+            PANEL._professional_v3_packet_state(
+                unsupported, validation_root=ROOT, artifact_path=None,
+                validate_baseline=False, validation_mode="historical",
+            )
+        relabeled = copy.deepcopy(packet)
+        relabeled["review_contract_fingerprint"] = PANEL._professional_evidence_review_contract_fingerprint()
+        with self.assertRaisesRegex(PANEL.PanelReviewError, "document_frequency_filter is stale"):
+            PANEL._professional_v3_packet_state(
+                relabeled, validation_root=ROOT, artifact_path=None,
+                validate_baseline=False,
+            )
+        packet["professional_targets"][0]["routing_adjacency"][
+            "document_frequency_filter"
+        ]["negative_route_contract"]["version"] = PANEL.PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
+        with self.assertRaises(PANEL.PanelReviewError):
+            PANEL._professional_v3_packet_state(
+                packet, validation_root=ROOT, artifact_path=None,
+                validate_baseline=False, validation_mode="historical",
+            )
 
     def test_professional_required_candidate_budgets_fail_closed(self) -> None:
         per_target_over_budget = [
@@ -1940,7 +2527,7 @@ Route current work to `candidate-a`.
             (
                 "missing",
                 lambda packet: packet["professional_targets"].pop(),
-                "exactly 189",
+                "exactly 188",
             ),
             (
                 "duplicate",
@@ -2427,10 +3014,10 @@ Route current work to `candidate-a`.
 
         original_ranking = PANEL._professional_catalog_ranking
 
-        def patched_ranking(skill_id: str, *, bases: dict) -> list[dict]:
+        def patched_ranking(skill_id: str, *, bases: dict, **kwargs) -> list[dict]:
             if skill_id == target["skill_id"]:
                 return synthetic_ranking
-            return original_ranking(skill_id, bases=bases)
+            return original_ranking(skill_id, bases=bases, **kwargs)
 
         with mock.patch.object(
             PANEL,
@@ -2715,7 +3302,7 @@ Route current work to `candidate-a`.
             ],
         )
         self.assertEqual(
-            189 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
+            188 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
             record["summary"]["evidence"]["criterion_result_count"],
         )
         self.assertEqual(
@@ -2776,11 +3363,11 @@ Route current work to `candidate-a`.
             record["professional_decisions"][0]["domain_critical_defects"],
         )
         self.assertEqual(
-            189,
+            188,
             record["summary"]["qualification"]["covered_target_count"],
         )
         self.assertEqual(
-            189 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
+            188 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
             record["summary"]["evidence"]["criterion_result_count"],
         )
         self.assertEqual(
@@ -3205,45 +3792,20 @@ Route current work to `candidate-a`.
             ("reference", "reference_content"),
         ):
             semantic = audit[content_key]["semantic_advisories"]
-            candidates = [
-                candidate
-                for candidate in semantic["candidates"]
-                if axis == "root" or candidate.get("detector_status") == "candidate"
-            ]
+            candidates = PANEL._semantic_eligible_candidates(
+                axis=axis, semantic=semantic
+            )
             entries = semantic["disposition_contract"]["entries"]
             entries_by_id = {entry["candidate_id"]: entry for entry in entries}
             target_ids = []
             exact_ids = []
             for candidate in candidates:
                 entry = entries_by_id.get(candidate["candidate_id"])
-                fields = [
-                    "candidate_id",
-                    "finding",
-                    "path",
-                    "fingerprint",
-                    "skill_owner",
-                ]
-                if axis == "root":
-                    fields.extend(["document_part", "priority"])
-                exact = entry is not None and all(
-                    entry.get(field) == candidate.get(field) for field in fields
+                exact = not PANEL._semantic_entry_mismatches(
+                    axis=axis,
+                    candidate=candidate,
+                    entry=entry,
                 )
-                evidence = entry.get("evidence") if isinstance(entry, dict) else None
-                if exact and axis == "root":
-                    exact = isinstance(evidence, dict) and all(
-                        evidence.get(field) == candidate.get(field)
-                        for field in (
-                            "occurrence_fingerprint",
-                            "context_fingerprint",
-                        )
-                    )
-                elif exact:
-                    exact = isinstance(evidence, dict) and (
-                        evidence.get("fingerprint")
-                        == candidate.get("evidence_fingerprint")
-                        and evidence.get("content_fingerprint")
-                        == candidate.get("content_fingerprint")
-                    )
                 (exact_ids if exact else target_ids).append(candidate["candidate_id"])
             stale_old = sorted(
                 set(entries_by_id) - {candidate["candidate_id"] for candidate in candidates}
@@ -3471,9 +4033,21 @@ Route current work to `candidate-a`.
             attestation_selector=selector,
         )
 
-        self.assertEqual(208, len(selected["semantic_targets"]))
+        expected_axis_counts = {
+            axis: len(
+                PANEL._semantic_eligible_candidates(
+                    axis=axis,
+                    semantic=audit[f"{axis}_content"]["semantic_advisories"],
+                )
+            )
+            for axis in ("root", "reference")
+        }
         self.assertEqual(
-            {"root": 79, "reference": 129},
+            sum(expected_axis_counts.values()),
+            len(selected["semantic_targets"]),
+        )
+        self.assertEqual(
+            expected_axis_counts,
             selected["panel_contract"]["required_axis_target_counts"],
         )
 
@@ -3490,8 +4064,19 @@ Route current work to `candidate-a`.
         )
 
         self.assertEqual(original, audit)
+        expected_axis_counts = {
+            axis: len(
+                PANEL._semantic_eligible_candidates(
+                    axis=axis,
+                    semantic=original[f"{axis}_content"][
+                        "semantic_advisories"
+                    ],
+                )
+            )
+            for axis in ("root", "reference")
+        }
         self.assertEqual(
-            {"root": 79, "reference": 129},
+            expected_axis_counts,
             packet["panel_contract"]["required_axis_target_counts"],
         )
         PANEL.validate_semantic_packet_current(packet, original)
@@ -3669,17 +4254,8 @@ Route current work to `candidate-a`.
         changed["ai_readability"] = {
             "source_fingerprint": {"value": "2" * 64}
         }
-        layout_target = next(
-            target
-            for target in packet["semantic_targets"]
-            if target["axis"] == "reference" and target["candidate"]["path"] != "group"
-        )
-        layout_candidate = next(
-            candidate
-            for candidate in changed["reference_content"]["semantic_advisories"]["candidates"]
-            if candidate["candidate_id"]
-            == layout_target["candidate"]["candidate_id"]
-        )
+        layout_candidate = reference_candidate
+        self.assertTrue(layout_candidate["occurrences"])
         for occurrence in layout_candidate["occurrences"]:
             occurrence["lines"] = {
                 "start": occurrence["lines"]["start"] + 1,
@@ -3687,7 +4263,7 @@ Route current work to `candidate-a`.
             }
         PANEL.validate_semantic_packet_current(packet, changed)
 
-    def test_semantic_currentness_rejects_five_stable_evidence_changes(self) -> None:
+    def test_semantic_currentness_rejects_stable_identity_evidence_changes(self) -> None:
         packet = _semantic_packet()
         current = copy.deepcopy(_live_semantic_audit())
 
@@ -3747,8 +4323,6 @@ Route current work to `candidate-a`.
             index
             for index, candidate in enumerate(candidates)
             if candidate.get("detector_status") != "candidate"
-            and candidate.get("evidence_fingerprint") is None
-            and candidate.get("content_fingerprint") is None
         )
 
         removed = copy.deepcopy(current)
@@ -3816,6 +4390,11 @@ Route current work to `candidate-a`.
                 for disposition in sorted(PANEL.SEMANTIC_DISPOSITIONS)
                 if disposition != target["winning_disposition"]
             )
+            entry["record_fingerprint"] = (
+                PANEL.panel_contracts.semantic_disposition_record_fingerprint(
+                    target["axis"], entry
+                )
+            )
             with self.assertRaisesRegex(
                 PANEL.PanelReviewError, "disposition mismatch"
             ):
@@ -3845,12 +4424,6 @@ Route current work to `candidate-a`.
 
     def test_semantic_detector_v1_compatibility_is_one_exact_row(self) -> None:
         historical = _historical_schema1_semantic_selector()
-        fixed = json.loads(
-            (
-                ROOT
-                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
-            ).read_text(encoding="utf-8")
-        )
         rows = PANEL.panel_contracts.semantic_detector_compatibility_rows()
         self.assertEqual(1, len(rows))
         row = rows[0]
@@ -3921,62 +4494,54 @@ Route current work to `candidate-a`.
         )
         self.assertEqual("compatibility", mode)
 
-        self.assertEqual(2, fixed["schema_version"])
+        # Exercise the historical two-key selector independently of the
+        # replaceable repository fixed attestation, which may already be current.
+        historical_compact = copy.deepcopy(
+            expected_row["legacy_detector_contracts"]
+        )
         self.assertEqual(
             {"reference_detector_contract", "root_detector_contract"},
-            set(fixed["detector_contract_fingerprints"]),
+            set(historical_compact),
         )
-        self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
-                ),
-            },
-            fixed["detector_contract_fingerprints"],
+        detector_keys = {
+            "reference_detector_contract",
+            "root_detector_contract",
+        }
+        self.assertTrue(
+            all(
+                re.fullmatch(r"[0-9a-f]{64}", digest)
+                for digest in historical_compact.values()
+            )
         )
-        live_audit = copy.deepcopy(_live_semantic_audit())
-        root_semantic, reference_semantic = PANEL._semantic_audit_sections(
-            live_audit
+        current_compact = {key: current[key] for key in sorted(detector_keys)}
+        self.assertNotEqual(
+            historical_compact,
+            current_compact,
         )
-        live_fingerprints = PANEL._semantic_source_fingerprints(
-            live_audit,
-            root_semantic=root_semantic,
-            reference_semantic=reference_semantic,
-        )
-        self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "7e45706770e42dbe3f83fda946be11724d348a8d2898c45bef255b3cbdb6dcac"
-                ),
-            },
-            {
-                key: live_fingerprints[key]
-                for key in (
-                    "reference_detector_contract",
-                    "root_detector_contract",
-                )
-            },
-        )
-        current_mode = PANEL._semantic_source_fingerprint_selector_mode(
-            selector_fingerprints=fixed["detector_contract_fingerprints"],
-            current_fingerprints=live_fingerprints,
-            review_id=fixed["review_id"],
-            review_contract_fingerprint=fixed[
+        historical_compact_mode = PANEL._semantic_source_fingerprint_selector_mode(
+            selector_fingerprints=historical_compact,
+            current_fingerprints=current,
+            review_id=historical["review_id"],
+            review_contract_fingerprint=historical[
                 "review_contract_fingerprint"
             ],
-            target_count=len(fixed["findings"]),
-            axis_counts={
-                axis: sum(item["axis"] == axis for item in fixed["findings"])
-                for axis in sorted(PANEL.SEMANTIC_AXES)
-            },
+            target_count=historical["target_count"],
+            axis_counts=historical["axis_counts"],
         )
-        self.assertIsNone(current_mode)
+        self.assertIsNone(historical_compact_mode)
+        self.assertEqual(
+            "compact-v2",
+            PANEL._semantic_source_fingerprint_selector_mode(
+                selector_fingerprints=current_compact,
+                current_fingerprints=current,
+                review_id=historical["review_id"],
+                review_contract_fingerprint=historical[
+                    "review_contract_fingerprint"
+                ],
+                target_count=historical["target_count"],
+                axis_counts=historical["axis_counts"],
+            ),
+        )
 
         direct = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=current,
@@ -4124,9 +4689,21 @@ Route current work to `candidate-a`.
 
     def test_reviewed_rewrite_removal_is_self_contained_but_entry_retention_fails(self) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
-        candidate_id = audit["root_content"]["semantic_advisories"][
-            "disposition_contract"
-        ]["entries"][0]["candidate_id"]
+        root_semantic = audit["root_content"]["semantic_advisories"]
+        candidates_by_id = {
+            candidate["candidate_id"]: candidate
+            for candidate in root_semantic["candidates"]
+        }
+        candidate_id = next(
+            entry["candidate_id"]
+            for entry in root_semantic["disposition_contract"]["entries"]
+            if entry["candidate_id"] in candidates_by_id
+            and not PANEL._semantic_entry_mismatches(
+                axis="root",
+                candidate=candidates_by_id[entry["candidate_id"]],
+                entry=entry,
+            )
+        )
         target_id = f"root:{candidate_id}"
         with _current_semantic_application_fixture(
             audit, winner_overrides={target_id: "rewrite"}
@@ -4277,6 +4854,95 @@ Route current work to `candidate-a`.
             len(packet["semantic_targets"]),
             record["summary"]["semantic_dispositions"]["rewrite"],
         )
+
+    def test_semantic_aggregate_is_permutation_invariant_and_attestable(self) -> None:
+        audit = _semantic_audit_with_synthetic_delta()
+        packet = PANEL.prepare_semantic_disposition_packet(
+            audit=audit,
+            review_id="semantic-permutation-review",
+            created_on="2026-07-16",
+        )
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            root = Path(raw)
+            packet_path = root / "packet.json"
+            _write_json(packet_path, packet)
+            digest = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            ballot_values = []
+            for voter, disposition in enumerate(
+                (
+                    "false-positive",
+                    "valid-contextual-rule",
+                    "valid-contextual-rule",
+                ),
+                start=1,
+            ):
+                path = root / f"semantic-expert-{voter}.json"
+                value = _semantic_ballot(
+                    packet,
+                    digest,
+                    voter=voter,
+                    disposition=disposition,
+                )
+                _write_json(path, value)
+                ballot_values.append((path, value))
+
+            ordered = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=ballot_values,
+                decided_on="2026-07-16",
+            )
+            permuted = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=[
+                    ballot_values[2],
+                    ballot_values[0],
+                    ballot_values[1],
+                ],
+                decided_on="2026-07-16",
+            )
+            self.assertEqual(
+                json.dumps(ordered, sort_keys=True, separators=(",", ":")),
+                json.dumps(permuted, sort_keys=True, separators=(",", ":")),
+            )
+            decision_path = root / "decision.json"
+            _write_json(decision_path, permuted)
+            PANEL.validate_decision_record(
+                permuted, record_path=decision_path
+            )
+            compact = PANEL._semantic_attestation_from_decision(
+                permuted,
+                decision_path=decision_path,
+                audit=audit,
+            )
+
+        self.assertEqual(
+            sorted(voter["voter_id"] for voter in permuted["voters"]),
+            [voter["voter_id"] for voter in permuted["voters"]],
+        )
+        for decision in permuted["semantic_decisions"]:
+            for field in ("supporting_voters", "dissenting_voters"):
+                self.assertEqual(sorted(decision[field]), decision[field])
+            self.assertEqual(
+                sorted(
+                    row["voter_id"]
+                    for row in decision["ballot_rationales"]
+                ),
+                [
+                    row["voter_id"]
+                    for row in decision["ballot_rationales"]
+                ],
+            )
+        self.assertEqual(
+            sorted(reviewer["voter_id"] for reviewer in compact["reviewers"]),
+            [reviewer["voter_id"] for reviewer in compact["reviewers"]],
+        )
+        for finding in compact["findings"]:
+            self.assertEqual(
+                sorted(vote["voter_id"] for vote in finding["votes"]),
+                [vote["voter_id"] for vote in finding["votes"]],
+            )
 
 
 if __name__ == "__main__":

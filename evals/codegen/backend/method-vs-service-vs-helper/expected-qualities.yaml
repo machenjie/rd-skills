@@ -1,6 +1,5 @@
 id: method-vs-service-vs-helper
 category: backend
-complexity: L3
 focus:
   - method placement
   - service orchestration boundary

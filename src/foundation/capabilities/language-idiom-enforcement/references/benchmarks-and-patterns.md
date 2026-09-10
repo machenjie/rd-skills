@@ -15,7 +15,7 @@ Use this reference when `language-idiom-enforcement` needs deeper cross-language
 ## Public Surface Idiom Checklist
 
 - Naming, visibility, module path, and package layout follow nearby repository examples before generic style guides.
-- Public doc comments use the language-standard format and state behavior, inputs, outputs, errors/results, side effects, concurrency, and examples when non-trivial.
+- Required public doc comments use the language-standard format with the applicable contract fields and examples required by current repository or toolchain authority.
 - Error/result/nullability contracts are language-native and stable for consumers.
 - Generated surfaces stay generated; handwritten adapters own idiom and compatibility decisions.
 - Deviations include owner, scope, expiration, and validation proof.

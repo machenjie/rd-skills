@@ -25,7 +25,8 @@ Define the smallest scenario set that exposes material behavior, boundary states
 - **Partition by distinct decision or failure mechanism.** Add a scenario when it changes authority, invariant, state transition, side effect, recovery, consumer, or observable oracle; avoid generic category completion.
 - **Cover material boundary states.** Include missing, empty, minimum or maximum, duplicate, stale, conflicting, partial, denied, and unsupported conditions only where the affected contract distinguishes them.
 - **Model time and concurrency where reachable.** Expose timeout, cancellation, replay, reordering, simultaneous action, late result, retry exhaustion, and mixed-version behavior that can change the terminal state.
-- **Include abuse at changed trust boundaries.** Trace untrusted input, identity or tenant confusion, resource amplification, disclosure, and bypass paths, then route deeper attacker analysis to the security owner.
+- **Include abuse at changed trust boundaries.** Map untrusted input, identity or tenant confusion, resource amplification, disclosure, and bypass paths.
+- Route deeper attacker analysis to the security owner when those paths leave a material security judgment unresolved.
 - **Describe recovery and operations as outcomes.** Capture detection, containment, retry or reconciliation, rollback or forward repair, cleanup, ownership, and unresolved state without prescribing a universal incident process.
 - **Keep traceability explicit.** Link each retained scenario to current rule or contract evidence, an observable oracle, and the Professional or Foundation owner that decides implementation or proof.
 

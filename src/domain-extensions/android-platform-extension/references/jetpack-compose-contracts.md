@@ -15,19 +15,6 @@ Official Android Developers pages below were accessed on 2026-07-24.
 - Choose saveable state only for bounded restorable values; keep durable data in
   its repository owner and bind restoration to current identity.
 - Preserve stable item identity for changed collections.
-- Measure recomposition or layout cost on affected hot UI paths.
-
-## Failure Proof
-
-- Exercise recomposition, configuration recreation, process-death restoration,
-  back navigation, deep-link entry, lifecycle stop/start, and repeated effects.
-- Prove stale navigation arguments and account-scoped saved state are rejected.
-
-## Required Record
-
-Return the state owner, event/effect boundary, restoration rule, navigation and
-back behavior, lifecycle collection rule, performance evidence, Compose/library
-version, proof limits, and residual risk.
 
 ## Primary Sources
 

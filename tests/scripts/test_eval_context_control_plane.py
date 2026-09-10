@@ -1,389 +1,98 @@
-from __future__ import annotations
-
+"""Consumers reject stale or inconsistent producer evidence without replaying it."""
 import contextlib
+import copy
 import importlib.util
 import io
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "eval-context-control-plane.py"
+sys.path.insert(0, str(ROOT / 'scripts'))
+spec = importlib.util.spec_from_file_location('context_eval', ROOT / 'scripts/eval-context-control-plane.py')
+EVAL = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(EVAL)
 
 
-def _load_module():
-    spec = importlib.util.spec_from_file_location("eval_context_control_plane", SCRIPT)
-    assert spec and spec.loader
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def reports():
+    ids = ['isolated-write-parallel-contract', 'shared-workspace-serial-write']
+    source = dict(schema_version=2, fixture_schema_version=2, status='pass', errors=[],
+                  evidence_scope='deterministic-fixtures', fixture_count=len(ids),
+                  cases=[dict(id=id, errors=[], matches_expected=True, metrics={}) for id in ids],
+                  negative_cases=[dict(id='overlapping-shared-write', errors=['write conflict'], matches_expected=True)],
+                  aggregate_structural_proxies={'subagent_count': {'max': 2}},
+                  limitations=['Simulated fixtures do not prove real Host behavior.'])
+    rendered = dict(schema_version=2, fixture_schema_version=2, status='pass', errors=[],
+                    evidence_scope='deterministic-rendered-artifacts', fixture_count=len(ids),
+                    cases=[dict(id=id) for id in ids], tokenizer='o200k_base',
+                    hosts=['codex', 'claude', 'copilot'], aggregate={'max_main': {'tokens': 1000}},
+                    limitations=['Measured artifact tokens do not prove wall-clock performance.'])
+    return source, rendered
 
 
-def _source_report(*, status: str = "pass", evidence_scope: str = "deterministic-fixtures") -> dict:
-    return {
-        "schema_version": 2,
-        "fixture_schema_version": 2,
-        "status": status,
-        "evidence_scope": evidence_scope,
-        "fixture_count": 3,
-        "limitations": ["Deterministic fixture limitation."],
-        "cases": [
-            {
-                "id": "isolated-write-parallel-contract",
-                "metrics": {
-                    "preparation_loop_detected": False,
-                    "parallel_write_conflict": False,
-                    "loaded_skill_count": 2,
-                    "loaded_layer3_reference_count": 0,
-                    "required_progress_for_multi_agent": True,
-                    "required_multi_agent_progress_satisfied": True,
-                    "conditional_isolated_write_contract": True,
-                    "shared_workspace_writes_serial": False,
-                    "utility_workspace_diff_unchanged": False,
-                },
-            },
-            {
-                "id": "shared-workspace-serial-write",
-                "fixture_group": "scheduling",
-                "metrics": {
-                    "preparation_loop_detected": False,
-                    "parallel_write_conflict": False,
-                    "loaded_skill_count": 2,
-                    "loaded_layer3_reference_count": 0,
-                    "required_progress_for_multi_agent": True,
-                    "required_multi_agent_progress_satisfied": True,
-                    "conditional_isolated_write_contract": False,
-                    "shared_workspace_writes_serial": True,
-                    "utility_workspace_diff_unchanged": False,
-                },
-            },
-            {
-                "id": "validation-task-no-edit",
-                "fixture_group": "utility",
-                "metrics": {
-                    "preparation_loop_detected": False,
-                    "parallel_write_conflict": False,
-                    "loaded_skill_count": 0,
-                    "loaded_layer3_reference_count": 0,
-                    "required_progress_for_multi_agent": False,
-                    "required_multi_agent_progress_satisfied": True,
-                    "conditional_isolated_write_contract": False,
-                    "shared_workspace_writes_serial": False,
-                    "utility_workspace_diff_unchanged": True,
-                },
-            },
-        ],
-    }
-
-
-def _rendered_report(*, status: str = "pass") -> dict:
-    return {
-        "schema_version": 2,
-        "fixture_schema_version": 2,
-        "status": status,
-        "evidence_scope": "deterministic-rendered-artifacts",
-        "tokenizer": "o200k_base",
-        "fixture_count": 3,
-        "build_profiles": ["recommended", "full", "dev"],
-        "hosts": ["codex", "claude", "copilot"],
-        "limitations": ["Deterministic rendered artifact limitation."],
-        "cases": [
-            {"id": "isolated-write-parallel-contract"},
-            {"id": "shared-workspace-serial-write"},
-            {"id": "validation-task-no-edit"},
-        ],
-        "aggregate": {"max_main": {"tokens": 1000}},
-        "transferred_context": {
-            "source_scope": {
-                "trajectory_fixture": "evals/agent-light-trajectories/cases.yaml",
-                "lightweight_long_task_selector": (
-                    "reports/hookless-control-plane-eval.json"
-                    "#/cases/*/metrics/required_progress_for_multi_agent"
-                ),
-            },
-            "semantic_baseline": {
-                "source": "reports/hookless-control-plane-eval.json#/orchestration_fixtures",
-                "retained_semantic_equality": True,
-            },
-            "gross_tokens": 10,
-            "non_compressible_tokens": 10,
-            "compressible_tokens": 0,
-            "compressible_ratio": 0.0,
-            "before_gross_tokens": 47302,
-            "after_gross_tokens": 10,
-            "realized_reduction_tokens": 47292,
-            "realized_reduction_ratio": round(47292 / 47302, 6),
-            "long_task_selector_join_count": 2,
-            "long_task_rows": [
-                {
-                    "id": "isolated-write-parallel-contract",
-                    "required_progress_for_multi_agent": True,
-                    "gross_tokens": 10,
-                    "non_compressible_tokens": 10,
-                    "compressible_tokens": 0,
-                    "compressible_ratio": 0.0,
-                    "before_gross_tokens": 20,
-                    "after_gross_tokens": 10,
-                    "realized_reduction_tokens": 10,
-                    "realized_reduction_ratio": 0.5,
-                },
-                {
-                    "id": "shared-workspace-serial-write",
-                    "required_progress_for_multi_agent": True,
-                    "gross_tokens": 10,
-                    "non_compressible_tokens": 10,
-                    "compressible_tokens": 0,
-                    "compressible_ratio": 0.0,
-                    "before_gross_tokens": 20,
-                    "after_gross_tokens": 10,
-                    "realized_reduction_tokens": 10,
-                    "realized_reduction_ratio": 0.5,
-                },
-            ],
-            "conservative_long_task_ratio": 0.5,
-            "context_compaction_decision": {
-                "classification": "continue",
-                "observed_conservative_ratio": 0.5,
-                "minimum_realized_reduction_ratio": 0.25,
-                "target_realized_reduction_ratio": 0.30,
-            },
-            "proof_limits": ["Deterministic transfer projection only."],
-        },
-        "errors": [],
-    }
-
-
-class ContextControlPlaneEvaluationTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.module = _load_module()
-
-    def _invoke(
-        self,
-        source: str | None,
-        rendered: str | None = None,
-        *,
-        write_rendered: bool = True,
-        dependencies: list[str] | None = None,
-    ) -> tuple[int, str, dict | None, bool]:
+class ContextConsumerTests(unittest.TestCase):
+    def invoke(self, source=None, rendered=None, *, missing=None):
+        good_source, good_rendered = reports()
+        source = good_source if source is None else source
+        rendered = good_rendered if rendered is None else rendered
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            source_path = root / "hookless-control-plane-eval.json"
-            rendered_path = root / "rendered-context-budget.json"
-            report_json = root / "context-control-plane-eval.json"
-            report_md = root / "context-control-plane-eval.md"
-            core_contracts = root / "core-contracts.json"
-            if source is not None:
-                source_path.write_text(source, encoding="utf-8")
-            if rendered is None:
-                rendered = json.dumps(_rendered_report())
-            if write_rendered:
-                rendered_path.write_text(rendered, encoding="utf-8")
-            core_contracts.write_text(
-                json.dumps(
-                    {
-                        "principle_acceptance_contract": {
-                            "producers": [
-                                {
-                                    "id": "eval-context-control",
-                                    "depends_on": dependencies
-                                    if dependencies is not None
-                                    else ["eval-agent-lightweight", "eval-rendered-context"],
-                                }
-                            ]
-                        }
-                    }
-                ),
-                encoding="utf-8",
-            )
-            stderr = io.StringIO()
-            with (
-                mock.patch.object(self.module, "SOURCE_REPORT", source_path),
-                mock.patch.object(self.module, "RENDERED_CONTEXT_REPORT", rendered_path),
-                mock.patch.object(self.module, "REPORT_JSON", report_json),
-                mock.patch.object(self.module, "REPORT_MD", report_md),
-                mock.patch.object(self.module, "CORE_CONTRACTS", core_contracts),
-                mock.patch.object(
-                    subprocess,
-                    "run",
-                    side_effect=AssertionError("context evaluation must not launch another evaluator"),
-                ),
-                contextlib.redirect_stderr(stderr),
-            ):
-                result = self.module.main([])
-            report = json.loads(report_json.read_text(encoding="utf-8")) if report_json.exists() else None
-            return result, stderr.getvalue(), report, report_md.exists()
+            for name, value in [('hookless-control-plane-eval.json', source), ('rendered-context-budget.json', rendered)]:
+                if name != missing:
+                    (root / name).write_text(json.dumps(value))
+            with mock.patch.object(subprocess, 'run', side_effect=AssertionError('must consume, not replay')):
+                return EVAL.evaluate(root)
 
-    def test_consumes_existing_lightweight_report_without_subprocess(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(json.dumps(_source_report()))
+    def test_passes_and_copies_real_producer_measurements(self):
+        source, rendered = reports()
+        result = self.invoke(source, rendered)
+        self.assertEqual('pass', result['status'])
+        self.assertEqual(rendered['aggregate'], result['rendered_context_summary'])
+        self.assertEqual(source['aggregate_structural_proxies'], result['structural_proxies'])
+        self.assertEqual(source['limitations'] + rendered['limitations'], result['limitations'])
 
-        self.assertEqual(0, result, stderr)
-        self.assertEqual("pass", report["status"])
-        self.assertEqual("deterministic-fixtures", report["evidence_scope"])
-        self.assertEqual(
-            "continue",
-            report["context_compaction_decision"]["classification"],
-        )
-        self.assertEqual("pass", report["status"])
-        self.assertFalse(markdown_exists)
+    def test_rejects_missing_producer_without_launching_it(self):
+        for name in ['hookless-control-plane-eval.json', 'rendered-context-budget.json']:
+            with self.subTest(name=name), self.assertRaises(OSError):
+                self.invoke(missing=name)
 
-    def test_copies_producer_summary_and_decision_without_recomputing(self) -> None:
-        rendered = _rendered_report()
-        transfer = rendered["transferred_context"]
-        producer_decision = {
-            **transfer["context_compaction_decision"],
-            "producer_owned_marker": "copied-not-recomputed",
-        }
-        transfer["context_compaction_decision"] = producer_decision
+    def test_rejects_failed_wrong_scope_or_old_schema_producer(self):
+        for side in range(2):
+            for key, value in [('status', 'fail'), ('errors', ['defect']), ('schema_version', 1), ('evidence_scope', 'live-host')]:
+                values = list(reports()); values[side][key] = value
+                with self.subTest(side=side, key=key), self.assertRaises(ValueError):
+                    self.invoke(*values)
 
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            json.dumps(rendered),
-        )
+    def test_rejects_mismatched_or_duplicate_fixture_identity(self):
+        source, rendered = reports()
+        rendered['cases'][0]['id'] = 'wrong-subject'
+        self.assertEqual('fail', self.invoke(source, rendered)['status'])
+        rendered['cases'][0]['id'] = rendered['cases'][1]['id']
+        with self.assertRaises(ValueError):
+            self.invoke(source, rendered)
 
-        self.assertEqual(0, result, stderr)
-        self.assertEqual(producer_decision, report["context_compaction_decision"])
-        self.assertEqual(
-            transfer["semantic_baseline"],
-            report["transferred_context_summary"]["semantic_baseline"],
-        )
-        self.assertFalse(markdown_exists)
+    def test_requires_real_negative_controls_and_passing_positive_cases(self):
+        for mutate in [lambda s: s.update(negative_cases=[]),
+                       lambda s: s['negative_cases'][0].update(errors=[]),
+                       lambda s: s['cases'][0].update(errors=['write conflict']),
+                       lambda s: s['cases'][0]['metrics'].update(parallel_write_conflict=True)]:
+            source, rendered = reports(); mutate(source)
+            self.assertEqual('fail', self.invoke(source, rendered)['status'])
 
-    def test_rendered_context_rejects_unproven_long_task_join(self) -> None:
-        rendered = _rendered_report()
-        rendered["transferred_context"]["long_task_rows"] = []
+    def test_requires_matching_fixture_schema_exact_tokens_and_all_hosts(self):
+        for key, value in [('fixture_schema_version', 1), ('tokenizer', 'estimate'), ('hosts', ['codex'])]:
+            source, rendered = reports(); rendered[key] = value
+            self.assertEqual('fail', self.invoke(source, rendered)['status'])
 
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            json.dumps(rendered),
-        )
+    def test_missing_report_cli_returns_failure_without_output(self):
+        with tempfile.TemporaryDirectory() as raw, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(1, EVAL.main(['--reports-dir', raw]))
+            self.assertFalse((Path(raw) / 'context-control-plane-eval.json').exists())
 
-        self.assertEqual(1, result)
-        self.assertIn("long-task rows do not match", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
 
-    def test_missing_source_report_fails_without_writing_output(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(None)
-
-        self.assertEqual(1, result)
-        self.assertIn("missing prerequisite report", stderr)
-        self.assertIn("run scripts/eval-agent-lightweight.py first", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_missing_rendered_report_fails_without_writing_output(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            write_rendered=False,
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("missing rendered-context report", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_malformed_source_report_fails_without_writing_output(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke("not-json")
-
-        self.assertEqual(1, result)
-        self.assertIn("malformed prerequisite report", stderr)
-        self.assertIn("invalid JSON", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_non_passing_source_report_is_rejected(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report(status="fail"))
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("prerequisite report did not pass", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_wrong_evidence_scope_is_rejected(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report(evidence_scope="live-host"))
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("wrong evidence_scope", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_non_passing_rendered_context_report_is_rejected(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            json.dumps(_rendered_report(status="fail")),
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("rendered-context report did not pass", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_malformed_rendered_context_report_is_rejected(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            "not-json",
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("malformed rendered-context report", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_missing_producer_decision_is_rejected(self) -> None:
-        rendered = _rendered_report()
-        rendered["transferred_context"].pop("context_compaction_decision")
-
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            json.dumps(rendered),
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("context compaction decision is missing", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_declared_producer_dependency_is_required(self) -> None:
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            dependencies=["eval-rendered-context"],
-        )
-
-        self.assertEqual(1, result)
-        self.assertIn("Core eval-context-control dependency", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-    def test_stale_report_or_fixture_schema_is_rejected(self) -> None:
-        stale_source = _source_report()
-        stale_source["schema_version"] = 1
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(stale_source)
-        )
-        self.assertEqual(1, result)
-        self.assertIn("schema_version 2", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-        stale_rendered = _rendered_report()
-        stale_rendered["fixture_schema_version"] = 1
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            json.dumps(stale_rendered),
-        )
-        self.assertEqual(1, result)
-        self.assertIn("fixture_schema_version", stderr)
-        self.assertIsNone(report)
-        self.assertFalse(markdown_exists)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

@@ -11,8 +11,10 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   group, migration, deletion, and recovery rule.
 - Define XPC request/response types, caller and peer identity, authorization,
   cancellation, timeout, restart, version negotiation, and idempotency.
-- Treat every process boundary as untrusted until code identity, entitlements,
-  input, and requested authority are verified.
+- Classify the actual caller, channel, input, and privilege boundary.
+- Verify code identity, entitlements, and requested authority where the accepted
+  peer or privilege contract requires them.
+- Process separation alone does not establish an untrusted caller or a new authority boundary.
 
 ## Helper and Login Decision
 
@@ -20,13 +22,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   Agent, Launch Daemon, or no helper, based on lifecycle and privilege.
 - Bind helper registration, installation, user visibility, enable/disable,
   upgrade, removal, signing, sandbox, and crash recovery to one owner.
-- Exercise missing helper, rejected peer, protocol skew, crash/restart, disabled
-  login item, partial upgrade, and orphaned registration.
-
-## Required Record
-
-Return secret owner, process topology, peer/auth contract, helper lifecycle,
-privilege and signing boundary, failure evidence, limits, and residual risk.
 
 ## Primary Sources
 

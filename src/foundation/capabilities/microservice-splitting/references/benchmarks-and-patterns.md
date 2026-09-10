@@ -4,20 +4,20 @@ Use this reference when `microservice-splitting` needs deeper split-force calibr
 - **DDD / monolith-first:** align deployable boundaries with bounded context, language, aggregate, and a hard independence/scale/ownership/fault/compliance force; otherwise repair the modular monolith.
 - **Team Topologies / DORA:** Treat independent code, deployment, and incident ownership plus reduced routine coordination as service-split evidence. Reject or revisit the split when normal delivery or recovery still requires synchronized ownership across its proposed boundary.
 - **Strangler / branch by abstraction / consumer contracts:** phase behind routing or internal seams and prove mixed-version compatibility before traffic and releases move.
-- **Outbox/inbox and Saga:** durable events need idempotency, compensation, and reconciliation.
+- **Outbox/inbox and Saga:** preserve event identity and the selected protocol's duplicate, failure, and recovery behavior.
+- **Compensation and reconciliation:** require these mechanisms when the selected recovery protocol uses them.
 - **SRE:** for an independently deployed runtime, derive ownership, service levels, alerts, dashboard/runbook, capacity, cost, and security artifacts from its actual failure modes and operating policy; omit untriggered artifacts with rationale.
 ## Split Force Calibration
-
 | Force | Strong split evidence | Reject or defer when |
 | --- | --- | --- |
 | Business capability | Separate bounded context, policy owner, and lifecycle language | Same business rules, same owner, or unclear domain vocabulary |
 | Team ownership | Different team owns code, incidents, deploys, and roadmap | Same team owns both sides or platform/on-call is missing |
 | Deploy cadence | One side is blocked by another team's release or freeze window | Releases remain coordinated after extraction |
 | Scaling or cost | Measured CPU/memory/IO/traffic divergence or cost isolation need | Scale claim lacks profile, capacity, or cost evidence |
-| Fault isolation | When fault isolation is a split force, failure on one side has a defined contained or degraded outcome instead of uncontrolled propagation. | Synchronous hot path still requires both sides to be healthy |
+| Fault isolation | When fault isolation is a split force, failure on one side has a defined contained or degraded outcome instead of uncontrolled propagation. | Dependency failure violates the accepted isolation, latency, or availability requirement |
 | Compliance or data perimeter | Regulated scope, residency, tenant, or audit boundary shrinks | Same data classification and controls remain shared |
 | Contract stability | Public API/event schema is stable and versioned | Contract exposes persistence/domain internals or unknown consumers |
-| Operational capacity | Platform, observability, on-call, and runbook capacity exists | Another service would exceed team support capacity |
+| Operational capacity | Accountable owners and capacity for operating artifacts required by service risks and platform policy exist | Another service would exceed team support capacity |
 
 ## Extraction Patterns
 
@@ -31,9 +31,11 @@ Use this reference when `microservice-splitting` needs deeper split-force calibr
 | Merge or recombine | Independence never materialized or cost exceeds isolation value | Deployment coupling evidence, owner agreement, migration/rollback plan |
 
 ## Distributed Consistency Patterns
-- Keep a workflow in-process when atomic correctness is mandatory and no compensation exists.
+- Keep a workflow in-process when required atomicity or recovery cannot be established across the actual participants; missing compensation alone does not reject a supported atomic protocol.
 - Choose Saga orchestration for one visible command owner, or choreography only with mature event ownership and observable replay/ordering.
-- Use outbox plus inbox/dedup for durable publication/consumption; accepted eventual consistency also names reconciliation cadence, owner, alert, and repair.
+- Use the accepted publication/consumption protocol.
+- Select outbox and inbox/dedup where their durable coupling is required.
+- Accepted eventual consistency names reconciliation cadence, repair owner, and alerts justified by the failure consequence or policy.
 - Avoid two-phase commit as the default service-split answer unless the platform and failure model explicitly support it.
 
 ## Operability Readiness Pattern
@@ -50,8 +52,8 @@ Before production approval, inventory the risks introduced by the independently 
 | --- | --- |
 | Splitting because a folder is large | Size is not deploy, scale, ownership, fault-isolation, or compliance evidence |
 | Shared database after extraction | Keeps release and data coupling while adding network and operational cost |
-| New service with no runbook or on-call | Moves failure into production without an owner |
-| Synchronous chain on a hot path with no fallback | Multiplies p99 latency and availability risk |
+| New service lacks accountable production owners or a required runbook | Leaves incident responsibility or required recovery instructions unproven |
+| Synchronous chain violates accepted latency, availability, or failure-isolation limits | Leaves latency or dependency failure outside the accepted budget |
 | Big-bang cutover | Removes rollback and hides mixed-version incompatibility until release |
 | Contract exposes ORM models | Future persistence refactors become breaking API changes |
 | Strangler with no retirement trigger | Legacy and new service run forever |

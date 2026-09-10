@@ -44,3 +44,9 @@ Official workflow and platform pages were accessed on 2026-07-26.
 ## Proof Limits
 
 Temporal and Azure describe product and pattern semantics, not guarantees for another implementation. Focused crash tests prove only inspected state stores, transports, participants, retention windows, and versions; external commit status needs direct participant evidence.
+
+## Failure And Validation Evidence
+
+- Duplicate delivery commits an effect twice.
+- Lost completion leaves a committed effect unfinished.
+- Exercise duplicate, reordered, delayed, poison, lost-response, stuck, repair, and participant-drift cases.

@@ -24,19 +24,19 @@ Reconcile the visible plan with actual changed files, behavior, commands, valida
 
 - Audit actual changes and evidence against the accepted plan or capsule.
 - Record and explain any unplanned path, omitted path, or changed assumption that affects acceptance or evidence.
-- Require fresh validation evidence after the final repository edit.
+- Require fresh validation of affected behavior after the final material edit.
 - Require explicit validation coverage for every changed file in scope.
-- After repair, reconcile the latest diff, fresh validation, and re-review before closure.
+- After repair, reconcile the latest diff and fresh affected validation. Re-review only for a new material question needing independent judgment or an unresolved required review.
 
 ## Anti-Patterns
 
 - An extra generated file can indicate editing the wrong source.
-- A repaired finding invalidates review of the prior diff.
-- Planned scope does not excuse an unreviewed actual change.
+- A review of the prior diff does not prove the repair. Use fresh evidence for the changed behavior without assuming another review is required.
+- Planned scope does not excuse an actual change missing type-appropriate inspection, validation, or required independent judgment.
 
 ## Stop Conditions
 
-- Block closure when changed paths are unexplained, validation predates the last edit, any changed file is unreviewed, or repair lacks re-review.
+- Block closure when changed paths are unexplained, evidence for affected behavior predates its final material edit, a changed path lacks type-appropriate inspection or validation, or required independent judgment remains unresolved.
 - Escalate intentional behavior or scope changes not covered by acceptance.
 
 ## Output Contract

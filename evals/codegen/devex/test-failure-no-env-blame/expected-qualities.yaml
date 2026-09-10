@@ -1,41 +1,8 @@
-id: test-failure-no-env-blame
-category: devex
-complexity: L2
-focus:
-  - verified-cause diagnosis
-  - test failure triage
-  - environment-blame rejection
-  - read-only source evidence
-route_hints:
-  work_path: diagnosis
-  agent_profile: analysis-agent
-  primary_skill: engineering-change-analysis
-  layer3_skills: [failure-diagnosis]
-  review_skill: null
-release_contract:
-  case_id: devex/test-failure-no-env-blame
-  control_path: diagnosis
-  primary_skill: engineering-change-analysis
-  task_skill: null
-  review_skill: null
-  tasks: []
-expected_outcomes:
-  - The failure is diagnosed from repository evidence before any environment claim is made.
-  - The verified cause names a config key, fixture setup issue, dependency version, or input.
-  - The recommended repair is minimal and preserves the integration nature of the test.
-  - The final report includes source locations, proof limits, and residual risk.
-required_qualities:
-  - Symptom, hypothesis, method, verified cause, and counter-evidence are separated.
-  - Evidence names the relevant configuration, fixture, harness, and log locations.
-  - The agent does not ask the user to restart local services as the primary fix.
-  - The workspace remains unmodified throughout diagnosis.
-forbidden_shortcuts:
-  - Blaming local postgres or user setup without inspecting repo evidence.
-  - Replacing the integration test with a mocked unit test.
-  - Marking the failure flaky without reproduction evidence.
-  - Editing source, tests, configuration, fixtures, or documentation.
-evidence:
-  - Verified-cause statement tied to a specific file or configuration value.
-  - Repository-owned integration log and configuration mismatch evidence.
-  - Counter-evidence showing why unsupported environment blame was rejected.
-  - Final handoff with repair boundary, validation plan, unverified scope, and residual risk.
+id: "test-failure-no-env-blame"
+category: "devex"
+focus: ["verified-cause diagnosis", "test failure triage", "environment-blame rejection", "read-only source evidence"]
+route_hints: {"work_path": "diagnosis", "agent_profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": ["failure-diagnosis"], "review_skill": null}
+expected_outcomes: ["The failure is diagnosed from repository evidence before any environment claim is made.", "The verified cause names a config key, fixture setup issue, dependency version, or input.", "The recommended repair is minimal and preserves the integration nature of the test.", "The final report includes source locations, proof limits, and residual risk."]
+required_qualities: ["Symptom, hypothesis, method, verified cause, and counter-evidence are separated.", "Evidence names the relevant configuration, fixture, harness, and log locations.", "The agent does not ask the user to restart local services as the primary fix.", "The workspace remains unmodified throughout diagnosis."]
+forbidden_shortcuts: ["Blaming local postgres or user setup without inspecting repo evidence.", "Replacing the integration test with a mocked unit test.", "Marking the failure flaky without reproduction evidence.", "Editing source, tests, configuration, fixtures, or documentation."]
+evidence: ["Verified-cause statement tied to a specific file or configuration value.", "Repository-owned integration log and configuration mismatch evidence.", "Counter-evidence showing why unsupported environment blame was rejected.", "Final handoff with repair boundary, validation plan, unverified scope, and residual risk."]

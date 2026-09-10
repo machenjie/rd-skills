@@ -43,7 +43,7 @@ Turn accepted architecture and module-boundary decisions into deterministic chec
 
 Escalate to `delivery-release-gate` when new CI gates affect release flow. Escalate to `architecture-impact-reviewer` when enforcement reveals ambiguous ownership. Escalate to `ai-code-review-refactor` when generated code or AI-produced files need exemptions that could hide real violations.
 
-Escalate to `security-privacy-gate` when a rule touches authentication, authorization, secrets, permission boundaries, or supply-chain-sensitive tooling. Escalate to `package-dependency-management` when enforcement requires a new package, plugin, action, binary, container image, or lockfile change. Escalate to `consumer-impact-analysis` before blocking or removing public exports that may be used outside local search scope.
+Return a security or privacy specialist need to Main when enforcement changes a real trust, permission, secret, supply-chain, or privacy boundary and its control or evidence judgment remains unresolved. Escalate to `package-dependency-management` when enforcement requires a new package, plugin, action, binary, container image, or lockfile change. Escalate to `consumer-impact-analysis` before blocking or removing public exports that may be used outside local search scope.
 
 ## Output Contract
 

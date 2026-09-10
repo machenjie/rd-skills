@@ -1,6 +1,5 @@
 id: webhook-signature-replay
 category: backend
-complexity: L4
 focus:
   - webhook signature verification
   - replay protection

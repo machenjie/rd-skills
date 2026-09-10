@@ -1,48 +1,8 @@
-id: backward-compatible-api-field
-category: data-api
-complexity: L3
-focus:
-  - additive API contract
-  - DTO schema validation
-  - backward compatibility
-  - contract testing
-route_hints:
-  work_path: analyzed-work
-  agent_profile: task-agent
-  primary_skill: data-api-contract-changer
-  layer3_skills:
-    - api-contract-design
-    - dto-schema-design
-    - version-compatibility
-  review_skill: architecture-impact-reviewer
-release_contract:
-  case_id: data-api/backward-compatible-api-field
-  control_path: analyzed
-  primary_skill: engineering-change-analysis
-  task_skill: data-api-contract-changer
-  review_skill: architecture-impact-reviewer
-  tasks:
-    - task_id: compatible-api-change
-      skill: data-api-contract-changer
-      review_skill: architecture-impact-reviewer
-expected_outcomes:
-  - GET response includes preferred contact method as an additive nullable field.
-  - PATCH accepts valid new values and rejects invalid values with stable error shape.
-  - Existing clients can omit the field without behavior change.
-  - Documentation and examples reflect old and new client compatibility.
-required_qualities:
-  - DTO and OpenAPI schema stay backward compatible.
-  - Persistence mapping handles existing records without destructive backfill.
-  - Contract tests include old client fixtures.
-  - Validation errors use existing error code conventions.
-  - Documentation states nullability and allowed values clearly.
-forbidden_shortcuts:
-  - Making the new field required for existing requests.
-  - Renaming or removing existing response fields.
-  - Reusing an unrelated boolean as contact preference.
-  - Updating docs without executable contract coverage.
-evidence:
-  - API schema diff showing additive field.
-  - Contract tests for old and new clients.
-  - Persistence or migration note for existing customer profiles.
-  - Updated API documentation examples.
+id: "backward-compatible-api-field"
+category: "data-api"
+focus: ["additive API contract", "DTO schema validation", "backward compatibility", "contract testing"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "data-api-contract-changer", "layer3_skills": ["api-contract-design", "dto-schema-design", "version-compatibility"], "review_skill": null}
+expected_outcomes: ["GET response includes preferred contact method as an additive nullable field.", "PATCH accepts valid new values and rejects invalid values with stable error shape.", "Existing clients can omit the field without behavior change.", "Documentation and examples reflect old and new client compatibility."]
+required_qualities: ["DTO and OpenAPI schema stay backward compatible.", "Persistence mapping handles existing records without destructive backfill.", "Contract tests include old client fixtures.", "Validation errors use existing error code conventions.", "Documentation states nullability and allowed values clearly."]
+forbidden_shortcuts: ["Making the new field required for existing requests.", "Renaming or removing existing response fields.", "Reusing an unrelated boolean as contact preference.", "Updating docs without executable contract coverage."]
+evidence: ["API schema diff showing additive field.", "Contract tests for old and new clients.", "Persistence or migration note for existing customer profiles.", "Updated API documentation examples."]

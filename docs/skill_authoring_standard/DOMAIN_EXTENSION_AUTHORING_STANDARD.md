@@ -6,6 +6,9 @@ This standard extends the [base standard](SKILL_AUTHORING_BASE_STANDARD.md).
 
 A Domain Skill supplies high-density invariants and failure judgments for a business or technology domain such as payments, trading, wallets, distributed data, embedded systems, mobile systems, or Web3. It does not replace the task's primary Professional Skill.
 
+Every Domain entry is `modifier-only`. It cannot own a Primary Route or appear
+as a Runtime top-level Skill.
+
 Each Domain registry entry declares sorted, closed-set
 `required_expertise_tags`, including `domain-<skill-name>`. These authoring-only
 tags bind content-reviewer coverage and are not projected into built Skills.
@@ -32,7 +35,12 @@ triggered hard limit. A hard overage is `BLOCK`. Keep Domain checklists at 12 to
 
 ## Loading
 
-Domain Skills are loaded only when a concrete domain signal affects the current decision. They are compiled as targeted references where named and exposed top-level in the `full` and `dev` profiles. Domain routing must not trigger merely because a word appears in unrelated prose.
+Domain Skills are loaded only when a concrete domain signal affects the current
+decision. They are compiled behind the selected Professional owner and are
+never exposed at the Runtime top level. Domain routing must not trigger merely
+because a word appears in unrelated prose. Task and Review consume the Primary
+Route fixed by Main; they do not bypass the Professional route or globally
+reroute from a Domain signal.
 
 ## Review
 

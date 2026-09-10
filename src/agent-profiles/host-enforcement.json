@@ -1,15 +1,43 @@
 {
-  "schema_version": 4,
-  "source_summary": "Static configuration-level enforcement declared by each generated host projection. This matrix contains no host-execution observation.",
+  "schema_version": 5,
+  "source_summary": "Static Host/Profile tool delivery and enforcement. Task operations invoke delivered Role tools directly and report only observed Host or tool failures.",
   "status_values": [
     "native-enforced",
     "sandbox-enforced",
     "prompt-enforced",
     "unsupported"
   ],
-  "mode_values": {
-    "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
-    "validation_mode": ["native-read-only", "task-no-edit", "unsupported"]
+  "host_surfaces": {
+    "copilot-cli": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "copilot-cli-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    },
+    "copilot-vscode": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "vscode-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search", "web"], "external_source_read": "prompt-enforced"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    },
+    "copilot-coding-agent": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "github-coding-agent-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    }
   },
   "hosts": {
     "codex": {
@@ -18,10 +46,6 @@
       "subagent_dispatch": "native-enforced",
       "partial_handoff": "unsupported",
       "isolated_workspace": "unsupported",
-      "diff_input_mode": "native",
-      "validation_mode": "native-read-only",
-      "utility_no_edit": "prompt-enforced",
-      "native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "prompt-enforced",
@@ -32,7 +56,7 @@
           "limitations": [
             "Codex Agent Profile TOML has no supported tool allowlist field; dispatch-only behavior is prompt-enforced.",
             "The read-only sandbox prevents workspace writes but does not turn the declared tools into a native allowlist.",
-            "A parent-agent or invocation-level tool override can expose additional tools; the generated Profile is a declared default, not observed effective enforcement."
+            "A parent-agent or invocation-level tool override can expose additional tools; the Semantic Role and Task Contract still bound execution."
           ]
         },
         "analysis-agent": {
@@ -74,10 +98,6 @@
       "subagent_dispatch": "native-enforced",
       "partial_handoff": "unsupported",
       "isolated_workspace": "unsupported",
-      "diff_input_mode": "supplied-artifact",
-      "validation_mode": "task-no-edit",
-      "utility_no_edit": "prompt-enforced",
-      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "native-enforced",
@@ -123,10 +143,6 @@
       "subagent_dispatch": "native-enforced",
       "partial_handoff": "unsupported",
       "isolated_workspace": "unsupported",
-      "diff_input_mode": "supplied-artifact",
-      "validation_mode": "task-no-edit",
-      "utility_no_edit": "prompt-enforced",
-      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "native-enforced",
@@ -143,8 +159,7 @@
           "external_source_read": "prompt-enforced",
           "rendered_tools": ["read", "search", "web"],
           "limitations": [
-            "VS Code exposes its read-only Web search and fetch capability through the official web tool alias; minimum-public-information and prompt boundaries remain authoritative.",
-            "GitHub Copilot coding agent ignores unsupported tools and has no mapped Web capability, so cloud execution remains fail closed."
+            "The shared Copilot profile requests the portable union declared by the three independent Copilot Host Surfaces; unavailable Web operations report their actual Host failure."
           ]
         },
         "task-agent": {
@@ -175,10 +190,6 @@
       "subagent_dispatch": "unsupported",
       "partial_handoff": "unsupported",
       "isolated_workspace": "unsupported",
-      "diff_input_mode": "unsupported",
-      "validation_mode": "unsupported",
-      "utility_no_edit": "unsupported",
-      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "unsupported",
@@ -220,10 +231,6 @@
       "subagent_dispatch": "unsupported",
       "partial_handoff": "unsupported",
       "isolated_workspace": "unsupported",
-      "diff_input_mode": "unsupported",
-      "validation_mode": "unsupported",
-      "utility_no_edit": "unsupported",
-      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "unsupported",

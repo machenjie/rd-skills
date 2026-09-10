@@ -1,6 +1,5 @@
 id: service-method-vs-new-helper
 category: backend
-complexity: L3
 focus:
   - service method placement
   - business rule ownership

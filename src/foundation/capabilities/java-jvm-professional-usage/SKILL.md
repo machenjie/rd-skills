@@ -44,7 +44,8 @@ Prevent JVM-specific failures in advice reachability, interruption, executors, c
 - Route propagation, isolation, rollback, and after-commit design to `transaction-consistency`.
 - Route ORM and data models to persistence owners.
 - Route public serialization shape and version to the relevant contract owner.
-- Route untrusted deserialization to `security-privacy-gate`.
+- Return deserialization work to Main for `security-privacy-gate` when an actual type-admission, trust, executable sink, authority, resource-exhaustion, or privacy change leaves control or proof unresolved.
+- Preserve ordinary format and compatibility validation within its owner.
 - Route locks to `concurrency-control`, allocation to `language-performance-safety`, and tests to `language-testing-strategy`.
 
 ## Output Contract

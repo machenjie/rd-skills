@@ -9,8 +9,8 @@ Use this reference when state-machine closure depends on lifecycle graph freshne
 | State set is authoritative | Domain object path, persisted representation, state owner, terminal/failure states, and writer scan | Inspected lifecycle has one declared source of truth | Future writers or uninspected support tools cannot bypass it |
 | Transition legality is enforced | Transition table, enforcement method, illegal-transition fixtures, and denied reason behavior | Named valid and invalid transitions are covered in inspected paths | All concurrent or migrated records are safe |
 | Guard rules are current | Guard owner, source facts, actor authority, positive and negative tests or review artifact | Inspected guards match current source and rule owner | Full business-rule extraction or policy approval is complete |
-| Side effects bind to committed state | Transaction/outbox/event boundary, idempotency key, duplicate handling, and failure test or review | Inspected side effects do not obviously run before durable transition | Downstream delivery, provider behavior, or all retries are proven |
-| Migration/versioning is safe | Stored record counts or mapping, old/new state interpretation, rollback behavior, validation query | Changed state values have a declared compatibility path | Production distribution, every report, or all consumers are covered |
+| Side effects follow the accepted transition protocol | Selected commit/effect order, transaction/outbox/event boundary, effect identity, duplicate handling, and failure-window tests or review of the applicable rollback, replay, cancellation, or reconciliation path | Inspected ordering and recovery match the accepted protocol, including a pre-commit effect only where its identity and recovery are proven | Downstream delivery, provider behavior, or all retries are proven |
+| Migration/versioning is safe | Stored record counts or mapping, old/new state interpretation, selected recovery behavior, validation query | Changed state values have a declared compatibility path | Production distribution, every report, or all consumers are covered |
 | Prior lifecycle evidence is fresh | Current paths, accepted/rejected prior task evidence and repository inspection delta, validator/report, and final-edit freshness | Reused transition model still matches inspected source | Later state, actor, event, or data edits remain covered |
 
 ## Evidence Quality Labels
@@ -18,11 +18,11 @@ Use this reference when state-machine closure depends on lifecycle graph freshne
 - **Strong evidence**: current domain/writer/event/migration/test paths inspected, command or review artifact named, exit code or status recorded, final-edit freshness stated, and proof limits named.
 - **Weak evidence**: diagram only, enum diff only, prior task evidence, happy-path transition test, or local search without writer/consumer coverage.
 - **Missing evidence**: no transition table, no illegal-transition proof, no timeout/recovery proof, no side-effect commit boundary, no migration mapping, or no owner for unverified writers.
-- **Invalid evidence**: side effect before commit, terminal state can mutate through ordinary path, stale lifecycle memory accepted as fact, or stored state renamed without rollback interpretation.
+- **Invalid evidence**: pre-commit effect without proof of its accepted identity, ordering, and applicable rollback/replay/cancellation/reconciliation contract, terminal state can mutate through ordinary path, stale lifecycle memory accepted as fact, or stored state renamed without supported-reader and selected-recovery interpretation.
 
 ## Tool Permission Boundary
 
-- Production repair transitions, data patches, replays, requeues, provider calls, and migrations require an authorized state scope, dry-run or staging proof, terminal stop condition, and rollback or compensation path.
+- Production repair transitions, data patches, replays, requeues, provider calls, and migrations require an authorized state scope, available dry-run or staging proof, terminal stop condition, and accepted recovery or explicitly non-reversible transition limits.
 - When an authorized repair mutates lifecycle state, preserve its source and target state, actor or policy authority, applicable replay or idempotency stance, and transitions the inspected repair path cannot reverse.
 
 ## Handoff Evidence Shape

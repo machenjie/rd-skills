@@ -17,18 +17,6 @@ Official freedesktop.org specifications below were accessed on 2026-07-24.
 - Never infer keyring availability, persistence, or unlock behavior across
   desktops, display managers, remote sessions, or headless execution.
 
-## Failure Proof
-
-- Exercise malformed launch input, missing executable/icon, stale desktop/MIME
-  metadata, user-selected alternate handler, unavailable/locked keyring, and logout.
-- Prove upgrades preserve intended identity without retaining obsolete
-  associations or cross-account secrets.
-
-## Required Record
-
-Return identity/association inventory, user-choice rule, keyring provider/scope,
-install/update/removal behavior, failure proof, and non-inferences.
-
 ## Primary Sources
 
 - [Desktop Entry specification](https://xdg.pages.freedesktop.org/xdg-specs/desktop-entry/latest-single/)

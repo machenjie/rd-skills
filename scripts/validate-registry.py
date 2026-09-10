@@ -22,12 +22,13 @@ from validation_utils import (
     foundation_content_class_errors,
     foundation_ownership_errors,
     foundation_registry_field_errors,
+    layer3_selector_authority,
     load_yaml_file,
     parse_frontmatter,
     path_is_within,
     professional_automatic_routing_contract_errors,
-    professional_review_skill_ids,
     reference_contract_has_owner_anchor,
+    reference_context_admissibility_authority,
     reference_contracts,
     reference_type_for_path,
     required_expertise_tag_errors,
@@ -162,19 +163,6 @@ def main() -> int:
         if not isinstance(entry.get("task_routable"), bool):
             errors.append(f"{context}: task_routable must be boolean")
 
-    try:
-        covered_review_skills = professional_review_skill_ids(
-            loaded.get("professional_skills", []),
-            CORE_CONTRACTS["review_discipline_contract"]["professional_risk_matrix"],
-        )
-    except ValidationProblem as exc:
-        errors.append(str(exc))
-    else:
-        if not covered_review_skills:
-            errors.append(
-                "professional review risk matrix selector must cover at least one Skill"
-            )
-
     for index, entry in enumerate(loaded.get("foundation_skills", [])):
         context = f"foundation-skills.yaml:foundation_skills[{index}]"
         errors.extend(foundation_registry_field_errors(entry, context))
@@ -187,6 +175,24 @@ def main() -> int:
             loaded.get("professional_skills", []),
         )
     )
+    try:
+        reference_context_admissibility_authority(
+            load_yaml_file(REGISTRY_DIR / "professional-skills.yaml"),
+            load_yaml_file(REGISTRY_DIR / "foundation-skills.yaml"),
+            load_yaml_file(REGISTRY_DIR / "domain-skills.yaml"),
+            context="registry Reference context admissibility",
+        )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+    try:
+        layer3_selector_authority(
+            load_yaml_file(REGISTRY_DIR / "foundation-skills.yaml"),
+            load_yaml_file(REGISTRY_DIR / "professional-skills.yaml"),
+            load_yaml_file(REGISTRY_DIR / "domain-skills.yaml"),
+            context="registry Layer 3 selector authority",
+        )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
     try:
         domain_modifier_routing_authority(
             load_yaml_file(REGISTRY_DIR / "domain-skills.yaml"),

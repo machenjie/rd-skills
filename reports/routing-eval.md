@@ -9,6 +9,10 @@
 - Domain transition cases: 13
 - Domain unchanged-paraphrase controls: 14
 - Maximum Layer 3 Skills in one route: 3
+- Decision axes: 7
+- Controlled Decision mutants: 9
+- Compatibility baseline: 233+62
+- Targeted boundary relations: 8/8
 
 | Case | Domain family | Path | Profile | Primary | Layer 3 | Review | Excluded | Pass |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

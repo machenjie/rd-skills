@@ -1,6 +1,5 @@
 id: parent-child-sibling-object-relationship
 category: structure
-complexity: L3
 focus:
   - object relationship map
   - parent-child object

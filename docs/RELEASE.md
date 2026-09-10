@@ -11,7 +11,7 @@ semantics. This page owns only operator order and stop conditions.
 ## Build And Local Full Regression
 
 Build the final tree through [Installation](INSTALLATION.md#build).
-[Build profiles](BUILD_PROFILES.md) owns profile composition and the generated
+[Runtime build](BUILD_PROFILES.md) owns composition and the generated
 manifest contract.
 
 Run the [local Full Regression](VALIDATION.md#local-full-regression) once after
@@ -44,8 +44,10 @@ python3 scripts/eval-core-principles.py --gate formal-release
    surface; do not infer that every surface needs replacement.
 
 4. **Refresh only diagnosed evidence.** Refresh only the stale surface. Batch
-   every diagnosed repair for that surface, complete its independent review,
-   and return to step 1. Do not run a second unchanged attempt after two
+   every diagnosed repair for that surface and validate the repair. Replace
+   invalidated panel evidence through that panel's required independent review;
+   ordinary repairs do not automatically require another Review. Return to
+   step 1. Do not run a second unchanged attempt after two
    same-path failures.
 
 This flow has one local Full Regression and one formal pass on a successful candidate.
@@ -63,7 +65,7 @@ artifact. Git history audits replaced attestations; do not retain dated, `rN`,
 or last-N copies in the tracked tree.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. Formal release requires a current Semantic Disposition
 application bound to the exact fixed-attestation bytes. Reuse each current
 attestation while its strict current validator passes; create and promote a
@@ -172,19 +174,19 @@ Do not weaken a validator, edit a generated readiness decision, or create
 replacement panels without a diagnosed stale surface. Correct the owning source
 or review input. Before publication, discard only verified new uncommitted
 release output; never remove unrelated files or accepted evidence. Installed
-artifact recovery is documented in [Installation](INSTALLATION.md#upgrade).
+artifact recovery is documented in
+[Installation](INSTALLATION.md#upgrade-and-legacy-runtime-migration).
 
 ## Package
 
 After local formal evidence passes for the same clean commit:
 
 ```bash
-python3 scripts/package.py --profile recommended
-python3 scripts/package.py --profile full
-python3 scripts/package.py --profile dev
+python3 scripts/package.py
 ```
 
-Package only generated profile content under `dist/`. Never package `src/`,
+Package only generated Runtime content under `dist/`. The compatibility output
+directory remains `recommended`, but there is no package choice. Never package `src/`,
 source registries, reports, reviewer input manifests, personal mappings, or
 obsolete runtime artifacts. The build manifest is the package inventory
 authority.
@@ -217,10 +219,13 @@ artifact upload, tag/object binding on a remote, or remote branch/check state.
       outcome passed for that commit.
 - [ ] Root, Semantic Disposition, Readability, and Professional Completeness
       selectors are current, tracked, byte-equal to `HEAD`, and clean.
-- [ ] Professional Completeness accepts all 189 packages with required fresh or
+- [ ] Professional Completeness accepts all 188 packages with required fresh or
       valid carried votes and no correction or unresolved disagreement.
 - [ ] Readability has no tracked tightening, unresolved detector false positive,
       or rewrite requirement.
-- [ ] All three profiles build and package through their generated manifests.
+- [ ] The one Runtime builds and packages through its generated manifest; it
+      exposes only 1 Control and 25 Professional top-level Skills.
+- [ ] Foundation/Domain completeness and the temporary 163-item Layer 3 stress
+      projection pass without creating a top-level or packaged Layer 3 surface.
 - [ ] The handoff states evidence limits, skipped checks, Unverified scope, and
       Residual risk.

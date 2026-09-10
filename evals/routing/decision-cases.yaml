@@ -1,0 +1,22 @@
+---
+schema_version: 1
+cases:
+  - id: discover-owner-test
+    prompt: Fix the backend service method handling invalid input. Owner and verification are unknown.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder", review_skill: null}
+  - id: serialized-local
+    prompt: Fix the backend service method handling invalid input. Its single owner is serialized; concurrency and transaction behavior remain unchanged.
+    expected: {start_profile: "task-agent", review_skill: null}
+    excluded_skills: ["concurrency-control", "transaction-consistency", "security-privacy-gate"]
+  - id: stale-lease-effect
+    prompt: Implement backend lease fencing so stale workers cannot commit duplicate external effects.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder", layer3_skills: ["concurrency-control", "idempotency-retry-design"], review_skill: null}
+  - id: transaction-concurrent-write
+    prompt: Implement backend transaction rollback after concurrent writes fail.
+    expected: {start_profile: "task-agent", layer3_skills: ["concurrency-control", "transaction-consistency"], review_skill: null}
+  - id: explicit-review
+    prompt: Review the actual diff for generated helper misuse.
+    expected: {start_profile: "review-agent", primary_skill: "ai-code-review-refactor", layer3_skills: ["code-review"], review_skill: "ai-code-review-refactor"}
+  - id: explicit-cause-analysis
+    prompt: Diagnose the root cause of a failing background worker from logs tests and source evidence.
+    expected: {start_profile: "analysis-agent", primary_skill: "engineering-change-analysis", layer3_skills: ["failure-diagnosis"], review_skill: null}

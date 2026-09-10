@@ -8,6 +8,6 @@
 - Separate translation from pricing, authorization, state transition, tenant access, retry behavior, and side effects unless explicitly routed as policy.
 - Preserve null, absent, empty, zero, false, unknown, not-applicable, server default, client omitted, enum/default, and value-object semantics with old/new examples.
 - Verify persistence metadata, internal IDs, audit fields, tenant/object scope, permission flags, provider fields, ORM metadata, and sensitive fields do not leak without review.
-- Confirm generated models stay generated, are not hand-edited, and are mapped through owned handwritten code.
+- Keep generated models unedited and map them through the owned handwritten or generated boundary selected by source authority. Prove mapping semantics and generator freshness without hiding business policy in generated output.
 - Map each boundary risk to observable tests, contract checks, generated-client checks, negative/compatibility cases, report paths, exit codes, freshness, and residual risk.
 - Hand off schema, persistence, API behavior, compatibility, consumer inventory, side-effect order, test seams, privacy review, or release approval to the correct owner.

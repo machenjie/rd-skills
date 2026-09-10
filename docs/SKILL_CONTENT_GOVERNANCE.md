@@ -71,6 +71,15 @@ References, and compiled Layer 3 projections. Fenced code, standalone commands,
 schema fields, table cells, and pure term enumerations are exempt. Inline code
 is one atom, while links count their visible labels.
 
+Weak front-loaded-action scoring and Readability currentness share one
+normalized logical-unit projection. The static front window is the first 60
+unfenced governed units, not the first 60 physical lines. Blank-line padding,
+HTML comments, frontmatter size, prose wrapping, and Markdown decoration do not
+move that boundary. Actual raw HTML comments and tags are removed before entity
+decoding, so escaped comment or tag syntax remains visible evidence. Review
+packets retain the continuous raw source lines and SHA-256 for provenance and
+tamper checks; those coordinates and raw bytes do not decide currentness.
+
 ## Root Content
 
 Keep rules that an agent needs on every selection:
@@ -87,6 +96,45 @@ Foundation roots must not repeat the generic inspect/apply/return sequence,
 task-contract inputs, primary-Skill return language, or generic evidence and
 next-owner handoff. Repeated execution and role scaffolding remains actionable
 in the content audit; it is not allowlisted merely because many Skills share it.
+
+## Professional Independence
+
+A Professional Skill must pass the transplant test: place its governed content
+in an ordinary code repository whose agents know nothing about rd-skills, and
+its professional judgments must still be valid. Professional content declares
+capability and authority boundaries. Registry, Agent Profile, and control-plane
+owners supply runtime routing, dispatch, and adaptation without changing that
+domain knowledge.
+
+The transplant test and a zero-finding result cover authored, governed domain
+content. The canonical Registry-generated `Targeted References` adapter table
+is physically embedded in the source root but logically excluded from that
+content: it may select only an optional Reference and its depth. It may not
+change the capability owner, invariant, failure behavior, acceptance condition,
+domain verdict, or proof obligation. A manual, noncanonical, malformed, or
+diverged table is not an adapter exception and remains governed content.
+
+The audit covers every Professional root description and body, every physical
+Professional Reference whether indexed or not, and all 18 Professional example
+documents. Generic Engineering Brief, Task Contract, Task DAG, First Executable
+Slice, Review Boundary, and Evidence Ledger knowledge is not self-coupling by
+itself. A finding requires contextual evidence that a judgment depends on an
+rd-skills-only role, level, versioned protocol, sibling route, branded schema,
+or control-plane state.
+
+Normal `python3 scripts/validate-skills.py` is the hard gate: each confirmed
+finding is an error and produces a nonzero exit. Maintainers can inventory the
+same deterministic source scope without weakening that gate:
+
+```bash
+python3 scripts/validate-skills.py --professional-independence-report
+```
+
+Report-only mode emits stable JSON and does not fail merely because findings
+exist. Source-collection or schema errors still fail closed. This contextual
+static detector can miss indirect or novel control dependencies and does not
+inspect non-Markdown assets; a zero-finding report is bounded negative evidence,
+not proof that every possible dependency is absent.
 
 ## Targeted References
 
@@ -130,7 +178,10 @@ collector preserves the complete source for document fingerprints, but blanks
 that exact projection with line offsets intact before content budgets, decision
 density, and Root semantic detection. This prevents Registry wording from
 inflating authored Skill content or requiring duplicate semantic dispositions.
-No other section is exempt: a bare link, manual loading rule, or noncanonical
+The projection may select only an optional Reference and its depth; it cannot
+change the owner, invariant, failure behavior, acceptance condition, domain
+verdict, or proof obligation supplied by authored content. No other section is
+exempt: a bare link, manual loading rule, malformed table, or noncanonical
 `Targeted References` body remains governed content and fails the applicable
 contract.
 
@@ -157,17 +208,35 @@ without applying Reference preface or duplicate-block heuristics to roots. This
 shared collector architecture replaces the proposed duplicate
 `audit-reference-content.py`; do not add a second crawler or generated report.
 
-The exact predecessor Root disposition schema versions 4 and 5 may remain
-inside `config/skill-content-exceptions.yaml` only until an authorized recorder
-migrates them. A line-independent candidate ID is not
-sufficient evidence: every entry must also match the current occurrence
-membership fingerprint and heading/section/local-context fingerprint. Copying
-the same sentence, moving it under another heading, or changing its surrounding
-condition therefore makes the disposition stale. Canonical Registry projection
-is excluded as described above. Manual loading prose and every other root
-section remain scanned.
+Current Root disposition schema version 8 separates a content-independent
+`source_selector` from mutable evidence. The selector contains owner, finding,
+canonical path, document part, and rule identity; unmarked selectors also use
+their semantic section. Candidate IDs are hashes of that selector only.
+Occurrence membership, marker occurrence ID, discovered heading, and local
+context remain evidence fingerprints: changing them preserves a marker-backed
+candidate ID, does not apply the old disposition, and reports
+`needs-confirmation`. Moving an unmarked rule to another semantic section or
+changing owner, finding, path, document part, or rule identity creates a new
+candidate identity. Canonical Registry projection is excluded as described
+above. Manual loading prose and every other root section remain scanned.
 
-Root disposition schema version 6 contains lifecycle schema version 4 with
+The source-only marker
+`<!-- rd-semantic-id:v2 finding=<closed-finding> rule=<rule-id> occurrence=<occurrence-id> -->`
+binds the next logical unit when section identity alone is insufficient. A
+marker-backed identity contains owner, declared finding, canonical path,
+document part, and rule ID; its discovered heading is evidence only. If the
+declared detector no longer matches, the candidate remains at the same identity
+with changed evidence and requires confirmation. Unmarked candidates retain
+their section-scoped identity. Finding, rule, and occurrence IDs use the closed
+lowercase selector grammar; single-owner rules use that owner's prefix, grouped
+rules use `group/`, and occurrence IDs are unique per semantic axis. Rule IDs
+participate in stable identity, while occurrence IDs participate only in
+evidence. Markers are removed from semantic, budget, readability, and
+Professional-review projections, remain present in raw source provenance and
+build-input freshness, and are stripped from built Runtime Markdown. Malformed,
+ambiguous, orphaned, or colliding markers fail closed.
+
+Historical retired Root disposition schema version 6 contained lifecycle schema version 4 with
 bounded `previous` and `current` snapshot-version-4 records. A snapshot records candidate
 identity, lineage, owning-document fingerprint, disposition, first-observed
 release metadata, discriminated formal change reviews, and a closed
@@ -450,19 +519,19 @@ strict validation:
   schemas across at least two owners. It compares schema structure, not matrix
   meaning, and remains distinct from exact normalized duplication.
 
-Every candidate records a stable ID derived from finding, scope, and semantic
-fingerprint. Line numbers exist only under sorted `occurrences`, so line movement
-does not change sentence identity. Duplicate groups use scope `group` and bind a
-separate evidence fingerprint to the sorted path/owner occurrence multiset.
-Multiplicity is preserved while line numbers are excluded, so an added repeated
-occurrence invalidates prior evidence but a line move does not. Group occurrences
-also carry normalized decision-row/body fingerprints that exclude pure schema
-headers and line locations. A separate sorted path/owner/content multiset binds
-dispositions to row semantics, so unchanged membership cannot hide converged or
-rewritten rows. The schema-version 7 block reconciles detector-downgraded,
-untriaged, rewrite, resolved, unresolved,
+Every Reference candidate records a stable ID derived only from its versioned
+`source_selector`. Sentence selectors contain owner, finding, canonical path,
+semantic section, and rule identity. Group selectors contain finding and a
+content-independent structural shape identity. Evidence and normalized content
+have separate fingerprints. Text, occurrence-ID, multiplicity, membership, or
+normalized-body drift therefore retains the same candidate ID but prevents the
+old disposition from applying and reports `needs-confirmation`. A selector
+change creates a new identity. Line numbers remain display evidence only.
+Duplicate groups preserve multiplicity while excluding line movement from
+membership evidence. The schema-version 8 block reconciles detector-downgraded,
+untriaged, needs-confirmation, rewrite, resolved, unresolved,
 priority, group, occurrence, and token counts.
-The schema-version 7 object also carries the exact closed
+The schema-version 8 object also carries the exact closed
 `reference-semantic-detector-contract-v1` object
 `{contract_version, algorithm, value}`. Its value hashes the reachable closure
 of the pure Reference candidate entrypoint, including sentence parsing,
@@ -473,14 +542,20 @@ occurrence, disposition contract, disposition entry, and nested evidence shapes
 are closed; unknown fields and legacy aliases fail default validation.
 
 `config/skill-content-exceptions.yaml` remains the single governance file. Its
-versioned `reference_semantic_dispositions` entries name candidate identity,
+versioned schema-3 `reference_semantic_dispositions` entries name stable
+candidate identity and selector,
 skill owner, P0/P1/P2 priority, one of `rewrite`, `valid-contextual-rule`,
 `false-positive`, or `time-bounded-exception`, accountable evidence, mitigation,
-and review date. Only time-bounded exceptions may carry a future ISO
+review date, and a record fingerprint protecting config integrity. Only time-bounded exceptions may carry a future ISO
 `review_after`; all other dispositions require null. `rewrite` remains
-unresolved; the other three dispositions resolve the candidate. Stale entries,
-identity, group-membership, or normalized-content mismatches, duplicates, malformed evidence, and
-expired exceptions fail default validation. Strict validation requires zero
+unresolved; the other three dispositions resolve the candidate. Evidence drift
+is a same-ID `needs-confirmation` state and never reuses the old decision.
+Identity, selector, record-integrity, duplicate, malformed, ambiguous migration,
+and expired-exception failures reject the active migration all-or-nothing.
+Exactly 19 unmatched historical records are retained under
+`semantic_disposition_legacy_evidence` with immutable commit/config/audit/
+attestation anchors; they are provenance only and never apply or resolve a
+candidate. Strict validation requires zero
 unresolved fixed numbers, templated groups, and P0/P1 unconditional absolutes;
 exact duplicate groups and non-family P2 rewrites are non-blocking advisories.
 
@@ -502,13 +577,19 @@ canonical sentence to its logical document-part context and exact source span.
 Ballots decide every finding exactly once; any nested tightening derives each reviewer
 document disposition before the document two-of-three majority. Professional
 completeness schema-3 evidence binds
-all 189 non-Control Skill packages, including complete root and indexed
+all 188 non-Control Skill packages, including complete root and indexed
 Reference content, Registry responsibility and expertise contracts, source
 anchors, examined failure and omission candidates, independently derived
 adjacency evidence, and proof limits. Adjacency evidence embeds the complete
 catalog ranking while requiring every Registry-declared relationship, every
 source-declared relationship, overall Top 5, positive per-signal Top 2, and
-rank-independent phrase-aware negative-route conflict. Registry declarations
+rank-independent negative-route conflict. The `contiguous-phrase-v2` matcher
+requires a common ordered pair of significant tokens within one Registry
+entry. Generic or short tokens and line boundaries break a pair; it cannot
+combine distant qualifiers such as runtime `user` and `artifact` provenance.
+An exact single-token match remains valid only when each whole entry contains
+that one significant token, such as `diff`. Every genuine conflict remains
+required even below the overall or per-signal rank cutoffs. Registry declarations
 and source declarations remain separate. Source declarations are directional
 from target to candidate. They come only from the bound Root and indexed
 References. The selector accepts exact inline-code Skill IDs only in imperative
@@ -529,7 +610,14 @@ decision evidence.
 The exact r11 cap-50 packet and exact r14 selector-v1 packet remain auditable
 through review-ID, packet-SHA-256, and old-contract-fingerprint allowlists.
 Their adapters are invocation-local comparison views. They do not rewrite
-artifact bytes. They do not authorize a generic legacy selector bypass.
+artifact bytes or authorize a generic legacy selector bypass.
+
+Schema-2 ranking and registered earlier schema-3 contracts retain their
+`phrase-aware-v1` token-set comparison for historical audit. The preceding
+schema-3 contract also retains its conservative material bindings. Its old
+contract fingerprint cannot authorize current evidence, carry, or Formal
+Release. Changing the negative-route contract requires all 188 packages fresh.
+Relabeling old ranking metadata as the new version fails validation.
 
 Schema-3 source grounding is stricter than the historical schema-2 structural
 overlap check. Non-defect criterion, failure-mode, and omission evidence quotes
@@ -575,20 +663,101 @@ Formal readiness requires current contract/plan/bindings/provenance and recomput
 cost. Formal readiness requires zero `tracked-tightening`, unresolved
 `detector-false-positive`, or `rewrite-required` readability decisions, zero
 professional corrections, and zero unresolved professional disagreements
-across 189 packages. Static qualification claims prove declared tag coverage,
+across 188 packages. Static qualification claims prove declared tag coverage,
 not real-world identity, credentials, or experience.
 
-Current Professional schema-3 packets store no target-level
-`package_fingerprint`; each target has one `review_binding` containing
+Professional currentness is built by `professional_review_bindings()` from two
+separate bindings. `content_fingerprint` binds the complete raw Root and indexed
+Reference records, Registry authority, Reference authority, and required
+expertise. It is provenance, artifact-integrity, tamper, and debug evidence; it
+never selects fresh versus carry. `package_material_binding` instead hashes the
+`professional-commonmark-material-projection-v4` result from
+`professional_candidate_currentness_projection()`.
+
+That currentness projection consumes structured authority directly. It includes
+the exact package identity and layer, owned Root and indexed-Reference paths,
+required expertise, and the complete normalized `registry_authority` row. The
+Registry row therefore covers responsibility and role support, trigger and
+anti-trigger signals, required inputs and outputs, escalation and boundary
+signals, Layer 3 candidates, `used_by`, `task_routable`, routing authority, and
+any other validated row field without reconstructing those facts from prose.
+Its compatibility `responsibility_contract` is derived from that row and must
+match it. The separate ordered `reference_authority` projection is produced
+from Reference Contract v2 and preserves each Reference identity plus `type`,
+`load_when`, `do_not_load_when`, `required_by`, and `required_output`. Its paths
+must match the complete indexed Reference material set.
+
+`professional_markdown_currentness_projection()` uses
+`markdown-it-py==4.2.0` with `mdurl==0.1.2`, the `commonmark` preset, HTML token
+recognition enabled, and linkify, typographer, and automatic breaks disabled.
+The table rule is enabled only so tables can be recognized and rejected. Both
+distribution versions are verified at execution; a missing or different
+version fails closed without a fallback parser. The projection is not a
+natural-language equivalence parser and does not add repository-specific prose
+grammar.
+
+The closed block-token subset is document, paragraph, heading with level,
+blockquote, unordered list and list item with nesting and order, fenced code
+with info and content, distinct indented code, and thematic break. The closed
+inline-token subset is whitespace-aware text and softbreak fragments, distinct
+hardbreak, emphasis or strong children without their presentation decoration,
+inline code, direct links, images, and CommonMark autolinks. It preserves
+lexical text, case, punctuation, word order, heading level, block and inline
+type, order and nesting, code content, inline boundary whitespace, and exact
+parser-produced link and image attributes. Unicode NFC, LF line endings,
+horizontal whitespace and soft wrapping within the same parsed inline region,
+emphasis or strong decoration, unordered-list marker spelling, heading marker
+style, fence marker style, and thematic-break marker style are presentation.
+Frontmatter remains a separate closed adapter: only exact column-zero `---`
+delimiters and simple `name` or `description` scalar fields are accepted.
+
+The parser first authenticates source-marker comments. Only exact, root-level,
+single-line marker HTML tokens are removed; comments inside code, inline
+comments, indented comments, and ordinary HTML remain material. The normalized
+body is parsed again after removal. Ordered lists, GFM tables, raw HTML,
+reference definitions or reference-style links, unknown or plugin tokens, and
+unexpected token attributes, metadata, or nesting make the whole body one
+`opaque-document`. That opaque value preserves every normalized character after
+authenticated marker removal, including horizontal and blank-line whitespace
+and the final newline. A spelling change, equivalent wording substitution,
+prose compression, or any other possibly semantic change therefore changes the
+material projection and requires affected review; Professional source must not
+be rewritten to fit the projection.
+
+`professional_adjacency_review_binding()` binds required candidate IDs and the
+selection-contract version. `review_unit_binding` combines the target material,
+that adjacency, and direct required-candidate material bindings. When a package
+material projection changes, `plan_exact_professional_carry_forward()` marks
+that target `target-material-changed`; targets that directly required it become
+fresh through `required-candidate-material-changed`. Candidates authenticated
+as reviewer-added by the prior decision use the same one-hop comparison and
+produce `reviewer-added-candidate-material-changed`. Fresh status itself is not
+propagated, so a dependent's dependent and unrelated packages carry when their
+own review unit is unchanged. A raw `content_fingerprint` change with an
+unchanged conservative projection also carries.
+
+Only a `review_contract_fingerprint` change makes every existing package fresh
+from a currentness-contract change, with `review-contract-changed`; absence of a
+usable prior baseline separately requires bootstrap review. An attestation made
+current under an earlier Professional review contract becomes stale,
+historical-only evidence. It cannot authorize carry, promotion, currentness, or
+Formal Release, and current and prior evidence remain separate until a fresh
+review replaces the fixed attestation.
+
+`package_fingerprint` is schema-2 and historical compatibility-only evidence;
+it is not a current schema-3 target, decision, or carry field. Current schema-3
+packet targets have one `review_binding` containing
 `package_material_binding`, direct `dependency_material_bindings`, and the
-single `review_unit_binding`. Decisions retain that review-unit binding and the
-packet/ballot artifact chain, but no package or review-binding aliases. Compact
-storage keeps one top-level `review_contract_fingerprint`, one shared
+single `review_unit_binding`. Raw material-record `sha256` values remain
+provenance and integrity evidence. Decisions retain that review-unit binding
+and the packet/ballot artifact chain, but no package or review-binding aliases.
+Compact storage keeps one top-level
+`review_contract_fingerprint`, one shared
 `dependency_material_catalog`, and per-Skill package material, review unit,
 dependency IDs, votes, result, expertise, and direct-origin provenance. It has
 no `source_fingerprints`, per-finding dependency map, or duplicated origin
 material. The tool derives these projections, validates closed fields, and
-requires all 189 packages fresh whenever the Professional review contract
+requires all 188 packages fresh whenever the Professional review contract
 changes.
 
 Professional compact schema-2 bytes use the physical
@@ -607,10 +776,11 @@ after promotion, the tracked artifact SHA-256 and clean `HEAD` bytes remain the
 external anchor.
 
 Readability compact storage keeps the
-`readability-complete-target-authority-manifest-v2` digest as its sole source
+`readability-complete-normalized-binding-manifest-v4` digest as its sole source
 authority. Each content or actionability target and each readability finding
-stores one tool-generated `readability-review-unit-binding-v3` digest over its
-identity and normalized local authority from that manifest. The digest excludes
+stores one tool-generated `readability-normalized-review-unit-binding-v5`
+digest over its identity and normalized local authority from that manifest. The
+digest excludes
 votes and outcomes; the document conclusion remains derived from finding votes.
 The top-level `review_artifacts` object retains the packet SHA-256, exactly three
 voter-keyed ballot SHA-256 values in voter order, and the decision SHA-256.
@@ -643,24 +813,30 @@ Pending or stale evidence remains non-blocking for `authoring_gate`, but keeps
 `src/control-model/core-contracts.json` at
 `final_goal_contract.professional_review_cost_fixtures` owns the professional
 review cost policy and thresholds. Currentness is derived from the measured
-189-case inventory, exact-three review invariants, arithmetic, and ceilings; it
+188-case inventory, exact-three review invariants, arithmetic, and ceilings; it
 does not compare catalog, material, projection, case, or review-contract hashes
 with a checked-in cost snapshot.
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority and is derived evidence; it does not own or
 override the cost contract.
-The current 189-package cost fixture satisfies the
-one-reviewer-added-relationship-per-target budget. This static cost result does
-not replace the final Core formal gate.
+The measured fixture must satisfy every current ceiling independently of an
+accepted panel verdict. A non-current fixture keeps the Professional release
+blocker even when all 188 package findings are current and accepted. This
+static cost result does not replace the final Core formal gate.
+
+Compact carry planning keeps target eligibility separate from the authenticated
+dependency material catalog. A candidate's stale review does not invalidate a
+target that reviewed its unchanged material. The target must still pass its own
+complete binding and every required or reviewer-added candidate material check.
+This applies the existing one-hop rule without changing stored evidence or the
+review contract.
 
 When current Root or Reference evidence cannot carry an existing semantic
 disposition forward exactly, use the orthogonal `semantic-disposition` panel.
-Its packet selects only those current candidates. Exact carry-forward candidate
-IDs and stale old IDs remain packet provenance, not voting targets. Root reuse
-requires identical stable identity, occurrence, and context evidence. Reference
-reuse requires identical stable identity and, for groups, identical membership
-and normalized-content evidence. Every other current candidate receives three
-independent votes with no abstention. Build and check an immutable round with:
+The canonical `prepare` command below forces every current eligible candidate
+on both axes into a fresh round. Stale old IDs remain packet provenance, not
+voting targets. Every current target receives three independent votes with no
+abstention. Build and check an immutable round with:
 
 ```text
 python3 scripts/expert_panel_review.py prepare --panel-kind semantic-disposition --audit reports/skill-content-audit.json --review-id REVIEW_ID --created-on YYYY-MM-DD --semantic-re-review-axis root --semantic-re-review-axis reference --reviewer VOTER_1 AGENT_1 ROLE_1 EXPERTISE_1 --reviewer VOTER_2 AGENT_2 ROLE_2 EXPERTISE_2 --reviewer VOTER_3 AGENT_3 ROLE_3 EXPERTISE_3 --out .rd-skills/expert-panel/REVIEW_ID/packet.json
@@ -684,15 +860,16 @@ disposition entries; in particular, a `rewrite` majority requires a source
 edit. This panel is authoring lifecycle evidence only and cannot satisfy either
 formal readability or professional-completeness attestation.
 
-`config/skill-content-exceptions.yaml#semantic_disposition_application` is the
-schema-1 application binding. After compact selector finalization it binds
-`evals/expert-panel/semantic-disposition.json`, the semantic attestation kind,
-and the SHA-256 of the attestation's exact bytes. Until that real artifact and
-hash exist, the configured selector remains pending and cannot satisfy formal
-release. Compact validation authenticates the three-vote result and source
-binding without requiring runtime files from the tracked tree. It then
-requires every non-`rewrite` target's current `(axis, candidate_id)` disposition
-entry to match the majority exactly. A `rewrite` target stays incomplete while
+The audit derives its schema-1 `semantic_disposition_application` sidecar from
+the canonical fixed `evals/expert-panel/semantic-disposition.json` attestation
+and its exact bytes. Applied policy remains in the existing Root and Reference
+disposition entries in `config/skill-content-exceptions.yaml`. After a real
+majority decision, update those entries from the reviewed result and regenerate
+the canonical audit; the panel CLI does not apply them. Compact validation
+authenticates the three-vote result and source binding without requiring
+runtime files from the tracked tree. Every non-`rewrite` target's current
+`(axis, candidate_id)` disposition entry must match the majority exactly.
+A `rewrite` target stays incomplete while
 the old candidate exists; completion requires the old candidate and its entry
 to disappear without any new eligible candidate or unrelated evidence drift.
 Root strict and Reference strict do not consume this binding: they validate
@@ -710,12 +887,12 @@ disposition entries remain the single source of truth for applied governance.
 The packet retains four closed source fingerprints: Root and Reference candidate
 manifests plus the two reachable-behavior detector contracts. Currentness
 rechecks both semantic detectors, the complete eligible candidate ID set,
-candidate identity and local text fingerprints, Root occurrence/context
-evidence, Reference group membership/content evidence, and every review target
-and exact carry-forward set. Governance-only fields are excluded from candidate
+stable identity and its separate current evidence, and every review target and
+exact carry-forward set. Governance-only fields are excluded from candidate
 evidence. Reference `priority` is also excluded because the disposition entry
-selects it. A change to detector, candidate identity or text, local context, or
-group evidence still invalidates the round.
+selects it. Same-ID text, occurrence, membership, normalized-content, or local
+context drift reopens that target as `needs-confirmation`; selector drift is an
+identity replacement. Neither path can silently apply old evidence.
 Raw and detector-downgraded candidate counts remain review-time provenance;
 their churn does not invalidate a round when the detector and complete eligible
 candidate set and evidence remain unchanged.
@@ -756,7 +933,27 @@ for layer-specific form; this document owns cross-layer placement. [Quality
 Model](QUALITY_MODEL.md) and [Benchmarks](BENCHMARKS.md) own evidence
 interpretation and proof limits.
 
-Each task receives one primary Professional Skill and zero to a few specifically triggered Layer 3 Skills.
+Before adding a Skill, place new knowledge in this strict order:
+
+1. an existing Targeted Reference;
+2. an existing Foundation or Domain Skill;
+3. an existing Professional Skill;
+4. a new Professional Skill.
+
+New frameworks, libraries, protocols, platform sub-capabilities, scenarios, and
+gotchas default to one of the first three owners. They do not justify a new
+Host-visible Skill. Add a Professional Skill only when the capability owns a
+stable, independent Primary Route and a distinct task boundary that cannot be
+owned coherently by an existing Professional Skill.
+
+Foundation is a capability-modifier layer and Domain is `modifier-only`.
+Neither becomes a Runtime top-level Skill. Layer 3 selection is an ordered
+unique list of zero to three items. More than three items or any duplicate fails
+closed; never truncate the selection. Higher risk changes which Layer 3 items
+are selected, not the maximum count. Each task receives one Primary
+Professional Skill, the selected Layer 3 items, then only the necessary Targeted
+References. Task and Review consume the route fixed by Main and do not globally
+reroute.
 Multi-role Professional Skills declare role-neutral inputs once and
 role-specific inputs through `required_inputs_by_role`; analysis cannot require
 a future diff, and review cannot be dispatched without an actual diff or named
@@ -821,7 +1018,7 @@ independent disclosures and do not redefine the authoring gate. Formal release
 requires both axes and the exact Semantic application binding to be current.
 Readability covers every current
 `REVIEW_DENSITY`, `TIGHTEN_BODY`, and readability advisory target. Professional
-completeness covers all 189 non-Control packages. Neither panel can override an
+completeness covers all 188 non-Control packages. Neither panel can override an
 authoring blocker. The complete release check is
 `python3 scripts/eval-core-principles.py --gate formal-release`; its aggregate
 `professionalism-formal-release-ready` outcome requires the producer process to
@@ -838,7 +1035,7 @@ bound to the captured `HEAD` and validated locally; Markdown is not a readiness
 authority, and Core authoring refreshes only tracked ordinary JSON.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. Formal release requires a current Semantic application
 bound to the exact fixed-attestation bytes. Reuse all three compact attestations
 while their strict current validators pass; replace an axis only after source,

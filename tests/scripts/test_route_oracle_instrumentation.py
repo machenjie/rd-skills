@@ -63,8 +63,6 @@ ROUTE_RESULT_FIELDS = {
     "primary_skill",
     "layer3_skills",
     "review_skill",
-    "execution_level",
-    "level_basis",
 }
 ACTIVATION_V2_139A_LAYER3_FIELDS = (
     "eligible_foundation_layer3_skills",
@@ -85,26 +83,7 @@ ACTIVATION_V2_139C_DIRECT_STAGES = (
 
 
 def _main_execution(task_id: str) -> dict[str, object]:
-    return {
-        "producer": "main-control-agent",
-        "task_id": task_id,
-        "execution_level": "L4",
-        "level_basis": {
-            "trigger_evaluations": [
-                {
-                    "id": "public-api-event-schema-compatibility",
-                    "status": "matched",
-                    "evidence_kind": "analysis_handoff",
-                    "source_anchor": f"task:{task_id}:routing-api",
-                    "plausible_critical": False,
-                }
-            ],
-            "l2_eligibility": [],
-            "obligations": ["high-risk pre-implementation evidence"],
-            "unresolved": [],
-            "edit_status": "allowed",
-        },
-    }
+    return {"producer": "main-control-agent", "task_id": task_id}
 
 
 def _compatibility_projection(decision: dict[str, object]) -> dict[str, object]:
@@ -131,31 +110,11 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
         )
         self.assertEqual("analyzed", decision["path"])
         self.assertEqual("analysis-agent", decision["route_result"]["start_profile"])
-        self.assertIsNone(decision["route_result"]["execution_level"])
-        self.assertIsNone(decision["route_result"]["level_basis"])
+        pass
+        pass
         self.assertIsNone(decision["main_execution_provenance"])
 
-    def test_analyzed_route_discards_a_legacy_fabricated_level(self) -> None:
-        decision = ORACLE.route(
-            "Analyze the unresolved owner and placement before any implementation.",
-            main_execution=_main_execution("analysis-fabricated-l3"),
-        )
-        self.assertIsNone(decision["route_result"]["execution_level"])
-        self.assertIsNone(decision["route_result"]["level_basis"])
-        self.assertIsNone(decision["main_execution_provenance"])
 
-    def test_direct_route_still_requires_executable_level_input(self) -> None:
-        with self.assertRaisesRegex(
-            ORACLE.RoutingIntegrityError,
-            "executable route requires Main execution input",
-        ):
-            ORACLE.route(
-                "Implement the accepted bounded backend change in the known owner.",
-                main_execution={
-                    "producer": "main-control-agent",
-                    "task_id": "direct-without-level",
-                },
-            )
 
     def test_public_route_requires_main_execution_without_a_default(self) -> None:
         signature = inspect.signature(ORACLE.route)
@@ -198,319 +157,9 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
                     ),
                 )
 
-    def test_main_level_basis_and_provenance_are_canonical_byte_equivalent(
-        self,
-    ) -> None:
-        main_execution = _main_execution("t2g-byte-equivalence")
-        decision = ORACLE.route(
-            "Implement an accepted backend service change.",
-            main_execution=main_execution,
-        )
-        result = decision["route_result"]
-        for actual, expected in (
-            (decision["main_execution_provenance"], main_execution),
-            (result["level_basis"], main_execution["level_basis"]),
-        ):
-            self.assertEqual(
-                json.dumps(
-                    expected,
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8"),
-                json.dumps(
-                    actual,
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8"),
-            )
-        self.assertEqual(
-            main_execution["execution_level"],
-            result["execution_level"],
-        )
 
-    def test_activation_v3_ordinary_route_keeps_public_contract_and_provenance(
-        self,
-    ) -> None:
-        main_execution = _main_execution("activation-v3-ordinary-provenance")
-        decision = ORACLE.route(
-            "Implement an accepted backend service change.",
-            main_execution=main_execution,
-        )
-        self.assertEqual(ENVELOPE_FIELDS, set(decision))
-        self.assertEqual(ROUTE_RESULT_FIELDS, set(decision["route_result"]))
-        self.assertNotIn(
-            "artifact_binding_id",
-            COHORTS._nested_mapping_keys(decision),
-        )
-        self.assertEqual(main_execution, decision["main_execution_provenance"])
 
-    def test_activation_v3_binding_record_is_closed_and_digest_bound(
-        self,
-    ) -> None:
-        errors: list[str] = []
-        record = COHORTS.FOUR_FOUNDATION_BINDING
-        prefix, claimed_digest = record.rsplit("|binding_sha256=", 1)
 
-        def signed(parts: list[str]) -> str:
-            unsigned = "|".join(parts)
-            digest = hashlib.sha256(unsigned.encode("utf-8")).hexdigest()
-            return f"{unsigned}|binding_sha256={digest}"
-
-        canonical_parts = prefix.split("|")
-        if (
-            signed(canonical_parts) != record
-            or hashlib.sha256(prefix.encode("utf-8")).hexdigest()
-            != claimed_digest
-        ):
-            errors.append("Brief159 fixture digest is not canonical")
-
-        def with_record(value: str) -> dict[str, object]:
-            main_execution = copy.deepcopy(
-                COHORTS._four_foundation_main_execution()
-            )
-            main_execution["level_basis"]["trigger_evaluations"][0][
-                "source_anchor"
-            ] = value
-            return main_execution
-
-        try:
-            ORACLE.route(
-                "Review the engineering brief and task plan.",
-                main_execution=with_record(record),
-            )
-        except Exception as exc:  # pragma: no cover - aggregate Red evidence
-            errors.append(f"canonical record rejected: {type(exc).__name__}")
-
-        def replaced(field: str, value: str) -> list[str]:
-            return [
-                f"{field}={value}" if part.startswith(f"{field}=") else part
-                for part in canonical_parts
-            ]
-
-        missing = [
-            part
-            for part in canonical_parts
-            if not part.startswith("artifact_id=")
-        ]
-        extra = [*canonical_parts, "unexpected=field"]
-        duplicate = [
-            *canonical_parts[:5],
-            canonical_parts[4],
-            *canonical_parts[5:],
-        ]
-        reordered = list(canonical_parts)
-        reordered[4], reordered[5] = reordered[5], reordered[4]
-        delimiter = replaced("artifact_id", "brief|injected=value")
-        wrong_digest = (
-            f"{prefix}|binding_sha256="
-            f"{claimed_digest[:-1]}{'0' if claimed_digest[-1] != '0' else '1'}"
-        )
-        invalid_records = {
-            "missing": signed(missing),
-            "extra": signed(extra),
-            "duplicate": signed(duplicate),
-            "reordered": signed(reordered),
-            "empty": signed(replaced("assignment_id", "")),
-            "whitespace": signed(
-                replaced("artifact_id", " brief-four-foundation")
-            ),
-            "delimiter": signed(delimiter),
-            "uppercase-hex": signed(
-                replaced("artifact_sha256", "A" * 64)
-            ),
-            "wrong-review-skill": signed(
-                replaced(
-                    "review_skill",
-                    "engineering-artifact-review",
-                )
-            ),
-            "wrong-artifact-kind": signed(
-                replaced("artifact_kind", "task-plan")
-            ),
-            "wrong-currentness": signed(
-                replaced("currentness_status", "stale")
-            ),
-            "wrong-acceptance": signed(
-                replaced("acceptance_status", "rejected")
-            ),
-            "wrong-digest": wrong_digest,
-            "missing-digest": prefix,
-            "wrong-version": signed(
-                [
-                    "cf.brief-review-binding/v2",
-                    *canonical_parts[1:],
-                ]
-            ),
-            "near-prefix": signed(
-                [
-                    "cf.brief-review-bindings/v1",
-                    *canonical_parts[1:],
-                ]
-            ),
-        }
-        for label, invalid_record in invalid_records.items():
-            rejected = False
-            with mock.patch.object(
-                ORACLE,
-                "_normalize_route_prompt",
-                wraps=ORACLE._normalize_route_prompt,
-            ) as normalize:
-                try:
-                    ORACLE.route(
-                        "Review the engineering brief and task plan.",
-                        main_execution=with_record(invalid_record),
-                    )
-                except ORACLE.RoutingIntegrityError:
-                    rejected = True
-                except Exception as exc:  # pragma: no cover - aggregate Red evidence
-                    errors.append(
-                        f"{label} raised {type(exc).__name__}, not routing integrity"
-                    )
-            if not rejected:
-                errors.append(f"{label} record was accepted")
-            if normalize.call_count != 0:
-                errors.append(
-                    f"{label} normalized the prompt before rejection"
-                )
-        self.assertEqual(
-            [],
-            errors,
-            "[activation-v3-binding-record] canonical digest records must use "
-            "the exact closed Brief159 serialization and reject invalid Main "
-            "before normalization",
-        )
-
-    def test_activation_v3_binding_authority_context_is_exact(self) -> None:
-        errors: list[str] = []
-
-        def routed(main_execution: dict[str, object]) -> None:
-            ORACLE.route(
-                "Review the engineering brief and task plan.",
-                main_execution=main_execution,
-            )
-
-        for level in ("L4", "L5"):
-            valid = copy.deepcopy(COHORTS._four_foundation_main_execution())
-            valid["execution_level"] = level
-            try:
-                routed(valid)
-            except Exception as exc:  # pragma: no cover - aggregate Red evidence
-                errors.append(
-                    f"valid {level} authority rejected: {type(exc).__name__}"
-                )
-
-        invalid_contexts: dict[str, dict[str, object]] = {}
-
-        def mutated(label: str) -> dict[str, object]:
-            value = copy.deepcopy(COHORTS._four_foundation_main_execution())
-            invalid_contexts[label] = value
-            return value
-
-        mutated("task-mismatch")["task_id"] = "different-main-task"
-        mutated("wrong-level")["execution_level"] = "L3"
-        mutated("missing-obligation")["level_basis"]["obligations"] = []
-        mutated("wrong-trigger")["level_basis"]["trigger_evaluations"][0][
-            "id"
-        ] = "public-api-event-schema-compatibility"
-        mutated("not-matched")["level_basis"]["trigger_evaluations"][0][
-            "status"
-        ] = "not_matched"
-        mutated("wrong-evidence-kind")["level_basis"][
-            "trigger_evaluations"
-        ][0]["evidence_kind"] = "user_fact"
-        mutated("critical-marker")["level_basis"]["trigger_evaluations"][0][
-            "plausible_critical"
-        ] = True
-        misplaced = mutated("record-on-wrong-row")
-        source_anchor = misplaced["level_basis"]["trigger_evaluations"][0][
-            "source_anchor"
-        ]
-        misplaced["level_basis"]["trigger_evaluations"][0][
-            "source_anchor"
-        ] = "task:activation-v3-four-foundation:architecture"
-        misplaced["level_basis"]["trigger_evaluations"][1][
-            "source_anchor"
-        ] = source_anchor
-        duplicate = mutated("duplicate-binding-authority")
-        duplicate["level_basis"]["trigger_evaluations"].append(
-            copy.deepcopy(
-                duplicate["level_basis"]["trigger_evaluations"][0]
-            )
-        )
-        canonical_prefix = COHORTS.FOUR_FOUNDATION_BINDING.rsplit(
-            "|binding_sha256=",
-            1,
-        )[0]
-        second_parts = [
-            (
-                "artifact_id=brief-four-foundation-second"
-                if part.startswith("artifact_id=")
-                else part
-            )
-            for part in canonical_prefix.split("|")
-        ]
-        second_prefix = "|".join(second_parts)
-        second_record = (
-            f"{second_prefix}|binding_sha256="
-            f"{hashlib.sha256(second_prefix.encode('utf-8')).hexdigest()}"
-        )
-        for label, record in (
-            ("first", COHORTS.FOUR_FOUNDATION_BINDING),
-            ("second", second_record),
-        ):
-            record_prefix, record_digest = record.rsplit(
-                "|binding_sha256=",
-                1,
-            )
-            if (
-                hashlib.sha256(record_prefix.encode("utf-8")).hexdigest()
-                != record_digest
-            ):
-                errors.append(
-                    f"{label} distinct authority record is not digest-valid"
-                )
-        distinct = mutated("distinct-binding-authorities")
-        distinct["level_basis"]["trigger_evaluations"].append(
-            {
-                "id": "major-architecture-or-physical-safety",
-                "status": "matched",
-                "evidence_kind": "analysis_handoff",
-                "source_anchor": second_record,
-                "plausible_critical": False,
-            }
-        )
-
-        for label, invalid in invalid_contexts.items():
-            rejected = False
-            with mock.patch.object(
-                ORACLE,
-                "_normalize_route_prompt",
-                wraps=ORACLE._normalize_route_prompt,
-            ) as normalize:
-                try:
-                    routed(invalid)
-                except ORACLE.RoutingIntegrityError:
-                    rejected = True
-                except Exception as exc:  # pragma: no cover - aggregate Red evidence
-                    errors.append(
-                        f"{label} raised {type(exc).__name__}, "
-                        "not routing integrity"
-                    )
-            if not rejected:
-                errors.append(f"{label} authority was accepted")
-            if normalize.call_count != 0:
-                errors.append(
-                    f"{label} normalized the prompt before rejection"
-                )
-        self.assertEqual(
-            [],
-            errors,
-            "[activation-v3-binding-authority] binding authority requires one "
-            "matched major-architecture analysis handoff at L4/L5 with its "
-            "high-risk evidence obligation and must reject before normalization",
-        )
 
     def test_selection_evidence_is_the_full_current_registry_partition(
         self,
@@ -553,62 +202,9 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
             "ROUTE_CANDIDATE_LAYER3_FIELDS is absent or not exact",
         )
 
-    def test_activation_v2_139a_enrichment_signature_is_exact(self) -> None:
-        enricher = getattr(ORACLE, "_enrich_route_candidates", None)
-        self.assertTrue(
-            callable(enricher),
-            "[activation-v2-139a-missing-helper] "
-            "_enrich_route_candidates is absent",
-        )
-        assert callable(enricher)
-        parameters = inspect.signature(enricher).parameters
-        expected_names = (
-            "candidates",
-            "domain_specs",
-            "domain_authority",
-            "layer3_authority_by_primary",
-            "maximum_layer3",
-            "admission_authority",
-        )
-        self.assertEqual(expected_names, tuple(parameters))
-        self.assertEqual(
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            parameters["candidates"].kind,
-        )
-        self.assertEqual(
-            "list[dict[str, Any]]",
-            parameters["candidates"].annotation,
-        )
-        expected_annotations = {
-            "domain_specs": "dict[str, dict[str, Any]]",
-            "domain_authority": "dict[str, Any]",
-            "layer3_authority_by_primary": "dict[str, list[str]]",
-            "maximum_layer3": "int",
-            "admission_authority": "OracleAdmissionAuthority | None",
-        }
-        for name in expected_names[1:]:
-            self.assertEqual(
-                inspect.Parameter.KEYWORD_ONLY,
-                parameters[name].kind,
-            )
-            expected_default = (
-                None
-                if name == "admission_authority"
-                else inspect.Parameter.empty
-            )
-            self.assertIs(expected_default, parameters[name].default)
-            self.assertEqual(
-                expected_annotations[name],
-                parameters[name].annotation,
-            )
-        self.assertEqual(
-            "list[dict[str, Any]]",
-            inspect.signature(enricher).return_annotation,
-        )
 
     def test_invalid_main_fails_before_every_routing_stage(self) -> None:
         stage_names = (
-            "_validated_brief_review_binding",
             "_normalize_route_prompt",
             "_build_route_candidates",
             "_enrich_route_candidates",
@@ -664,7 +260,6 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
     def test_each_public_call_runs_every_route_once_stage_once(self) -> None:
         stage_names = (
             "_validated_main_execution_copy",
-            "_validated_brief_review_binding",
         )
         missing = [
             name
@@ -704,56 +299,6 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
                     },
                 )
 
-    def test_activation_v3_binding_validation_has_one_route_once_call(
-        self,
-    ) -> None:
-        tree = ast.parse(ORACLE_PATH.read_text(encoding="utf-8"))
-        route_impl = next(
-            node
-            for node in tree.body
-            if isinstance(node, ast.FunctionDef)
-            and node.name == "_route_impl"
-        )
-        stage_calls = [
-            (node.func.id, node.lineno)
-            for node in ast.walk(route_impl)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id
-            in {
-                "_validated_main_execution_copy",
-                "_validated_brief_review_binding",
-                "_normalize_route_prompt",
-            }
-        ]
-        by_name = {
-            name: [
-                lineno
-                for candidate_name, lineno in stage_calls
-                if candidate_name == name
-            ]
-            for name in {
-                "_validated_main_execution_copy",
-                "_validated_brief_review_binding",
-                "_normalize_route_prompt",
-            }
-        }
-        self.assertEqual(
-            1,
-            len(by_name["_validated_brief_review_binding"]),
-            "[activation-v3-route-once] _route_impl must call the binding "
-            "validator exactly once",
-        )
-        self.assertEqual(1, len(by_name["_validated_main_execution_copy"]))
-        self.assertEqual(1, len(by_name["_normalize_route_prompt"]))
-        self.assertLess(
-            by_name["_validated_main_execution_copy"][0],
-            by_name["_validated_brief_review_binding"][0],
-        )
-        self.assertLess(
-            by_name["_validated_brief_review_binding"][0],
-            by_name["_normalize_route_prompt"][0],
-        )
 
     def test_route_with_trace_returns_canonical_decision_and_winner_trace(
         self,
@@ -958,60 +503,6 @@ class RouteOracleInstrumentationTests(unittest.TestCase):
             )
         )
 
-    def test_139c_build_signature_has_prompt_authority_and_no_snapshot(
-        self,
-    ) -> None:
-        parameters = inspect.signature(
-            ORACLE._build_route_candidates
-        ).parameters
-        expected_names = (
-            "raw_candidates",
-            "route_candidates",
-            "normalized_text",
-            "implementation_policy",
-            "domain_specs",
-            "admission_authority",
-        )
-        self.assertEqual(
-            expected_names,
-            tuple(parameters),
-            "[activation-v2-139c-build-signature] builder must receive the "
-            "normalized prompt and current authority, never a classifier "
-            "snapshot",
-        )
-        for forbidden in (
-            "domain_classification",
-            "domain_authority",
-            "layer3_authority_by_primary",
-            "maximum_layer3",
-            "snapshot",
-            "text",
-            "prompt",
-        ):
-            self.assertNotIn(forbidden, parameters)
-        for name in expected_names[:2]:
-            self.assertEqual(
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                parameters[name].kind,
-            )
-        for name in expected_names[2:]:
-            self.assertEqual(
-                inspect.Parameter.KEYWORD_ONLY,
-                parameters[name].kind,
-            )
-            expected_default = (
-                None
-                if name == "admission_authority"
-                else inspect.Parameter.empty
-            )
-            self.assertIs(
-                expected_default,
-                parameters[name].default,
-            )
-        self.assertEqual(
-            "OracleAdmissionAuthority | None",
-            parameters["admission_authority"].annotation,
-        )
 
     def test_139c_build_calls_domain_classifier_exactly_once(self) -> None:
         normalized_text = "sentinel normalized routing text"

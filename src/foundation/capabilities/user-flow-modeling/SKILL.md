@@ -49,7 +49,7 @@ Model ordered journeys through actor goal, preconditions, reachable entries, bra
 
 ## Output Contract
 
-- user-flow decision with actor goal preconditions entries predicates exits interruptions recovery authority side effects proof limits and specialist routes
+- user-flow decision with actor goal and preconditions; entries, predicates, exits, and interruptions; recovery, authority, and side effects; proof limits and specialist routes
 
 ## Targeted References
 

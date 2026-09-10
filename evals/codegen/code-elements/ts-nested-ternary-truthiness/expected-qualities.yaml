@@ -1,6 +1,5 @@
 id: ts-nested-ternary-truthiness
 category: code-elements
-complexity: L2
 focus:
   - nested ternary readability
   - truthiness/nullish semantics

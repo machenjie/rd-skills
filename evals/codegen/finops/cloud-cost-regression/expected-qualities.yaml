@@ -1,6 +1,5 @@
 id: cloud-cost-regression
 category: finops
-complexity: L4
 focus:
   - cost regression guardrail
   - resource diff analysis

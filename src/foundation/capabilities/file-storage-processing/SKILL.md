@@ -27,7 +27,8 @@ Protect access, resources, untrusted content, lifecycle, and cleanup across file
 - Validate declared type against an allowed content contract and independent content evidence when a mismatch can change execution, rendering, or parsing risk.
 - Derive signed-access method, object scope, content bounds, expiry, and revocation response from the use case, data sensitivity, current policy, and exposure consequence.
 - Define owned raw, quarantined, processed, retained, and deleted states, including abandoned transfers, failed processing, orphan detection, legal hold, and erasure conflicts where applicable.
-- Isolate active or parser-exposed content, sanitize untrusted object keys and metadata, and select origin, download, and public-access controls from the actual rendering and execution boundary.
+- Isolate active or parser-exposed content at its processing boundary. Object keys and metadata need validation and sanitization for their actual storage or interpretation sinks.
+- Select origin, download, and public-access controls from the actual rendering and execution boundary.
 
 ## Anti-Patterns
 

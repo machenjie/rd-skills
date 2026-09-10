@@ -1,5 +1,7 @@
 # Behavior Preservation Evidence
 
+- **Inventory observable behavior before movement.** Include public return and error semantics, side effects, persistence, events, configuration, metrics, logs used as contracts, timing or ordering guarantees, and consumed symbols relevant to the change.
+
 Use this reference when refactor closure depends on behavior equivalence, repository inspection freshness, prior task evidence, generated artifacts, observable action sequence, validation freshness, tool permission boundaries, or evidence limits. Keep the `SKILL.md` body as the routing surface; use this file for the deeper evidence map.
 
 ## Behavior Evidence Matrix
@@ -41,3 +43,7 @@ Use this reference when refactor closure depends on behavior equivalence, reposi
 
 ## Residual Risk and Recommended Next Step
 ```
+
+## Anti-Patterns
+
+- Reject behavior changes labeled refactoring, causally hidden broad moves, and local-search-only deletion.

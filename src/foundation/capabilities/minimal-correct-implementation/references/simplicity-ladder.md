@@ -1,5 +1,7 @@
 # Minimality Candidate Record
 
+- Compare delete or omit, existing repository behavior, standard or native behavior, installed dependencies, direct local code, and new structure against the task's actual boundaries.
+
 This record compares concrete implementation candidates against current acceptance, owner boundaries, and accident-prevention obligations.
 
 ## Candidate Comparison
@@ -21,3 +23,7 @@ This record compares concrete implementation candidates against current acceptan
 - A single current implementation can still protect an independent external contract or lifecycle; the decision records that boundary instead of applying a numeric rule.
 - Deletion and shrink claims state search limits for dynamic registration, reflection, generated code, stored data, and external consumers.
 - Once structure is retained, hand owner-private placement to `implementation-structure-design`; hand a proved variation, lifecycle, protocol, concurrency, or extension force to `design-pattern-selection`.
+
+## Anti-Patterns
+
+- Reject speculative scaffolding, pass-through abstractions, duplicate packages/code, and shortcuts without a bounded exit.

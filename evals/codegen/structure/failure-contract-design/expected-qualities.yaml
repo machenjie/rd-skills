@@ -1,6 +1,5 @@
 id: failure-contract-design
 category: structure
-complexity: L3
 focus:
   - boundary error taxonomy
   - retryable versus terminal state

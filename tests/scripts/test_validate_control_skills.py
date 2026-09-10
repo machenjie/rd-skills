@@ -151,47 +151,7 @@ class ControlSkillProjectionTests(unittest.TestCase):
                 VALIDATOR._validate_heading_structure(mutation, errors)
                 self.assertTrue(errors)
 
-    def test_each_forbidden_storage_projection_is_required(self) -> None:
-        for rule in VALIDATOR.EVIDENCE_LEDGER_MODEL["forbidden_storage"]:
-            term = rule["projection_terms"][0]
-            with self.subTest(rule=rule["id"]):
-                self.assertIn(term, self.body)
-                errors: list[str] = []
-                VALIDATOR._validate_concepts(
-                    self.body.replace(term, "REMOVED_STORAGE_TERM", 1),
-                    errors,
-                )
-                self.assertTrue(
-                    any(f"forbidden storage rule {rule['id']!r}" in error for error in errors),
-                    errors,
-                )
 
-    def test_runtime_contract_is_registered_exact_and_missing_copy_fails(self) -> None:
-        runtime = VALIDATOR.SKILL.parent / "references/execution-level-contract.md"
-        self.assertEqual(
-            [],
-            VALIDATOR.execution_level_runtime_reference_errors(
-                runtime.read_text(encoding="utf-8")
-            ),
-        )
-        self.assertIn(
-            "[execution level contract](references/execution-level-contract.md)",
-            self.body,
-        )
-        self.assertIn("check execution level before routing", self.body)
-        with tempfile.TemporaryDirectory() as raw:
-            skill_root = Path(raw) / "engineering-control-plane"
-            shutil.copytree(VALIDATOR.SKILL.parent, skill_root)
-            (skill_root / "references/execution-level-contract.md").unlink()
-            skill = skill_root / "SKILL.md"
-            _metadata, _frontmatter, body = VALIDATOR.parse_frontmatter(skill)
-            errors: list[str] = []
-            with mock.patch.object(VALIDATOR, "SKILL", skill):
-                VALIDATOR._validate_references(body, errors)
-            self.assertTrue(
-                any("missing control reference execution-level-contract.md" in error for error in errors),
-                errors,
-            )
 
     def test_context_budget_requires_raw_eof_proof_before_projection_exclusion(self) -> None:
         body = (

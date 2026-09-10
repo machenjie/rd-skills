@@ -31,34 +31,29 @@ Support `task-agent` and `review-agent` for bounded logging decisions.
 
 ## Professional Decision Rules
 
-- Log only for a named diagnostic, audit, security, or operational question; prefer another signal or no new signal when it answers better.
-- Place one event at the boundary owning the outcome; do not duplicate intermediate retries, wrappers, and terminal failures.
-- Select level and stable schema from current logger policy, event meaning, and reachable failure states.
-- Allow only purpose-required fields; omit or transform secrets, credentials, sensitive payloads, and unnecessary personal data under current policy.
-- Preserve only the correlation needed across affected request, trace, message, or job boundaries without exposing raw identity.
-- Bound material rate, value-space, retention, access, sink, cost, cardinality, and audit risk with measured/platform evidence and an owner.
+- Keep the selected logging design gate decision within its declared owner, inputs, stops, and output contract.
+- Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths.
+- Derive level, stable schema, purpose-required fields, redaction, and correlation from current logger and data-classification policy; exclude raw secrets, payloads, and unnecessary identity.
+- Bound rate, value space, cardinality, retention, access, sink, cost, and failure visibility with measured or platform evidence and a named owner.
 
 ## High-Value Gotchas
 
-- Raw payload logging creates a durable privacy incident.
-- Intermediate retry errors can create false incidents before the terminal outcome is known.
-- High-cardinality fields, hot-path events, or an error without useful context can make the signal unusable.
+- More events can reduce diagnostic value through volume, cardinality, or duplicate noise.
+- Redaction after formatting can expose sensitive values before the sink applies policy.
+- A schema change can silently break alerts, audit consumers, or correlation.
 
 ## Execution Checklist
 
-1. Trace the named operational question to one owning event boundary and consumer action.
-2. Choose level, schema, fields, redaction, correlation, and sink from current policy.
-3. Verify failure visibility, duplicate emission, cardinality, rate, retention, and sensitive-data behavior.
-4. **Task mode:** apply the logging decision at the owning event boundary.
-5. **Review mode:** judge every changed event path against safe-logging criteria.
-6. Stop when event purpose, owner, or data classification is unproven.
+- **Task mode:** Map the diagnostic question to its event owner, placement, schema, and sink.
+- **Task mode:** Apply approved field classification, redaction, level, and correlation decisions.
+- **Review mode:** Compare emitted and suppressed paths with purpose and safe-logging evidence.
+- Record unmeasured volume, consumer drift, and inaccessible sink behavior as residual risk.
+- Minimal validation: run emission and suppression tests at the selected sink boundary.
 
 ## Stop / Escalation Conditions
 
-- Stop without a named question, event owner, and placement; operational logs need an action, while audit evidence needs a consumer and protected meaning.
-- Stop when fields, correlation, retention, access, or sinks can expose classified data without policy-consistent transformation and negative proof.
-- Stop volume/cardinality risk without bounded rate or value-space evidence and an owned control or no-log outcome.
-- Stop sensitive evidence actions without permission, sandbox, redaction, bounded scope, and rollback or cleanup.
+- Stop without a named question, event owner, placement, consumer meaning, current data/sink policy, and negative proof.
+- Stop unbounded volume/cardinality or sensitive evidence without measured bounds, authority, redaction, scope, and recovery.
 
 ## Output Contract
 
@@ -69,7 +64,7 @@ Support `task-agent` and `review-agent` for bounded logging decisions.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |
+| [checklist](references/checklist.md) | decision-checklist | A bounded mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |
 | [index](references/index.md) | index | competing logging design gate references require dependency, conflict, or output-fragment selection | the logging design gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |
-| [logging output and gates](references/logging-output-and-gates.md) | targeted | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |
+| [logging output and gates](references/logging-output-and-gates.md) | targeted | implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |
 | [logging selection criteria](references/logging-selection-criteria.md) | targeted | A concrete purpose, level, field, redaction, correlation, placement, or signal choice needs more detail than the root contract | The root contract determines the no-log or bounded logging decision | task-agent, review-agent | selected-approach, residual-risk |

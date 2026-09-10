@@ -1,6 +1,5 @@
 id: cache-invalidation-consistency
 category: data-middleware
-complexity: L3
 focus:
   - cache invalidation
   - transaction consistency

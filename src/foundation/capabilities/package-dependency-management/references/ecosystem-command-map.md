@@ -1,5 +1,7 @@
 # Package Ecosystem Command Map
 
+**Follow the repository's package authority.** Identify manifest, lockfile, workspace root, resolution policy, supported runtimes, registry configuration, and generated-file ownership before changing dependencies.
+
 Use this reference to select dependency evidence commands. Prefer repository scripts only when they preserve the same fail-closed contract.
 
 The versions below match official stable releases checked on 2026-07-16. A repository pin overrides this baseline and requires version-specific verification.
@@ -25,14 +27,9 @@ The versions below match official stable releases checked on 2026-07-16. A repos
 
 ## Verification Contract
 
-- Match the exact repository-pinned manager and runtime before using a row.
-- Verify committed preconditions through source-control evidence.
-- Run frozen proof in a clean or disposable checkout.
-- Reject diffs to manifests, locks, workspace metadata, package-manager config, and verification metadata.
-- Classify cache, environment, build-output, and daemon-store changes separately from source mutation.
-- Treat lifecycle scripts, plugins, and build hooks as possible source writers.
-- Match dependency groups, extras, workspaces, and target platforms to the locked selection.
+- Match the repository-pinned manager/runtime, committed preconditions, groups/workspaces/platforms, and exact row; run frozen proof in a clean or disposable checkout.
+- Reject source-authority diffs and classify cache, environment, build-output, and daemon-store changes separately.
+- Treat lifecycle scripts, plugins, and build hooks as possible writers.
 - Use full-graph `npm audit` for general dependency-risk evidence. Scope `--omit=dev` to a production-runtime artifact and separately scan build/test/CI dependencies or record the unverified gap for `dependency-vulnerability-scanning`.
 - Keep update, repair, and metadata-write flags out of frozen proof.
-- Record command, working directory, version, exit code, report path, and network mode.
-- Record unavailable commands as proof limits for the owning gate.
+- Record command, cwd, version, exit/report/network result, source diff, and unavailable-command proof limits.

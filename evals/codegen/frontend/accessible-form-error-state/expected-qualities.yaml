@@ -1,6 +1,5 @@
 id: accessible-form-error-state
 category: frontend
-complexity: L2
 focus:
   - accessible form validation
   - interaction states

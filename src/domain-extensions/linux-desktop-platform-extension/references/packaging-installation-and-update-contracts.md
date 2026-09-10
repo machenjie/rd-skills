@@ -17,18 +17,6 @@ Official maintainer and distribution pages below were accessed on 2026-07-24.
   resolution; a built artifact proves no installed behavior.
 - Route distribution/update approval and rollout to `delivery-release-gate`.
 
-## Failure Proof
-
-- Exercise missing runtime/dependency, denied sandbox access, offline/partial
-  install, invalid signature, update interruption, downgrade, rollback, and removal.
-- Record unavailable store, repository, channel, distribution-version, and
-  clean-host evidence as proof limits.
-
-## Required Record
-
-Return selected package and rejected alternatives, identity/confinement,
-installer/update authority, transition matrix, artifact/host evidence, and risk.
-
 ## Primary Sources
 
 - [Flatpak basic concepts](https://docs.flatpak.org/en/latest/basic-concepts.html)

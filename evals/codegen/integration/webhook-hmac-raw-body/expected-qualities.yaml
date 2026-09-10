@@ -1,6 +1,5 @@
 id: webhook-hmac-raw-body
 category: integration
-complexity: L4
 focus:
   - raw body signature verification
   - partner webhook contract

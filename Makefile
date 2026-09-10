@@ -19,4 +19,4 @@ endif
 	python3 scripts/quickstart.py --agent copilot --scope project --target $(TARGET)
 
 doctor-codex:
-	python3 installers/doctor.py --agent codex --scope user --profile recommended
+	python3 installers/doctor.py --agent codex --scope user

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import hashlib
 import importlib.util
 import json
 import shutil
@@ -7,10 +9,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE_ROOT = ROOT
 SCRIPT = ROOT / "scripts/validate-built-skill-reference-links.py"
+BUILT_RUNTIME_ROOT: Path | None = None
 
 
 def _load_module():
@@ -31,6 +36,91 @@ def _load_module():
 VALIDATOR = _load_module()
 
 
+def _build_runtime_subject(subject: Path) -> Path:
+    for relative in ("src", "scripts"):
+        shutil.copytree(
+            SOURCE_ROOT / relative,
+            subject / relative,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+        )
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", subject / "pyproject.toml")
+
+    build = VALIDATOR.canonical_build
+    build_source_root = build.ROOT
+
+    def rebased(path: Path) -> Path:
+        return subject / path.relative_to(build_source_root)
+
+    with mock.patch.multiple(
+        build,
+        ROOT=subject,
+        SRC_DIR=rebased(build.SRC_DIR),
+        REGISTRY_DIR=rebased(build.REGISTRY_DIR),
+        DIST_DIR=subject / "dist",
+        UNIVERSAL_SKILLS_ROOT=rebased(build.UNIVERSAL_SKILLS_ROOT),
+        OPENAI_ZIP_DIR=rebased(build.OPENAI_ZIP_DIR),
+        PROFILE_SOURCE=rebased(build.PROFILE_SOURCE),
+        HOST_ENFORCEMENT_SOURCE=rebased(build.HOST_ENFORCEMENT_SOURCE),
+        CONTROL_PROMPT_SOURCE=rebased(build.CONTROL_PROMPT_SOURCE),
+        CORE_CONTRACTS_PATH=rebased(build.CORE_CONTRACTS_PATH),
+        LAYER_SOURCE_ROOTS={
+            layer: rebased(path)
+            for layer, path in build.LAYER_SOURCE_ROOTS.items()
+        },
+        AGENT_SKILL_ROOTS=tuple(rebased(path) for path in build.AGENT_SKILL_ROOTS),
+        AGENT_PROFILE_OUTPUTS=tuple(
+            (platform, rebased(path))
+            for platform, path in build.AGENT_PROFILE_OUTPUTS
+        ),
+    ):
+        result = build.build_profile(build.RUNTIME_PROFILE)
+
+    if (
+        result["top_level_count"] != 26
+        or result["compiled_layer3_reference_count"] != 154
+        or result["agent_profile_count"] != 4
+    ):
+        raise AssertionError(f"temporary Runtime build is incomplete: {result}")
+
+    runtime_root = subject / "dist/universal/skills/recommended"
+    manifest = json.loads(
+        (runtime_root / VALIDATOR.BUILD_MANIFEST_NAME).read_text(encoding="utf-8")
+    )
+    if (
+        len(manifest["top_level_skills"]) != 26
+        or sum(
+            scope != "product"
+            for scope in manifest["foundation_delivery_scopes"].values()
+        )
+        != 9
+    ):
+        raise AssertionError("temporary Runtime manifest delivery counts drifted")
+    return runtime_root
+
+
+def setUpModule() -> None:
+    global BUILT_RUNTIME_ROOT
+    runtime = tempfile.TemporaryDirectory(
+        prefix="changeforge-built-links-runtime-",
+    )
+    subject = Path(runtime.name).resolve()
+    if subject.is_relative_to(SOURCE_ROOT.resolve()):
+        runtime.cleanup()
+        raise AssertionError("temporary Runtime subject must be outside the repository")
+    try:
+        BUILT_RUNTIME_ROOT = _build_runtime_subject(subject)
+    except BaseException:
+        runtime.cleanup()
+        raise
+
+    def cleanup() -> None:
+        global BUILT_RUNTIME_ROOT
+        BUILT_RUNTIME_ROOT = None
+        runtime.cleanup()
+
+    unittest.addModuleCleanup(cleanup)
+
+
 class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
     def _write_profile(self, root: Path, body_line_count: int) -> Path:
         profile_root = root / "recommended"
@@ -38,9 +128,13 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         skill_root.mkdir(parents=True)
         fixed_lines = [
             "# Sample Professional",
+            "## JIT Reference Delivery",
+            "",
+            "JIT: `references/runtime/selector.json`; Runtime: "
+            "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.",
             "## Layer 3 Delivery",
-            "This build compiles assigned Foundation and Domain guidance.",
-            "Never preload Layer 3 or open a Layer 3 index or catalog.",
+            "",
+            "No Foundation or Domain Layer 3 items are assigned to this Skill.",
         ]
         self.assertGreaterEqual(body_line_count, len(fixed_lines))
         body = [
@@ -79,7 +173,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = self._write_profile(Path(temporary), 120)
             errors: list[str] = []
-            VALIDATOR._validate_profile(
+            VALIDATOR._validate_runtime(
                 profile_root, errors, enforce_source_mapping=False
             )
             self.assertEqual([], errors)
@@ -88,7 +182,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = self._write_profile(Path(temporary), 121)
             errors: list[str] = []
-            VALIDATOR._validate_profile(
+            VALIDATOR._validate_runtime(
                 profile_root, errors, enforce_source_mapping=False
             )
             self.assertTrue(
@@ -99,6 +193,37 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 ),
                 errors,
             )
+
+    def test_rejects_missing_or_duplicate_professional_jit_anchor(self) -> None:
+        for mutation in ("missing", "duplicate"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
+                profile_root = self._write_profile(Path(temporary), 120)
+                skill = profile_root / "sample-professional/SKILL.md"
+                text = skill.read_text(encoding="utf-8")
+                block = (
+                    "## JIT Reference Delivery\n\n"
+                    "JIT: `references/runtime/selector.json`; Runtime: "
+                    "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.\n"
+                )
+                self.assertEqual(1, text.count(block))
+                skill.write_text(
+                    text.replace(block, "", 1)
+                    if mutation == "missing"
+                    else text.replace(block, block + "\n" + block, 1),
+                    encoding="utf-8",
+                )
+                errors: list[str] = []
+                VALIDATOR._validate_runtime(
+                    profile_root, errors, enforce_source_mapping=False
+                )
+                self.assertTrue(
+                    any(
+                        "exactly one Professional JIT Reference Delivery and selector path"
+                        in error
+                        for error in errors
+                    ),
+                    errors,
+                )
 
     def test_rejects_missing_or_unknown_compiled_layer3_format(self) -> None:
         for value in (None, "authoring-root-v1"):
@@ -112,7 +237,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                     manifest["compiled_layer3_format"] = value
                 manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
                 errors: list[str] = []
-                VALIDATOR._validate_profile(
+                VALIDATOR._validate_runtime(
                     profile_root, errors, enforce_source_mapping=False
                 )
                 self.assertTrue(
@@ -121,8 +246,10 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 )
 
     def test_rejects_compiled_authoring_heading_in_projection(self) -> None:
-        built = ROOT / "dist/universal/skills/recommended"
-        self.assertTrue(built.is_dir(), "run the recommended build before this test")
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        self.assertTrue(built.is_dir(), "temporary recommended Runtime is missing")
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = Path(temporary) / "recommended"
             shutil.copytree(built, profile_root)
@@ -137,15 +264,17 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 encoding="utf-8",
             )
             errors: list[str] = []
-            VALIDATOR._validate_profile(profile_root, errors)
+            VALIDATOR._validate_runtime(profile_root, errors)
         self.assertTrue(
             any("compiled projection headings" in error for error in errors),
             errors,
         )
 
     def test_synchronized_manifest_index_and_files_cannot_reassign_owner(self) -> None:
-        built = ROOT / "dist/universal/skills/recommended"
-        self.assertTrue(built.is_dir(), "run the recommended build before this test")
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        self.assertTrue(built.is_dir(), "temporary recommended Runtime is missing")
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = Path(temporary) / "recommended"
             shutil.copytree(built, profile_root)
@@ -176,13 +305,279 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
             shutil.move(source_layer3 / candidate, wrong_layer3)
 
             errors: list[str] = []
-            VALIDATOR._validate_profile(profile_root, errors)
+            VALIDATOR._validate_runtime(profile_root, errors)
         candidate_mapping_errors = [
             error
             for error in errors
             if "does not match source Registry" in error and candidate in error
         ]
         self.assertEqual(2, len(candidate_mapping_errors), errors)
+
+
+class ProfessionalLocalSelectorClosureTests(unittest.TestCase):
+    def _copy_runtime(self, temporary: str) -> Path:
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        profile_root = Path(temporary) / "recommended"
+        shutil.copytree(built, profile_root)
+        return profile_root
+
+    @staticmethod
+    def _write_control_decoy(profile_root: Path) -> None:
+        control = profile_root / "engineering-control-plane"
+        VALIDATOR.canonical_build._write_control_layer3_selector_projections(control)
+
+    def test_current_runtime_validates_professional_local_selector_closures(self) -> None:
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        errors: list[str] = []
+        VALIDATOR._validate_compiled_layer3_entrypoints(built, errors)
+        self.assertEqual([], errors)
+
+    def test_control_decoy_cannot_rescue_invalid_professional_local_selector(self) -> None:
+        professional = "backend-change-builder"
+        for mutation in ("missing", "malformed", "wrong-owner"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as raw:
+                profile_root = self._copy_runtime(raw)
+                self._write_control_decoy(profile_root)
+                selector = (
+                    profile_root
+                    / professional
+                    / "references/runtime/selector.json"
+                )
+                if mutation == "missing":
+                    selector.unlink()
+                elif mutation == "malformed":
+                    selector.write_text("{not-json\n", encoding="utf-8")
+                else:
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    payload["professional_skill"] = "change-intake-compiler"
+                    selector.write_text(
+                        json.dumps(payload, sort_keys=True, separators=(",", ":"))
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                errors: list[str] = []
+                VALIDATOR._validate_compiled_layer3_entrypoints(
+                    profile_root,
+                    errors,
+                )
+                self.assertTrue(
+                    any(
+                        f"{professional}/references/runtime/selector.json" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_rejects_noncanonical_envelope_child_paths(self) -> None:
+        professional = "engineering-change-analysis"
+        unsafe_paths = (
+            "",
+            ".",
+            "../complete.json",
+            "/tmp/complete.json",
+            "selectors\\complete.json",
+            "selectors/./complete.json",
+        )
+        for unsafe in unsafe_paths:
+            with self.subTest(path=unsafe), tempfile.TemporaryDirectory() as raw:
+                profile_root = self._copy_runtime(raw)
+                professional_root = profile_root / professional
+                selector_root = professional_root / "references/runtime"
+                selector_path = selector_root / "selector.json"
+                payload = json.loads(selector_path.read_text(encoding="utf-8"))
+                payload["complete"]["path"] = unsafe
+                selector_path.write_text(
+                    json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+                    encoding="utf-8",
+                )
+                errors: list[str] = []
+                selector = VALIDATOR._load_complete_selector_projection(
+                    selector_path,
+                    errors,
+                    professional_root=professional_root,
+                    selector_root=selector_root,
+                    professional=professional,
+                    closure_layout="runtime",
+                )
+                self.assertIsNone(selector)
+                self.assertTrue(
+                    any("selector complete path is not canonical" in error for error in errors),
+                    errors,
+                )
+
+    def test_rejects_noncanonical_decision_child_path(self) -> None:
+        professional = "engineering-change-analysis"
+        with tempfile.TemporaryDirectory() as raw:
+            profile_root = self._copy_runtime(raw)
+            professional_root = profile_root / professional
+            selector_root = professional_root / "references/runtime"
+            selector_path = selector_root / "selector.json"
+            payload = json.loads(selector_path.read_text(encoding="utf-8"))
+            payload["decisions"][0]["path"] = "selectors/../decision.json"
+            selector_path.write_text(
+                json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+            selector = VALIDATOR._load_complete_selector_projection(
+                selector_path,
+                errors,
+                professional_root=professional_root,
+                selector_root=selector_root,
+                professional=professional,
+                closure_layout="runtime",
+            )
+            self.assertIsNone(selector)
+            self.assertTrue(
+                any("selector decision path is not canonical" in error for error in errors),
+                errors,
+            )
+
+    def test_fixed_child_grammar_rejects_forbidden_forms_and_resolved_escape(self) -> None:
+        unsafe_paths = (
+            "",
+            ".",
+            "../asset.json",
+            "/tmp/asset.json",
+            "C:/asset.json",
+            "nested\\asset.json",
+            "nested/./asset.json",
+        )
+        for label in (
+            "selector complete path",
+            "selector decision path",
+            "Reference partition path",
+            "physical Reference path",
+        ):
+            for unsafe in unsafe_paths:
+                with self.subTest(label=label, path=unsafe), tempfile.TemporaryDirectory() as raw:
+                    errors: list[str] = []
+                    self.assertIsNone(
+                        VALIDATOR._fixed_child_path(
+                            Path(raw),
+                            unsafe,
+                            errors,
+                            label=label,
+                        )
+                    )
+                    self.assertTrue(errors)
+            with self.subTest(label=label, path="resolved-symlink-escape"), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw) / "root"
+                root.mkdir()
+                (root / "escape").symlink_to(Path(raw))
+                errors = []
+                self.assertIsNone(
+                    VALIDATOR._fixed_child_path(
+                        root,
+                        "escape/asset.json",
+                        errors,
+                        label=label,
+                    )
+                )
+                self.assertTrue(
+                    any("must not contain a symlink" in error for error in errors),
+                    errors,
+                )
+
+    def test_partition_template_is_validated_but_never_drives_lookup(self) -> None:
+        professional = "backend-change-builder"
+        candidate = "transaction-consistency"
+        with tempfile.TemporaryDirectory() as raw:
+            profile_root = self._copy_runtime(raw)
+            professional_root = profile_root / professional
+            selector_root = professional_root / "references/runtime"
+            partition_root = selector_root / "reference-records"
+            selector_path = selector_root / "selector.json"
+            selector = json.loads(selector_path.read_text(encoding="utf-8"))
+            selector["reference_records_partition"]["path_template"] = (
+                "../../decoy/{owner_skill}.json"
+            )
+            selector_path.write_text(
+                json.dumps(selector, sort_keys=True, separators=(",", ":")) + "\n",
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+            VALIDATOR._validate_selector_reference_reachability(
+                professional,
+                candidate,
+                errors,
+                professional_root=professional_root,
+                selector_root=selector_root,
+                partition_root=partition_root,
+                physical_root=(
+                    professional_root / "references/layer3" / candidate
+                ),
+                closure_layout="runtime",
+            )
+            self.assertTrue(
+                any("fixed Reference partition path is invalid" in error for error in errors),
+                errors,
+            )
+
+    def test_rejects_symlinked_selector_partition_and_invalid_physical_record(self) -> None:
+        professional = "backend-change-builder"
+        candidate = "transaction-consistency"
+        for mutation in (
+            "selector",
+            "partition",
+            "physical-symlink-escape",
+            "physical-missing",
+            "physical-non-file",
+        ):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as raw:
+                profile_root = self._copy_runtime(raw)
+                professional_root = profile_root / professional
+                selector_root = professional_root / "references/runtime"
+                partition_root = selector_root / "reference-records"
+                physical_root = professional_root / "references/layer3" / candidate
+                if mutation == "selector":
+                    target = selector_root / "selector-target.json"
+                    target.write_bytes((selector_root / "selector.json").read_bytes())
+                    (selector_root / "selector.json").unlink()
+                    (selector_root / "selector.json").symlink_to(target.name)
+                elif mutation == "partition":
+                    target = partition_root / f"{candidate}-target.json"
+                    target.write_bytes((partition_root / f"{candidate}.json").read_bytes())
+                    (partition_root / f"{candidate}.json").unlink()
+                    (partition_root / f"{candidate}.json").symlink_to(target.name)
+                else:
+                    partition = json.loads(
+                        (partition_root / f"{candidate}.json").read_text(encoding="utf-8")
+                    )
+                    record_path = partition["reference_records"][0]["path"]
+                    physical = professional_root / record_path
+                    if mutation == "physical-symlink-escape":
+                        target = Path(raw) / "outside-reference.md"
+                        target.write_bytes(physical.read_bytes())
+                        physical.unlink()
+                        physical.symlink_to(target)
+                    elif mutation == "physical-missing":
+                        physical.unlink()
+                    else:
+                        physical.unlink()
+                        physical.mkdir()
+                errors: list[str] = []
+                VALIDATOR._validate_selector_reference_reachability(
+                    professional,
+                    candidate,
+                    errors,
+                    professional_root=professional_root,
+                    selector_root=selector_root,
+                    partition_root=partition_root,
+                    physical_root=physical_root,
+                    closure_layout="runtime",
+                )
+                if mutation in {"selector", "partition"}:
+                    expected = "must not contain a symlink"
+                elif mutation == "physical-symlink-escape":
+                    expected = "must not traverse a symlink"
+                else:
+                    expected = "missing regular file"
+                self.assertTrue(any(expected in error for error in errors), errors)
 
 
 class CompiledLayer3ReadabilityTests(unittest.TestCase):
@@ -197,11 +592,7 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             "## Anti-Patterns\n\n"
             "- Reject evidence that predates the final edit.\n\n"
             "## Stop Conditions\n\n"
-            "- Stop when the owner is unknown.\n\n"
-            "## Targeted References\n\n"
-            "- [checklist](references/checklist.md): "
-            "load the changed invariant needs negative-path coverage; "
-            "skip no invariant or failure path changes.\n"
+            "- Stop when the owner is unknown.\n"
         )
 
     def test_rejects_41_word_sentence_in_compiled_projection(self) -> None:
@@ -213,7 +604,15 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             )
             errors: list[str] = []
             VALIDATOR._validate_compiled_layer3_projection(
-                path, "sample-foundation", "foundation", errors
+                path,
+                "sample-foundation",
+                "foundation",
+                errors,
+                professional_root=Path(raw),
+                selector_root=Path(raw) / "references/runtime",
+                partition_root=Path(raw) / "references/runtime/reference-records",
+                physical_root=Path(raw),
+                closure_layout="runtime",
             )
             self.assertTrue(
                 any("sentence has 41 words; hard maximum is 40" in error for error in errors),
@@ -222,16 +621,399 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
 
     def test_accepts_canonical_load_skip_projection(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "sample-foundation.md"
+            root = Path(raw)
+            professional_root = root / "sample-professional"
+            path = (
+                professional_root
+                / "references/layer3/sample-foundation.md"
+            )
+            path.parent.mkdir(parents=True)
             path.write_text(
                 self._projection("Keep the changed ownership boundary explicit."),
                 encoding="utf-8",
             )
+            physical = (
+                professional_root
+                / "references/layer3/sample-foundation/references/checklist.md"
+            )
+            physical.parent.mkdir(parents=True)
+            physical.write_text("# Sample Checklist\n", encoding="utf-8")
+            partition = (
+                professional_root
+                / "references/runtime/reference-records/sample-foundation.json"
+            )
+            partition.parent.mkdir(parents=True)
+            records = [
+                {
+                    "owner_skill": "sample-foundation",
+                    "owner_layer": "foundation",
+                    "path": "references/layer3/sample-foundation/references/checklist.md",
+                    "type": "decision-checklist",
+                    "load_when": "A checklist decision is required.",
+                    "do_not_load_when": "No checklist decision is required.",
+                    "required_by": ["task-agent"],
+                    "required_output": ["checklist-result"],
+                    "context_admissibility": None,
+                    "residency": "singleton",
+                }
+            ]
+            partition_document = {
+                "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                "authority_contract": "changeforge.layer3-selector-authority/v1",
+                "professional_skill": "sample-professional",
+                "owner_skill": "sample-foundation",
+                "records_sha256": hashlib.sha256(
+                    (json.dumps(records, sort_keys=True, separators=(",", ":")) + "\n").encode()
+                ).hexdigest(),
+                "reference_records": records,
+            }
+            partition_bytes = (
+                json.dumps(
+                    partition_document,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n"
+            ).encode()
+            partition.write_bytes(partition_bytes)
+            professional_partition = partition.parent / "sample-professional.json"
+            empty_records: list[dict[str, object]] = []
+            professional_partition.write_text(
+                json.dumps(
+                    {
+                        "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                        "authority_contract": "changeforge.layer3-selector-authority/v1",
+                        "professional_skill": "sample-professional",
+                        "owner_skill": "sample-professional",
+                        "records_sha256": hashlib.sha256(b"[]\n").hexdigest(),
+                        "reference_records": empty_records,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            selector = (
+                professional_root
+                / "references/runtime/selector.json"
+            )
+            selector.parent.mkdir(parents=True, exist_ok=True)
+            selector.write_text(
+                json.dumps(
+                    {
+                        "contract": "changeforge.layer3-selector-normalized-control/v1",
+                        "authority_contract": "changeforge.layer3-selector-authority/v1",
+                        "professional_skill": "sample-professional",
+                        "maximum_layer3": 3,
+                        "exact_layer3_bypass": True,
+                        "profile_authority": [
+                            {
+                                "profile": "task-agent",
+                                "selection_basis": "professional-risk",
+                                "authorized_layer3": ["sample-foundation"],
+                                "domain_authorization": [],
+                                "selectors": [],
+                            }
+                        ],
+                        "owner_surfaces": [
+                            {
+                                "profile": "task-agent",
+                                "selection_owner": "main-control-agent",
+                            }
+                        ],
+                        "reference_records_partition": {
+                            "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                            "path_template": "reference-records/{owner_skill}.json",
+                        },
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             errors: list[str] = []
             VALIDATOR._validate_compiled_layer3_projection(
-                path, "sample-foundation", "foundation", errors
+                path,
+                "sample-foundation",
+                "foundation",
+                errors,
+                professional_root=professional_root,
+                selector_root=professional_root / "references/runtime",
+                partition_root=professional_root / "references/runtime/reference-records",
+                physical_root=path.parent / "sample-foundation",
+                closure_layout="runtime",
             )
             self.assertEqual([], errors)
+
+    def test_rejects_layer3_jit_and_control_policy(self) -> None:
+        forbidden = (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/sample.json",
+            "never select/reroute/preload",
+            "index/catalog",
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for value in forbidden:
+                with self.subTest(value=value):
+                    path = root / "sample-foundation.md"
+                    path.write_text(
+                        self._projection(
+                            "Keep the changed ownership boundary explicit."
+                        )
+                        + f"\n{value}\n",
+                        encoding="utf-8",
+                    )
+                    errors: list[str] = []
+                    VALIDATOR._validate_compiled_layer3_projection(
+                        path,
+                        "sample-foundation",
+                        "foundation",
+                        errors,
+                        professional_root=root,
+                        selector_root=root / "references/runtime",
+                        partition_root=root / "references/runtime/reference-records",
+                        physical_root=root,
+                        closure_layout="runtime",
+                    )
+                    self.assertTrue(
+                        any("Layer 3 JIT/control policy is forbidden" in error for error in errors),
+                        errors,
+                    )
+
+
+class CompleteLayer3TemporaryProjectionTests(unittest.TestCase):
+    @staticmethod
+    def _tree_digest(root: Path) -> str:
+        digest = hashlib.sha256()
+        if not root.exists():
+            return digest.hexdigest()
+        for path in sorted(root.rglob("*")):
+            relative = path.relative_to(root).as_posix().encode("utf-8")
+            digest.update(relative)
+            digest.update(b"\0")
+            if path.is_file():
+                digest.update(path.read_bytes())
+            digest.update(b"\0")
+        return digest.hexdigest()
+
+    def test_projects_all_layer3_sources_once_in_cleaned_temporary_storage(self) -> None:
+        self.assertTrue(
+            hasattr(VALIDATOR, "_validate_complete_layer3_temporary_projection"),
+            "the dev-independent 163-item temporary projection proof is missing",
+        )
+        dist_before = self._tree_digest(ROOT / "dist")
+        created_roots: list[Path] = []
+        real_temporary_directory = tempfile.TemporaryDirectory
+
+        def tracked_temporary_directory(*args, **kwargs):
+            context = real_temporary_directory(*args, **kwargs)
+            created_roots.append(Path(context.name))
+            return context
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.tempfile,
+            "TemporaryDirectory",
+            side_effect=tracked_temporary_directory,
+        ):
+            result = VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+
+        self.assertEqual([], errors)
+        self.assertEqual(163, result["projected_count"])
+        self.assertEqual(150, result["foundation_count"])
+        self.assertEqual(13, result["domain_count"])
+        self.assertEqual(154, result["runtime_jit_count"])
+        self.assertEqual(9, result["non_runtime_count"])
+        self.assertEqual(163, len(result["projected_names"]))
+        self.assertEqual(163, len(set(result["projected_names"])))
+        self.assertTrue(created_roots)
+        self.assertTrue(all(not path.exists() for path in created_roots))
+        self.assertEqual(dist_before, self._tree_digest(ROOT / "dist"))
+
+    def test_rejects_repository_or_runtime_output_as_projection_root(self) -> None:
+        forbidden = ROOT / "dist/complete-layer3-validation-forbidden"
+        self.assertFalse(forbidden.exists())
+        errors: list[str] = []
+        result = VALIDATOR._validate_complete_layer3_projection_at(
+            forbidden, errors
+        )
+        self.assertEqual(0, result["projected_count"])
+        self.assertTrue(
+            any(
+                "must remain outside the repository and Runtime outputs" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertFalse(forbidden.exists())
+
+    def test_rejects_registry_source_disagreement_and_duplicate(self) -> None:
+        registries = VALIDATOR.canonical_build._load_registries()
+        items = {
+            layer: VALIDATOR.canonical_build._load_items(layer, entries)
+            for layer, entries in registries.items()
+        }
+        incomplete = dict(items)
+        incomplete["foundation"] = items["foundation"][:-1]
+        disagreement_errors: list[str] = []
+        VALIDATOR._validate_layer3_registry_source_inventory(
+            incomplete, disagreement_errors
+        )
+        self.assertTrue(
+            any("Registry/source inventory disagrees" in error for error in disagreement_errors),
+            disagreement_errors,
+        )
+
+        duplicate_registries = copy.deepcopy(registries)
+        duplicate_registries["foundation"].append(
+            copy.deepcopy(duplicate_registries["foundation"][0])
+        )
+        duplicate_errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_load_registries",
+            return_value=duplicate_registries,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(
+                duplicate_errors
+            )
+        self.assertTrue(
+            any("duplicate foundation Skill" in error for error in duplicate_errors),
+            duplicate_errors,
+        )
+
+    def test_rejects_missing_or_malformed_compact_projection(self) -> None:
+        original = VALIDATOR.canonical_build._write_compact_layer3_root_projection
+
+        for mutation in ("missing", "malformed-heading"):
+            with self.subTest(mutation=mutation):
+                def mutate(destination, item):
+                    original(destination, item)
+                    if item.name != "transaction-consistency":
+                        return
+                    skill_file = destination / "SKILL.md"
+                    if mutation == "missing":
+                        skill_file.unlink()
+                    else:
+                        text = skill_file.read_text(encoding="utf-8")
+                        skill_file.write_text(
+                            text.replace(
+                                "## Skill Role",
+                                "## Invalid Projection Heading",
+                                1,
+                            ),
+                            encoding="utf-8",
+                        )
+
+                errors: list[str] = []
+                with mock.patch.object(
+                    VALIDATOR.canonical_build,
+                    "_write_compact_layer3_root_projection",
+                    side_effect=mutate,
+                ):
+                    VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+                expected = (
+                    "is missing root SKILL.md"
+                    if mutation == "missing"
+                    else "compact foundation projection headings"
+                )
+                self.assertTrue(
+                    any(expected in error for error in errors),
+                    errors,
+                )
+
+    def test_rejects_missing_nested_reference_and_link(self) -> None:
+        original = VALIDATOR.canonical_build._copy_skill_tree
+
+        def inject_broken_nested_link(source, destination):
+            original(source, destination)
+            if destination.name != "targeted-validation-selection":
+                return
+            reference = (
+                destination
+                / "references/repository-command-entry-evidence.md"
+            )
+            with reference.open("a", encoding="utf-8") as handle:
+                handle.write("\n[missing nested asset](../assets/missing-proof.txt)\n")
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_copy_skill_tree",
+            side_effect=inject_broken_nested_link,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("copied nested references files do not match" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("missing local temporary Layer 3 reference" in error for error in errors),
+            errors,
+        )
+
+    def test_rejects_selector_ownership_mismatch(self) -> None:
+        original = VALIDATOR._load_complete_selector_projection
+
+        def remove_authorized_candidate(selector_path, errors, **kwargs):
+            selector = original(selector_path, errors, **kwargs)
+            if selector is None or selector_path.name != "backend-change-builder.json":
+                return selector
+            selector = copy.deepcopy(selector)
+            for row in selector["profile_authority"]:
+                row["authorized_layer3"] = [
+                    candidate
+                    for candidate in row["authorized_layer3"]
+                    if candidate != "transaction-consistency"
+                ]
+                row["authorized_layer3"].append("skill-authoring-expert")
+            return selector
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR,
+            "_load_complete_selector_projection",
+            side_effect=remove_authorized_candidate,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("selector ownership does not match" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "non-Runtime Foundation Skills entered selector authorization"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_rejects_symlink_escape_in_temporary_projection(self) -> None:
+        original = VALIDATOR.canonical_build._copy_skill_tree
+
+        def inject_symlink(source, destination):
+            original(source, destination)
+            if destination.name == "targeted-validation-selection":
+                (destination / "references/escape.md").symlink_to(
+                    destination.parent / "outside-projection.md"
+                )
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_copy_skill_tree",
+            side_effect=inject_symlink,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("must not be a symlink" in error for error in errors),
+            errors,
+        )
 
 
 if __name__ == "__main__":

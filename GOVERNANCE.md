@@ -22,7 +22,7 @@ evidence semantics.
 
 Changes require explicit maintainer agreement when they affect:
 
-- Runtime profile semantics.
+- Single Runtime composition, JIT delivery, or compatibility semantics.
 - Installer, upgrade, uninstall, or doctor behavior.
 - Registry schema or routing behavior.
 - Security, privacy, licensing, or release policy.
@@ -67,21 +67,21 @@ the single source of truth for current rendered token totals, maximum fixture
 IDs, margins, duplicate-rule ratio, and pass/fail status. Governance records no
 current measurement snapshot.
 
-The fixed capacity ceilings below come from
+The provisional migration soft targets and hard ceilings below come from
 `src/control-model/core-contracts.json#/context_budget_contract`. They are
-constraints, not current measurements.
+guardrails, not current measurements or calibrated optima.
 
-| Context | Fixed capacity ceiling |
-| --- | ---: |
-| Main always-loaded | 2200 |
-| Direct Task dispatch | 3200 |
-| Analyzed Task dispatch | 6500 |
-| Analysis dispatch | 5000 |
-| Review dispatch | 4000 |
-| Utility dispatch | 2500 |
+| Context | Soft target | Hard ceiling |
+| --- | ---: | ---: |
+| Main always-loaded | 2305 | 2650 |
+| Direct Task dispatch | 3000 | 3200 |
+| Analyzed Task dispatch | 6000 | 6500 |
+| Analysis dispatch | 4500 | 5000 |
+| Review dispatch | 3700 | 4000 |
+| Utility dispatch | 2000 | 2500 |
 
 The report must exist, have `status: pass`, report no errors, and project these
-ceilings unchanged. Run `python3 scripts/eval-rendered-context-budget.py` to
+limits unchanged. Run `python3 scripts/eval-rendered-context-budget.py --mode conformance` to
 refresh current evidence.
 <!-- END CHANGEFORGE GOVERNANCE CONTEXT BUDGET AUTHORITY -->
 
@@ -149,7 +149,7 @@ refresh current evidence.
   [Profile validation test module](tests/scripts/test_validate_agent_profiles.py)
   is authoritative for the current profile projection and maximum result, and
   the
-  [lightweight evaluator test module](tests/scripts/test_eval_agent_lightweight_utility.py)
+  [lightweight evaluator test module](tests/scripts/test_eval_agent_lightweight.py)
   is authoritative for the current normal-route and guard-mutation result.
   Every real normal edit trajectory has typed owner, test, and caller reads
   plus closed, ordered A–F evidence before editing. Direct and post-analysis
@@ -427,7 +427,7 @@ refresh current evidence.
   implementation-discipline checks before any scheduling, review, or completion
   specialization runs.
 - **Validation:** The
-  [lightweight evaluator test module](tests/scripts/test_eval_agent_lightweight_utility.py)
+  [lightweight evaluator test module](tests/scripts/test_eval_agent_lightweight.py)
   is authoritative for the current focused and utility test result, and
   `python3 scripts/eval-agent-lightweight.py --no-write-report` passed for all
   contract-required behavior entries. Independent review returned `PASS`. The
@@ -450,13 +450,13 @@ refresh current evidence.
   only version and selected-file digests.
 - **Authoritative owner / scope:** manifest production in `scripts/build.py`,
   package checks in `scripts/package.py`, installation validation in
-  `scripts/validate-installation.py`, build-profile documentation, and build
+  `scripts/validate-installation.py`, Runtime-build documentation, and build
   tests.
 - **Acceptance:** A deterministic source-tree digest covers every build input;
   commit and dirty/unavailable state are explicit; changing any authoritative
   input makes a prior manifest stale; package and installation checks reject a
   mismatched binding.
-- **Targeted validation:** build all three profiles, run
+- **Targeted validation:** run `python3 scripts/build.py`,
   `python3 scripts/validate-installation.py`,
   `python3 scripts/validate-productization-assets.py`, and a mutation fixture
   that proves stale-manifest rejection.
@@ -520,7 +520,7 @@ refresh current evidence.
 - **Selected evidence and current state:** Canonical fixed-attestation paths,
   not Readability or Professional policy config, select Expert Panel evidence;
   the formal target remains
-  all 189 non-Control packages. The Root lifecycle is `pending-changes`, with no
+  all 188 non-Control packages. The Root lifecycle is `pending-changes`, with no
   current snapshot and no formal-release readiness. The sole JSON authority
   therefore reports `release_gate=release-not-ready`. These fixed attestations do
   not prove that the final local formal gate passed.

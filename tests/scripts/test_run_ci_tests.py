@@ -290,6 +290,122 @@ class CiTestRunnerTests(unittest.TestCase):
                         self.runner._full_test_resource_class(path),
                     )
 
+    def test_timeout_classifier_accepts_closed_literal_and_missing_default(
+        self,
+    ) -> None:
+        fixtures = {
+            "standard": "TEST_TIMEOUT_CLASS = 'standard'\n",
+            "source-validation": (
+                "TEST_TIMEOUT_CLASS: str = 'source-validation'\n"
+            ),
+            "missing": "import unittest\n",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for expected, source in fixtures.items():
+                with self.subTest(expected=expected):
+                    path = root / f"test_{expected}.py"
+                    path.write_text(source, encoding="utf-8")
+                    self.assertEqual(
+                        "standard" if expected == "missing" else expected,
+                        self.runner._test_timeout_class(path),
+                    )
+
+    def test_timeout_classifier_rejects_duplicate_dynamic_and_unknown_classes(
+        self,
+    ) -> None:
+        fixtures = {
+            "duplicate": (
+                "TEST_TIMEOUT_CLASS = 'source-validation'\n"
+                "TEST_TIMEOUT_CLASS = 'standard'\n",
+                "duplicate",
+            ),
+            "dynamic": (
+                "TEST_TIMEOUT_CLASS = 'source-validation'.strip()\n",
+                "dynamic",
+            ),
+            "nested": (
+                "if True:\n    TEST_TIMEOUT_CLASS = 'source-validation'\n",
+                "top-level",
+            ),
+            "unknown": ("TEST_TIMEOUT_CLASS = 'unbounded'\n", "unknown"),
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for label, (source, expected_reason) in fixtures.items():
+                with self.subTest(label=label):
+                    path = root / f"test_{label}.py"
+                    path.write_text(source, encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        self.runner.SelectionError,
+                        (
+                            f"timeout class.*{expected_reason}"
+                            f"|{expected_reason}.*timeout class"
+                        ),
+                    ):
+                        self.runner._test_timeout_class(path)
+
+    def test_source_validation_timeout_class_extends_only_declared_worker(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            standard = self._write_test(
+                root,
+                "test_standard.py",
+                """
+                import unittest
+                class Standard(unittest.TestCase):
+                    def test_standard(self):
+                        self.assertTrue(True)
+                """,
+            )
+            source_validation = self._write_test(
+                root,
+                "test_source_validation.py",
+                """
+                import time
+                import unittest
+                TEST_TIMEOUT_CLASS = "source-validation"
+                class SourceValidation(unittest.TestCase):
+                    def test_source_validation(self):
+                        time.sleep(1.2)
+                        self.assertTrue(True)
+                """,
+            )
+            results = self.runner._execute_modules(
+                root,
+                [standard, source_validation],
+                jobs=1,
+                timeout_seconds=1.0,
+            )
+
+        self.assertEqual(
+            [(source_validation, "pass"), (standard, "pass")],
+            [(result.module, result.status) for result in results],
+        )
+
+    def test_source_validation_timeout_owners_are_exact(self) -> None:
+        expected = {
+            "tests/scripts/test_deterministic_report_contracts.py",
+            "tests/scripts/test_eval_rendered_context_budget.py",
+            "tests/scripts/test_professional_completeness_schema3.py",
+        }
+        actual = {
+            path.relative_to(ROOT).as_posix()
+            for path in sorted((ROOT / "tests").rglob("test*.py"))
+            if self.runner._test_timeout_class(path) == "source-validation"
+        }
+        self.assertEqual(expected, actual)
+        for module in sorted(expected):
+            with self.subTest(module=module):
+                self.assertEqual(
+                    2 * self.runner.DEFAULT_TIMEOUT_SECONDS,
+                    self.runner._test_timeout_seconds(
+                        ROOT, module, self.runner.DEFAULT_TIMEOUT_SECONDS
+                    ),
+                )
+
     @unittest.skipUnless(os.name == "posix", "POSIX full regression discovery")
     def test_full_discovery_rejects_duplicate_dynamic_and_unknown_resource_classes(
         self,
@@ -2308,6 +2424,12 @@ class CiTestRunnerTests(unittest.TestCase):
         self.assertNotIn(stale_marker, source.casefold())
         self.assertNotIn(stale_marker, help_text.casefold())
         self.assertIn("full regression action", help_text.casefold())
+
+    def test_timeout_help_describes_base_duration_and_class_multiplier(self) -> None:
+        help_text = self.runner._parser().format_help().casefold()
+
+        self.assertIn("base timeout in seconds per test module", help_text)
+        self.assertIn("test_timeout_class multiplier", help_text)
 
 
 if __name__ == "__main__":

@@ -17,29 +17,24 @@ description: "`task-agent`/`review-agent`: use when protected state, restore obj
 
 ## Skill Role
 
-Define the recoverable-state inventory, restore contract, dependency order, validation boundary, and proof limits. Exclude data-conversion rollback and release sequencing.
+Own recoverable state, objectives, artifact lineage, restore order, validation, and proof limits.
 
 ## High-Value Rules
 
-- Define the recoverable product state, not just a storage resource. Its inventory names authoritative data, files, keys, configuration, offsets, identity state, compatible versions, derived rebuilds, and dependencies that agree after restore.
-- Derive recovery-point and recovery-time objectives from the named failure consequence, recovery unit, dependency chain, current scale, and accountable risk owner.
-- Do not inject universal recovery tiers, cadence, or retention periods.
-- Tie each recovery claim to an identifiable backup or log source, capture point, schema and key lineage, restore target, and validator. Backup-job success or artifact existence alone does not establish restorability.
-- Preserve consistency across dependency order and crash boundaries. The recovery contract defines quiesce, checkpoint, replay, reconciliation, and duplicate or missing side-effect behavior when components cannot be captured atomically.
-- Select isolation, immutability, encryption, deletion protection, and credential separation from the actual operator, corruption, provider, or attacker failure model. A replicated copy in the same failure boundary may repeat the loss.
-- Validate restored state through domain invariants and a representative business read/write or reconciliation path. The exercise record states its scale, environment, dependency, key, region, and wall-clock proof limits.
-- Align retention, key history, legal hold, erasure, expiry, and late replay so retained data remains decryptable and policy-compliant without silently resurrecting deleted state. Assign drift and re-exercise triggers after material change.
+- Define authoritative and dependent state for the named recovery unit.
+- Derive recovery objectives from consequence, scope, scale, dependencies, and owner.
+- Map artifacts to capture, key/schema lineage, target, and restore order.
+- For the named recovery, validate restored invariants.
+- For the named recovery, reconcile side effects.
+- Preserve policy alignment across retention, erasure, replay, drift, and re-exercise.
 
 ## Anti-Patterns
 
-- Treating snapshot freshness, replication, or a successful restore command as proof that the product is usable.
-- Restoring a database while omitting objects, keys, configuration, queue position, identity state, or compatible code.
-- Prescribing one copy topology, rehearsal cadence, runbook form, approval chain, or recovery objective for unrelated consequences.
-- Claiming production-scale, cross-region, or incident-time recovery from a small local exercise.
+- Artifact existence substituted for usable recovery evidence.
 
 ## Stop Conditions
 
-- Escalate when authoritative state, key history, restore order, destructive-operation recovery, policy ownership, or a material dependency is unknown and could make restored state unusable or unsafe.
+Stop when the named restore could produce unsafe state without an owned recovery proof.
 
 ## Output Contract
 

@@ -15,7 +15,7 @@ Load this reference when client state authority, cache lifetime, session reset, 
 9. **Derived state:** recompute through selectors/memoization from authoritative inputs; persist a derivative only with an explicit cost, invalidation, and reconciliation need.
 10. **Form draft:** define submit, cancel, navigation, validation failure, conflict, logout, and resume behavior while separating editable draft from server truth.
 11. **Persistence:** choose URL, cookie, local/session storage, IndexedDB, or no persistence from shareability, lifetime, sensitivity, quota, expiry, schema migration, per-user keying, and clear rules—not convenience.
-12. **Optimistic mutation:** snapshot affected views, prevent duplicate intent, reconcile server truth, roll back or expose partial/unknown outcome, and preserve a safe user recovery path.
+12. **Optimistic mutation:** retain the prior-state or operation evidence needed by the selected recovery strategy, prevent duplicate intent, reconcile server truth, and roll back, forward-reconcile, or expose partial/unknown outcomes with a safe user recovery path.
 13. **Concurrency:** define stale response, overlapping mutation, version/etag, reorder, cross-tab, and subscription race behavior; last-write-wins is a decision requiring consequence evidence.
 14. **Current convention:** inspect existing query, store, authentication, and persistence helpers before introducing another owner or reset path, with accepted and rejected reuse recorded.
 15. **Routes and proof:** send API cancellation/error mapping to `frontend-api-integration`, UI states to `interaction-state-modeling`, forms to `form-validation-design`, identity authority to `authentication-authorization`, sensitive persistence to `security-privacy-gate`, and executable cache/reset/race proof to `frontend-testing`.
@@ -24,4 +24,4 @@ Load this reference when client state authority, cache lifetime, session reset, 
 
 Unit/component tests do not prove real browser eviction, cross-tab timing, deployed session revocation, provider cache semantics, or production race frequency. Source inspection cannot discover runtime state or unknown consumers. Name untested browsers, identities, offline behavior, persistence migrations, and concurrency schedules.
 
-Reject copied server truth, broad invalidation without cost or rationale, protected caches surviving identity change, and client-writable permissions. Also reject optimistic effects without rollback or unknown-outcome state, indefinite sensitive drafts, and global stores chosen before ownership is known.
+Reject copied server truth, broad invalidation without cost or rationale, protected caches surviving identity change, and client-writable permissions. Also reject optimistic effects without a recovery strategy or unknown-outcome state, indefinite sensitive drafts, and global stores chosen before ownership is known.

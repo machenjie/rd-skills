@@ -10,7 +10,7 @@ Use this reference when closure depends on repository inspection, prior task evi
 | Machine output is parseable | Schema or golden output, stdout/stderr split, parser smoke command, compatibility window, consumer list. | The named output mode can be parsed without diagnostics contaminating stdout. | Every automation consumer or future field removal is safe. |
 | Exit codes are actionable | Exit-code table, retry guidance, failure-class tests, signal mapping. | Automation can distinguish success, usage, validation, dependency, partial, timeout, and signal states. | All provider-specific failures or OS-specific signal timing are covered. |
 | Config precedence is deterministic | Defaults, system/user/project config, env vars, flags, profile/target selectors, precedence tests. | The inspected invocation resolves configuration in the documented order. | All deployment environments or inherited config files are covered. |
-| Destructive action is bounded | Scoped selector, confirmation token, dry-run no-write proof, idempotency/rerun behavior, rollback or repair path. | The inspected mutation path has a reviewed side-effect boundary. | Live production state, provider permissions, or every partial failure is reversible. |
+| Destructive action is bounded | Scoped selector, accepted confirmation or policy authorization, truthful preview/no-write proof where supported, idempotency/rerun behavior, and accepted recovery or explicit irreversible limits. | The inspected mutation path has a reviewed side-effect boundary. | Live production state, provider permissions, or every partial failure is reversible. |
 | Daemon lifecycle is safe | Supervisor config, readiness/liveness distinction, signal tests, reload behavior, lock/PID behavior, shutdown timeout. | The inspected lifecycle has start, ready, reload, drain, and cleanup evidence. | Production orchestrator behavior, all OS variants, or real load timing is proven. |
 | TUI/non-TTY behavior is safe | TTY/non-TTY tests, cancel/resize behavior, terminal restoration, progress stream, color policy. | The inspected terminal flow has an automation-safe path. | Every terminal emulator or screen reader behavior is covered. |
 | Validation is fresh | Command, working directory, exit code/status, output summary, artifact path, covered interface surface, final-edit freshness. | Evidence was produced after the final material edit for the mapped interface risk. | Later source/help/docs/test/report edits or hidden consumers are covered. |
@@ -23,4 +23,9 @@ Use this reference when closure depends on repository inspection, prior task evi
 - Mark evidence stale after edits to command code, help/docs, config defaults, output schemas, exit codes, signal handlers, service units, examples, generated reports, or validation mappings.
 - Link each final CLI, TUI, or daemon confidence claim to current source, generated help, command output, validator output, owner approval, or an explicit not-run risk. One artifact may support related claims only when its scope does so.
 
-- If command execution that writes files, rotates credentials, deploys, deletes, publishes, migrates, or changes daemon state, require dry-run or sandbox proof, scoped target, rollback/repair path, stop condition, and secret redaction.
+When commands write files, rotate credentials, deploy, delete, publish, migrate, or change daemon state:
+
+- Bind evidence to the scoped target and stop condition.
+- Require truthful dry-run or sandbox proof where the accepted effect and authority contract calls for it.
+- Verify the accepted recovery path or explicit irreversible limits.
+- Apply secret redaction to sensitive command inputs and outputs.

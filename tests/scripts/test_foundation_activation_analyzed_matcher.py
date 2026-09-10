@@ -14,7 +14,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from deterministic_route_oracle import route_with_trace  # noqa: E402
-from validation_utils import compute_execution_level, load_yaml_file  # noqa: E402
+from validation_utils import load_yaml_file  # noqa: E402
 
 
 FOUNDATION_REGISTRY = ROOT / "src" / "registry" / "foundation-skills.yaml"
@@ -47,56 +47,8 @@ PROMPTS = {
 }
 
 
-def _main_execution(
-    case: str,
-    execution_contract: dict[str, Any],
-) -> dict[str, Any]:
-    case_task_id = f"{TASK_ID}:{case}"
-    if case != "n4":
-        return {
-            "producer": "main-control-agent",
-            "task_id": case_task_id,
-        }
-    trigger_evaluations = {
-        row["id"]: {
-            "status": "not_matched",
-            "evidence_kind": "analysis_handoff",
-            "source_anchor": f"handoff:{case_task_id}:trigger:{row['id']}",
-            "plausible_critical": False,
-        }
-        for row in execution_contract["trigger_registry"]
-    }
-    shared_contract_id = "no-shared-contract-or-external-consumer"
-    l2_evaluations = {
-        row["id"]: {
-            "status": "false" if row["id"] == shared_contract_id else "true",
-            "evidence_kind": "analysis_handoff",
-            "source_anchor": f"handoff:{case_task_id}:l2:{row['id']}",
-        }
-        for row in execution_contract["l2_eligibility"]
-    }
-    if shared_contract_id not in l2_evaluations:
-        raise AssertionError(
-            f"Core contract lacks required L2 predicate {shared_contract_id!r}"
-        )
-    computed = compute_execution_level(
-        requested="unspecified",
-        trigger_evaluations=trigger_evaluations,
-        l2_evaluations=l2_evaluations,
-        contract=execution_contract,
-    )
-    if (
-        computed["effective_level"] != "L3"
-        or computed["level_basis"]["unresolved"]
-        or computed["level_basis"]["edit_status"] != "allowed"
-    ):
-        raise AssertionError("Core contract did not derive the required editable L3")
-    return {
-        "producer": "main-control-agent",
-        "task_id": case_task_id,
-        "execution_level": computed["effective_level"],
-        "level_basis": computed["level_basis"],
-    }
+def _main_execution(case: str) -> dict[str, Any]:
+    return {"producer": "main-control-agent", "task_id": f"{TASK_ID}:{case}"}
 
 
 def _canonical_bytes(value: object) -> bytes:
@@ -153,9 +105,8 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
             raise AssertionError("Domain registry must provide the negative guard set")
 
         core_contracts = json.loads(CORE_CONTRACTS.read_text(encoding="utf-8"))
-        cls.execution_contract = core_contracts["execution_level_contract"]
         cls.main_executions = {
-            case: _main_execution(case, cls.execution_contract)
+            case: _main_execution(case)
             for case in PROMPTS
         }
         cls.observations = {
@@ -222,9 +173,9 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                 "final_path": self.activation["path"],
                 "final_profile": self.activation["profile"],
                 "final_primary_skill": self.activation["primary_skill"],
-                "final_review_skill": self.activation["review_skill"],
+                "final_review_skill": None,
                 "final_layer3_skills": [self.target_name],
-                "execution_level": None,
+
                 "route_once": True,
                 "trace_route_once": "proven",
                 "raw_domain_intersection": set(),
@@ -249,7 +200,7 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                 "final_primary_skill": result["primary_skill"],
                 "final_review_skill": result["review_skill"],
                 "final_layer3_skills": result["layer3_skills"],
-                "execution_level": result["execution_level"],
+
                 "route_once": route_decision["route_once"],
                 "trace_route_once": winner["route_once"],
                 "raw_domain_intersection": raw_values & self.domain_names,
@@ -489,44 +440,13 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                 decision = observed["route_decision"]
                 result = _final_result(observed)
                 selection = decision["selection_evidence"]
-                if case == "n4":
-                    self.assertEqual(
-                        "L3",
-                        self.main_executions[case]["execution_level"],
-                    )
-                    self.assertEqual(
-                        self.main_executions[case]["execution_level"],
-                        result["execution_level"],
-                    )
-                    self.assertEqual(
-                        _canonical_bytes(
-                            self.main_executions[case]["level_basis"]
-                        ),
-                        _canonical_bytes(result["level_basis"]),
-                    )
-                    self.assertEqual(
-                        _canonical_bytes(self.main_executions[case]),
-                        _canonical_bytes(
-                            decision["main_execution_provenance"]
-                        ),
-                    )
-                else:
-                    self.assertEqual(
-                        {"producer", "task_id"},
-                        set(self.main_executions[case]),
-                    )
-                    self.assertIsNone(result["execution_level"])
-                    self.assertIsNone(result["level_basis"])
-                    self.assertIsNone(
-                        decision["main_execution_provenance"]
-                    )
+                self.assertEqual(self.main_executions[case] if result["start_profile"] == "task-agent" else None, decision["main_execution_provenance"])
                 self.assertIs(decision["route_once"], True)
                 self.assertEqual("proven", observed["winner_trace"]["route_once"])
                 self.assertLessEqual(len(result["layer3_skills"]), 3)
                 self.assertIsInstance(result["primary_skill"], str)
                 self.assertTrue(result["primary_skill"])
-                self.assertIsInstance(result["review_skill"], str)
-                self.assertTrue(result["review_skill"])
+                self.assertIsNone(result["review_skill"])
                 self.assertEqual(1, selection["eligible_primary_count"])
                 self.assertEqual(
                     1,
@@ -536,7 +456,7 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                     ),
                 )
                 self.assertEqual(
-                    1,
+                    0,
                     sum(
                         candidate["eligible"]
                         for candidate in selection["review_candidates"]

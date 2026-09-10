@@ -27,6 +27,7 @@ from impact_graph import ImpactGraphError, select as select_impact
 
 from validation_utils import (
     AFFECTED_CONTEXT_ENV,
+    AFFECTED_SOURCE_REPOSITORY_ENV,
     CANONICAL_CORE_PRINCIPLE_IDENTITIES,
     PRINCIPLE_PREDICATE_OPERATORS,
     ValidationProblem,
@@ -1555,6 +1556,8 @@ def evaluate_affected(
     contract: dict[str, Any],
     producer_ids: list[str],
     affected_context: dict[str, Any] | None = None,
+    *,
+    source_repository: Path | None = None,
 ) -> dict[str, object]:
     """Execute one selected canonical producer closure without writing a report."""
 
@@ -1603,6 +1606,10 @@ def evaluate_affected(
         pre_tree,
         producer_environment=(
             {
+                # Only the fixed stale-attestation reader consumes this path;
+                # source inspection and execution stay in the selected archive.
+                AFFECTED_SOURCE_REPOSITORY_ENV: str(source_repository.resolve())
+                if source_repository is not None else "",
                 AFFECTED_CONTEXT_ENV: json.dumps(
                     validated_context,
                     sort_keys=True,
@@ -1794,6 +1801,7 @@ def run_affected_isolated(
             contract,
             producer_ids,
             affected_context=affected_context,
+            source_repository=root,
         )
 
 

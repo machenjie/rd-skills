@@ -4,8 +4,9 @@
 - Identify construction owner, lifecycle scope, consumers, config inputs, identity/tenant/cancellation/transaction coupling, and shutdown owner.
 - Inspect composition roots, constructors, factories, providers, DI/container modules, imports, config binding, generated clients, tests/fixtures, shutdown hooks, and current graph evidence.
 - Prefer existing composition roots, factories, providers, facades, or test seams before introducing a container, singleton, service locator, global, or lazy provider.
-- Confirm reusable clients and pools are not constructed per request, loop, handler, mapper, getter, retry, or hot path.
-- Define startup validation, health check, cancellation, timeout, retry/refresh, close/drain/unsubscribe/stop path, and failure behavior.
+- Match client and pool construction to library, state, isolation, and cleanup contracts. Reject repeated construction of resources that should be shared; an operation-scoped client may use a shared transport when its state cannot safely be shared.
+- Define failure and teardown behavior for the selected lifecycle.
+- Include startup validation, health, cancellation, timeouts, retry/refresh, or resource cleanup only where the dependency contract requires them.
 - For lazy/provider decisions, record race behavior, error caching, retry behavior, first-use latency, observability, and test override behavior.
 - For config-driven wiring, record typed config, defaults, variant matrix, startup fail-fast, secret boundary, rollout/rollback, and tests.
 - For test overrides, preserve production graph semantics through public seams; avoid private/global patching unless justified and owned.

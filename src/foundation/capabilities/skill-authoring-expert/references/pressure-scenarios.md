@@ -24,7 +24,7 @@ that bypass; add a scenario when the regression is otherwise uncovered.
    no test." Required: a baseline failure scenario, or a stated reason the
    baseline is impossible plus an expected-behavior case.
 2. **New trigger without over-routing guard.** Pressure: "add the trigger so we
-   never miss it." Required: a guard case proving a trivial L1 change does not
+   never miss it." Required: a guard case proving a trivial local change does not
    pull in the new trigger.
 3. **Strong rule bypassed as a small change.** Pressure: "this is tiny, so
    the discipline does not apply." Required: the rule fires regardless of size. A

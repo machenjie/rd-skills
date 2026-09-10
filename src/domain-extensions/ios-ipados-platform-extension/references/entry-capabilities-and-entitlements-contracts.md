@@ -18,15 +18,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
 
 - Derive each capability from a product need and bind its entitlement value to
   the exact app or extension target, bundle/App ID, team, and distribution mode.
-- Compare source entitlements, provisioning entitlements, and the signed
-  artifact; a project setting alone is not final proof.
-- Exercise missing, revoked, mismatched, malformed-entry, and duplicate-delivery
-  outcomes.
-
-## Required Record
-
-Return exposed entries, trust checks, capability owner, target/App ID binding,
-artifact entitlement evidence, provisioning source without secrets, and risk.
 
 ## Primary Sources
 

@@ -17,29 +17,23 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for recurrence g
 
 ## Skill Role
 
-Prove non-recurrence of a known failure mechanism at the narrowest boundary that preserves its trigger and observable result. Exclude wider portfolio and release verdicts.
+Protect an accepted prior failure at the narrowest boundary that preserves its
+causal trigger and observable result. Exclude speculative guards and release verdicts.
 
 ## High-Value Rules
 
-- Require causal-trigger reproduction rather than adjacent correct behavior as the recurrence guard.
-- Establish counterfactual value: observe the guard fail for the matching reason on unfixed behavior when safe, or challenge the assertion with a targeted mutation or fault. If neither is admissible, state the proof limit and compensating evidence.
-- Choose the narrowest admissible boundary that still contains the failure mechanism. A local test is insufficient when serialization, storage, browser, provider, concurrency, or deployment behavior caused the defect.
-- Preserve the triggering fixture or a minimized equivalent whose removed fields are shown irrelevant. Own redaction, schema drift, setup, and cleanup across pass, failure, and cancellation paths.
-- Map sibling paths, consumers, variants, and duplicate implementations for the same mechanism.
-- Classify a match `current-task` only when it affects Acceptance or a required Invariant within scope, `scope-blocker` when required work is outside scope, or `adjacent` otherwise with rationale, residual risk, and no edit.
-- Assert allowed and forbidden outcomes, including absence of unauthorized or duplicate side effects. For concurrency or eventual consistency, define admissible result sets and use bounded observation instead of fixed sleeps.
-- Do not use broad retry to certify a flaky guard. Isolate nondeterminism with owned clock, randomness, scheduling, and data seams; quarantine or non-automation needs an owner, release consequence, and revisit trigger.
+- Preserve the causal trigger, fixture, observable failure, and real boundary.
+- Prove counterfactual value or state its limit.
+- Scan same-pattern paths, classify their task relation, and assert allowed plus forbidden effects with deterministic or bounded observation.
+- Broad retry, stale evidence, or a green adjacent behavior is not recurrence proof.
 
 ## Anti-Patterns
 
-- Calling a new green-only happy-path test a regression guard without showing it constrains the prior failure.
-- Following a fixed test pyramid when the original mechanism lives at a real boundary.
-- Shrinking fixtures until the triggering condition disappears, or reusing stale incident/CI evidence after material edits.
-- Claiming recurrence is closed before all authorized `current-task` occurrences are fixed, or repairing every discovered sibling regardless of task relation.
+- Local success substituted for evidence of the regression testing contract.
 
 ## Stop Conditions
 
-- Escalate when safe reproduction is infeasible, the failure requires irreversible or shared-environment effects, or material same-pattern exposure remains without compensating detection and accepted ownership.
+- Stop when reproduction is unsafe, requires irreversible/shared effects, or leaves material same-pattern exposure without accepted detection and ownership.
 
 ## Output Contract
 

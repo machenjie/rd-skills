@@ -1,6 +1,5 @@
 id: structure-placement-reuse-existing-function
 category: devex
-complexity: L3
 focus:
   - existing function reuse
   - helper placement rationale

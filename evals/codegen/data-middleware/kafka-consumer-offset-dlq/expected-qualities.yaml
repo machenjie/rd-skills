@@ -1,6 +1,5 @@
 id: kafka-consumer-offset-dlq
 category: data-middleware
-complexity: L4
 focus:
   - Kafka manual offset commit
   - idempotent consumer

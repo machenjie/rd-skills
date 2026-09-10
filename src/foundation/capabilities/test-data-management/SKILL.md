@@ -17,27 +17,24 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when fixtures, f
 
 ## Skill Role
 
-Define fixture meaning, deterministic generation, namespace and isolation, relationship integrity, sensitive-data controls, cleanup, and evidence freshness. Exclude test portfolios, database design, and environment provisioning.
+Own fixture meaning, determinism, isolation/cleanup, relationships, sensitive-data controls, and freshness; exclude portfolio, database, and environment decisions.
 
 ## High-Value Rules
 
-- **Design data from the failure mechanism and oracle.** Include the smallest records, relationships, state, boundary values, and forbidden conditions needed to exercise the named behavior rather than a generic fixture universe.
-- **Give created state an owner and namespace.** Select transaction, disposable resource, unique tenant or key space, seeded snapshot, or targeted cleanup from actual commit and asynchronous-effect semantics.
-- **Keep generation deterministic where evidence depends on it.** Control clocks, randomness, identifiers, ordering, locale, and external responses while preserving the boundary behavior the test intends to prove.
-- **Preserve domain and storage relationships.** Build valid defaults through owned factories or builders, then vary only the attributes needed for the case so accidental invalidity does not obscure the target mechanism.
-- **Use synthetic or approved protected data.** Apply current classification, minimization, access, masking, retention, and deletion policy; do not copy production secrets or personal records into uncontrolled fixtures.
-- **Clean independently committed and asynchronous effects.** Track created identifiers, drain or reconcile queued work, and bound destructive cleanup so failed or parallel runs cannot delete another owner's state.
-- **Tie evidence to data version and environment.** Record schema, fixture source, seed or generator version, dependency versions, and material data assumptions, then refresh after changes that can alter the oracle.
+- Build the smallest fixture for the named failure mechanism and oracle.
+- Define controls for oracle-affecting time, randomness, IDs, order, locale, and external responses.
+- Define namespace and cleanup ownership across commit, asynchronous, and parallel effects.
+- Select synthetic or approved minimized data that excludes production secrets and personal records.
+- Bind schema, fixture, dependency, and environment versions; refresh after oracle-affecting changes.
 
 ## Anti-Patterns
 
-- Share mutable fixture state across cases or depend on execution order, machine time, or uncontrolled identifiers.
-- Use a large production-like snapshot that hides which records and relationships cause the behavior.
-- Rely on rollback cleanup when effects commit separately, run asynchronously, or leave external resources behind.
+- Local success substituted for evidence of the test data management contract.
 
 ## Stop Conditions
 
-Escalate when test ownership or namespace is absent, cleanup can reach shared data, or representative relationships cannot be constructed. Also escalate when sensitive data lacks approved handling, asynchronous effects cannot reconcile, or fixture drift makes results ambiguous.
+- Stop without an owned namespace or shared-safe cleanup.
+- Stop on unapproved sensitive data, unreconciled asynchronous effects, or ambiguous drift.
 
 ## Output Contract
 

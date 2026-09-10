@@ -46,26 +46,6 @@
         {
           "outcomes": [
             {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
               "id": "profiles-exact-valid",
               "status": "pass"
             }
@@ -235,15 +215,15 @@
             },
             {
               "id": "readability-review-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professionalism-formal-release-ready",
@@ -303,26 +283,6 @@
         {
           "outcomes": [
             {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
               "id": "built-links-valid",
               "status": "pass"
             }
@@ -333,269 +293,6 @@
       ],
       "id": "reference-contract-authority",
       "pointer": "/reference_contract",
-      "source": "src/control-model/core-contracts.json"
-    },
-    {
-      "consumer_results": [
-        {
-          "outcomes": [
-            {
-              "id": "prompt-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-control-plane-prompt",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "task-contracts-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-task-contracts",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-recommended-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-recommended",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "docs-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-docs-consistency",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "agent-lightweight-valid",
-              "status": "pass"
-            },
-            {
-              "id": "final-goal-structural-costs",
-              "status": "pass"
-            }
-          ],
-          "producer": "eval-agent-lightweight",
-          "producer_status": "pass"
-        }
-      ],
-      "id": "task-contract-authority",
-      "pointer": "/task_contract",
-      "source": "src/control-model/core-contracts.json"
-    },
-    {
-      "consumer_results": [
-        {
-          "outcomes": [
-            {
-              "id": "prompt-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-control-plane-prompt",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "task-contracts-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-task-contracts",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-recommended-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-recommended",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "profiles-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-agent-profiles",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "docs-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-docs-consistency",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "agent-lightweight-valid",
-              "status": "pass"
-            },
-            {
-              "id": "final-goal-structural-costs",
-              "status": "pass"
-            }
-          ],
-          "producer": "eval-agent-lightweight",
-          "producer_status": "pass"
-        }
-      ],
-      "id": "evidence-contract-authority",
-      "pointer": "/visible_evidence_contract",
-      "source": "src/control-model/core-contracts.json"
-    },
-    {
-      "consumer_results": [
-        {
-          "outcomes": [
-            {
-              "id": "prompt-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-control-plane-prompt",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "task-contracts-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-task-contracts",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-recommended-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-recommended",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "profiles-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-agent-profiles",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "docs-exact-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "validate-docs-consistency",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "agent-lightweight-valid",
-              "status": "pass"
-            },
-            {
-              "id": "final-goal-structural-costs",
-              "status": "pass"
-            }
-          ],
-          "producer": "eval-agent-lightweight",
-          "producer_status": "pass"
-        }
-      ],
-      "id": "completion-contract-authority",
-      "pointer": "/completion_state",
       "source": "src/control-model/core-contracts.json"
     },
     {
@@ -628,26 +325,6 @@
             }
           ],
           "producer": "build-recommended",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
           "producer_status": "pass"
         },
         {
@@ -699,26 +376,6 @@
             }
           ],
           "producer": "build-recommended",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-full-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-full",
-          "producer_status": "pass"
-        },
-        {
-          "outcomes": [
-            {
-              "id": "build-dev-valid",
-              "status": "pass"
-            }
-          ],
-          "producer": "build-dev",
           "producer_status": "pass"
         },
         {
@@ -799,6 +456,54 @@
         {
           "outcomes": [
             {
+              "id": "routing-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-routing",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "decision-eval-authority",
+      "pointer": "/decision_eval_contract",
+      "source": "src/control-model/core-contracts.json"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
+              "id": "rendered-context-valid",
+              "status": "pass"
+            },
+            {
+              "id": "final-goal-context-costs",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-rendered-context",
+          "producer_status": "pass"
+        },
+        {
+          "outcomes": [
+            {
+              "id": "agent-behavior-valid",
+              "status": "pass"
+            }
+          ],
+          "producer": "eval-agent-behavior",
+          "producer_status": "pass"
+        }
+      ],
+      "id": "behavior-eval-authority",
+      "pointer": "/behavior_eval_contract",
+      "source": "src/control-model/core-contracts.json"
+    },
+    {
+      "consumer_results": [
+        {
+          "outcomes": [
+            {
               "id": "task-contracts-valid",
               "status": "pass"
             }
@@ -812,19 +517,19 @@
       "source": "src/control-model/core-contracts.json"
     }
   ],
-  "command_execution_count": 33,
+  "command_execution_count": 31,
   "contract_errors": [],
-  "contract_sha256": "15bc3eee84dc78d4da6890529b5393a8646e7a622c7a8d28ec7047d0722589c2",
+  "contract_sha256": "11246970fea1173d9269cba664e94ed611b65b0700a0c6aab5b37e96bbc52b72",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2531,
-      "sha256": "53a1ec52da681f9c52eefdacea940a09cecdc0801c17839bafbf132f5e228b15"
+      "file_count": 7193,
+      "sha256": "28ac5aabdd17d191d235ff36834b9ef190fc151b119b0cdcce129ebaa442ee18"
     },
     "pre": {
-      "file_count": 2531,
-      "sha256": "53a1ec52da681f9c52eefdacea940a09cecdc0801c17839bafbf132f5e228b15"
+      "file_count": 7193,
+      "sha256": "28ac5aabdd17d191d235ff36834b9ef190fc151b119b0cdcce129ebaa442ee18"
     },
     "unchanged": true
   },
@@ -1207,7 +912,7 @@
         },
         {
           "actual_metadata": {
-            "length": 7,
+            "length": 4,
             "type": "string"
           },
           "expected": "pass",
@@ -1215,7 +920,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1227,11 +932,11 @@
           "pointer": "/semantic_disposition_application/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -2141,7 +1846,7 @@
     },
     {
       "capabilities": [
-        "recommended-build-validation"
+        "runtime-build-validation"
       ],
       "dimensions": [
         "core-model-build-and-installation"
@@ -2161,54 +1866,6 @@
         }
       ],
       "producer": "build-recommended",
-      "status": "pass"
-    },
-    {
-      "capabilities": [
-        "full-build-validation"
-      ],
-      "dimensions": [
-        "core-model-build-and-installation"
-      ],
-      "id": "build-full-valid",
-      "predicates": [
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 0,
-          "operator": "equals",
-          "pointer": "/exit_code",
-          "resolution_status": "resolved",
-          "source": "process",
-          "status": "pass"
-        }
-      ],
-      "producer": "build-full",
-      "status": "pass"
-    },
-    {
-      "capabilities": [
-        "dev-build-validation"
-      ],
-      "dimensions": [
-        "core-model-build-and-installation"
-      ],
-      "id": "build-dev-valid",
-      "predicates": [
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 0,
-          "operator": "equals",
-          "pointer": "/exit_code",
-          "resolution_status": "resolved",
-          "source": "process",
-          "status": "pass"
-        }
-      ],
-      "producer": "build-dev",
       "status": "pass"
     },
     {
@@ -2267,10 +1924,12 @@
     },
     {
       "capabilities": [
-        "built-reference-validation"
+        "built-reference-validation",
+        "expanded-layer3-temporary-projection-validation"
       ],
       "dimensions": [
         "ai-first-ai-facing-surface-validation",
+        "core-model-build-and-installation",
         "context-isolation-role-and-routing",
         "reference-loading-routing-and-build"
       ],
@@ -2855,28 +2514,13 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 2200,
+          "expected": 2305,
           "expected_from": {
             "authority": "context-budget-authority",
-            "pointer": "/budget_classes/main/capacity_ceiling"
+            "pointer": "/budget_classes/main/soft_target"
           },
           "operator": "equals",
-          "pointer": "/aggregate/max_main/capacity_ceiling",
-          "resolution_status": "resolved",
-          "source": "reports/rendered-context-budget.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "number"
-          },
-          "expected": 0.1,
-          "expected_from": {
-            "authority": "context-budget-authority",
-            "pointer": "/budget_classes/main/minimum_headroom_ratio"
-          },
-          "operator": "equals",
-          "pointer": "/aggregate/max_main/minimum_headroom_ratio",
+          "pointer": "/aggregate/max_main/soft_target",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
           "status": "pass"
@@ -2885,28 +2529,37 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 80,
+          "expected": 2650,
           "expected_from": {
             "authority": "context-budget-authority",
-            "pointer": "/budget_classes/main/minimum_release_margin_tokens"
+            "pointer": "/budget_classes/main/hard_ceiling"
           },
           "operator": "equals",
-          "pointer": "/aggregate/max_main/minimum_release_margin_tokens",
+          "pointer": "/aggregate/max_main/hard_ceiling",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
           "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "length": 11,
+            "type": "string"
           },
-          "expected": 80,
-          "expected_from": {
-            "authority": "context-budget-authority",
-            "pointer": "/budget_classes/main/minimum_release_margin_tokens"
+          "expected": "conformance",
+          "operator": "equals",
+          "pointer": "/budget_governance/mode",
+          "resolution_status": "resolved",
+          "source": "reports/rendered-context-budget.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "length": 0,
+            "type": "array"
           },
-          "operator": "greater_than_or_equal",
-          "pointer": "/aggregate/max_main/release_margin_tokens",
+          "expected": [],
+          "operator": "equals",
+          "pointer": "/budget_governance/conformance_failures",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
           "status": "pass"
@@ -3273,7 +2926,7 @@
           "pointer": "/content_readiness/aggregate/readability_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3284,7 +2937,7 @@
           "pointer": "/content_readiness/expert/readability/decision_complete",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3295,7 +2948,7 @@
           "pointer": "/content_readiness/expert/readability/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3306,7 +2959,7 @@
           "pointer": "/content_readiness/expert/readability/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3317,51 +2970,51 @@
           "pointer": "/content_readiness/expert/readability/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 2,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/tracked_tightening_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/detector_false_positive_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/rewrite_required_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3376,7 +3029,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -3407,7 +3060,7 @@
           "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3418,7 +3071,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/decision_complete",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3429,7 +3082,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3440,7 +3093,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3451,11 +3104,11 @@
           "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "length": 61,
+            "length": 79,
             "type": "string"
           },
           "expected": "exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed",
@@ -3463,18 +3116,18 @@
           "pointer": "/content_readiness/expert/professional_completeness/decision_method",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 3,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3485,7 +3138,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/panel_size",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3496,7 +3149,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/evidence_contract_satisfied",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3507,7 +3160,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_contract_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3518,7 +3171,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_plan_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3529,7 +3182,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_binding_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3540,7 +3193,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/provenance_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3551,49 +3204,57 @@
           "pointer": "/content_readiness/expert/professional_completeness/round_lifecycle_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": null,
-          "expected": 189,
-          "operator": "equals",
-          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/covered_target_count",
-          "resolution_status": "pointer-error",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": null,
-          "expected": 2,
-          "operator": "equals",
-          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_domain_experts_per_target",
-          "resolution_status": "pointer-error",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": null,
-          "expected": 1,
-          "operator": "equals",
-          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_architecture_experts_per_target",
-          "resolution_status": "pointer-error",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": null,
-          "expected": 5670,
-          "operator": "equals",
-          "pointer": "/content_readiness/expert/professional_completeness/evidence_summary/criterion_result_count",
-          "resolution_status": "pointer-error",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 189,
+          "expected": 188,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/covered_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 2,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_domain_experts_per_target",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 1,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_architecture_experts_per_target",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 5640,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/evidence_summary/criterion_result_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 188,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/required_target_count",
           "resolution_status": "resolved",
@@ -3604,49 +3265,49 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 189,
+          "expected": 188,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/applied_target_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
-          "expected": 189,
+          "expected": 188,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/accepted_current_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/correction_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/unresolved_professional_disagreement_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -3670,14 +3331,14 @@
         },
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 3,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3688,13 +3349,13 @@
           "pointer": "/content_readiness/expert/professional_completeness/panel_size",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 189,
+          "expected": 188,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/required_target_count",
           "resolution_status": "resolved",
@@ -3710,25 +3371,29 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
-          "actual_metadata": null,
-          "expected": 567,
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 564,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_vote_count",
-          "resolution_status": "pointer-error",
+          "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
-          "actual_metadata": null,
-          "expected": 5670,
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 5640,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_criterion_result_count",
-          "resolution_status": "pointer-error",
+          "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3746,7 +3411,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 189,
+          "expected": 188,
           "operator": "equals",
           "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/case_count",
           "resolution_status": "resolved",
@@ -3757,7 +3422,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 56,
+          "expected": 58,
           "expected_from": {
             "authority": "final-goal-authority",
             "pointer": "/professional_review_cost_fixtures/thresholds/maximum_fresh_target_count"
@@ -3785,7 +3450,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -3832,7 +3497,7 @@
         },
         {
           "actual_metadata": {
-            "length": 5,
+            "length": 13,
             "type": "string"
           },
           "expected": "current",
@@ -3976,7 +3641,7 @@
   "principles": [
     {
       "authoring_status": "pass",
-      "formal_release_status": "blocked",
+      "formal_release_status": "pass",
       "id": "ai-first",
       "name": "AI First",
       "required_dimensions": [
@@ -4011,7 +3676,7 @@
           "content-audit-formal-release-current"
         ]
       },
-      "status": "partial"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -4030,8 +3695,7 @@
           "agent-behavior-valid",
           "context-control-valid",
           "build-recommended-valid",
-          "build-full-valid",
-          "build-dev-valid",
+          "built-links-valid",
           "installation-valid"
         ],
         "formal_release": []
@@ -4140,7 +3804,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "blocked",
+      "formal_release_status": "pass",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -4169,7 +3833,7 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "partial"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -4584,9 +4248,7 @@
     {
       "argv": [
         "python3",
-        "scripts/build.py",
-        "--profile",
-        "recommended"
+        "scripts/build.py"
       ],
       "depends_on": [],
       "exit_code": 0,
@@ -4602,52 +4264,32 @@
     {
       "argv": [
         "python3",
-        "scripts/build.py",
-        "--profile",
-        "full"
-      ],
-      "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
-      "id": "build-full",
-      "release_reports": [],
-      "reports": [],
-      "source_unchanged": true,
-      "status": "pass",
-      "timed_out": false,
-      "timeout_seconds": 600
-    },
-    {
-      "argv": [
-        "python3",
-        "scripts/build.py",
-        "--profile",
-        "dev"
-      ],
-      "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
-      "id": "build-dev",
-      "release_reports": [],
-      "reports": [],
-      "source_unchanged": true,
-      "status": "pass",
-      "timed_out": false,
-      "timeout_seconds": 600
-    },
-    {
-      "argv": [
-        "python3",
         "scripts/validate-agent-profiles.py"
       ],
       "depends_on": [
-        "build-recommended",
-        "build-full",
-        "build-dev"
+        "build-recommended"
       ],
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-agent-profiles",
+      "release_reports": [],
+      "reports": [],
+      "source_unchanged": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-built-skill-reference-links.py"
+      ],
+      "depends_on": [
+        "build-recommended"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "validate-built-links",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
@@ -4683,9 +4325,7 @@
         "scripts/eval-rendered-context-budget.py"
       ],
       "depends_on": [
-        "build-recommended",
-        "build-full",
-        "build-dev",
+        "validate-built-links",
         "eval-agent-lightweight"
       ],
       "exit_code": 0,
@@ -4715,26 +4355,6 @@
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-docs-consistency",
-      "release_reports": [],
-      "reports": [],
-      "source_unchanged": true,
-      "status": "pass",
-      "timed_out": false,
-      "timeout_seconds": 600
-    },
-    {
-      "argv": [
-        "python3",
-        "scripts/validate-built-skill-reference-links.py"
-      ],
-      "depends_on": [
-        "build-recommended",
-        "build-full",
-        "build-dev"
-      ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
-      "id": "validate-built-links",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,

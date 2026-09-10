@@ -1,6 +1,5 @@
 id: cpp-uninitialized-variable
 category: code-elements
-complexity: L2
 focus:
   - uninitialized variable
   - branch coverage

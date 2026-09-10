@@ -1,6 +1,5 @@
 id: design-pattern-overengineering
 category: structure
-complexity: L3
 focus:
   - pattern overengineering
   - direct code decision

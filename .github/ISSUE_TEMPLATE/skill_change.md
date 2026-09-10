@@ -21,10 +21,10 @@ labels: skill-change
 ## Current Behavior
 
 
-## Routing or Build Profile Impact
+## Routing or Runtime Delivery Impact
 
 - Path affected: Direct Task / Analyzed Work / review / none
-- Profile impact: `recommended` / `full` / `dev`
+- Runtime delivery impact:
 - Expected top-level skill count impact:
 - Expected compiled reference impact:
 

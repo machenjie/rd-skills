@@ -6,15 +6,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import tomllib
 from pathlib import Path
 
 from validation_utils import (
-    COMPLETION_STATE_MODEL,
     CORE_CONTRACTS,
-    EVIDENCE_LEDGER_MODEL,
-    IMPLEMENTATION_DISCIPLINE_MODEL,
-    REVIEW_DISCIPLINE_MODEL,
     PROFILE_CONTRACT_MODEL,
     PROMPT_CONTRACT_MODEL,
     ROLE_CONTRACT_MODEL,
@@ -25,6 +22,7 @@ from validation_utils import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / PROFILE_CONTRACT_MODEL["source_path"]
+PROMPT = ROOT / PROMPT_CONTRACT_MODEL["path"]
 ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
 ENFORCEMENT_STATUSES = {
     "native-enforced",
@@ -44,17 +42,9 @@ HOST_ENFORCEMENT_CAPABILITIES = {
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 }
-GENERIC_CAPABILITY_CONTRACT = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
-DECISION_CAPABILITY_STATES = set(GENERIC_CAPABILITY_CONTRACT["states"])
-HOST_MODE_VALUES = {
-    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
-    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
-}
-NATIVE_DIFF_SAFEGUARDS = ["--no-pager", "--no-ext-diff", "--no-textconv"]
 ENFORCEMENT_HOSTS = {"codex", "claude", "copilot", "cline", "openai-api"}
+COPILOT_SURFACES = {"copilot-cli", "copilot-vscode", "copilot-coding-agent"}
 EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
@@ -68,44 +58,28 @@ OLD_NAMES = {
     "integration-worker", "pdd-freezer", "ddd-freezer", "sdd-contract-freezer",
     "tdd-behavior-freezer", "task-implementer", "phase-reviewer",
 }
+CONTROL_REFERENCE_RE = re.compile(r"(?<![A-Za-z0-9_.-])references/([a-z0-9-]+\.md)")
+def role_control_reference_errors(role: str, text: str) -> list[str]:
+    """Reject missing control references while allowing Main to name optional aids."""
+    errors = []
+    for name in set(CONTROL_REFERENCE_RE.findall(text)):
+        if name == "main-control-agent.md":
+            continue
+        if not (ROOT / "src/control-skills/engineering-control-plane/references" / name).is_file():
+            errors.append(f"{role}: missing control Reference {name}")
+    return errors
 
 
-def _normalized_decision_capabilities(entry: dict[str, object]) -> dict[str, str]:
-    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES - {"unsupported"}
-    diff_supported = entry.get("diff_input_mode") in {"native", "supplied-artifact"}
-    validation_supported = entry.get("validation_mode") in {"native-read-only", "task-no-edit"}
-    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES - {"unsupported"}
-    return {
-        "bounded-source-read": "supported" if profile_supported else "unsupported",
-        "workspace-mutation": "supported" if profile_supported else "unsupported",
-        "non-mutating-validation": "supported" if validation_supported else "unsupported",
-        "exact-change-evidence-read": "supported" if diff_supported else "unsupported",
-        "exact-change-evidence-export": "supported" if diff_supported else "unsupported",
-        "reviewer-accessible-change-reference": "supported" if diff_supported else "unsupported",
-        "workspace-state-observation": "supported" if observation_supported else "unsupported",
-    }
 
 
-def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
-    groups = {
-        state: [
-            field
-            for field in DECISION_CAPABILITY_FIELDS
-            if capabilities[field] == state
-        ]
-        for state in ("supported", "unsupported")
-    }
-    return (
-        "Current capability facts: supported "
-        + ("/".join(groups["supported"]) or "none")
-        + "; unsupported "
-        + ("/".join(groups["unsupported"]) or "none")
-        + "."
-    )
 OUTPUTS = (
     ("codex", ROOT / "dist" / "codex" / "project" / ".codex" / "agents", ".toml"),
+    ("codex", ROOT / "dist" / "codex" / "user" / ".codex" / "agents", ".toml"),
+    ("codex", ROOT / "dist" / "codex" / "admin" / "agents", ".toml"),
     ("claude", ROOT / "dist" / "claude" / "project" / ".claude" / "agents", ".md"),
+    ("claude", ROOT / "dist" / "claude" / "user" / ".claude" / "agents", ".md"),
     ("copilot", ROOT / "dist" / "copilot" / "project" / ".github" / "agents", ".agent.md"),
+    ("copilot", ROOT / "dist" / "copilot" / "user" / ".copilot" / "agents", ".agent.md"),
 )
 BUILT_MANIFESTS = (
     ROOT / "dist/codex/project/.agents/skills/recommended/.changeforge-build-manifest.json",
@@ -149,261 +123,41 @@ def _validate_profile_description(
     )
 
 
-def _rule_group_matches(rules: list[str], required_terms: list[str]) -> list[int]:
-    folded_terms = [term.casefold() for term in required_terms]
-    return [
-        index
-        for index, rule in enumerate(rules)
-        if all(term in rule.casefold() for term in folded_terms)
-    ]
 
 
-def _validate_instruction_rule_groups(
-    *,
-    role_name: str,
-    contract_label: str,
-    groups: list[dict[str, object]],
-    rules: list[str],
-    errors: list[str],
-) -> bool:
-    all_present = True
-    for group in groups:
-        required_terms = group.get("required_terms")
-        rule_id = group.get("rule_id")
-        if not isinstance(required_terms, list):
-            continue
-        matches = _rule_group_matches(rules, required_terms)
-        if len(matches) != 1:
-            all_present = False
-            errors.append(
-                f"{role_name}: {contract_label} rule {rule_id!r} must appear in "
-                f"exactly one instruction bullet, found {len(matches)}"
-            )
-        if "exact_rule" not in group:
-            continue
-        exact_rule = group["exact_rule"]
-        if not isinstance(exact_rule, str) or not exact_rule:
-            all_present = False
-            errors.append(
-                f"{role_name}: {contract_label} rule {rule_id!r} has an invalid "
-                "exact canonical bullet"
-            )
-            continue
-        exact_matches = [
-            index for index, rule in enumerate(rules) if rule == exact_rule
-        ]
-        if len(exact_matches) != 1:
-            all_present = False
-            errors.append(
-                f"{role_name}: {contract_label} rule {rule_id!r} must equal "
-                f"its exact canonical bullet once, found {len(exact_matches)}"
-            )
-    return all_present
 
 
-def _validate_profile_instruction_contract(
-    *,
-    role_name: str,
-    error_label: str,
-    readability_label: str,
-    instructions: str,
-    errors: list[str],
-) -> None:
-    """Validate one source or decoded built Profile instruction block."""
-
-    limits = PROFILE_CONTRACT_MODEL["instruction_rule_count"]
-    maximum = limits["maximum_by_role"].get(role_name, limits["maximum"])
-    rules = instructions.splitlines()
-    if not limits["minimum"] <= len(rules) <= maximum or any(
-        not rule.startswith("- ") for rule in rules
-    ):
-        errors.append(
-            f"{error_label}: instructions must contain {limits['minimum']}-"
-            f"{maximum} newline bullet rules"
-        )
-    validate_ai_readability(instructions, readability_label, errors)
-    for obsolete in PROFILE_CONTRACT_MODEL["forbidden_instruction_terms"]:
-        if obsolete in instructions:
-            errors.append(
-                f"{error_label}: instructions contain forbidden term {obsolete!r}"
-            )
-
-    capability_groups = dict(PROFILE_CONTRACT_MODEL["capability_terms"])
-    capability_groups[IMPLEMENTATION_DISCIPLINE_MODEL["profile_capability_id"]] = (
-        IMPLEMENTATION_DISCIPLINE_MODEL["profile_projection"]
-    )
-    capability_groups[REVIEW_DISCIPLINE_MODEL["profile_capability_id"]] = (
-        REVIEW_DISCIPLINE_MODEL["profile_projection"]
-    )
-    capability_contract = PROFILE_CONTRACT_MODEL["role_capabilities"][role_name]
-    required_ids = capability_contract["required_capability_ids"]
-    for capability_id in required_ids:
-        _validate_instruction_rule_groups(
-            role_name=error_label,
-            contract_label=f"capability {capability_id!r}",
-            groups=capability_groups[capability_id],
-            rules=rules,
-            errors=errors,
-        )
-    for capability_id, groups in capability_groups.items():
-        if capability_id in required_ids:
-            continue
-        if all(_rule_group_matches(rules, group["required_terms"]) for group in groups):
-            errors.append(
-                f"{error_label}: contains capability {capability_id!r} owned by "
-                "another role"
-            )
-
-    handoff_id = capability_contract["handoff_contract"]
-    _validate_instruction_rule_groups(
-        role_name=error_label,
-        contract_label=f"handoff {handoff_id!r}",
-        groups=PROFILE_CONTRACT_MODEL["handoff_contracts"][handoff_id],
-        rules=rules,
-        errors=errors,
-    )
-    forbidden_storage_rules = {
-        rule["id"]: rule for rule in EVIDENCE_LEDGER_MODEL["forbidden_storage"]
+def _validate_profile_instruction_contract(*, role_name, error_label, readability_label, instructions, errors):
+    """Check role behavior, not an exact wording or ceremonial output schema."""
+    required = {
+        "main-control-agent": ["Dispatch only", "task-agent", "Route expertise once", "Host boundaries"],
+        "analysis-agent": ["current-source read/search", "decision-relevant evidence", "read-only", "proof limits"],
+        "task-agent": ["read/search/edit/execute", "bounded search/read", "authorized write scope", "final material edit", "fresh targeted validation", "Self-check", "current requirements or repository evidence"],
+        "review-agent": ["Independently inspect", "current diff", "reachable failure", "new evidence", "read-only"],
     }
-    for rule_id in capability_contract["forbidden_storage_projection_ids"]:
-        matches = _rule_group_matches(
-            rules,
-            forbidden_storage_rules[rule_id]["projection_terms"],
-        )
-        if len(matches) != 1:
-            errors.append(
-                f"{error_label}: forbidden storage projection {rule_id!r} must "
-                f"appear in exactly one instruction bullet, found {len(matches)}"
-            )
-
-    completion_proof = EVIDENCE_LEDGER_MODEL["completion_proof"]["implementation"]
-    for projection in completion_proof["projections"]:
-        if projection["target"] != f"profile:{role_name}":
-            continue
-        missing_terms = [
-            term
-            for term in projection["terms"]
-            if not any(term in rule for rule in rules)
-        ]
-        if missing_terms:
-            errors.append(
-                f"{error_label}: independent review evidence projection is "
-                f"missing required terms {missing_terms}"
-            )
-
-    if role_name == "main-control-agent":
-        folded_instructions = instructions.casefold()
-        prompt_owned_terms = [
-            "Task Contract v2",
-            "Evidence Ledger",
-            *COMPLETION_STATE_MODEL["statuses"],
-            *COMPLETION_STATE_MODEL["fail_closed_rules"],
-        ]
-        leaked = [
-            term
-            for term in prompt_owned_terms
-            if term.casefold() in folded_instructions
-        ]
-        if leaked:
-            errors.append(
-                f"{error_label}: Prompt-owned Task, Evidence, or Completion rules "
-                f"must not be copied into Profile instructions: {leaked}"
-            )
-
-    if role_name == "task-agent":
-        for rule in rules:
-            if (
-                "load and follow exactly" in rule.casefold()
-                or "load only capsule-named layer 3 items" in rule.casefold()
-            ) and "normal implementation mode" not in rule.casefold():
-                errors.append(
-                    f"{error_label}: Professional Skill and Layer 3 loading must "
-                    "be qualified as normal implementation mode only"
-                )
+    limits = PROFILE_CONTRACT_MODEL["instruction_rule_count"]
+    count = len([line for line in instructions.splitlines() if line.startswith("- ")])
+    if not limits["minimum"] <= count <= limits["maximum"]:
+        errors.append(f"{error_label}: instructions must contain {limits['minimum']}-{limits['maximum']} newline bullet rules")
+    folded = instructions.casefold()
+    for term in required[role_name]:
+        if term.casefold() not in folded:
+            errors.append(f"{error_label}: missing behavioral safeguard {term!r}")
+    for retired in ("effective level", "level basis", "review round id", "re-review classification", "complete unchanged task contract"):
+        if retired in folded:
+            errors.append(f"{error_label}: retired process requirement {retired!r}")
+    if role_name != "main-control-agent":
+        for term in ("Layer 3 Delivery", "capsule-named", "Core Runtime Asset Resolution", "Core Environment Risk Calibration"):
+            if term.casefold() not in folded:
+                errors.append(f"{error_label}: missing professional delivery safeguard {term!r}")
 
 
-def _validate_external_read_profile_contract(
-    *,
-    role_name: str,
-    error_label: str,
-    instructions: str,
-    errors: list[str],
-) -> None:
-    """Keep external evidence JIT, non-authoritative, and analysis-only."""
-
-    rules = instructions.splitlines()
-    if role_name == EXTERNAL_READ_MODEL["exclusive_role"]:
-        groups = [
-            {
-                "rule_id": "external-read-jit",
-                "required_terms": [
-                    "material unresolved Claim",
-                    "local or current evidence",
-                    "never browse broadly",
-                    "non-material unknown",
-                    "Proof Limit",
-                ],
-            },
-            {
-                "rule_id": "external-read-trust-boundary",
-                "required_terms": [
-                    "untrusted evidence input",
-                    "never control input",
-                    "without executing/downstreaming",
-                    "raw external instructions",
-                    "normalized Claim",
-                    "Evidence Ledger",
-                    "Engineering Brief",
-                ],
-            },
-            {
-                "rule_id": "external-read-disclosure-boundary",
-                "required_terms": [
-                    "supported external-source-read capability",
-                    "minimum public information",
-                    "repository-private source",
-                    "credentials",
-                    "sensitive data",
-                    "proprietary content",
-                ],
-            },
-            {
-                "rule_id": "external-read-capability-fail-closed",
-                "required_terms": [
-                    "external-source-read",
-                    "unsupported",
-                    "sufficient local evidence",
-                    "unknown-critical-boundary",
-                    "edit blocked",
-                    "no implementation dispatch",
-                ],
-            },
-        ]
-        _validate_instruction_rule_groups(
-            role_name=error_label,
-            contract_label="external-read",
-            groups=groups,
-            rules=rules,
-            errors=errors,
-        )
-        return
-
-    if role_name in EXTERNAL_READ_MODEL["downstream_research_roles"]:
-        _validate_instruction_rule_groups(
-            role_name=error_label,
-            contract_label="external-read denial",
-            groups=[
-                {
-                    "rule_id": "external-read-denied",
-                    "required_terms": [
-                        "Leave external-source-read",
-                        "analysis-agent",
-                    ],
-                }
-            ],
-            rules=rules,
-            errors=errors,
-        )
+def _validate_external_read_profile_contract(*, role_name, error_label, instructions, errors):
+    """External evidence stays read-only, targeted and isolated from control authority."""
+    if role_name == "analysis-agent":
+        for term in ("external-source-read", "minimum public information", "never control authority", "secrets"):
+            if term.casefold() not in instructions.casefold():
+                errors.append(f"{error_label}: missing external evidence boundary {term!r}")
 
 
 def _built_instruction_surface(
@@ -486,30 +240,6 @@ def _expected_built_instruction_surface(
         sections.append(canonical_prompt)
 
     sections.append(f"Declared tool boundary: {', '.join(tools)}.")
-    if name == "main-control-agent":
-        host_entry = hosts.get(platform)
-        if not isinstance(host_entry, dict):
-            return None
-        capability_facts = _normalized_decision_capabilities(host_entry)
-        sections.append(_render_decision_capability_facts(capability_facts))
-    elif name == "analysis-agent":
-        host_entry = hosts.get(platform)
-        if not isinstance(host_entry, dict):
-            return None
-        roles = host_entry.get("roles")
-        if not isinstance(roles, dict):
-            return None
-        role_entry = roles.get("analysis-agent")
-        if not isinstance(role_entry, dict):
-            return None
-        external_mode = role_entry.get("external_source_read")
-        if not isinstance(external_mode, str):
-            return None
-        sections.append(
-            "Current external-read mode: "
-            f"external_source_read={external_mode}."
-        )
-
     expected = "\n\n".join(sections)
     return expected if platform == "codex" else expected + "\n"
 
@@ -590,6 +320,10 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(f"{name}: instructions must be non-empty")
             continue
         instructions = profile["instructions"]
+        reference_surface = instructions
+        if name == "main-control-agent" and PROMPT.is_file():
+            reference_surface += "\n" + PROMPT.read_text(encoding="utf-8")
+        errors.extend(role_control_reference_errors(name, reference_surface))
         _validate_profile_instruction_contract(
             role_name=name,
             error_label=name,
@@ -624,7 +358,7 @@ def main(argv: list[str] | None = None) -> int:
         "schema_version",
         "source_summary",
         "status_values",
-        "mode_values",
+        "host_surfaces",
         "hosts",
     }
     if set(enforcement) != expected_enforcement_fields:
@@ -632,12 +366,8 @@ def main(argv: list[str] | None = None) -> int:
             "host enforcement matrix fields must be exactly "
             f"{sorted(expected_enforcement_fields)}"
         )
-    if enforcement.get("schema_version") != 4 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
-        errors.append("host enforcement matrix must use schema_version 4 and the fixed status enum")
-    if enforcement.get("mode_values") != {
-        field: list(values) for field, values in HOST_MODE_VALUES.items()
-    }:
-        errors.append("host enforcement mode_values must match the adapter contract")
+    if enforcement.get("schema_version") != 5 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
+        errors.append("host enforcement matrix must use schema_version 5 and the fixed status enum")
     if not isinstance(hosts, dict) or set(hosts) != ENFORCEMENT_HOSTS:
         errors.append("host enforcement matrix must contain exactly the supported hosts")
         hosts = {}
@@ -645,30 +375,12 @@ def main(argv: list[str] | None = None) -> int:
         if not isinstance(host_entry, dict):
             errors.append(f"{host}: enforcement entry must be an object")
             continue
-        expected_fields = HOST_ENFORCEMENT_CAPABILITIES | {
-            "diff_input_mode",
-            "validation_mode",
-            "native_diff_safeguards",
-            "roles",
-        }
+        expected_fields = HOST_ENFORCEMENT_CAPABILITIES | {"roles"}
         if set(host_entry) != expected_fields:
             errors.append(f"{host}: host fields must be exactly {sorted(expected_fields)}")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if host_entry.get(capability) not in ENFORCEMENT_STATUSES:
                 errors.append(f"{host}: invalid {capability} enforcement")
-        if host_entry.get("diff_input_mode") not in HOST_MODE_VALUES["diff_input_mode"]:
-            errors.append(f"{host}: invalid diff_input_mode")
-        if host_entry.get("validation_mode") not in HOST_MODE_VALUES["validation_mode"]:
-            errors.append(f"{host}: invalid validation_mode")
-        expected_safeguards = (
-            NATIVE_DIFF_SAFEGUARDS
-            if host_entry.get("diff_input_mode") == "native"
-            else []
-        )
-        if host_entry.get("native_diff_safeguards") != expected_safeguards:
-            errors.append(f"{host}: native diff safeguards do not match adapter mode")
-        if tuple(_normalized_decision_capabilities(host_entry)) != DECISION_CAPABILITY_FIELDS:
-            errors.append(f"{host}: normalized decision capabilities drift from Core")
         roles = host_entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
             errors.append(f"{host}: enforcement roles must be the exact four profiles")
@@ -723,6 +435,46 @@ def main(argv: list[str] | None = None) -> int:
         errors.append(
             "claude:analysis-agent must expose only the native read and Web read tools"
         )
+    surfaces = enforcement.get("host_surfaces")
+    if not isinstance(surfaces, dict) or set(surfaces) != COPILOT_SURFACES:
+        errors.append("host enforcement must declare the three Copilot surfaces")
+        surfaces = {}
+    expected_surface_tools = {
+        "copilot-cli": ["read", "search"],
+        "copilot-vscode": ["read", "search", "web"],
+        "copilot-coding-agent": ["read", "search"],
+    }
+    for surface, expected_analysis_tools in expected_surface_tools.items():
+        entry = surfaces.get(surface)
+        if not isinstance(entry, dict) or set(entry) != {
+            "delivery_family",
+            "profile_interpretation",
+            "roles",
+        }:
+            errors.append(f"{surface}: Host Surface fields are invalid")
+            continue
+        if entry.get("delivery_family") != "copilot":
+            errors.append(f"{surface}: delivery family must remain copilot")
+        roles = entry.get("roles")
+        if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
+            errors.append(f"{surface}: roles must be the four static Profiles")
+            continue
+        for role, role_entry in roles.items():
+            if not isinstance(role_entry, dict) or set(role_entry) != {
+                "rendered_tools",
+                "external_source_read",
+            }:
+                errors.append(f"{surface}:{role}: Host Surface role fields are invalid")
+                continue
+            if not isinstance(role_entry.get("rendered_tools"), list):
+                errors.append(f"{surface}:{role}: rendered_tools must be a list")
+            if role_entry.get("external_source_read") not in ENFORCEMENT_STATUSES:
+                errors.append(f"{surface}:{role}: external read declaration is invalid")
+            if role != "analysis-agent" and role_entry.get("external_source_read") != "unsupported":
+                errors.append(f"{surface}:{role}: external read must remain unsupported")
+        analysis = roles.get("analysis-agent", {})
+        if analysis.get("rendered_tools") != expected_analysis_tools:
+            errors.append(f"{surface}: analysis tools do not match the surface ceiling")
     copilot_analysis_tools = (
         hosts.get("copilot", {})
         .get("roles", {})
@@ -731,7 +483,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if copilot_analysis_tools != ["read", "search", "web"]:
         errors.append(
-            "copilot:analysis-agent must expose only read, search, and web"
+            "copilot:analysis-agent must expose only read, search, and web "
+            "as the portable surface union"
         )
     for host in ("claude", "copilot"):
         review = hosts.get(host, {}).get("roles", {}).get("review-agent", {})
@@ -778,6 +531,7 @@ def main(argv: list[str] | None = None) -> int:
                 platform, name, instruction_surface, errors
             )
             if instruction_block:
+                errors.extend(role_control_reference_errors(name, instruction_block))
                 _validate_profile_instruction_contract(
                     role_name=name,
                     error_label=f"{platform}:{name}",
@@ -834,46 +588,15 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 if '"execute"' in tools_line or tools_line != expected_tools_line:
                     errors.append("copilot:review-agent must omit execute and use read/search")
-            if name == "main-control-agent":
-                host_entry = hosts.get(platform, {})
-                capability_facts = _normalized_decision_capabilities(host_entry)
-                expected_modes = _render_decision_capability_facts(capability_facts)
-                if expected_modes not in text:
-                    errors.append(f"{platform}:{name}: missing exact capability facts")
-            elif name == "analysis-agent":
-                expected_mode = (
-                    hosts.get(platform, {})
-                    .get("roles", {})
-                    .get("analysis-agent", {})
-                    .get("external_source_read")
-                )
-                expected_external_mode = (
-                    "Current external-read mode: "
-                    f"external_source_read={expected_mode}."
-                )
-                if expected_external_mode not in text:
-                    errors.append(
-                        f"{platform}:{name}: missing exact external-read mode"
-                    )
-                if (
-                    text.count("Current external-read mode:") != 1
-                    or text.count("external_source_read=") != 1
-                ):
-                    errors.append(
-                        f"{platform}:{name}: external-read mode must be injected exactly once"
-                    )
-            elif any(
-                marker in text
-                for marker in (
-                    "Current capability facts:",
-                    "bounded-source-read=",
-                    "workspace-mutation=",
-                    "exact-change-evidence-read=",
-                    "Current external-read mode:",
-                    "external_source_read=",
-                )
+            for marker in (
+                "Current capability facts:",
+                "Current external-read mode:",
+                "external_source_read=",
             ):
-                errors.append(f"{platform}:{name}: worker Profile must not receive control capability facts")
+                if marker in text:
+                    errors.append(
+                        f"{platform}:{name}: static runtime capability projection is forbidden"
+                    )
 
     if ENFORCEMENT_SOURCE.is_file():
         expected_digest = hashlib.sha256(ENFORCEMENT_SOURCE.read_bytes()).hexdigest()

@@ -9,12 +9,10 @@ from pathlib import Path, PurePosixPath
 
 from validation_utils import (
     CONTROL_SKILL_CONTRACT_MODEL,
-    EVIDENCE_LEDGER_MODEL,
     REFERENCE_CONTRACT_MODEL,
     ValidationProblem,
     count_nonblank_lines,
     count_o200k_base_tokens,
-    execution_level_runtime_reference_errors,
     extract_section_body,
     fail_many,
     heading_entries,
@@ -44,14 +42,11 @@ try:
     _HOST_ENFORCEMENT = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
 except (OSError, json.JSONDecodeError):
     _HOST_ENFORCEMENT = {}
-FORBIDDEN_HOST_MODE_BRANCH_LITERALS = tuple(
-    dict.fromkeys(
-        value
-        for values in (_HOST_ENFORCEMENT.get("mode_values") or {}).values()
-        if isinstance(values, list)
-        for value in values
-        if isinstance(value, str)
-    )
+FORBIDDEN_HOST_MODE_BRANCH_LITERALS = (
+    "native-enforced",
+    "sandbox-enforced",
+    "prompt-enforced",
+    "unsupported",
 )
 LEGACY_HOST_MODE_FIELDS = ("diff_inspection", "validation_execution")
 FORBIDDEN_OBSOLETE_MECHANISMS = (
@@ -111,27 +106,6 @@ def _validate_concepts(body: str, errors: list[str]) -> None:
                 f"missing {label} concept terms: "
                 + ", ".join(repr(term) for term in missing)
             )
-    forbidden_rules = {
-        rule["id"]: rule for rule in EVIDENCE_LEDGER_MODEL["forbidden_storage"]
-    }
-    for section, rule_ids in CONTROL_SKILL_CONTRACT_MODEL[
-        "forbidden_storage_projection_ids_by_section"
-    ].items():
-        surface = extract_section_body(body, section)
-        folded = _fold(surface or "")
-        for rule_id in rule_ids:
-            missing = [
-                term
-                for term in forbidden_rules[rule_id]["projection_terms"]
-                if term.casefold() not in folded
-            ]
-            if missing:
-                errors.append(
-                    f"control-skill:{section} is missing forbidden storage rule "
-                    f"{rule_id!r}: "
-                    + ", ".join(repr(term) for term in missing)
-                )
-
 
 def _validate_references(body: str, errors: list[str]) -> None:
     section = extract_section_body(body, "Targeted References")
@@ -163,14 +137,6 @@ def _validate_references(body: str, errors: list[str]) -> None:
     for name in REFERENCES:
         if not (reference_root / name).is_file():
             errors.append(f"missing control reference {name}")
-    runtime_reference = reference_root / "execution-level-contract.md"
-    if runtime_reference.is_file():
-        errors.extend(
-            execution_level_runtime_reference_errors(
-                runtime_reference.read_text(encoding="utf-8")
-            )
-        )
-
 
 def _validate_thin_decision_rules(body: str, errors: list[str]) -> None:
     section = extract_section_body(body, "Decision Rules")
@@ -250,8 +216,21 @@ def _validate_no_host_mode_branches(body: str, errors: list[str]) -> None:
             )
 
 
+def _validate_host_enforcement_status_owner(errors: list[str]) -> None:
+    if (
+        _HOST_ENFORCEMENT.get("schema_version") != 5
+        or tuple(_HOST_ENFORCEMENT.get("status_values") or ())
+        != FORBIDDEN_HOST_MODE_BRANCH_LITERALS
+    ):
+        errors.append(
+            "host-enforcement schema v5 status_values must match the non-empty "
+            "control Skill host-branch exclusion enum"
+        )
+
+
 def main() -> int:
     errors: list[str] = []
+    _validate_host_enforcement_status_owner(errors)
     if not SKILL.is_file():
         errors.append("missing engineering-control-plane/SKILL.md")
         return fail_many("validate-control-skills", errors)

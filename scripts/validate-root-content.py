@@ -260,16 +260,17 @@ def _evaluate(
             continue
         finding = candidate.get("finding")
         path = candidate.get("path")
-        fingerprint = candidate.get("fingerprint")
         if finding not in auditor.ROOT_SEMANTIC_FINDINGS:
             errors.append(f"{label}.finding is not declared")
             continue
         try:
-            expected_id = auditor._root_semantic_candidate_id(
-                finding, path, candidate.get("document_part"), fingerprint
+            source_selector = auditor._validate_root_semantic_source_selector(
+                candidate.get("source_selector")
             )
+            expected_id = auditor._root_semantic_candidate_id(source_selector)
         except (TypeError, ValueError):
             expected_id = None
+            errors.append(f"{label}.source_selector is invalid")
         candidate_id = candidate.get("candidate_id")
         if candidate_id != expected_id:
             errors.append(f"{label}.candidate_id does not match stable identity inputs")
@@ -295,12 +296,17 @@ def _evaluate(
             if candidate.get("context_fingerprint") != expected_context:
                 errors.append(f"{label}.context_fingerprint does not match occurrences")
         disposition = candidate.get("disposition")
+        needs_confirmation = candidate.get("governance_status") == "needs-confirmation"
         expected_resolved = disposition in auditor.SEMANTIC_RESOLVED_DISPOSITIONS
-        expected_unresolved = not expected_resolved
+        expected_unresolved = needs_confirmation or not expected_resolved
         expected_status = (
             f"resolved-{disposition}"
             if expected_resolved
-            else ("unresolved-rewrite" if disposition == "rewrite" else "untriaged")
+            else (
+                "unresolved-rewrite"
+                if disposition == "rewrite"
+                else ("needs-confirmation" if needs_confirmation else "untriaged")
+            )
         )
         if (
             candidate.get("resolved") is not expected_resolved
@@ -396,6 +402,11 @@ def _evaluate(
     counts = {
         "documents": len(documents),
         "semantic_raw": len(candidates),
+        "semantic_needs_confirmation": sum(
+            item.get("governance_status") == "needs-confirmation"
+            for item in candidates
+            if isinstance(item, dict)
+        ),
         "semantic_unresolved": unresolved,
         "semantic_p0_p1_unresolved": p0_p1,
         "semantic_fixed_number_unresolved": fixed,
@@ -503,6 +514,9 @@ def _evaluate(
         "domain_over_target_tokens": counts["domain_over_target_tokens"],
         "domain_over_hard_tokens": counts["domain_over_hard_tokens"],
         "semantic_raw_candidates": counts["semantic_raw"],
+        "semantic_needs_confirmation_candidates": counts[
+            "semantic_needs_confirmation"
+        ],
         "semantic_unresolved_candidates": counts["semantic_unresolved"],
         "semantic_p0_p1_unresolved": counts["semantic_p0_p1_unresolved"],
         "semantic_fixed_number_unresolved": counts["semantic_fixed_number_unresolved"],
@@ -554,32 +568,16 @@ def _evaluate(
                 "compact": counts["foundation_compact_capabilities"],
                 "complex": counts["foundation_complex_capabilities"],
             },
+            "rule_contract": auditor.FOUNDATION_RULE_CONTRACT,
         }
+        if set(budget) != set(expected_budget):
+            errors.append(
+                "root_content.foundation_budget_contract does not match canonical policy"
+            )
         for field, expected in expected_budget.items():
             if budget.get(field) != expected:
                 errors.append(
                     f"Foundation budget contract field {field} does not match canonical policy"
-                )
-        derivation = budget.get("derivation_snapshot")
-        if derivation != auditor.FOUNDATION_DERIVATION_SNAPSHOT:
-            errors.append(
-                "Foundation token threshold derivation snapshot does not match the canonical inventory snapshot"
-            )
-        try:
-            recomputed_derivation = (
-                auditor.foundation_derivation_snapshot_from_documents(
-                    foundation_documents
-                )
-            )
-        except auditor.ValidationProblem as exc:
-            errors.append(
-                "Foundation derivation recomputation failed closed: "
-                f"{exc}"
-            )
-        else:
-            if derivation != recomputed_derivation:
-                errors.append(
-                    "Foundation token threshold derivation snapshot does not match current Foundation body document metrics"
                 )
 
     if strict:
@@ -608,6 +606,7 @@ def _format_counts(counts: dict[str, int], *, strict: bool) -> list[str]:
         (
             "validate-root-content: inventory "
             f"documents={counts['documents']} semantic_raw={counts['semantic_raw']} "
+            f"needs_confirmation={counts['semantic_needs_confirmation']} "
             f"unresolved={counts['semantic_unresolved']} "
             f"p0_p1_unresolved={counts['semantic_p0_p1_unresolved']} "
             f"fixed_number_unresolved={counts['semantic_fixed_number_unresolved']}"

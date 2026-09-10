@@ -1,5 +1,7 @@
 # Implementation Structure Evidence Patterns
 
+- Trace generated placement as `editable source -> generator/template/config -> artifact -> committed/derived policy -> regen/freshness check`.
+
 Use this reference to close reuse, owner-private placement, deliberate-separation, or generated-source claims after the decision owner and candidate locations are known.
 
 ## Evidence Record
@@ -21,3 +23,7 @@ Use this reference to close reuse, owner-private placement, deliberate-separatio
 - Local search and tests cover only inspected owners, callers, generated surfaces, and fixtures.
 - Build graph and freshness checks cover declared inputs and targets; reflection, plugins, dynamic loads, undeclared tools, and external consumers remain outside the claim.
 - Record uninspected consumers, ambient generator inputs, intentional-copy drift, missing delete conditions, and unsupported platforms as residual risks.
+
+## Anti-Patterns
+
+- Reject convention-, size-, utility-, or test-only exports as ownership or placement proof.

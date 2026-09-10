@@ -1,49 +1,52 @@
 #!/usr/bin/env python3
-"""Build, install, and inspect a hookless rd-skills profile."""
+"""Build, install, and inspect the hookless rd-skills runtime."""
 
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
+ROOT = Path(__file__).resolve().parents[1]
+INSTALLER_DIR = ROOT / "installers"
+if str(INSTALLER_DIR) not in sys.path:
+    sys.path.insert(0, str(INSTALLER_DIR))
 
+from changeforge_install import InstallError, product_next_step_lines  # noqa: E402
 
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
-PROFILE_CHOICES = ("auto", "recommended", "full", "dev")
+EXPECTED_RUNTIME_SKILL_COUNT = 26
+MATERIAL_SUCCESS_RE = re.compile(
+    r"\b(?:warn(?:ing)?|legacy|backup|recover(?:y|able)?|restore|rollback|"
+    r"migration|migrated|cleanup|cleaned\s+up|removed?)\b",
+    re.IGNORECASE,
+)
+MATERIAL_CONTINUATION_RE = re.compile(r"^(?:\s+\S|\s*[-*]\s+\S)")
 
 
 @dataclass(frozen=True)
 class QuickstartPlan:
-    selected_profile: str
     expected_skill_count: int
     commands: tuple[tuple[str, ...], ...]
     doctor_expected: bool
     agent_profiles: tuple[str, ...]
 
 
-def resolve_profile(agent: str, scope: str | None, requested: str) -> str:
-    if requested != "auto":
-        return requested
-    return "recommended"
-
-
 def build_plan(args: argparse.Namespace) -> QuickstartPlan:
-    selected = resolve_profile(args.agent, args.scope, args.profile)
     scope = args.scope or ("project" if args.agent == "openai-api" else None)
     if scope is None:
         raise ValueError("--scope is required for runtime installs")
     if scope == "project" and args.agent != "openai-api" and args.target is None:
         raise ValueError("--target is required for project installs")
-    build = ("python3", "scripts/build.py", "--profile", selected)
+    build = ("python3", "scripts/build.py")
     install = [
         "python3", "installers/install.py", "--agent", args.agent,
-        "--scope", scope, "--profile", selected,
+        "--scope", scope,
     ]
     if args.target is not None:
         install.extend(("--target", str(args.target)))
@@ -54,14 +57,13 @@ def build_plan(args: argparse.Namespace) -> QuickstartPlan:
     if doctor_expected:
         doctor = [
             "python3", "installers/doctor.py", "--agent", args.agent,
-            "--scope", scope, "--profile", selected,
+            "--scope", scope,
         ]
         if args.target is not None:
             doctor.extend(("--target", str(args.target)))
         commands.append(tuple(doctor))
     return QuickstartPlan(
-        selected_profile=selected,
-        expected_skill_count=EXPECTED_PROFILE_TOP_LEVEL_COUNTS[selected],
+        expected_skill_count=EXPECTED_RUNTIME_SKILL_COUNT,
         commands=tuple(commands),
         doctor_expected=doctor_expected,
         agent_profiles=(
@@ -76,16 +78,74 @@ def run_plan(
     plan: QuickstartPlan,
     *,
     dry_run: bool,
-    runner: Callable[[list[str]], object] = subprocess.check_call,
+    verbose: bool = False,
+    runner: Callable[[list[str]], object] | None = None,
 ) -> int:
     if dry_run:
         return 0
     for command in plan.commands:
+        argv = list(command)
         try:
-            runner(list(command))
+            if runner is not None:
+                runner(argv)
+            elif verbose:
+                subprocess.check_call(argv)
+            else:
+                completed = subprocess.run(
+                    argv,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                if completed.returncode:
+                    if completed.stdout:
+                        print(completed.stdout, end="")
+                    if completed.stderr:
+                        print(completed.stderr, end="", file=sys.stderr)
+                    return int(completed.returncode)
+                material = _material_success_output(completed.stdout)
+                if material:
+                    print(material, end="")
+                if completed.stderr:
+                    print(completed.stderr, end="", file=sys.stderr)
         except subprocess.CalledProcessError as exc:
             return int(exc.returncode)
     return 0
+
+
+def _material_success_output(output: str) -> str:
+    """Keep successful mutation, warning, and recovery effects plus continuations."""
+
+    kept: list[str] = []
+    material_precedes = False
+    for line in output.splitlines(keepends=True):
+        if MATERIAL_SUCCESS_RE.search(line):
+            kept.append(line)
+            material_precedes = True
+            continue
+        if material_precedes and MATERIAL_CONTINUATION_RE.match(line):
+            kept.append(line)
+            continue
+        material_precedes = False
+    return "".join(kept)
+
+
+def _print_plan(plan: QuickstartPlan) -> None:
+    print("quickstart: command plan")
+    for command in plan.commands:
+        print("- " + " ".join(command))
+    print("quickstart: diagnostics")
+    print(f"- expected standard Skills: {plan.expected_skill_count}")
+    if plan.agent_profiles:
+        print("- Agent Profiles: " + ", ".join(plan.agent_profiles))
+    else:
+        print("- Agent Profiles: not emitted for this host; standard Skills only")
+
+
+def _print_next_step(lines: tuple[str, ...]) -> None:
+    print("Next:")
+    for line in lines:
+        print(line)
 
 
 def main() -> int:
@@ -93,27 +153,36 @@ def main() -> int:
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path)
-    parser.add_argument("--profile", choices=PROFILE_CHOICES, default="auto")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-doctor", action="store_true")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show the command plan and detailed command output.",
+    )
     args = parser.parse_args()
     try:
         plan = build_plan(args)
-    except ValueError as exc:
+        next_step = product_next_step_lines(args.agent)
+    except (ValueError, InstallError) as exc:
         print(f"quickstart: ERROR: {exc}", file=sys.stderr)
         return 2
-    print("quickstart: command plan")
-    for command in plan.commands:
-        print("- " + " ".join(command))
-    print("quickstart: summary")
-    print(f"- selected profile: {plan.selected_profile}")
-    print(f"- expected standard Skills: {plan.expected_skill_count}")
-    if plan.agent_profiles:
-        print("- Agent Profiles: " + ", ".join(plan.agent_profiles))
-    else:
-        print("- Agent Profiles: not emitted for this host; standard Skills only")
-    print("- next prompt: Use engineering-control-plane for bounded engineering work.")
-    return run_plan(plan, dry_run=args.dry_run)
+    if args.dry_run or args.verbose:
+        _print_plan(plan)
+    result = run_plan(plan, dry_run=args.dry_run, verbose=args.verbose)
+    if result:
+        print(
+            f"quickstart: ERROR: setup stopped after a command failed (exit {result}).",
+            file=sys.stderr,
+        )
+        return result
+    if args.dry_run:
+        print("✓ dry run complete; no files changed")
+        return 0
+    print("✓ rd-skills setup complete")
+    print()
+    _print_next_step(next_step)
+    return 0
 
 
 if __name__ == "__main__":

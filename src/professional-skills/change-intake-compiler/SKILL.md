@@ -1,6 +1,6 @@
 ---
 name: change-intake-compiler
-description: "Use `analysis-agent` when engineering intent lacks desired behavior, boundaries, constraints, or completion signals. Skip requests with an accepted Engineering Brief and no-repo direct-answer work."
+description: "Use `analysis-agent` for ambiguous or missing intent: slice desired behavior, boundaries, constraints, and completion signals. Skip an accepted Brief or repository-independent answers fully determined by user facts."
 ---
 
 # change-intake-compiler
@@ -18,7 +18,7 @@ reversible assumptions and user-owned decisions.
 ## Do Not Use
 
 - accepted Engineering Brief already exists
-- no-repo direct-answer mode
+- questions fully determined by user-supplied facts that require no repository evidence or engineering intent compilation
 
 ## Required Inputs
 
@@ -37,6 +37,13 @@ reversible assumptions and user-owned decisions.
 - Do not turn an ambiguous request into an invented requirement.
 - A source-discoverable fact is not a reason to interrupt the user.
 - Make every reversible assumption explicit in the output.
+
+## Gap Classification
+
+- Treat a discoverable fact as research work: inspect the authorized source and record the evidence instead of asking the requester to supply repository facts.
+- Treat a reversible assumption as provisional only when it is explicit, bounded, and cannot alter public behavior, data, authorization, or domain meaning.
+- Treat a user-owned decision as blocking when engineering evidence cannot determine product semantics, scope, priority, or another stakeholder-owned tradeoff.
+- Treat an unsafe or non-reversible unknown as an unresolved requirement; do not hide it inside an implementation assumption.
 
 ## Execution Checklist
 

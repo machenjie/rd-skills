@@ -10,7 +10,7 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use offline to find 
 **Use when**
 
 - offline analysis of observable dispatch read edit validation review repair re-review and closure actions
-- measure preparation loops duplicate reads stale validation missing review coverage or repair without re-review
+- measure preparation loops, duplicate reads, stale validation, unresolved required review, or repair without fresh affected validation
 
 **Do not use when**
 
@@ -24,7 +24,7 @@ Measure observable engineering actions offline without executable interception, 
 
 - Analyze only observable dispatch, read, edit, command, validation, review, repair, re-review, progress, and closure actions.
 - Measure first productive action, first edit, control turns, duplicate reads, subagent count, loaded Skills, context size, and repair loops.
-- Detect repeated preparation, stale validation, unreviewed changed files, and repair without re-review.
+- Detect repeated preparation, stale validation, changed paths without type-appropriate evidence, and repair without fresh affected validation. Missing re-review is a gap only when a new material question needs independent judgment or a required review remains unresolved.
 - Separate deterministic fixtures from live-agent evidence and label uncollected metrics.
 
 ## Anti-Patterns
