@@ -246,6 +246,22 @@ class OwnerDiscoveryTests(unittest.TestCase):
                 first_search['results'].insert(0, hit)
                 self.assertEqual([], EVAL.evaluate_case(case)[1])
 
+    def test_distinct_search_queries_in_one_scope_are_not_duplicate_reads(self):
+        case = self.case('owner-first-search-hit-is-decoy')
+        self.assertEqual(0, EVAL.evaluate_case(case)[0]['duplicate_read_count'])
+
+    def test_repeated_query_still_counts_despite_a_different_search_purpose(self):
+        case = self.case('owner-first-search-hit-is-decoy')
+        repeated = copy.deepcopy(next(s for s in case['steps'] if s['action'] == 'search'))
+        repeated['purpose'] = 'competing-owner'
+        case['steps'].insert(2, repeated)
+        self.assertEqual(1, EVAL.evaluate_case(case)[0]['duplicate_read_count'])
+
+    def test_repeated_current_source_read_still_counts(self):
+        case = self.case('owner-simple-local')
+        case['steps'].insert(3, copy.deepcopy(case['steps'][2]))
+        self.assertEqual(1, EVAL.evaluate_case(case)[0]['duplicate_read_count'])
+
     def test_current_read_authority_and_impact_are_independently_required(self):
         original = self.case('owner-registry-binding-selects-implementation')
         for mutation, expected in (
