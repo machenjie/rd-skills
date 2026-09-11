@@ -1073,6 +1073,232 @@
         }
       ],
       "user_request": "Analyze duplicate financial effect proof for payment retry."
+    },
+    {
+      "id": "owner-simple-local",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/values.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-first-search-hit-is-decoy",
+      "repository": {
+        "pkg/a_hint.py": "\"\"\"normalize: legacy example; no command imports this module.\"\"\"\ndef normalize(items):\n    return None\n",
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 4, "max_searches": 2, "competing_signal": {"path": "pkg/a_hint.py", "quote": "legacy example"}, "competing_hits": ["pkg/a_hint.py", "pkg/values.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "discovery", "results": ["pkg/a_hint.py", "pkg/values.py", "pkg/run.py"]},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/a_hint.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/a_hint.py", "current": true, "content": "\"\"\"normalize: legacy example; no command imports this module.\"\"\"\ndef normalize(items):\n    return None\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "def normalize", "purpose": "competing-owner", "results": ["pkg/a_hint.py", "pkg/values.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/values.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-caller-delegates",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/run.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/values.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-user-test-path-is-evidence",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Fix empty result normalization seen in tests/test_values.py.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "tests/test_values.py"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/values.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-generated-follows-authoring-source",
+      "repository": {
+        "pkg/generated.py": "# Generated by build/emit.py from pkg/template.py; do not edit.\ndef normalize(items):\n    return list(items)\n",
+        "pkg/template.py": "SOURCE = \"def normalize(items):\\n    return list(items)\\n\"\n",
+        "build/emit.py": "from pathlib import Path\nfrom pkg.template import SOURCE\nPath(\"pkg/generated.py\").write_text(SOURCE)\n",
+        "pkg/run.py": "from pkg.generated import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/template.py"], "authority": [{"path": "pkg/template.py", "quote": "return list(items)"}, {"path": "build/emit.py", "quote": "from pkg.template import SOURCE"}, {"path": "build/emit.py", "quote": "Path(\"pkg/generated.py\").write_text(SOURCE)"}], "impact": ["pkg/generated.py", "build/emit.py", "pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/generated.py", "quote": "Generated by build/emit.py from pkg/template.py"}, "competing_hits": ["build/emit.py"], "probe": {"code": "import runpy\nrunpy.run_path(\"build/emit.py\")\nfrom pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/generated.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/generated.py", "current": true, "content": "# Generated by build/emit.py from pkg/template.py; do not edit.\ndef normalize(items):\n    return list(items)\n"},
+        {"action": "search", "agent_id": "worker", "path": "build/*", "query": "write_text", "purpose": "competing-owner", "results": ["build/emit.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/template.py", "current": true, "content": "SOURCE = \"def normalize(items):\\n    return list(items)\\n\"\n"},
+        {"action": "read", "agent_id": "worker", "path": "build/emit.py", "current": true, "content": "from pathlib import Path\nfrom pkg.template import SOURCE\nPath(\"pkg/generated.py\").write_text(SOURCE)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.generated import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/template.py"], "outcome": "edit", "evidence": [{"path": "pkg/template.py", "quote": "return list(items)"}, {"path": "build/emit.py", "quote": "from pkg.template import SOURCE"}, {"path": "build/emit.py", "quote": "Path(\"pkg/generated.py\").write_text(SOURCE)"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/template.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-registry-binding-selects-implementation",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\nREGISTRY = {\"normalize\": current.normalize}\ndef resolve():\n    return REGISTRY[\"normalize\"]\n",
+        "pkg/run.py": "from pkg.bindings import resolve\ndef run(items):\n    return resolve()(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": current.normalize}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\nREGISTRY = {\"normalize\": current.normalize}\ndef resolve():\n    return REGISTRY[\"normalize\"]\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import resolve\ndef run(items):\n    return resolve()(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/current.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": current.normalize}"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-di-binding-selects-implementation",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\nclass Command:\n    def __init__(self, normalizer):\n        self.normalizer = normalizer\n    def run(self, items):\n        return self.normalizer(items)\ndef create():\n    return Command(current.normalize)\n",
+        "pkg/run.py": "from pkg.bindings import create\ndef run(items):\n    return create().run(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return Command(current.normalize)"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\nclass Command:\n    def __init__(self, normalizer):\n        self.normalizer = normalizer\n    def run(self, items):\n        return self.normalizer(items)\ndef create():\n    return Command(current.normalize)\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import create\ndef run(items):\n    return create().run(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/current.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return Command(current.normalize)"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-factory-binding-selects-implementation",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\ndef create():\n    return current.normalize\n",
+        "pkg/run.py": "from pkg.bindings import create\ndef run(items):\n    return create()(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return current.normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\ndef create():\n    return current.normalize\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import create\ndef run(items):\n    return create()(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/current.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return current.normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
+    },
+    {
+      "id": "owner-competing-active-invariants-need-analysis",
+      "repository": {
+        "pkg/first.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/second.py": "def normalize(items):\n    return None if not items else list(items)\n",
+        "pkg/bindings.py": "from pkg import first, second\nREGISTRY = {\"normalize\": [first.normalize, second.normalize]}\ndef resolve(position):\n    return REGISTRY[\"normalize\"][position]\n",
+        "pkg/run.py": "from pkg.bindings import resolve\ndef run(items, position):\n    return resolve(position)(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_nonempty():\n    assert run((1,), 0) == run((1,), 1) == [1]\n"
+      },
+      "owner_oracle": {"owners": ["pkg/first.py", "pkg/second.py"], "authority": [{"path": "pkg/first.py", "quote": "return list(items)"}, {"path": "pkg/second.py", "quote": "return None if not items else list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}, "competing_hits": ["pkg/first.py", "pkg/second.py", "pkg/bindings.py"], "outcome": "analysis", "probe": {"code": "from pkg.run import run\nprint(repr((run((),0),run((),1))))", "stdout": "([], None)"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/first.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/first.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import first, second\nREGISTRY = {\"normalize\": [first.normalize, second.normalize]}\ndef resolve(position):\n    return REGISTRY[\"normalize\"][position]\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/first.py", "pkg/second.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/second.py", "current": true, "content": "def normalize(items):\n    return None if not items else list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import resolve\ndef run(items, position):\n    return resolve(position)(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_nonempty():\n    assert run((1,), 0) == run((1,), 1) == [1]\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/first.py", "pkg/second.py"], "outcome": "analysis", "evidence": [{"path": "pkg/first.py", "quote": "return list(items)"}, {"path": "pkg/second.py", "quote": "return None if not items else list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}]},
+        {"action": "question", "agent_id": "worker", "question": "Which active normalize registration owns the invariant?", "changes_implementation": true, "evidence": [{"path": "pkg/first.py", "quote": "return list(items)"}, {"path": "pkg/second.py", "quote": "return None if not items else list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}]},
+        {"action": "dispatch", "agent_id": "analyst", "profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "source-backed-answer", "goal": "Resolve the competing active normalization policies.", "reason": "Both implementations are registered and their empty-result invariants contradict."},
+        {"action": "read", "agent_id": "analyst", "path": "pkg/bindings.py", "current": true, "content": "from pkg import first, second\nREGISTRY = {\"normalize\": [first.normalize, second.normalize]}\ndef resolve(position):\n    return REGISTRY[\"normalize\"][position]\n"}
+      ]
+    },
+    {
+      "id": "owner-multiple-necessary-enforcement-points",
+      "repository": {
+        "pkg/http.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/queue.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import http, queue\nENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}\n",
+        "pkg/run.py": "from pkg.bindings import ENTRYPOINTS\ndef run(items):\n    return tuple(handler(items) for handler in ENTRYPOINTS.values())\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == ([], [])\n"
+      },
+      "owner_oracle": {"owners": ["pkg/http.py", "pkg/queue.py"], "authority": [{"path": "pkg/http.py", "quote": "return list(items)"}, {"path": "pkg/queue.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}, "competing_hits": ["pkg/http.py", "pkg/queue.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "([], [])"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/http.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/http.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import http, queue\nENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/http.py", "pkg/queue.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/queue.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import ENTRYPOINTS\ndef run(items):\n    return tuple(handler(items) for handler in ENTRYPOINTS.values())\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == ([], [])\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/http.py", "pkg/queue.py"], "outcome": "edit", "evidence": [{"path": "pkg/http.py", "quote": "return list(items)"}, {"path": "pkg/queue.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/http.py"},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/queue.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ]
     }
   ],
   "negative_cases": [
@@ -2269,6 +2495,241 @@
       "expected_errors": [
         "unobserved-tool-failure"
       ]
+    },
+    {
+      "id": "owner-simple-local-wrong-decision",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/run.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-first-search-hit-is-decoy-wrong-decision",
+      "repository": {
+        "pkg/a_hint.py": "\"\"\"normalize: legacy example; no command imports this module.\"\"\"\ndef normalize(items):\n    return None\n",
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 4, "max_searches": 2, "competing_signal": {"path": "pkg/a_hint.py", "quote": "legacy example"}, "competing_hits": ["pkg/a_hint.py", "pkg/values.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "discovery", "results": ["pkg/a_hint.py", "pkg/values.py", "pkg/run.py"]},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/a_hint.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/a_hint.py", "current": true, "content": "\"\"\"normalize: legacy example; no command imports this module.\"\"\"\ndef normalize(items):\n    return None\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "def normalize", "purpose": "competing-owner", "results": ["pkg/a_hint.py", "pkg/values.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/a_hint.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-caller-delegates-wrong-decision",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/run.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/run.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-user-test-path-is-evidence-wrong-decision",
+      "repository": {
+        "pkg/values.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/run.py": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/values.py"], "authority": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 3, "max_searches": 0, "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Fix empty result normalization seen in tests/test_values.py.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "tests/test_values.py"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/values.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.values import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["tests/test_values.py"], "outcome": "edit", "evidence": [{"path": "pkg/values.py", "quote": "return list(items)"}, {"path": "pkg/run.py", "quote": "from pkg.values import normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/values.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-generated-follows-authoring-source-wrong-decision",
+      "repository": {
+        "pkg/generated.py": "# Generated by build/emit.py from pkg/template.py; do not edit.\ndef normalize(items):\n    return list(items)\n",
+        "pkg/template.py": "SOURCE = \"def normalize(items):\\n    return list(items)\\n\"\n",
+        "build/emit.py": "from pathlib import Path\nfrom pkg.template import SOURCE\nPath(\"pkg/generated.py\").write_text(SOURCE)\n",
+        "pkg/run.py": "from pkg.generated import normalize\ndef run(items):\n    return normalize(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/template.py"], "authority": [{"path": "pkg/template.py", "quote": "return list(items)"}, {"path": "build/emit.py", "quote": "from pkg.template import SOURCE"}, {"path": "build/emit.py", "quote": "Path(\"pkg/generated.py\").write_text(SOURCE)"}], "impact": ["pkg/generated.py", "build/emit.py", "pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/generated.py", "quote": "Generated by build/emit.py from pkg/template.py"}, "competing_hits": ["build/emit.py"], "probe": {"code": "import runpy\nrunpy.run_path(\"build/emit.py\")\nfrom pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/generated.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/generated.py", "current": true, "content": "# Generated by build/emit.py from pkg/template.py; do not edit.\ndef normalize(items):\n    return list(items)\n"},
+        {"action": "search", "agent_id": "worker", "path": "build/*", "query": "write_text", "purpose": "competing-owner", "results": ["build/emit.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/template.py", "current": true, "content": "SOURCE = \"def normalize(items):\\n    return list(items)\\n\"\n"},
+        {"action": "read", "agent_id": "worker", "path": "build/emit.py", "current": true, "content": "from pathlib import Path\nfrom pkg.template import SOURCE\nPath(\"pkg/generated.py\").write_text(SOURCE)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.generated import normalize\ndef run(items):\n    return normalize(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/generated.py"], "outcome": "edit", "evidence": [{"path": "pkg/template.py", "quote": "return list(items)"}, {"path": "build/emit.py", "quote": "from pkg.template import SOURCE"}, {"path": "build/emit.py", "quote": "Path(\"pkg/generated.py\").write_text(SOURCE)"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/template.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-registry-binding-selects-implementation-wrong-decision",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\nREGISTRY = {\"normalize\": current.normalize}\ndef resolve():\n    return REGISTRY[\"normalize\"]\n",
+        "pkg/run.py": "from pkg.bindings import resolve\ndef run(items):\n    return resolve()(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": current.normalize}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\nREGISTRY = {\"normalize\": current.normalize}\ndef resolve():\n    return REGISTRY[\"normalize\"]\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import resolve\ndef run(items):\n    return resolve()(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/old.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": current.normalize}"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-di-binding-selects-implementation-wrong-decision",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\nclass Command:\n    def __init__(self, normalizer):\n        self.normalizer = normalizer\n    def run(self, items):\n        return self.normalizer(items)\ndef create():\n    return Command(current.normalize)\n",
+        "pkg/run.py": "from pkg.bindings import create\ndef run(items):\n    return create().run(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return Command(current.normalize)"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\nclass Command:\n    def __init__(self, normalizer):\n        self.normalizer = normalizer\n    def run(self, items):\n        return self.normalizer(items)\ndef create():\n    return Command(current.normalize)\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import create\ndef run(items):\n    return create().run(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/old.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return Command(current.normalize)"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-factory-binding-selects-implementation-wrong-decision",
+      "repository": {
+        "pkg/old.py": "def normalize(items):\n    return None\n",
+        "pkg/current.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import old, current\ndef create():\n    return current.normalize\n",
+        "pkg/run.py": "from pkg.bindings import create\ndef run(items):\n    return create()(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"
+      },
+      "owner_oracle": {"owners": ["pkg/current.py"], "authority": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return current.normalize"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "from pkg import old, current"}, "competing_hits": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "[]"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/old.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/old.py", "current": true, "content": "def normalize(items):\n    return None\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import old, current\ndef create():\n    return current.normalize\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/old.py", "pkg/current.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/current.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import create\ndef run(items):\n    return create()(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == []\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/old.py"], "outcome": "edit", "evidence": [{"path": "pkg/current.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "return current.normalize"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/current.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "owner-competing-active-invariants-need-analysis-wrong-decision",
+      "repository": {
+        "pkg/first.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/second.py": "def normalize(items):\n    return None if not items else list(items)\n",
+        "pkg/bindings.py": "from pkg import first, second\nREGISTRY = {\"normalize\": [first.normalize, second.normalize]}\ndef resolve(position):\n    return REGISTRY[\"normalize\"][position]\n",
+        "pkg/run.py": "from pkg.bindings import resolve\ndef run(items, position):\n    return resolve(position)(items)\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_nonempty():\n    assert run((1,), 0) == run((1,), 1) == [1]\n"
+      },
+      "owner_oracle": {"owners": ["pkg/first.py", "pkg/second.py"], "authority": [{"path": "pkg/first.py", "quote": "return list(items)"}, {"path": "pkg/second.py", "quote": "return None if not items else list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}, "competing_hits": ["pkg/first.py", "pkg/second.py", "pkg/bindings.py"], "outcome": "analysis", "probe": {"code": "from pkg.run import run\nprint(repr((run((),0),run((),1))))", "stdout": "([], None)"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/first.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/first.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import first, second\nREGISTRY = {\"normalize\": [first.normalize, second.normalize]}\ndef resolve(position):\n    return REGISTRY[\"normalize\"][position]\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/first.py", "pkg/second.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/second.py", "current": true, "content": "def normalize(items):\n    return None if not items else list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import resolve\ndef run(items, position):\n    return resolve(position)(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_nonempty():\n    assert run((1,), 0) == run((1,), 1) == [1]\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/first.py"], "outcome": "edit", "evidence": [{"path": "pkg/first.py", "quote": "return list(items)"}, {"path": "pkg/second.py", "quote": "return None if not items else list(items)"}, {"path": "pkg/bindings.py", "quote": "REGISTRY = {\"normalize\": [first.normalize, second.normalize]}"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/first.py"},
+        {"action": "validate", "result": "pass", "output": "nonempty assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision", "unresolved-owner-not-escalated"]
+    },
+    {
+      "id": "owner-multiple-necessary-enforcement-points-wrong-decision",
+      "repository": {
+        "pkg/http.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/queue.py": "def normalize(items):\n    return list(items)\n",
+        "pkg/bindings.py": "from pkg import http, queue\nENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}\n",
+        "pkg/run.py": "from pkg.bindings import ENTRYPOINTS\ndef run(items):\n    return tuple(handler(items) for handler in ENTRYPOINTS.values())\n",
+        "tests/test_values.py": "from pkg.run import run\ndef test_empty():\n    assert run(()) == ([], [])\n"
+      },
+      "owner_oracle": {"owners": ["pkg/http.py", "pkg/queue.py"], "authority": [{"path": "pkg/http.py", "quote": "return list(items)"}, {"path": "pkg/queue.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}], "impact": ["pkg/run.py", "tests/test_values.py"], "max_reads": 5, "max_searches": 1, "competing_signal": {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}, "competing_hits": ["pkg/http.py", "pkg/queue.py", "pkg/bindings.py"], "probe": {"code": "from pkg.run import run\nprint(repr(run(())))", "stdout": "([], [])"}},
+      "steps": [
+        {"action": "dispatch", "agent_id": "worker", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": [], "layer3_references": [], "professional_references": [], "mode": "implementation", "goal": "Make the command normalize empty results to a list.", "write_scope": ["pkg/*", "tests/*", "build/*"], "validation": "Run the focused behavior check after the final edit."},
+        {"action": "candidate-owner", "agent_id": "worker", "path": "pkg/http.py"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/http.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/bindings.py", "current": true, "content": "from pkg import http, queue\nENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}\n"},
+        {"action": "search", "agent_id": "worker", "path": "pkg/*", "query": "normalize", "purpose": "competing-owner", "results": ["pkg/http.py", "pkg/queue.py", "pkg/bindings.py"]},
+        {"action": "read", "agent_id": "worker", "path": "pkg/queue.py", "current": true, "content": "def normalize(items):\n    return list(items)\n"},
+        {"action": "read", "agent_id": "worker", "path": "pkg/run.py", "current": true, "content": "from pkg.bindings import ENTRYPOINTS\ndef run(items):\n    return tuple(handler(items) for handler in ENTRYPOINTS.values())\n"},
+        {"action": "read", "agent_id": "worker", "path": "tests/test_values.py", "current": true, "content": "from pkg.run import run\ndef test_empty():\n    assert run(()) == ([], [])\n"},
+        {"action": "owner-decision", "agent_id": "worker", "owners": ["pkg/http.py"], "outcome": "edit", "evidence": [{"path": "pkg/http.py", "quote": "return list(items)"}, {"path": "pkg/queue.py", "quote": "return list(items)"}, {"path": "pkg/bindings.py", "quote": "ENTRYPOINTS = {\"http\": http.normalize, \"queue\": queue.normalize}"}]},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/http.py"},
+        {"action": "edit", "agent_id": "worker", "path": "pkg/queue.py"},
+        {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
+      ],
+      "expected_errors": ["wrong-owner-decision"]
     }
   ]
 }

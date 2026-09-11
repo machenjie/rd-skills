@@ -10,9 +10,25 @@
 | review-agent | Independent non-modifying assessment when selected | Read, search, and execute-read-only |
 
 The four Profile boundaries are defined in
-`src/agent-profiles/role-agents.json`. A task-agent can inspect unknown local
-owners and tests before editing. This does not require another agent or a
-capability self-proof. Actual Host failures and permission boundaries remain
+`src/agent-profiles/role-agents.json`. Task owns ordinary discovery:
+candidate owner → current-source read → bounded competing-owner scan when
+signaled → minimum affected consumers → confirmed owner(s) → edit. A user path,
+first search hit, test, doc, caller or generated output provides a locator or
+evidence; it cannot establish ownership alone. Confirm authority from current
+behavior and invariants, writes, registration/DI/factory bindings, public/shared
+contracts, generator inputs and dependency direction. Inspect alternative
+definitions, siblings, bindings, writers or source/generated boundaries only
+when evidence points there. Multiple necessary enforcement points can be owners.
+
+Task closes relevant callers/consumers, affected tests and changed
+contract/config/generated surfaces within the task's impact. This reuses the
+discovery and impact principles of `repository-context-map` and
+`repository-impact-inspection` without requiring either full Skill on ordinary
+tasks, a checklist, or a recorded owner-decision artifact. Bounded read/search
+handles normal file/owner/test/caller location; only unresolved competing owners,
+contradicted invariants or other uncertainty that can change implementation
+justify deeper Analysis. An ordinary resolved task stays **Task → validation →
+done**, without fixed Analysis or Review. Actual Host failures and permission boundaries remain
 visible; a declaration of capability does not grant authority.
 
 Analysis uses external-source-read only after local evidence leaves a material
