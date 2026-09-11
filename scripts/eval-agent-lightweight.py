@@ -7,6 +7,7 @@ negative controls deliberately violate a single engineering requirement.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import re
 from pathlib import Path
@@ -29,9 +30,105 @@ def _in_scope(path: str, scope: list[str]) -> bool:
     return _target_in_task_scope(path, scope, ROOT)
 
 
+def _owner_discovery_errors(case: dict[str, Any]) -> list[str]:
+    """Judge fixture decisions against a separate source-anchored oracle.
+
+    The repository contains tiny authored source examples, not owner labels.
+    The oracle is evaluator-only: no paths from it are inserted into dispatch,
+    search results, or reads. This is trace grading, not a runtime resolver or
+    evidence that a live model would produce the accepted trace.
+    """
+    if "repository" not in case:
+        return []
+    repository = case["repository"]
+    oracle = case["owner_oracle"]
+    steps = case["steps"]
+    errors = []
+    if case.get("needed_sources") or any(s.get("needed_sources") for s in steps):
+        errors.append("owner-oracle-leaked-as-needed-sources")
+    decisions = [(i, s) for i, s in enumerate(steps) if s.get("action") == "owner-decision"]
+    if len(decisions) != 1:
+        return errors + ["missing-owner-decision"]
+    index, decision = decisions[0]
+    actor = decision.get("agent_id")
+    before = [s for s in steps[:index] if s.get("agent_id") == actor]
+    if not any(s.get("action") == "dispatch" and s.get("profile") == "task-agent" for s in before):
+        errors.append("owner-discovery-not-task")
+    reads = [s for s in before if s.get("action") == "read"]
+    observed = {s.get("path") for s in reads if s.get("current") is True
+                and s.get("content") == repository.get(s.get("path"))
+                and s.get("path") in repository}
+    if len(observed) != len({s.get("path") for s in reads}):
+        errors.append("owner-source-not-current")
+
+    def anchored(anchor: dict[str, str], *, read: bool = True) -> bool:
+        path, quote = anchor.get("path"), anchor.get("quote")
+        return bool(quote and path in repository and quote in repository[path]
+                    and (not read or path in observed))
+
+    evidence = decision.get("evidence", [])
+    if not evidence or not all(anchored(anchor) for anchor in evidence):
+        errors.append("owner-evidence-not-read")
+    required = oracle["authority"]
+    if not required or not all(anchored(anchor, read=False) for anchor in required):
+        errors.append("owner-oracle-source-mismatch")
+    if any(anchor not in evidence for anchor in required):
+        errors.append("owner-authority-not-established")
+    if (set(decision.get("owners", [])) != set(oracle["owners"])
+            or decision.get("outcome") != oracle.get("outcome", "edit")):
+        errors.append("wrong-owner-decision")
+    if not set(oracle["impact"]) <= observed:
+        errors.append("owner-impact-not-closed")
+    candidates = [s for s in before if s.get("action") == "candidate-owner"]
+    if not candidates or any(s.get("path") not in observed for s in candidates):
+        errors.append("candidate-not-read")
+    searches = [s for s in before if s.get("action") == "search"]
+    for search in searches:
+        scope, query = search.get("path", ""), search.get("query", "")
+        scanned = [path for path in repository if fnmatch.fnmatchcase(path, scope)]
+        hits = {path for path in scanned if query and query in repository[path]}
+        if not query or set(search.get("results", [])) != hits:
+            errors.append("owner-search-not-source-backed")
+        if scope in {"*", "**", "**/*", "."} or len(scanned) > oracle.get("max_search_files", 6):
+            errors.append("owner-search-unbounded")
+    competing = [s for s in searches if s.get("purpose") == "competing-owner"]
+    signal = oracle.get("competing_signal")
+    if signal:
+        # A targeted scan follows the source that exposes the alternative.
+        valid_scans = [s for s in competing if any(
+            r.get("action") == "read" and r.get("current") is True
+            and r.get("path") == signal["path"]
+            and r.get("content") == repository.get(signal["path"])
+            for r in before[:before.index(s)])]
+        if not anchored(signal) or not set(oracle["competing_hits"]) <= {
+            path for s in valid_scans for path in s.get("results", [])
+        }:
+            errors.append("competing-owner-scan-missing")
+    elif competing:
+        errors.append("unsignaled-competing-owner-scan")
+    if len(reads) > oracle["max_reads"] or len(searches) > oracle["max_searches"]:
+        errors.append("owner-discovery-budget-exceeded")
+    analyses = [i for i, s in enumerate(steps) if s.get("profile") == "analysis-agent"]
+    reviews = [s for s in steps if s.get("profile") == "review-agent"]
+    if oracle.get("outcome", "edit") == "analysis":
+        if not analyses or min(analyses) <= index or any(s.get("action") == "edit" for s in steps):
+            errors.append("unresolved-owner-not-escalated")
+    elif analyses:
+        errors.append("resolved-owner-escalated")
+    if oracle.get("outcome", "edit") == "edit" and not set(oracle["owners"]) <= {
+        s.get("path") for s in steps[index + 1:] if s.get("action") == "edit"
+    }:
+        errors.append("owner-enforcement-not-edited")
+    if reviews:
+        errors.append("routine-owner-review")
+    if any(i <= index for i, s in enumerate(steps) if s.get("action") == "edit"):
+        errors.append("edit-before-owner-confirmed")
+    return errors
+
+
 def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     steps = case.get("steps", [])
-    errors: list[str] = []
+    errors: list[str] = _owner_discovery_errors(case)
     dispatches = [(i, s) for i, s in enumerate(steps) if s.get("action") == "dispatch"]
     reads = [s for s in steps if s.get("action") in {"read", "search"}]
     edits = [(i, s) for i, s in enumerate(steps) if s.get("action") == "edit"]
@@ -162,7 +259,10 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
             errors.append("unobserved-tool-failure")
         if s.get("action") == "external-read" and (actor_assignment.get("profile") != "analysis-agent" or s.get("sensitive_data_sent")):
             errors.append("external-read-boundary")
-    keys = [(s.get("agent_id"), s.get("path"), s.get("revision")) for s in reads]
+    # Different queries over one bounded scope are distinct observations;
+    # relabeling a repeated query's purpose does not make it fresh evidence.
+    keys = [(s.get("agent_id"), s.get("action"), s.get("path"), s.get("revision"),
+             s.get("query") if s.get("action") == "search" else None) for s in reads]
     metrics = {
         "subagent_count": len(dispatches),
         "control_turn_count": len(dispatches) + 1,
@@ -172,6 +272,8 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         "analysis_dispatch_count": sum(s.get("profile") == "analysis-agent" for _, s in dispatches),
         "review_dispatch_count": sum(s.get("profile") == "review-agent" for _, s in dispatches),
         "loaded_skill_count": sum(1 + len(s.get("layer3_skills", [])) for _, s in dispatches),
+        "source_read_count": sum(s.get("action") == "read" for s in reads),
+        "source_search_count": sum(s.get("action") == "search" for s in reads),
         "parallel_write_conflict": "parallel-write-conflict" in errors,
         "preparation_loop_detected": "repeated-judgment-without-new-evidence" in errors,
     }
