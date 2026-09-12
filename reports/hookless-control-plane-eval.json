@@ -3,8 +3,8 @@
   "fixture_schema_version": 2,
   "status": "pass",
   "evidence_scope": "deterministic-fixtures",
-  "fixture_count": 14,
-  "negative_fixture_count": 16,
+  "fixture_count": 24,
+  "negative_fixture_count": 26,
   "cases": [
     {
       "id": "local-owner-discovery",
@@ -17,6 +17,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -34,6 +36,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -51,6 +55,8 @@
         "analysis_dispatch_count": 1,
         "review_dispatch_count": 0,
         "loaded_skill_count": 2,
+        "source_read_count": 4,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -68,6 +74,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -85,6 +93,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 1,
         "loaded_skill_count": 2,
+        "source_read_count": 4,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -102,6 +112,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -119,6 +131,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -136,6 +150,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -153,6 +169,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 2,
+        "source_read_count": 6,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -170,6 +188,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 2,
+        "source_read_count": 6,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -187,6 +207,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -204,6 +226,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 4,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -221,6 +245,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 4,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -238,6 +264,198 @@
         "analysis_dispatch_count": 1,
         "review_dispatch_count": 0,
         "loaded_skill_count": 3,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-simple-local",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-first-search-hit-is-decoy",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 4,
+        "source_search_count": 2,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-caller-delegates",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-user-test-path-is-evidence",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-generated-follows-authoring-source",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-registry-binding-selects-implementation",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-di-binding-selects-implementation",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-factory-binding-selects-implementation",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-competing-active-invariants-need-analysis",
+      "metrics": {
+        "subagent_count": 2,
+        "control_turn_count": 3,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 1,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 2,
+        "source_read_count": 6,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-multiple-necessary-enforcement-points",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -257,6 +475,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -276,6 +496,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 2,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -295,6 +517,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -314,6 +538,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -333,6 +559,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -352,6 +580,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -371,6 +601,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -390,6 +622,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -409,6 +643,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -428,6 +664,8 @@
         "analysis_dispatch_count": 1,
         "review_dispatch_count": 0,
         "loaded_skill_count": 2,
+        "source_read_count": 4,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -447,6 +685,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -466,6 +706,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -485,6 +727,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 2,
+        "source_read_count": 6,
+        "source_search_count": 1,
         "parallel_write_conflict": true,
         "preparation_loop_detected": false
       },
@@ -504,6 +748,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 1,
         "loaded_skill_count": 2,
+        "source_read_count": 4,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -523,6 +769,8 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
@@ -542,11 +790,224 @@
         "analysis_dispatch_count": 0,
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
       },
       "errors": [
         "unobserved-tool-failure"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-simple-local-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-first-search-hit-is-decoy-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 4,
+        "source_search_count": 2,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-caller-delegates-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-user-test-path-is-evidence-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-generated-follows-authoring-source-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-registry-binding-selects-implementation-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-di-binding-selects-implementation-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-factory-binding-selects-implementation-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-competing-active-invariants-need-analysis-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision",
+        "unresolved-owner-not-escalated"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "owner-multiple-necessary-enforcement-points-wrong-decision",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 10,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "wrong-owner-decision"
       ],
       "matches_expected": true
     }

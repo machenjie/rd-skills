@@ -1,5 +1,5 @@
 {
-  "authoring_principles_status": "pass",
+  "authoring_principles_status": "fail",
   "authorities": [
     {
       "consumer_results": [
@@ -207,31 +207,31 @@
           "outcomes": [
             {
               "id": "professionalism-authoring-valid",
-              "status": "pass"
+              "status": "not_run"
             },
             {
               "id": "professional-review-cost-fixtures-valid",
-              "status": "pass"
+              "status": "not_run"
             },
             {
               "id": "readability-review-current",
-              "status": "pass"
+              "status": "not_run"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "pass"
+              "status": "not_run"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "pass"
+              "status": "not_run"
             },
             {
               "id": "professionalism-formal-release-ready",
-              "status": "fail"
+              "status": "not_run"
             }
           ],
           "producer": "validate-professionalism-regression",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         }
       ],
       "id": "final-goal-authority",
@@ -264,11 +264,11 @@
           "outcomes": [
             {
               "id": "reference-content-valid",
-              "status": "pass"
+              "status": "not_run"
             }
           ],
           "producer": "validate-reference-content",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         },
         {
           "outcomes": [
@@ -517,7 +517,7 @@
       "source": "src/control-model/core-contracts.json"
     }
   ],
-  "command_execution_count": 31,
+  "command_execution_count": 28,
   "contract_errors": [],
   "contract_sha256": "11246970fea1173d9269cba664e94ed611b65b0700a0c6aab5b37e96bbc52b72",
   "contract_source": "src/control-model/core-contracts.json",
@@ -525,11 +525,11 @@
   "input_tree": {
     "post": {
       "file_count": 7193,
-      "sha256": "28ac5aabdd17d191d235ff36834b9ef190fc151b119b0cdcce129ebaa442ee18"
+      "sha256": "a4b7d1e91eb72ccf454f75c23826fd1738c2ac8be232706231aac1caa4075899"
     },
     "pre": {
       "file_count": 7193,
-      "sha256": "28ac5aabdd17d191d235ff36834b9ef190fc151b119b0cdcce129ebaa442ee18"
+      "sha256": "a4b7d1e91eb72ccf454f75c23826fd1738c2ac8be232706231aac1caa4075899"
     },
     "unchanged": true
   },
@@ -862,7 +862,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -884,11 +884,11 @@
           "pointer": "/ai_readability/summary/hard_gate_ready",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -908,11 +908,11 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "length": 4,
+            "length": 7,
             "type": "string"
           },
           "expected": "pass",
@@ -920,7 +920,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -936,7 +936,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -956,7 +956,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1029,7 +1029,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1051,7 +1051,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1124,7 +1124,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1146,7 +1146,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1219,7 +1219,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1241,7 +1241,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1314,7 +1314,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1335,7 +1335,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1408,7 +1408,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1430,7 +1430,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1503,7 +1503,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1526,7 +1526,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1599,7 +1599,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1622,7 +1622,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1695,7 +1695,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1718,7 +1718,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1791,7 +1791,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -1806,18 +1806,18 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-reference-content",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -1831,18 +1831,18 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-root-content",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -2759,14 +2759,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2860,7 +2860,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -2873,14 +2873,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2895,7 +2895,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -2908,14 +2908,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3029,7 +3029,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -3042,14 +3042,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3307,7 +3307,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -3320,14 +3320,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3450,7 +3450,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -3463,14 +3463,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3635,13 +3635,13 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "not_run"
     }
   ],
   "principles": [
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "fail",
+      "formal_release_status": "blocked",
       "id": "ai-first",
       "name": "AI First",
       "required_dimensions": [
@@ -3676,7 +3676,7 @@
           "content-audit-formal-release-current"
         ]
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "pass",
@@ -3803,8 +3803,8 @@
       "status": "pass"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "fail",
+      "formal_release_status": "blocked",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -3833,11 +3833,11 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "fail",
+      "formal_release_status": "blocked",
       "id": "reference-loading",
       "name": "Reference Loading",
       "required_dimensions": [
@@ -3857,7 +3857,7 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "pass",
@@ -3961,7 +3961,7 @@
       "status": "pass"
     },
     {
-      "authoring_status": "pass",
+      "authoring_status": "not_run",
       "formal_release_status": "blocked",
       "id": "final-goal",
       "name": "Final Goal",
@@ -3986,10 +3986,10 @@
           "professionalism-formal-release-ready"
         ]
       },
-      "status": "partial"
+      "status": "fail"
     }
   ],
-  "principles_status": "partial",
+  "principles_status": "fail",
   "producers": [
     {
       "argv": [
@@ -4191,8 +4191,10 @@
         "authoring"
       ],
       "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "audit-skill-content",
       "release_reports": [],
       "reports": [
@@ -4203,7 +4205,7 @@
         }
       ],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4216,13 +4218,15 @@
       "depends_on": [
         "audit-skill-content"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "validate-reference-content",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4235,13 +4239,15 @@
       "depends_on": [
         "audit-skill-content"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "validate-root-content",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4598,19 +4604,15 @@
         "eval-professional-samples",
         "eval-pressure-behavior"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "validate-professionalism-regression",
       "release_reports": [],
-      "reports": [
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/professionalism-regression-report.json"
-        }
-      ],
+      "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 3600
     }

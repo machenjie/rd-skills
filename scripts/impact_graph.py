@@ -778,6 +778,23 @@ def _run_git(
     )
 
 
+def require_clean_selected_head(root: Path, head_sha: str) -> None:
+    """Bind affected execution to its selected commit and clean worktree."""
+
+    current = _run_git(root, ["rev-parse", "--verify", "HEAD^{commit}"])
+    dirty = _run_git(root, ["status", "--porcelain=v1", "--untracked-files=all"])
+    if (
+        current.returncode != 0
+        or current.stdout.strip() != head_sha.encode("ascii")
+        or dirty.returncode != 0
+        or dirty.stdout
+    ):
+        raise ImpactGraphError(
+            "head-worktree-mismatch",
+            "affected execution requires a clean checkout at the selected head",
+        )
+
+
 def _parse_name_status_z(payload: bytes) -> list[tuple[str, str]]:
     fields = payload.split(b"\0")
     if fields and fields[-1] == b"":

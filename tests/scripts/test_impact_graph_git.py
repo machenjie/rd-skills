@@ -19,6 +19,57 @@ class ImpactGraphGitTests(unittest.TestCase):
     _write_registry_catalog = staticmethod(_FIXTURES._write_registry_catalog)
     _resolve = _FIXTURES._resolve
 
+    def test_clean_selected_head_supports_linked_worktree_and_ignored_files(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw) / "primary"
+            linked = Path(raw) / "linked"
+            root.mkdir()
+
+            def git(*arguments):
+                return subprocess.run(
+                    ["git", *arguments], cwd=root, check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                ).stdout.strip()
+
+            (root / ".gitignore").write_text("ignored\n", encoding="utf-8")
+            git("init", "-q")
+            git("add", ".")
+            git(
+                "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                "commit", "-qm", "fixture",
+            )
+            head = git("rev-parse", "HEAD")
+            git("worktree", "add", "--detach", "-q", str(linked), head)
+            self.assertTrue((linked / ".git").is_file())
+            for repository in (root, linked):
+                with self.subTest(repository=repository.name):
+                    (repository / "ignored").write_text("ignored\n", encoding="utf-8")
+                    impact_graph.require_clean_selected_head(repository, head)
+                    (repository / "untracked").write_text("untracked\n", encoding="utf-8")
+                    with self.assertRaises(impact_graph.ImpactGraphError) as raised:
+                        impact_graph.require_clean_selected_head(repository, head)
+                    self.assertEqual("head-worktree-mismatch", raised.exception.reason)
+
+    def test_clean_selected_head_rejects_git_failure_without_raw_output(self) -> None:
+        head = "a" * 40
+        for command in ("rev-parse", "status"):
+            with self.subTest(command=command):
+                results = [
+                    subprocess.CompletedProcess(
+                        [], 1 if command == "rev-parse" else 0,
+                        stdout=(head + "\n").encode(), stderr=b"SECRET_GIT_OUTPUT",
+                    ),
+                    subprocess.CompletedProcess(
+                        [], 1 if command == "status" else 0,
+                        stdout=b"", stderr=b"SECRET_GIT_OUTPUT",
+                    ),
+                ]
+                with mock.patch.object(impact_graph, "_run_git", side_effect=results):
+                    with self.assertRaises(impact_graph.ImpactGraphError) as raised:
+                        impact_graph.require_clean_selected_head(ROOT, head)
+                self.assertEqual("head-worktree-mismatch", raised.exception.reason)
+                self.assertNotIn("SECRET_GIT_OUTPUT", str(raised.exception))
+
     def test_current_repository_paths_have_one_closed_classification(self) -> None:
         listed = subprocess.run(
             ["git", "ls-files", "-co", "--exclude-standard", "-z"],

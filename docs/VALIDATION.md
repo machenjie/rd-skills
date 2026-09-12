@@ -3,15 +3,25 @@
 Every completion or release claim needs evidence from the final material edit.
 Generated reports are derived evidence only when their producer ran against the
 same current tree.
+Assess feedback against the current invocation's gate, selected base/head (when
+applicable), and exit result. Tracked Markdown reports can be historical
+projections; their age alone does not establish whether current tests ran.
+
+Core flushes its existing `producer_nonpass` diagnostics to stderr as each
+failure or dependency block becomes known. These contain only producer identity,
+status, exit/timeout fields, dependencies, and closed failure reason codes;
+child stdout/stderr remain excluded. A source mutation found by the final
+ordinary tree check emits updated diagnostics at that point. Progress does not
+replace the final gate result or deterministic report.
 
 ## Gate Paths
 
 ### Development Affected
 
 Ordinary committed development validates only the changed-path projection from
-one selected base and head. The affected Core runner requires a clean checkout
-at the selected head because it executes tracked files from that commit in a
-disposable tree:
+one selected base and head. Both affected runners require a clean checkout at
+the selected head. Core executes tracked files from that commit in a disposable
+tree:
 
 ```text
 python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>
@@ -21,6 +31,13 @@ python3 scripts/run-ci-tests.py run --base <base> --head <head>
 Use focused owner checks while a change is still uncommitted. They become
 completion evidence only when followed by the affected commit check or the
 local Full Regression required by the integration boundary.
+The unittest `run` action checks `HEAD` and tracked, staged, and untracked
+changes before and after execution, including empty selections. A mismatch
+before execution starts no workers; a mismatch afterward preserves their final
+JSON results but returns `2`, so those results cannot establish completion for
+the selected commit. This detects persistent checkout drift, not temporary
+changes reverted between checks. `explain`, `list`, and `full` retain their
+existing behavior.
 
 ### Formal Release
 
@@ -167,9 +184,12 @@ module uses `source-validation` for its complete 188-package bindings,
 capsule materials, CLI chain, and ballot aggregation checks. Its protocol and
 CLI fixtures still use bounded synthetic content. With `--timeout 900`, this
 module has an effective 1800-second deadline; the base timeout is unchanged.
-Worker
-logs, durations, and status are emitted in module-path order
-regardless of completion order. A test failure returns `1`; selection, startup,
+Worker logs, durations, and status remain in the final stdout JSON in
+module-path order regardless of completion order. During execution, stderr
+flushes a compact `worker_completed` line when a worker is collected or fails to
+start, containing only module, status, exit code, and timeout flag. It contains
+no child logs and does not wait for other workers to finish. A test failure
+returns `1`; selection, startup,
 timeout, interruption, abnormal-exit, or cleanup errors return `2`. After the
 first non-pass result, no new module is started, already-running workers are
 collected boundedly, and remaining modules are reported as `not-run`. The

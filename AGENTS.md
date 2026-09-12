@@ -18,8 +18,9 @@ This repository exists only to author, validate, build, package, install, upgrad
 ## Change Discipline
 
 Ordinary development uses the affected graph against one selected base and
-head commit. The head checkout must be clean because the Core affected runner
-executes only tracked files from that commit:
+head commit. Both affected runners require a clean checkout at the selected
+head. Core executes only tracked files from that commit; the unittest runner
+checks the checkout before and after its workers, including empty selections:
 
 ```text
 python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>

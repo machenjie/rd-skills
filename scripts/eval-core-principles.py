@@ -23,7 +23,11 @@ import time
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from impact_graph import ImpactGraphError, select as select_impact
+from impact_graph import (
+    ImpactGraphError,
+    require_clean_selected_head,
+    select as select_impact,
+)
 
 from validation_utils import (
     AFFECTED_CONTEXT_ENV,
@@ -1016,6 +1020,25 @@ def _topological_producers(producers: list[dict[str, Any]]) -> list[dict[str, An
     return order
 
 
+def _print_producer_nonpass(producer: dict[str, object]) -> None:
+    if producer["status"] == "pass":
+        return
+    diagnostic = {
+        "id": producer["id"],
+        "status": producer["status"],
+        "exit_code": producer["exit_code"],
+        "timed_out": producer["timed_out"],
+        "failure_reason_codes": producer["failure_reason_codes"],
+        "depends_on": producer["depends_on"],
+    }
+    print(
+        "eval-core-principles: producer_nonpass="
+        + json.dumps(diagnostic, separators=(",", ":")),
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _run_producers(
     root: Path,
     producers: list[dict[str, Any]],
@@ -1039,6 +1062,7 @@ def _run_producers(
             )
             results.append(result)
             by_id[producer_id] = result
+            _print_producer_nonpass(result)
             continue
 
         canonical_argv = tuple(producer["argv"])
@@ -1048,6 +1072,7 @@ def _run_producers(
             )
             results.append(result)
             by_id[producer_id] = result
+            _print_producer_nonpass(result)
             continue
         executed_argv.add(canonical_argv)
         timeout_seconds = _producer_timeout_seconds(producer)
@@ -1209,6 +1234,7 @@ def _run_producers(
         results.append(result)
         by_id[producer_id] = result
         current_tree = next_tree
+        _print_producer_nonpass(result)
     return results, by_id, current_tree
 
 
@@ -1227,6 +1253,7 @@ def _record_deferred_source_mutation(
             failure_reason_codes.append("source-tree-mutated")
         if producer["status"] == "pass":
             producer["status"] = "fail"
+        _print_producer_nonpass(producer)
 
 
 def evaluate_operator(actual: object, operator: str, expected: object) -> bool:
@@ -1740,38 +1767,12 @@ def run_affected_isolated(
     affected_context: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     """Run affected producers from the selected tracked commit in a disposable tree."""
+    require_clean_selected_head(root, head_sha)
     git_environment = {
         **os.environ,
         "GIT_OPTIONAL_LOCKS": "0",
         "LC_ALL": "C",
     }
-    current = subprocess.run(
-        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
-        cwd=root,
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=git_environment,
-        text=True,
-    )
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
-        cwd=root,
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=git_environment,
-    )
-    if (
-        current.returncode != 0
-        or current.stdout.strip() != head_sha
-        or dirty.returncode != 0
-        or dirty.stdout
-    ):
-        raise ImpactGraphError(
-            "head-worktree-mismatch",
-            "affected execution requires a clean checkout at the selected head",
-        )
     with tempfile.TemporaryDirectory(prefix="changeforge-affected-") as temporary:
         isolated_root = Path(temporary) / "repository"
         with tempfile.TemporaryFile(mode="w+b") as archive:
@@ -2909,23 +2910,6 @@ def main(argv: list[str] | None = None) -> int:
         f"selected_gate={args.gate}:{selected_gate_status}; "
         f"commands={report['command_execution_count']}"
     )
-    if selected_gate_status != "pass":
-        for producer in report["producers"]:
-            if producer["status"] == "pass":
-                continue
-            diagnostic = {
-                "id": producer["id"],
-                "status": producer["status"],
-                "exit_code": producer["exit_code"],
-                "timed_out": producer["timed_out"],
-                "failure_reason_codes": producer["failure_reason_codes"],
-                "depends_on": producer["depends_on"],
-            }
-            print(
-                "eval-core-principles: producer_nonpass="
-                + json.dumps(diagnostic, separators=(",", ":")),
-                file=sys.stderr,
-            )
     if report["contract_errors"]:
         for error in report["contract_errors"][:10]:
             print(f"eval-core-principles: ERROR: {error}", file=sys.stderr)

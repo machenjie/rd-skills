@@ -61,6 +61,9 @@ Every committed Skill-system change must run [Development
 Affected](docs/VALIDATION.md#development-affected) for its selected base and
 head. Documentation-only changes remain in scope because the Core impact graph
 maps them to their owning documentation producer and tests.
+Both affected commands require a clean checkout at the selected head. The
+unittest runner also checks after execution; checkout drift returns an execution
+error while preserving the collected worker results.
 
 Focused checks remain useful while changes are uncommitted. The [local Full
 Regression](docs/VALIDATION.md#local-full-regression) runs once before an

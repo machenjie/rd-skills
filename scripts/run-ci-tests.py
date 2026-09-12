@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import IO, Iterator, Sequence
 
-from impact_graph import ImpactGraphError, load_core, select
+from impact_graph import ImpactGraphError, load_core, require_clean_selected_head, select
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -844,6 +844,21 @@ def _not_run_result(module: str, detail: str) -> WorkerResult:
     )
 
 
+def _print_worker_completed(result: WorkerResult) -> None:
+    diagnostic = {
+        "module": result.module,
+        "status": result.status,
+        "exit_code": result.exit_code,
+        "timed_out": result.timed_out,
+    }
+    print(
+        "run-ci-tests: worker_completed="
+        + json.dumps(diagnostic, separators=(",", ":")),
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _interrupted_module_results(
     modules: Sequence[str],
     completed: Sequence[WorkerResult],
@@ -1032,6 +1047,7 @@ def _execute_modules(
                             starting_module = None
                             startup_slot.clear()
                             stop_dispatch = True
+                            _print_worker_completed(results[module])
                     if not active:
                         break
                     completed = _poll_workers(active)
@@ -1039,6 +1055,7 @@ def _execute_modules(
                         results[result.module] = result
                         if result.status != "pass":
                             stop_dispatch = True
+                        _print_worker_completed(result)
                     if active and not completed:
                         time.sleep(POLL_SECONDS)
         except (KeyboardInterrupt, RunnerInterrupted):
@@ -1795,6 +1812,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("\n".join(result["selected_test_modules"]))
             return 0
         modules = result["selected_test_modules"]
+        require_clean_selected_head(ROOT, result["head_sha"])
         print(
             json.dumps(
                 {
@@ -1805,6 +1823,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             ),
             flush=True,
         )
+        results: list[WorkerResult] = []
         if modules:
             results = _execute_modules(
                 ROOT,
@@ -1813,8 +1832,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 timeout_seconds=args.timeout,
             )
             _print_results(results)
-            return _exit_code(results)
-        return 0
+        require_clean_selected_head(ROOT, result["head_sha"])
+        return _exit_code(results)
     except (ImpactGraphError, OSError, SelectionError, ValueError) as exc:
         reason = exc.reason if isinstance(exc, ImpactGraphError) else "execution-error"
         print(

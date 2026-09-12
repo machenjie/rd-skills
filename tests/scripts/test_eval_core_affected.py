@@ -155,7 +155,7 @@ class CoreAffectedTests(unittest.TestCase):
     def test_affected_archive_and_extraction_failures_are_classified(self) -> None:
         head = "a" * 40
         current = subprocess.CompletedProcess(
-            ["git", "rev-parse"], 0, stdout=head + "\n", stderr=""
+            ["git", "rev-parse"], 0, stdout=(head + "\n").encode(), stderr=b""
         )
         clean = subprocess.CompletedProcess(
             ["git", "status"], 0, stdout=b"", stderr=b""

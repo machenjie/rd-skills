@@ -116,6 +116,7 @@ class CiTestRunnerTests(unittest.TestCase):
     def test_jobs_one_and_two_preserve_the_same_selection_and_decisions(self) -> None:
         selection = {
             "reason": "affected-targets",
+            "head_sha": "b" * 40,
             "selected_test_modules": [
                 "tests/scripts/test_impact_graph.py",
                 "tests/scripts/test_run_ci_tests.py",
@@ -128,7 +129,9 @@ class CiTestRunnerTests(unittest.TestCase):
             self.runner, "_selection", return_value=selection
         ) as selected, mock.patch.object(
             self.runner, "_execute_modules", return_value=[]
-        ) as execute, mock.patch.object(sys, "stdout", io.StringIO()) as stdout:
+        ) as execute, mock.patch.object(
+            self.runner, "require_clean_selected_head"
+        ), mock.patch.object(sys, "stdout", io.StringIO()) as stdout:
             self.assertEqual(0, self.runner.main(["run", "--jobs", "1"]))
             self.assertEqual(0, self.runner.main(["run", "--jobs", "2"]))
 
@@ -1240,7 +1243,9 @@ class CiTestRunnerTests(unittest.TestCase):
             self.runner, "_acquire_full_interrupt_ownership"
         ) as acquire, mock.patch.object(
             self.runner, "_finalize_full_exit_code", side_effect=lambda code: code
-        ), mock.patch.object(sys, "stdout", io.StringIO()) as stdout:
+        ), mock.patch.object(sys, "stdout", io.StringIO()) as stdout, mock.patch.object(
+            self.runner, "require_clean_selected_head"
+        ) as guard:
             exit_code = self.runner.main(["full", "--list-tests"])
         self.assertEqual(0, exit_code)
         acquire.assert_called_once_with()
@@ -1251,6 +1256,7 @@ class CiTestRunnerTests(unittest.TestCase):
         )
         load_core.assert_not_called()
         execute.assert_not_called()
+        guard.assert_not_called()
         payload = json.loads(stdout.getvalue())
         self.assertEqual("full-regression", payload["reason"])
         self.assertEqual(manifest.test_ids, payload["test_ids"])
@@ -1860,6 +1866,108 @@ class CiTestRunnerTests(unittest.TestCase):
             ["fail", "pass", "not-run"], [result.status for result in results]
         )
 
+    def test_worker_feedback_is_flushed_before_remaining_worker_completes(self) -> None:
+        modules = ["tests/test_a_slow.py", "tests/test_b_fail.py", "tests/test_c.py"]
+        secret = "CHILD_LOG_MUST_STAY_IN_FINAL_RESULT"
+        completed = [
+            self.runner.WorkerResult(
+                module=module,
+                status=status,
+                exit_code=exit_code,
+                timed_out=False,
+                duration_seconds=0.01,
+                stdout=secret,
+                stderr=secret,
+                detail=secret,
+                pid=123,
+                tmpdir="/tmp/worker",
+            )
+            for module, status, exit_code in (
+                (modules[1], "fail", 1),
+                (modules[0], "pass", 0),
+            )
+        ]
+        for action in ("affected", "full"):
+            with self.subTest(action=action):
+                stderr = io.StringIO()
+                observations = []
+                remaining = iter(completed)
+
+                def poll(active):
+                    observations.append((stderr.getvalue(), flush.call_count))
+                    result = next(remaining)
+                    active.pop(result.module)
+                    return [result]
+
+                with mock.patch.object(
+                    self.runner, "_start_worker", return_value=object()
+                ) as start, mock.patch.object(
+                    self.runner, "_poll_workers", side_effect=poll
+                ), mock.patch.object(sys, "stderr", stderr), mock.patch.object(
+                    stderr, "flush", wraps=stderr.flush
+                ) as flush, mock.patch.object(sys, "stdout", io.StringIO()) as stdout:
+                    if action == "full":
+                        results = self.runner._execute_full_modules(
+                            ROOT, modules, exclusive_modules=[],
+                            jobs=2, timeout_seconds=5.0,
+                        )
+                    else:
+                        results = self.runner._execute_modules(
+                            ROOT, modules, jobs=2, timeout_seconds=5.0,
+                        )
+                    self.assertEqual("", stdout.getvalue())
+                    self.runner._print_results(results)
+
+                expected = {
+                    "module": modules[1], "status": "fail", "exit_code": 1,
+                    "timed_out": False,
+                }
+                self.assertEqual(("", 0), observations[0])
+                self.assertEqual(
+                    "run-ci-tests: worker_completed="
+                    + json.dumps(expected, separators=(",", ":")) + "\n",
+                    observations[1][0],
+                )
+                self.assertEqual(1, observations[1][1])
+                self.assertEqual(2, start.call_count)
+                self.assertNotIn(secret, stderr.getvalue())
+                self.assertEqual(
+                    ["pass", "fail", "not-run"], [row.status for row in results]
+                )
+                final = json.loads(stdout.getvalue())["worker_results"]
+                self.assertEqual(modules, [row["module"] for row in final])
+                self.assertEqual(secret, final[1]["stdout"])
+                self.assertEqual(1, self.runner._exit_code(results))
+
+    def test_worker_feedback_write_failure_cleans_remaining_worker(self) -> None:
+        modules = ["tests/test_completed.py", "tests/test_running.py"]
+        handles = {module: object() for module in modules}
+        result = self.runner.WorkerResult(
+            module=modules[0], status="pass", exit_code=0, timed_out=False,
+            duration_seconds=0.01, stdout="", stderr="", detail="", pid=123,
+            tmpdir="/tmp/worker",
+        )
+
+        def poll(active):
+            active.pop(modules[0])
+            return [result]
+
+        with mock.patch.object(
+            self.runner, "_start_worker",
+            side_effect=lambda _root, module, _timeout, **_kwargs: handles[module],
+        ), mock.patch.object(
+            self.runner, "_poll_workers", side_effect=poll
+        ), mock.patch.object(
+            self.runner, "_terminate_worker", return_value=True
+        ) as terminate, mock.patch.object(
+            self.runner, "_finish_worker", return_value=result
+        ) as finish, mock.patch.object(sys, "stderr") as stderr:
+            stderr.write.side_effect = OSError("feedback sink closed")
+            with self.assertRaisesRegex(OSError, "feedback sink closed"):
+                self.runner._execute_modules(ROOT, modules, jobs=2, timeout_seconds=5.0)
+        terminate.assert_called_once_with(handles[modules[1]])
+        self.assertEqual(handles[modules[1]], finish.call_args.args[0])
+
     def test_temporary_cleanup_failure_is_execution_error(self) -> None:
         process = mock.Mock(pid=123)
         process.poll.return_value = 0
@@ -2335,13 +2443,14 @@ class CiTestRunnerTests(unittest.TestCase):
     def test_empty_no_impact_selection_exits_zero_with_explicit_signal(self) -> None:
         selection = {
             "reason": "known-no-impact",
+            "head_sha": "b" * 40,
             "selected_test_modules": [],
         }
         with mock.patch.object(self.runner, "load_core", return_value=self.core), mock.patch.object(
             self.runner, "_selection", return_value=selection
         ), mock.patch.object(self.runner, "_execute_modules") as execute, mock.patch.object(
             sys, "stdout", io.StringIO()
-        ) as stdout:
+        ) as stdout, mock.patch.object(self.runner, "require_clean_selected_head") as guard:
             exit_code = self.runner.main(
                 ["run", "--base", "a" * 40, "--head", "b" * 40]
             )
@@ -2350,15 +2459,101 @@ class CiTestRunnerTests(unittest.TestCase):
         payload = json.loads(stdout.getvalue())
         self.assertEqual("known-no-impact", payload["reason"])
         self.assertEqual([], payload["test_modules"])
+        self.assertEqual([mock.call(ROOT, "b" * 40)] * 2, guard.call_args_list)
+
+    def test_affected_run_binds_execution_to_clean_selected_head(self) -> None:
+        for state in (
+            "clean", "wrong-head", "unstaged", "staged", "untracked",
+            "empty-dirty", "post-dirty", "post-head",
+        ):
+            with self.subTest(state=state), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+
+                def git(*arguments):
+                    return subprocess.run(
+                        ["git", *arguments], cwd=root, check=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                    ).stdout.strip()
+
+                tracked = root / "tracked.py"
+                tracked.write_text("original\n", encoding="utf-8")
+                git("init", "-q")
+                git("config", "user.name", "Fixture")
+                git("config", "user.email", "fixture@example.invalid")
+                git("add", ".")
+                git("commit", "-qm", "fixture")
+                head = git("rev-parse", "HEAD")
+                if state in {"unstaged", "staged"}:
+                    tracked.write_text("changed\n", encoding="utf-8")
+                if state == "staged":
+                    git("add", ".")
+                if state in {"untracked", "empty-dirty"}:
+                    (root / "untracked.py").write_text("untracked\n", encoding="utf-8")
+                module = "tests/test_selected.py"
+                selection = {
+                    "reason": "affected-targets",
+                    "head_sha": "a" * 40 if state == "wrong-head" else head,
+                    "selected_test_modules": [] if state == "empty-dirty" else [module],
+                }
+                result = self.runner.WorkerResult(
+                    module=module, status="pass", exit_code=0, timed_out=False,
+                    duration_seconds=0.01, stdout="completed-test-output", stderr="",
+                    detail="", pid=123, tmpdir="/tmp/worker",
+                )
+
+                def execute(*_args, **_kwargs):
+                    if state == "post-dirty":
+                        tracked.write_text("changed during execution\n", encoding="utf-8")
+                    if state == "post-head":
+                        git("commit", "--allow-empty", "-qm", "changed head")
+                    return [result]
+
+                with mock.patch.object(self.runner, "ROOT", root), mock.patch.object(
+                    self.runner, "load_core", return_value=self.core
+                ), mock.patch.object(self.runner, "_selection", return_value=selection), mock.patch.object(
+                    self.runner, "_execute_modules", side_effect=execute
+                ) as execute_mock, mock.patch.object(sys, "stdout", io.StringIO()) as stdout, mock.patch.object(
+                    sys, "stderr", io.StringIO()
+                ) as stderr:
+                    exit_code = self.runner.main(["run"])
+
+                self.assertEqual(0 if state == "clean" else 2, exit_code)
+                if state in {"clean", "post-dirty", "post-head"}:
+                    execute_mock.assert_called_once()
+                    final = json.loads(stdout.getvalue().splitlines()[-1])
+                    self.assertEqual(
+                        "completed-test-output", final["worker_results"][0]["stdout"]
+                    )
+                else:
+                    execute_mock.assert_not_called()
+                    self.assertEqual("", stdout.getvalue())
+                if state != "clean":
+                    self.assertIn('"reason": "head-worktree-mismatch"', stderr.getvalue())
+
+    def test_explain_and_list_do_not_require_clean_selected_head(self) -> None:
+        selection = {"selected_test_modules": ["tests/test_selected.py"]}
+        for action in ("explain", "list"):
+            with self.subTest(action=action), mock.patch.object(
+                self.runner, "load_core", return_value=self.core
+            ), mock.patch.object(
+                self.runner, "_selection", return_value=selection
+            ), mock.patch.object(
+                self.runner, "require_clean_selected_head"
+            ) as guard, mock.patch.object(sys, "stdout", io.StringIO()):
+                self.assertEqual(0, self.runner.main([action]))
+            guard.assert_not_called()
 
     def test_deleted_test_is_classified_but_never_executed(self) -> None:
         selection = {
             "reason": "affected-targets",
+            "head_sha": "b" * 40,
             "selected_test_modules": [],
         }
         with mock.patch.object(self.runner, "load_core", return_value=self.core), mock.patch.object(
             self.runner, "_selection", return_value=selection
-        ), mock.patch.object(self.runner, "_execute_modules") as execute:
+        ), mock.patch.object(self.runner, "_execute_modules") as execute, mock.patch.object(
+            self.runner, "require_clean_selected_head"
+        ):
             exit_code = self.runner.main(
                 ["run", "--base", "a" * 40, "--head", "b" * 40]
             )
@@ -2369,11 +2564,14 @@ class CiTestRunnerTests(unittest.TestCase):
         new_path = "tests/scripts/test_new.py"
         selection = {
             "reason": "affected-targets",
+            "head_sha": "b" * 40,
             "selected_test_modules": [new_path],
         }
         with mock.patch.object(self.runner, "load_core", return_value=self.core), mock.patch.object(
             self.runner, "_selection", return_value=selection
-        ), mock.patch.object(self.runner, "_execute_modules") as execute:
+        ), mock.patch.object(self.runner, "_execute_modules") as execute, mock.patch.object(
+            self.runner, "require_clean_selected_head"
+        ):
             self.assertEqual(
                 0,
                 self.runner.main(

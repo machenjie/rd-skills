@@ -47,6 +47,9 @@ import impact_graph  # noqa: E402
 
 
 _CORE_FIXTURES, PROCESS_PASS = core_fixture_symbols()
+REPOSITORY_FIXTURE_IGNORE = shutil.ignore_patterns(
+    ".git", "dist", ".rd-skills", "__pycache__", ".pytest_cache"
+)
 
 
 def _context(*, scope: str = "packages", ids: list[str] | None = None) -> str:
@@ -225,6 +228,46 @@ def _write_partial_reports(
 
 
 class AffectedProfessionalismTests(unittest.TestCase):
+    def test_repository_fixture_excludes_runtime_history_and_keeps_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            source = Path(raw) / "source"
+            destination = Path(raw) / "repository"
+            included = (
+                "src/control-model/core-contracts.json",
+                "scripts/eval-core-principles.py",
+                "reports/skill-content-audit.json",
+                "evals/expert-panel/professional-completeness.json",
+            )
+            excluded = (
+                ".rd-skills/expert-panel/history/sentinel",
+                ".git/sentinel",
+                "dist/sentinel",
+                "scripts/__pycache__/sentinel",
+                ".pytest_cache/sentinel",
+            )
+            for relative in (*included, *excluded):
+                path = source / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(relative, encoding="utf-8")
+
+            shutil.copytree(source, destination, ignore=REPOSITORY_FIXTURE_IGNORE)
+
+            self.assertEqual(
+                set(included),
+                {
+                    path.relative_to(destination).as_posix()
+                    for path in destination.rglob("*")
+                    if path.is_file()
+                },
+            )
+            for relative in included:
+                self.assertEqual(
+                    (source / relative).read_bytes(),
+                    (destination / relative).read_bytes(),
+                )
+            for relative in excluded:
+                self.assertEqual(relative, (source / relative).read_text())
+
     def test_real_eight_producer_chain_accepts_isolated_partial_evidence_once(self) -> None:
         direct_package_id = "engineering-change-analysis"
         selected_ids = [
@@ -246,9 +289,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
             shutil.copytree(
                 ROOT,
                 repository,
-                ignore=shutil.ignore_patterns(
-                    ".git", "dist", "__pycache__", ".pytest_cache"
-                ),
+                ignore=REPOSITORY_FIXTURE_IGNORE,
             )
             panel = EVALUATOR._load_evaluator(
                 EVALUATOR.EXPERT_PANEL_REVIEW,

@@ -1495,7 +1495,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             EVALUATOR,
             "input_tree_digest",
             wraps=EVALUATOR.input_tree_digest,
-        ) as digest:
+        ) as digest, mock.patch.object(sys, "stderr", io.StringIO()) as stderr:
             report = EVALUATOR.evaluate(root, contract)
 
         self.assertEqual(2, digest.call_count)
@@ -1507,6 +1507,15 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             self.assertEqual("fail", producer["status"])
             self.assertFalse(producer["source_unchanged"])
             self.assertIn("source-tree-mutated", producer["failure_reason_codes"])
+        diagnostics = [
+            json.loads(line.split("producer_nonpass=", 1)[1])
+            for line in stderr.getvalue().splitlines()
+        ]
+        self.assertEqual(["mutate", "successor"], [row["id"] for row in diagnostics])
+        self.assertTrue(all(
+            row["failure_reason_codes"] == ["source-tree-mutated"]
+            for row in diagnostics
+        ))
 
     def test_formal_source_mutation_prevents_dependent_successor(self) -> None:
         temporary, root = self._root()
@@ -2882,11 +2891,23 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             with self.subTest(gate=gate), mock.patch.object(
                 sys, "stdout", io.StringIO()
             ) as stdout, mock.patch.object(sys, "stderr", io.StringIO()) as stderr:
-                exit_code = EVALUATOR.main(
-                    ["--root", str(root), "--gate", gate]
-                )
+                observations = []
+                popen = EVALUATOR.subprocess.Popen
+
+                def start(command, **kwargs):
+                    if command[1] == passing:
+                        observations.append((stderr.getvalue(), flush.call_count))
+                    return popen(command, **kwargs)
+
+                with mock.patch.object(
+                    EVALUATOR.subprocess, "Popen", side_effect=start
+                ), mock.patch.object(stderr, "flush", wraps=stderr.flush) as flush:
+                    exit_code = EVALUATOR.main(
+                        ["--root", str(root), "--gate", gate]
+                    )
 
             self.assertEqual(1, exit_code)
+            self.assertEqual([(expected_diagnostics, 2)], observations)
             self.assertEqual(
                 "eval-core-principles: authoring_principles=fail; "
                 "formal_principles=blocked; "

@@ -2,7 +2,7 @@
   "schema_version": 2,
   "status": "pass",
   "evidence_scope": "deterministic-fixtures",
-  "fixture_count": 14,
+  "fixture_count": 24,
   "rendered_context_summary": {
     "max_main": {
       "tokens": 1745,
@@ -19,11 +19,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 1715,
+        "tokens": 1721,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2785,
-        "hard_margin_tokens": 3285,
+        "soft_margin_tokens": 2779,
+        "hard_margin_tokens": 3279,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -34,11 +34,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2776,
+        "tokens": 2753,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 224,
-        "hard_margin_tokens": 424,
+        "soft_margin_tokens": 247,
+        "hard_margin_tokens": 447,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -49,11 +49,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "analyzed_task": {
-        "tokens": 975,
+        "tokens": 946,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 5025,
-        "hard_margin_tokens": 5525,
+        "soft_margin_tokens": 5054,
+        "hard_margin_tokens": 5554,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -64,11 +64,11 @@
         "primary_skill": "repository-tooling-change-builder"
       },
       "review": {
-        "tokens": 696,
+        "tokens": 698,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 3004,
-        "hard_margin_tokens": 3304,
+        "soft_margin_tokens": 3002,
+        "hard_margin_tokens": 3302,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,

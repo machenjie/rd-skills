@@ -61,7 +61,7 @@
       },
       "agent-profile-instructions": {
         "advisory_documents": 0,
-        "compound_bullets": 0,
+        "compound_bullets": 1,
         "documents": 4,
         "hard_fail_sentences": 0,
         "review_as_complex_sentences": 0,
@@ -526,15 +526,15 @@
       },
       {
         "check_bullets": true,
-        "compound_bullet_count": 0,
-        "content_fingerprint": "f3c7614411b4bef9054565582df9d8af38aa5adcd633c1e073e1ecca5467fb74",
+        "compound_bullet_count": 1,
+        "content_fingerprint": "992b6d44f6684a0093a42cc7572657204faa145700e920e00251c7064622e59e",
         "document_context": {
-          "line_count": 15,
+          "line_count": 11,
           "line_offset": 0,
           "lines": [
             {
               "line": 1,
-              "text": "- Follow assigned Professional and `## Layer 3 Delivery`; capsule-named Layer 3 only, no index/catalog/preload/rerouting."
+              "text": "- Follow assigned Professional/`## Layer 3 Delivery`; capsule-named Layer 3 only; no index/catalog/preload/rerouting."
             },
             {
               "line": 2,
@@ -542,59 +542,43 @@
             },
             {
               "line": 3,
-              "text": "- Use read/search/edit/execute. Locate owners, files, tests and callers with bounded search/read; repository reads may expand; authorized write scope stays bounded."
+              "text": "- Use read/search/edit/execute; bounded search/read expands reads, never authorized write scope. Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners."
             },
             {
               "line": 4,
-              "text": "- Inspect current owner, tests, minimum consumers, reuse, placement and dependency direction before editing. Resolve important shared-state, concurrency, transaction, contract, migration, financial, authority or integration questions; deepen Analysis only for decisions that change implementation."
+              "text": "- Close affected consumers/tests, changed contract/config/generated surfaces and reuse/placement locally. Analysis requires implementation-changing uncertainty (competing owners/contradicted invariants) unresolved by bounded read/search; no ordinary Analysis/Review."
             },
             {
               "line": 5,
-              "text": "- Add no abstraction, protocol, contract, validator, factory, adapter, extension point, safety layer or dependency without current requirements or repository evidence. Future reuse, robustness, consistency or safety alone are insufficient; real variation, multiple implementations and boundaries can justify structure."
+              "text": "- Add structure/dependencies only for current requirements or repository evidence, not future reuse/robustness/consistency/safety alone. One test approach: normal, invalid, boundary, forbidden, regression."
             },
             {
               "line": 6,
-              "text": "- Choose one test approach for normal, invalid, boundary, forbidden and regression outcomes."
+              "text": "- Bugs/review defects need behavioral RED, verified cause and same-pattern scan; setup/import/syntax failure is not RED."
             },
             {
               "line": 7,
-              "text": "- Reproducible bugs and review defects need behavioral RED, verified cause and a same-pattern scan; setup/import/syntax failure is not RED."
+              "text": "- Keep rules at owners; no unrelated refactors, duplicate helpers or test-only API widening. Self-check; fresh targeted validation after final material edit. Report outcomes, skips/retries/flakiness/limits; edits invalidate proof."
             },
             {
               "line": 8,
-              "text": "- Keep rules in their owner; avoid unrelated refactors, duplicate helpers and test-only API widening."
+              "text": "- Process records/independent Review need real consumers/hard boundaries."
             },
             {
               "line": 9,
-              "text": "- Self-check, then run fresh targeted validation after the final material edit."
+              "text": "- Repair current direction; redesign/re-review needs new decision evidence or unresolved independent judgment. After two same-path failures change approach or return Main, never reset by renaming."
             },
             {
               "line": 10,
-              "text": "- Report actual results and skipped/flaky/retried/partial/unavailable evidence; later edits invalidate affected proof."
+              "text": "- Honor authorization/Host enforcement; never self-authorize. Safety needs reachable boundaries/effects, not keywords. Blocked execution needs observed failure and operation/raw evidence; no capability self-proof or sandbox emulation."
             },
             {
               "line": 11,
-              "text": "- No routine Brief, Task Contract, Handoff, signature, fingerprint or independent Review. Formalize only for a real consumer or hard boundary."
-            },
-            {
-              "line": 12,
-              "text": "- Repair within the current direction; redesign/re-review needs new decision-relevant evidence or unresolved independent judgment. After two same-path failures, change hypothesis/material/gap or return Main; renaming never resets retries."
-            },
-            {
-              "line": 13,
-              "text": "- Safety follows reachable trust boundaries, sensitive flows, authority changes, untrusted input to executable sinks, destruction, secrets, production and irreversible effects, not keywords. Respect authorization and Host enforcement; never self-authorize."
-            },
-            {
-              "line": 14,
-              "text": "- Execution blocked needs actual tool/permission/sandbox/artifact failure with operation and raw evidence; no capability self-proof or sandbox emulation."
-            },
-            {
-              "line": 15,
-              "text": "- Never dispatch or independently review your work. Leave external-source-read to analysis-agent. No daemon, database, private evidence storage, runtime task state engine or hidden protocol record."
+              "text": "- Never dispatch or independently review; external-source-read is Analysis-only. No daemon/database/task engines, private evidence storage or hidden protocols."
             }
           ],
-          "sha256": "f3c7614411b4bef9054565582df9d8af38aa5adcd633c1e073e1ecca5467fb74",
-          "text": "- Follow assigned Professional and `## Layer 3 Delivery`; capsule-named Layer 3 only, no index/catalog/preload/rerouting.\n- Apply Core Runtime Asset Resolution and Core Environment Risk Calibration.\n- Use read/search/edit/execute. Locate owners, files, tests and callers with bounded search/read; repository reads may expand; authorized write scope stays bounded.\n- Inspect current owner, tests, minimum consumers, reuse, placement and dependency direction before editing. Resolve important shared-state, concurrency, transaction, contract, migration, financial, authority or integration questions; deepen Analysis only for decisions that change implementation.\n- Add no abstraction, protocol, contract, validator, factory, adapter, extension point, safety layer or dependency without current requirements or repository evidence. Future reuse, robustness, consistency or safety alone are insufficient; real variation, multiple implementations and boundaries can justify structure.\n- Choose one test approach for normal, invalid, boundary, forbidden and regression outcomes.\n- Reproducible bugs and review defects need behavioral RED, verified cause and a same-pattern scan; setup/import/syntax failure is not RED.\n- Keep rules in their owner; avoid unrelated refactors, duplicate helpers and test-only API widening.\n- Self-check, then run fresh targeted validation after the final material edit.\n- Report actual results and skipped/flaky/retried/partial/unavailable evidence; later edits invalidate affected proof.\n- No routine Brief, Task Contract, Handoff, signature, fingerprint or independent Review. Formalize only for a real consumer or hard boundary.\n- Repair within the current direction; redesign/re-review needs new decision-relevant evidence or unresolved independent judgment. After two same-path failures, change hypothesis/material/gap or return Main; renaming never resets retries.\n- Safety follows reachable trust boundaries, sensitive flows, authority changes, untrusted input to executable sinks, destruction, secrets, production and irreversible effects, not keywords. Respect authorization and Host enforcement; never self-authorize.\n- Execution blocked needs actual tool/permission/sandbox/artifact failure with operation and raw evidence; no capability self-proof or sandbox emulation.\n- Never dispatch or independently review your work. Leave external-source-read to analysis-agent. No daemon, database, private evidence storage, runtime task state engine or hidden protocol record."
+          "sha256": "992b6d44f6684a0093a42cc7572657204faa145700e920e00251c7064622e59e",
+          "text": "- Follow assigned Professional/`## Layer 3 Delivery`; capsule-named Layer 3 only; no index/catalog/preload/rerouting.\n- Apply Core Runtime Asset Resolution and Core Environment Risk Calibration.\n- Use read/search/edit/execute; bounded search/read expands reads, never authorized write scope. Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners.\n- Close affected consumers/tests, changed contract/config/generated surfaces and reuse/placement locally. Analysis requires implementation-changing uncertainty (competing owners/contradicted invariants) unresolved by bounded read/search; no ordinary Analysis/Review.\n- Add structure/dependencies only for current requirements or repository evidence, not future reuse/robustness/consistency/safety alone. One test approach: normal, invalid, boundary, forbidden, regression.\n- Bugs/review defects need behavioral RED, verified cause and same-pattern scan; setup/import/syntax failure is not RED.\n- Keep rules at owners; no unrelated refactors, duplicate helpers or test-only API widening. Self-check; fresh targeted validation after final material edit. Report outcomes, skips/retries/flakiness/limits; edits invalidate proof.\n- Process records/independent Review need real consumers/hard boundaries.\n- Repair current direction; redesign/re-review needs new decision evidence or unresolved independent judgment. After two same-path failures change approach or return Main, never reset by renaming.\n- Honor authorization/Host enforcement; never self-authorize. Safety needs reachable boundaries/effects, not keywords. Blocked execution needs observed failure and operation/raw evidence; no capability self-proof or sandbox emulation.\n- Never dispatch or independently review; external-source-read is Analysis-only. No daemon/database/task engines, private evidence storage or hidden protocols."
         },
         "document_id": "src/agent-profiles/role-agents.json#task-agent#instructions",
         "document_part": "instructions",
@@ -131114,6 +131098,34 @@
     ],
     "findings": [
       {
+        "band": null,
+        "decisions": 2,
+        "document_id": "src/agent-profiles/role-agents.json#task-agent#instructions",
+        "finding_id": "aa252503966b1ef05684ad46d6022f52444ad75e82a32b3adb94fee459a7c7dc",
+        "kind": "bullet-decisions",
+        "line": 3,
+        "preview": "Use read/search/edit/execute; bounded search/read expands reads, never authorized write scope. Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm",
+        "sentence": "Use read/search/edit/execute; bounded search/read expands reads, never authorized write scope. Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners.",
+        "sentence_fingerprint": "d25af9802e2591ff749c04075e03a8e9fad0e36647a62e7c402d78a6a6d1b1d1",
+        "severity": "error",
+        "source_span": {
+          "end_column": 607,
+          "end_line": 3,
+          "end_offset": 801,
+          "lines": [
+            {
+              "line": 3,
+              "text": "- Use read/search/edit/execute; bounded search/read expands reads, never authorized write scope. Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners."
+            }
+          ],
+          "sha256": "59d345d2e6b066cd60b3c95c1428b4357bf4279158f801414c188f2369a48752",
+          "start_column": 3,
+          "start_line": 3,
+          "start_offset": 197
+        },
+        "words": null
+      },
+      {
         "band": "tighten",
         "decisions": null,
         "document_id": "src/control-prompts/main-control-agent.md#control-prompt",
@@ -154630,16 +154642,16 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 999,
-      "value": "d30afcc2c66768dd451c65a5c3ebba90660fd2f049fb8b71d2604b38c6aa8cab"
+      "value": "d1c943e317265508d2eb3a2c93fcfc895352918bd77efd81142664eae3a681e9"
     },
     "summary": {
       "advisory_documents": 329,
       "advisory_sentences": 831,
-      "blocker_findings": 0,
-      "compound_bullets": 0,
+      "blocker_findings": 1,
+      "compound_bullets": 1,
       "documents": 999,
       "hard_fail_sentences": 0,
-      "hard_gate_ready": true,
+      "hard_gate_ready": false,
       "review_as_complex_sentences": 814,
       "tighten_sentences": 17
     }
@@ -154714,12 +154726,22 @@
   },
   "gate_status": {
     "authoring": {
-      "blockers": [],
-      "status": "pass"
+      "blockers": [
+        {
+          "id": "ai-readability-hard-gate-not-ready",
+          "message": "AI-readability deterministic hard gate is not ready"
+        }
+      ],
+      "status": "fail"
     },
     "formal_release": {
-      "blockers": [],
-      "status": "pass"
+      "blockers": [
+        {
+          "id": "authoring-gate-not-pass",
+          "message": "formal release requires the deterministic authoring gate to pass"
+        }
+      ],
+      "status": "blocked"
     },
     "limitations": [
       "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness."
