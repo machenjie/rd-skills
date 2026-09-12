@@ -1981,7 +1981,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             try:
                 fixed_application = PANEL.validate_semantic_decision_application(live_audit)
             except PANEL.PanelReviewError as exc:
-                self.assertIn("stale", str(exc))
+                self.assertTrue(PANEL.attestation_currentness_drift(exc), str(exc))
             else:
                 self.assertEqual("current", fixed_application["status"])
                 self.assertEqual(len(winners), fixed_application["applied_count"])

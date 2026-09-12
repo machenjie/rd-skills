@@ -1562,7 +1562,12 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 "semantic-decision-application-invalid",
                 checked_in_application["error"]["id"],
             )
-            self.assertIn("stale", checked_in_application["error"]["message"])
+            self.assertTrue(
+                PANEL.attestation_currentness_drift(
+                    PANEL.PanelReviewError(checked_in_application["error"]["message"])
+                ),
+                checked_in_application["error"]["message"],
+            )
         self.assertEqual(
             0,
             checked_in_application["completed_rewrite_count"],
