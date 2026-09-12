@@ -16725,7 +16725,7 @@ def _route_impl(
             precedence_class="runtime-risk",
         )
     legacy_reliability_signal_match = any(
-        word in text for word in ("outage", "slo", "degradation")
+        _contains_signal(text, word) for word in ("outage", "slo", "degradation")
     )
     external_reliability_mechanics = (
         external_reliability_effect == EFFECT_CHANGED

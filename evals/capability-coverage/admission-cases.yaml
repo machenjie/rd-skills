@@ -3202,7 +3202,7 @@ cases:
     layer: foundation
     skill: python-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-python-professional-usage-domain-owned
@@ -3234,7 +3234,7 @@ cases:
     layer: foundation
     skill: go-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-go-professional-usage-domain-owned
@@ -3266,7 +3266,7 @@ cases:
     layer: foundation
     skill: typescript-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-typescript-professional-usage-domain-owned
@@ -3298,7 +3298,7 @@ cases:
     layer: foundation
     skill: rust-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-rust-professional-usage-domain-owned
@@ -3330,7 +3330,7 @@ cases:
     layer: foundation
     skill: cpp-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-cpp-professional-usage-domain-owned
@@ -3362,7 +3362,7 @@ cases:
     layer: foundation
     skill: java-jvm-professional-usage
     case_kind: adjacent
-    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    prompt: "Implement an accepted backend service business-rule change. Language runtime semantics remain unchanged."
     expected: {selected: false, primary_skill: backend-change-builder}
 
   - id: capcov-admission-foundation-java-jvm-professional-usage-domain-owned
