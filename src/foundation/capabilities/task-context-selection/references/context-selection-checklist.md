@@ -11,7 +11,7 @@ Use this checklist for one current decision, including resumed work, not for dow
 
 ## Resuming Interrupted Work
 
-Reconstruct only what the next decision needs from available conversation and
+For the resumed decision, reconstruct the relevant conversation and
 artifacts: the current goal and constraints, changes already saved, unfinished
 parts, the last confirmed state and checks, operations with unknown outcomes,
 and the next action. An attempted operation is not a confirmed result; retain

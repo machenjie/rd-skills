@@ -15,7 +15,7 @@ skip when JavaScript/native state and integration behavior remain unchanged.
 
 Resolve the repository's React Native, native-module and target pins and actual
 architecture before selecting APIs. Use the matching versioned docs and local
-bindings; do not generalize legacy-architecture startup caveats to every version.
+bindings; apply legacy startup caveats when the pinned architecture matches.
 
 Sources checked 2026-09-12: React Native 0.83 [Linking](https://reactnative.dev/docs/0.83/linking), [AppState](https://reactnative.dev/docs/0.83/appstate), and [platform-specific code](https://reactnative.dev/docs/0.83/platform-specific-code).
-Version limit: 0.83 is the documentation sample, not a required upgrade or proof of the repository's installed versions.
+Version limit: the cited release is a documentation sample; it does not establish the repository's installed versions or imply an upgrade.

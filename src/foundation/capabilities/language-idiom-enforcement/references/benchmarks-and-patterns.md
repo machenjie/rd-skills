@@ -30,12 +30,12 @@ Use this reference when `language-idiom-enforcement` needs deeper cross-language
 
 | Conflict and decisive evidence | Owner and bounded choice | Validation and unresolved choice |
 | --- | --- | --- |
-| Nearby code catches all errors and returns success, but the current endpoint contract requires failures to be visible. | Keep the existing error boundary and response shape; propagate or map the failure there. Do not repeat swallowing merely to match siblings or rewrite unrelated handlers. | Exercise the failing operation and assert the documented error response. Act from the established contract; ask only if authoritative consumers require incompatible success and failure semantics. |
+| A nearby broad catch returns success after a failed operation, but the current endpoint contract requires a visible failure. | Keep the existing error boundary and response shape; propagate or map the failure there. Do not repeat swallowing merely to match siblings or rewrite unrelated handlers. | Exercise the failing operation and assert the documented error response. Act from the established contract; ask only if authoritative consumers require incompatible success and failure semantics. |
 | A newer idiom renames serialized fields or changes absent values to null, while fixtures or consumers depend on the old wire format. | Preserve the wire representation at its existing serialization owner; use the idiom internally only if it leaves that contract intact. Avoid a new adapter for a naming preference. | Compare serialized normal, absent and null values against current consumers. A deliberate wire change needs a user-owned compatibility or migration decision; an internal spelling choice does not. |
 | Neighboring code uses an API absent from the pinned runtime or package. | Confirm the lockfile, target and installed declaration; use the supported equivalent at the existing caller if its error, lifetime and value semantics match. Do not silently upgrade dependencies or assume the latest example applies. | Compile against the pin and exercise changed behavior. If no compatible equivalent exists, present the concrete version or behavior choice instead of copying the obsolete call. |
 
-These cases resolve a local decision, not a global hierarchy of policies. Keep
-mandatory contracts distinct from preferences and preserve authorized scope.
+These cases resolve a local decision, not a global hierarchy of policies. Distinguish
+established contracts from style preferences within the authorized scope.
 
 ## Deviation Record
 
