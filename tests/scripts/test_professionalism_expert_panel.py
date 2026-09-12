@@ -335,7 +335,7 @@ def _current_semantic_attestation(
     winner_overrides: dict[str, str] | None = None,
 ) -> tuple[dict, dict, dict, bytes]:
     producer = REGRESSION.expert_panel
-    audit = source_support.live_semantic_audit()
+    audit = source_support.current_semantic_fixture_audit()
     review_id = "semantic-current-selector-" + ("-".join(axes) or "ordinary")
     packet = producer.prepare_semantic_disposition_packet(
         audit=producer._semantic_audit_for_axis_rereview(audit, list(axes)),

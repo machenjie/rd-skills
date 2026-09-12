@@ -24,9 +24,8 @@ PANEL = source_support.PANEL
 def _current_semantic_compact_fixture(auditor) -> tuple[dict, bytes]:
     root_content = auditor._collect_root_content()
     reference_content = auditor._collect_reference_content()
-    audit = auditor._semantic_application_audit_view(
-        root_content,
-        reference_content,
+    audit = source_support.current_semantic_fixture_audit(
+        auditor._semantic_application_audit_view(root_content, reference_content)
     )
     packet = PANEL.prepare_semantic_disposition_packet(
         audit=PANEL._semantic_audit_for_axis_rereview(
@@ -76,9 +75,7 @@ def _current_semantic_compact_fixture(auditor) -> tuple[dict, bytes]:
                 "votes": [
                     {
                         "voter_id": reviewer["voter_id"],
-                        "disposition": dispositions.get(
-                            target["target_id"], "valid-contextual-rule"
-                        ),
+                        "disposition": dispositions[target["target_id"]],
                         "rationale": (
                             "The current candidate retains its independently "
                             "reviewed bounded disposition."
@@ -1596,7 +1593,13 @@ class ValidateReferenceContentTests(unittest.TestCase):
             )
             fixed.parent.mkdir(parents=True)
             fixed.write_bytes(compact)
-            with mock.patch.object(PANEL, "ROOT", fixture_root):
+            # Only the synthetic positive case uses the closed fixture. The
+            # live-source drift checks above keep every current candidate.
+            with (
+                mock.patch.object(PANEL, "ROOT", fixture_root),
+                mock.patch.object(auditor, "_collect_root_content", return_value=copy.deepcopy(audit["root_content"])),
+                mock.patch.object(auditor, "_collect_reference_content", return_value=copy.deepcopy(audit["reference_content"])),
+            ):
                 _root, _reference, application = (
                     auditor._collect_semantic_content_with_application()
                 )

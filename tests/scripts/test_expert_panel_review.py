@@ -345,31 +345,7 @@ def _current_semantic_application_fixture(
 
     review_id = "semantic-current-application-fixture"
     overrides = winner_overrides or {}
-    for axis in sorted(PANEL.SEMANTIC_AXES):
-        semantic = audit[f"{axis}_content"]["semantic_advisories"]
-        candidates_by_id = {
-            candidate["candidate_id"]: candidate
-            for candidate in semantic["candidates"]
-        }
-        exact_entries = [
-            entry
-            for entry in semantic["disposition_contract"]["entries"]
-            if entry["candidate_id"] in candidates_by_id
-            and not PANEL._semantic_entry_mismatches(
-                axis=axis,
-                candidate=candidates_by_id[entry["candidate_id"]],
-                entry=entry,
-            )
-        ]
-        semantic["disposition_contract"]["entries"] = exact_entries
-        covered_ids = {
-            entry["candidate_id"] for entry in exact_entries
-        }
-        semantic["candidates"] = [
-            candidate
-            for candidate in semantic["candidates"]
-            if candidate["candidate_id"] in covered_ids
-        ]
+    audit.update(source_support.current_semantic_fixture_audit(audit))
     review_audit = PANEL._semantic_audit_for_axis_rereview(
         copy.deepcopy(audit), sorted(PANEL.SEMANTIC_AXES)
     )

@@ -105,3 +105,28 @@ def semantic_audit_with_synthetic_delta() -> dict:
             raise AssertionError(f"{content_key} needs one disposition fixture entry")
         semantic["disposition_contract"]["entries"] = entries[1:]
     return audit
+
+
+def current_semantic_fixture_audit(audit: dict | None = None) -> dict:
+    """Close a synthetic current fixture over exactly bound existing dispositions.
+
+    Live-source drift checks must use live_semantic_audit instead. This fixture
+    creates no judgments for newly authored or changed candidates.
+    """
+    result = copy.deepcopy(audit) if audit is not None else live_semantic_audit()
+    for axis in sorted(PANEL.SEMANTIC_AXES):
+        semantic = result[f"{axis}_content"]["semantic_advisories"]
+        candidates = {row["candidate_id"]: row for row in semantic["candidates"]}
+        entries = [
+            entry for entry in semantic["disposition_contract"]["entries"]
+            if entry["candidate_id"] in candidates
+            and not PANEL._semantic_entry_mismatches(
+                axis=axis, candidate=candidates[entry["candidate_id"]], entry=entry,
+            )
+        ]
+        covered = {entry["candidate_id"] for entry in entries}
+        semantic["disposition_contract"]["entries"] = entries
+        semantic["candidates"] = [
+            row for row in semantic["candidates"] if row["candidate_id"] in covered
+        ]
+    return result
