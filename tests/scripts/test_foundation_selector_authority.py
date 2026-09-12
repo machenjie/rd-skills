@@ -7118,6 +7118,7 @@ class LanguageAuthorizationTests(unittest.TestCase):
     def test_natural_language_paths_select_semantics_without_internal_skill_names(self):
         for prompt, owner, profile, language in [
             ('Fix the internal Python CLI import initialization that starts a worker during spawn.', 'repository-tooling-change-builder', 'task-agent', 'python-professional-usage'),
+            ('Fix the internal Golang CLI goroutine cancellation.', 'repository-tooling-change-builder', 'task-agent', 'go-professional-usage'),
             ('Review the actual diff for Rust borrowed lifetime escaping its owner.', 'ai-code-review-refactor', 'review-agent', 'rust-professional-usage'),
             ('Explain from repository source evidence why the Go context cancellation leaks a goroutine.', 'engineering-change-analysis', 'analysis-agent', 'go-professional-usage'),
             ('Fix the Rust backend service unsafe FFI ownership boundary.', 'backend-change-builder', 'task-agent', 'rust-professional-usage'),

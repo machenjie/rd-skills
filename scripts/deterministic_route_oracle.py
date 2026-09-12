@@ -9447,7 +9447,7 @@ def _accessibility_behavior_requested(value: str) -> bool:
 
 _LANGUAGE_CLI_RE = re.compile(
     r"\b(?:internal|repository(?:-owned)?)\s+"
-    r"(?:python|go|typescript|rust|c\+\+|node\.?(?:js)?|java|jvm|kotlin|c#|\.net|swift)\s+cli\b"
+    r"(?:python|go|golang|typescript|rust|c\+\+|node\.?(?:js)?|java|jvm|kotlin|c#|\.net|swift)\s+cli\b"
 )
 
 
@@ -10170,6 +10170,9 @@ def _material_review_risk_candidates(
                     break
                 end = start + len(signal)
                 offset = end
+                if ((start > 0 and value[start - 1].isalnum())
+                        or (end < len(value) and value[end].isalnum())):
+                    continue
                 if any(
                     range_start <= start and end <= range_end
                     for range_start, range_end in nonmaterial_ranges
