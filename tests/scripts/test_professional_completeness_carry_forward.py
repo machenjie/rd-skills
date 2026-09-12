@@ -30,7 +30,7 @@ PANEL = source_support.PANEL
 _sha = professional_support._sha
 _material = professional_support._material
 _catalog = professional_support._catalog
-_live_packet = professional_support._live_packet
+_historical_schema2_packet = professional_support._historical_schema2_packet
 _legacy_schema1_packet = professional_support._legacy_schema1_packet
 SKILL_IDS = ("a", "b", "c", "d")
 CONTRACT_FINGERPRINT = "a" * 64
@@ -1989,7 +1989,12 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
                     )
 
     def test_schema2_packet_shape_and_canonical_bytes_remain_unchanged(self) -> None:
-        packet = copy.deepcopy(_live_packet())
+        packet = copy.deepcopy(_historical_schema2_packet())
+        PANEL._validate_professional_completeness_packet_v2(packet)
+        for target in packet["professional_targets"]:
+            adjacency = target["routing_adjacency"]
+            for field in ("required_candidates", "full_catalog_ranking"):
+                self.assertEqual(_sha(adjacency[field]), adjacency[f"{field}_fingerprint"])
         before = CARRY.canonical_json_bytes(packet)
         bindings = PANEL._professional_review_bindings(
             packet["professional_targets"]
@@ -2030,7 +2035,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
 
     def test_schema2_unregistered_selector_is_rejected_in_every_mode(self) -> None:
-        packet = copy.deepcopy(_live_packet())
+        packet = copy.deepcopy(_historical_schema2_packet())
         selector = packet["panel_contract"]["adjacency_contract"][
             "required_candidate_selection"
         ]

@@ -9469,8 +9469,17 @@ def _language_semantic_layers(text: str) -> list[str]:
     text = text.casefold().replace("c++", "cplusplus").replace("c#", "csharp").replace(".net", "dotnet")
     selected = []
     for name, language, semantics in patterns:
+        if name == "nodejs-runtime-professional-usage":
+            if (
+                re.search(language, text)
+                and not _documentation_only(text)
+                and _overall_effect_state(_node_runtime_effect_records(text))
+                == EFFECT_CHANGED
+            ):
+                selected.append(name)
+            continue
         for _scope_id, scope in _bounded_effect_scopes(text):
-            if _scope_is_unchanged(scope) or re.search(
+            if _scope_is_unchanged(scope) or _documentation_only(scope) or re.search(
                 r"\b(?:only in (?:comments|documentation)|(?:build|package|signing|packaging)(?:[- ](?:policy|mechanics|configuration))? only)\b", scope
             ):
                 continue

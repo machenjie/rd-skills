@@ -1452,6 +1452,8 @@
           "profile": "analysis-agent",
           "primary_skill": "engineering-change-analysis",
           "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
           "goal": "Return the exact Host-selected control routing asset.",
           "reason": "Host did not supply routing metadata.",
           "purpose": "routing-asset-read",

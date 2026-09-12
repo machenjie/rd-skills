@@ -791,22 +791,7 @@
     },
     "required_skill_count": 10
   },
-  "errors": [
-    "routing: low-level-transition-rust-to-os-resource: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
-    "routing: low-level-anti-unchanged-ffi-documentation: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
-    "routing: low-level-transition-rust-to-os-resource: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
-    "routing: low-level-anti-unchanged-ffi-documentation: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
-    "routing: capcov-admission-foundation-python-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capcov-admission-foundation-go-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capcov-admission-foundation-typescript-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capcov-admission-foundation-rust-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capcov-admission-foundation-cpp-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capcov-admission-foundation-java-jvm-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "routing: capability admission evidence: missing obligations=[('foundation', 'cpp-professional-usage', 'adjacent'), ('foundation', 'go-professional-usage', 'adjacent'), ('foundation', 'java-jvm-professional-usage', 'adjacent'), ('foundation', 'python-professional-usage', 'adjacent'), ('foundation', 'rust-professional-usage', 'adjacent'), ('foundation', 'typescript-professional-usage', 'adjacent')]",
-    "routing: base-professional-vs-domain-modifier/distractor: routing case is not passing",
-    "routing: base-professional-vs-domain-modifier/transition: routing case is not passing",
-    "routing: base-professional-vs-domain-modifier: stable dimensions drifted; declared ['path', 'profile', 'primary_skill', 'layer3_skills', 'review_skill'], observed ['path', 'profile', 'primary_skill', 'review_skill']"
-  ],
+  "errors": [],
   "gate_summary": {
     "required_skill_count": 10,
     "pass_count": 10,
@@ -1629,6 +1614,8 @@
       "evidence_case_ids": {
         "positive_route": [
           "low-level-anti-rust-business-service",
+          "low-level-anti-unchanged-ffi-documentation",
+          "low-level-transition-rust-to-os-resource",
           "security-anti-credential-session-internal-refactor",
           "structure-deliberate-separate-owner-implementations",
           "structure-ef-mapping-domain-facts-unchanged",
@@ -1678,7 +1665,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 26,
+        "positive_route": 28,
         "negative_route": 0,
         "behavior": 11,
         "pressure": 3,
@@ -6558,7 +6545,9 @@
       "layer3_candidates": [],
       "authoring_status": "pass",
       "evidence_case_ids": {
-        "positive_route": [],
+        "positive_route": [
+          "low-level-transition-rust-to-os-resource"
+        ],
         "negative_route": [],
         "behavior": [
           "evals/professional-benchmarks/language/rust-unsafe-boundary-without-invariants"
@@ -6568,7 +6557,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 0,
+        "positive_route": 1,
         "negative_route": 0,
         "behavior": 1,
         "pressure": 0,
@@ -6577,7 +6566,7 @@
       },
       "coverage_states": {
         "registered": true,
-        "route_covered": false,
+        "route_covered": true,
         "negative_route_covered": false,
         "behavior_covered": true,
         "pressure_covered": false,
@@ -9371,10 +9360,12 @@
           "low-level-ffi-ownership",
           "low-level-kernel-driver",
           "low-level-native-memory-paraphrase",
-          "low-level-realtime-paraphrase"
+          "low-level-realtime-paraphrase",
+          "low-level-transition-rust-to-os-resource"
         ],
         "negative_route": [
-          "low-level-anti-rust-business-service"
+          "low-level-anti-rust-business-service",
+          "low-level-anti-unchanged-ffi-documentation"
         ],
         "behavior": [
           "evals/professional-benchmarks/domain/low-level-ffi-unwind-allocator-publication"
@@ -9384,8 +9375,8 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 4,
-        "negative_route": 1,
+        "positive_route": 5,
+        "negative_route": 2,
         "behavior": 1,
         "pressure": 0,
         "release_critical": 0,

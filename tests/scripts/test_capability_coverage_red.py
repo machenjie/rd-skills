@@ -735,6 +735,18 @@ PHASE2_A_FOUNDATION_TRIPLES = frozenset(
         )
     }
 )
+LANGUAGE_ADMISSION_FOUNDATIONS = frozenset(
+    {
+        "python-professional-usage", "go-professional-usage",
+        "typescript-professional-usage", "rust-professional-usage",
+        "cpp-professional-usage", "java-jvm-professional-usage",
+    }
+)
+LANGUAGE_ADMISSION_TRIPLES = frozenset(
+    ("foundation", skill, effect)
+    for skill in LANGUAGE_ADMISSION_FOUNDATIONS
+    for effect in ("selected", "domain-owned", "adjacent", "simple")
+)
 PHASE2_A_PREDECESSOR_ROW_COUNT = 313
 PHASE2_A_PREDECESSOR_ROWS_SHA256 = (
     "260ad68541c4fe4f7618249709890dd14537c75984e07c225a67073b9dc62ea2"
@@ -5509,7 +5521,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             if candidate in domain_names
         }
         self.assertEqual(24, len(professional_names))
-        self.assertEqual(69, len(foundation_names))
+        self.assertEqual(75, len(foundation_names))
         self.assertEqual(13, len(domain_names))
 
         expected_precedence = {
@@ -5648,12 +5660,12 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         }
         if expected_counts != {
             "professional": 105,
-            "foundation": 276,
+            "foundation": 300,
             "domain": 48,
         }:
             errors.append(
                 f"[{case_id}] expected obligation_counts="
-                "{'professional': 105, 'foundation': 276, 'domain': 48}; "
+                "{'professional': 105, 'foundation': 300, 'domain': 48}; "
                 f"actual={expected_counts!r}"
             )
         fixture = load_yaml_file(
@@ -5700,15 +5712,15 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 and skill in special_foundations
             ),
         }
-        if len(fixture_rows) != 429 or len(actual_combinations) != 429:
+        if len(fixture_rows) != 453 or len(actual_combinations) != 453:
             errors.append(
-                f"[{case_id}] expected current_fixture_rows=429 unique; "
+                f"[{case_id}] expected current_fixture_rows=453 unique; "
                 f"actual rows={len(fixture_rows)} "
                 f"unique={len(actual_combinations)}"
             )
-        if len(expected_combinations) != 429:
+        if len(expected_combinations) != 453:
             errors.append(
-                f"[{case_id}] expected obligation_target=429; "
+                f"[{case_id}] expected obligation_target=453; "
                 f"actual={len(expected_combinations)}"
             )
         if len(missing_obligations) != 0:
@@ -5769,8 +5781,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             CAPABILITY_COVERAGE.EXPECTED_ADMISSION_COMBINATIONS
             - actual_combinations
         )
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(actual_combinations))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(actual_combinations))
         self.assertEqual(set(), actual_combinations - (
             CAPABILITY_COVERAGE.EXPECTED_ADMISSION_COMBINATIONS
         ))
@@ -6046,8 +6058,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             CAPABILITY_COVERAGE.EXPECTED_ADMISSION_COMBINATIONS
             - actual_combinations
         )
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(actual_combinations))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(actual_combinations))
         self.assertEqual(
             set(),
             actual_combinations
@@ -6368,8 +6380,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         }
         self.assertEqual(PHASE2_F03_FOUNDATION_TRIPLES, actual_f03)
         self.assertEqual(28, len(actual_f03))
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(actual_combinations))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(actual_combinations))
 
         predecessor = fixture_rows[:PHASE2_F03_PREDECESSOR_ROW_COUNT]
         predecessor_bytes = json.dumps(
@@ -6418,6 +6430,12 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             },
         )
 
+        language_admissions = {
+            (row["layer"], row["skill"], row["case_kind"])
+            for row in fixture_rows
+            if row["skill"] in LANGUAGE_ADMISSION_FOUNDATIONS
+        }
+        self.assertEqual(LANGUAGE_ADMISSION_TRIPLES, language_admissions)
         old_ordinary = {
             triple
             for triple in actual_combinations
@@ -6426,6 +6444,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             and triple[1] not in PHASE2_F03_FOUNDATIONS
             and triple[1] not in PHASE2_F04_FOUNDATIONS
             and triple[1] not in PHASE2_A_FOUNDATIONS
+            and triple not in LANGUAGE_ADMISSION_TRIPLES
         }
         actual_f02 = {
             triple
@@ -6670,8 +6689,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         }
         self.assertEqual(PHASE2_F04_FOUNDATION_TRIPLES, actual_f04)
         self.assertEqual(44, len(actual_f04))
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(actual_combinations))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(actual_combinations))
 
         predecessor = fixture_rows[:PHASE2_F04_PREDECESSOR_ROW_COUNT]
         predecessor_bytes = json.dumps(
@@ -6724,6 +6743,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 "professional": 105,
                 "special": 16,
                 "pre-f03-ordinary": 84,
+                "language": 24,
                 "f03": 28,
                 "f04": 44,
                 "domain": 48,
@@ -6748,7 +6768,9 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                     and triple[1] not in PHASE2_F03_FOUNDATIONS
                     and triple[1] not in PHASE2_F04_FOUNDATIONS
                     and triple[1] not in PHASE2_A_FOUNDATIONS
+                    and triple not in LANGUAGE_ADMISSION_TRIPLES
                 ),
+                "language": len(actual_combinations & LANGUAGE_ADMISSION_TRIPLES),
                 "f03": sum(
                     1
                     for triple in actual_combinations
@@ -6973,8 +6995,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             for triple in actual_combinations
             if triple in PHASE2_A_FOUNDATION_TRIPLES
         }
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(actual_combinations))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(actual_combinations))
         self.assertEqual(PHASE2_A_FOUNDATION_TRIPLES, actual_a)
         self.assertEqual(104, len(actual_a))
         self.assertEqual(
@@ -6984,7 +7006,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 276,
+                "foundation": 300,
                 "domain": 48,
             },
             {
@@ -7038,6 +7060,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             [
                 (row["layer"], row["skill"], row["case_kind"])
                 for row in fixture_rows[PHASE2_A_PREDECESSOR_ROW_COUNT:]
+                if (row["layer"], row["skill"], row["case_kind"])
+                not in LANGUAGE_ADMISSION_TRIPLES
             ],
         )
 

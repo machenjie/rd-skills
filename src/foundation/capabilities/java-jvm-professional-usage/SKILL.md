@@ -19,34 +19,33 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when JVM transac
 
 ## Skill Role
 
-Prevent JVM-specific failures in advice reachability, interruption, executors, classloaders, thread-local state, null/type boundaries, serialization, and exception propagation. Leave architecture, persistence, public contracts, and generic concurrency to their owners.
+Protect JVM runtime semantics. Leave architecture, persistence, public contracts, and generic concurrency to their owners.
 
 ## High-Value Rules
 
-- Prove annotation-driven behavior from the runtime caller and proxy or weaving boundary; self-invocation can bypass advice.
+- Verify runtime callers through proxies or weaving; self-invocation can bypass advice.
 - Preserve interrupt status or translate cancellation at an explicit task boundary.
-- Give each executor owned admission, rejection, failure observation, context propagation, and shutdown behavior.
+- Own executor admission, rejection, failure observation, context propagation, and shutdown.
 - Select virtual threads from workload and pinning evidence.
-- Define cleanup ownership for static state, thread locals, executors, callbacks, and reflective caches across reload and shutdown.
+- Define cleanup ownership for static/thread-local state, executors, callbacks, and reflective caches through reload and shutdown.
 - Define nullability, variance, and collection-element contracts across reflection, persistence, and generated boundaries.
 - Bound serialization by format authority, versioning, polymorphism, unknown fields, size, depth, and compatibility.
-- Preserve exception cause and category through async, reflection, proxy, transaction, and framework boundaries.
+- Preserve exception cause/category across async, reflection, proxies, transactions, and frameworks.
 
 ## Anti-Patterns
 
-- Annotation presence is treated as proof that a transaction, async method, cache, or security interceptor ran.
-- `InterruptedException` or task failure is swallowed, converted to a default, or logged without restoring the caller's cancellation semantics.
-- A default executor or virtual-thread slogan hides admission, pinning, context, failure, or shutdown behavior.
-- A static, thread-local, ORM proxy, serializer, or reflection cache retains request data, resources, or an obsolete classloader.
+- Annotations are mistaken for advice execution.
+- Swallowed interruption, substituted defaults, or logging alone lose cancellation.
+- Executor or virtual-thread defaults hide lifecycle obligations.
+- Cached/thread-local state retains requests, resources, or obsolete classloaders.
 
 ## Stop Conditions
 
-- Route propagation, isolation, rollback, and after-commit design to `transaction-consistency`.
-- Route ORM and data models to persistence owners.
-- Route public serialization shape and version to the relevant contract owner.
-- Return deserialization work to Main for `security-privacy-gate` when an actual type-admission, trust, executable sink, authority, resource-exhaustion, or privacy change leaves control or proof unresolved.
-- Preserve ordinary format and compatibility validation within its owner.
-- Route locks to `concurrency-control`, allocation to `language-performance-safety`, and tests to `language-testing-strategy`.
+- Return propagation, isolation, rollback, and after-commit design to `transaction-consistency`.
+- Return ORM/data models to persistence owners; public serialization shape/version to contract owners.
+- Escalate deserialization to Main/`security-privacy-gate` when type admission, trust, executable sinks, authority, resource exhaustion, or privacy changes leave control/proof unresolved.
+- Keep ordinary format/compatibility validation with its owner.
+- Return locks, allocation, and tests to `concurrency-control`, `language-performance-safety`, and `language-testing-strategy`, respectively.
 
 ## Output Contract
 

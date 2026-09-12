@@ -2,13 +2,9 @@
   "architecture": "hookless-control-plane-v1",
   "automatic_routing_policy_fingerprint": "81efd6d39cefc37df743253378fa0783117c5ea3b221987981d1de95f685f293",
   "boundary_relations": {
-    "candidate_coverage": "unavailable",
-    "errors": [
-      "base-professional-vs-domain-modifier/distractor: routing case is not passing",
-      "base-professional-vs-domain-modifier/transition: routing case is not passing",
-      "base-professional-vs-domain-modifier: stable dimensions drifted; declared ['path', 'profile', 'primary_skill', 'layer3_skills', 'review_skill'], observed ['path', 'profile', 'primary_skill', 'review_skill']"
-    ],
-    "passed_count": 7,
+    "candidate_coverage": "full",
+    "errors": [],
+    "passed_count": 8,
     "relation_count": 8,
     "results": [
       {
@@ -177,13 +173,9 @@
           "paraphrase": "low-level-anti-rust-business-service",
           "transition": "low-level-transition-rust-to-os-resource"
         },
-        "errors": [
-          "base-professional-vs-domain-modifier/distractor: routing case is not passing",
-          "base-professional-vs-domain-modifier/transition: routing case is not passing",
-          "base-professional-vs-domain-modifier: stable dimensions drifted; declared ['path', 'profile', 'primary_skill', 'layer3_skills', 'review_skill'], observed ['path', 'profile', 'primary_skill', 'review_skill']"
-        ],
+        "errors": [],
         "id": "base-professional-vs-domain-modifier",
-        "passed": false,
+        "passed": true,
         "stable_dimensions": [
           "path",
           "profile",
@@ -197,8 +189,8 @@
       }
     ],
     "role_count": 32,
-    "route_once": "unavailable",
-    "status": "fail"
+    "route_once": "proven",
+    "status": "pass"
   },
   "candidate_coverage": "full",
   "case_count": 233,
@@ -295,22 +287,7 @@
   "domain_family_case_count": 44,
   "domain_transition_case_count": 13,
   "domain_unchanged_case_count": 14,
-  "errors": [
-    "low-level-transition-rust-to-os-resource: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
-    "low-level-anti-unchanged-ffi-documentation: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
-    "low-level-transition-rust-to-os-resource: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
-    "low-level-anti-unchanged-ffi-documentation: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
-    "capcov-admission-foundation-python-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capcov-admission-foundation-go-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capcov-admission-foundation-typescript-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capcov-admission-foundation-rust-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capcov-admission-foundation-cpp-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capcov-admission-foundation-java-jvm-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
-    "capability admission evidence: missing obligations=[('foundation', 'cpp-professional-usage', 'adjacent'), ('foundation', 'go-professional-usage', 'adjacent'), ('foundation', 'java-jvm-professional-usage', 'adjacent'), ('foundation', 'python-professional-usage', 'adjacent'), ('foundation', 'rust-professional-usage', 'adjacent'), ('foundation', 'typescript-professional-usage', 'adjacent')]",
-    "base-professional-vs-domain-modifier/distractor: routing case is not passing",
-    "base-professional-vs-domain-modifier/transition: routing case is not passing",
-    "base-professional-vs-domain-modifier: stable dimensions drifted; declared ['path', 'profile', 'primary_skill', 'layer3_skills', 'review_skill'], observed ['path', 'profile', 'primary_skill', 'review_skill']"
-  ],
+  "errors": [],
   "evidence_scope": "deterministic-fixtures",
   "legacy_route_count": 0,
   "limitations": [
@@ -320,7 +297,7 @@
   ],
   "max_layer3_per_case": 3,
   "negative_case_count": 67,
-  "passed_count": 231,
+  "passed_count": 233,
   "results": [
     {
       "actual": {
@@ -99006,13 +98983,12 @@
         "domain": "low-level-systems-extension",
         "family": "abi-ffi-memory"
       },
-      "errors": [
-        "low-level-transition-rust-to-os-resource: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}"
-      ],
+      "errors": [],
       "excluded_skills": [],
       "expected": {
         "layer3_skills": [
-          "low-level-systems-extension"
+          "low-level-systems-extension",
+          "rust-professional-usage"
         ],
         "path": "direct",
         "primary_skill": "backend-change-builder",
@@ -99025,8 +99001,8 @@
         "family": "abi-ffi-memory"
       },
       "negative_passed": true,
-      "passed": false,
-      "positive_passed": false,
+      "passed": true,
+      "positive_passed": true,
       "prompt": "Migrate an ordinary Rust backend service to an OS resource boundary with native memory ownership.",
       "route_decision": {
         "main_execution_provenance": {
@@ -101036,9 +101012,7 @@
     },
     {
       "actual": {
-        "layer3_skills": [
-          "rust-professional-usage"
-        ],
+        "layer3_skills": [],
         "path": "direct",
         "primary_skill": "backend-change-builder",
         "profile": "task-agent",
@@ -101048,9 +101022,7 @@
       "domain_anti_variant": "unchanged-paraphrase",
       "domain_family": null,
       "domain_transition": null,
-      "errors": [
-        "low-level-anti-unchanged-ffi-documentation: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}"
-      ],
+      "errors": [],
       "excluded_skills": [
         "low-level-systems-extension"
       ],
@@ -101064,8 +101036,8 @@
       "id": "low-level-anti-unchanged-ffi-documentation",
       "matched_domain_family": null,
       "negative_passed": true,
-      "passed": false,
-      "positive_passed": false,
+      "passed": true,
+      "positive_passed": true,
       "prompt": "Update a Rust backend service FFI ownership guide and OS resource copy; ABI behavior remains unchanged.",
       "route_decision": {
         "main_execution_provenance": {
@@ -101075,9 +101047,7 @@
         "path": "direct",
         "route_once": true,
         "route_result": {
-          "layer3_skills": [
-            "rust-professional-usage"
-          ],
+          "layer3_skills": [],
           "primary_skill": "backend-change-builder",
           "review_skill": null,
           "start_profile": "task-agent"
@@ -101086,25 +101056,11 @@
           "eligible_primary_count": 1,
           "layer3_candidates": [
             {
-              "eligible": true,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [],
-              "skill": "rust-professional-usage"
-            },
-            {
               "eligible": false,
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101116,9 +101072,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101130,9 +101084,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101144,9 +101096,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101158,9 +101108,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101172,9 +101120,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101186,9 +101132,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101200,9 +101144,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101214,9 +101156,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101228,9 +101168,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101242,9 +101180,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101256,9 +101192,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101270,9 +101204,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101284,9 +101216,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101298,9 +101228,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101312,9 +101240,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101326,9 +101252,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101340,9 +101264,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101354,9 +101276,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101368,9 +101288,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101382,9 +101300,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101396,9 +101312,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101410,9 +101324,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101424,9 +101336,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101438,9 +101348,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101452,9 +101360,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101466,9 +101372,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101480,9 +101384,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101494,9 +101396,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101508,9 +101408,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101522,9 +101420,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101536,9 +101432,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101550,9 +101444,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101564,9 +101456,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101578,9 +101468,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101592,9 +101480,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101606,9 +101492,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101620,9 +101504,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101634,9 +101516,19 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "rust-professional-usage"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-layer3-route-evidence"
@@ -101650,9 +101542,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [],
               "skill": "backend-change-builder"
@@ -101662,9 +101552,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101676,9 +101564,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101690,9 +101576,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101704,9 +101588,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101718,9 +101600,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101732,9 +101612,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101746,9 +101624,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101760,9 +101636,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101774,9 +101648,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101788,9 +101660,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101802,9 +101672,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101816,9 +101684,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101830,9 +101696,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-primary-route-precedence"
@@ -101846,9 +101710,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101860,9 +101722,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101874,9 +101734,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101888,9 +101746,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101902,9 +101758,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101916,9 +101770,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101930,9 +101782,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101944,9 +101794,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101958,9 +101806,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -101972,9 +101818,7 @@
               "evidence_ids": [
                 "route-evidence-1",
                 "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
+                "route-evidence-3"
               ],
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
@@ -102000,18 +101844,6 @@
               "kind": "routing_candidate",
               "source_anchor": "explicit-implementation-action",
               "task_id": "low-level-anti-unchanged-ffi-documentation"
-            },
-            {
-              "id": "route-evidence-4",
-              "kind": "routing_candidate",
-              "source_anchor": "dynamic-helper:_language_semantic_layers",
-              "task_id": "low-level-anti-unchanged-ffi-documentation"
-            },
-            {
-              "id": "route-evidence-5",
-              "kind": "routing_candidate",
-              "source_anchor": "foundation-selector:dynamic-foundation:rust-professional-usage",
-              "task_id": "low-level-anti-unchanged-ffi-documentation"
             }
           ]
         }
@@ -102022,9 +101854,7 @@
         "match_evidence": [
           "backend-surface",
           "effect-changed",
-          "explicit-implementation-action",
-          "dynamic-helper:_language_semantic_layers",
-          "foundation-selector:dynamic-foundation:rust-professional-usage"
+          "explicit-implementation-action"
         ],
         "precedence_class": "candidate-selection",
         "raw_candidates": [
@@ -102032,30 +101862,20 @@
             "candidate_id": "implementation-owner:backend-change-builder",
             "candidate_layer3_context": {
               "domain_requests": [],
-              "foundation_requests": [
-                "rust-professional-usage"
-              ],
+              "foundation_requests": [],
               "kind": "fixed"
             },
             "candidate_type": "automatic-implementation-owner",
             "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "rust-professional-usage"
-            ],
-            "eligible_layer3_skills": [
-              "rust-professional-usage"
-            ],
+            "eligible_foundation_layer3_skills": [],
+            "eligible_layer3_skills": [],
             "evidence": [
               "backend-surface",
               "effect-changed",
-              "explicit-implementation-action",
-              "dynamic-helper:_language_semantic_layers",
-              "foundation-selector:dynamic-foundation:rust-professional-usage"
+              "explicit-implementation-action"
             ],
             "layer3_overflow": false,
-            "layer3_skills": [
-              "rust-professional-usage"
-            ],
+            "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
             "primary_skill": "backend-change-builder",
@@ -102066,22 +101886,6 @@
             "rule_id": null,
             "source_candidate_ids": [
               "implementation-owner:backend-change-builder"
-            ],
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "dynamic-foundation:rust-professional-usage",
-                "evidence": [
-                  "dynamic-helper:_language_semantic_layers",
-                  "foundation-selector:dynamic-foundation:rust-professional-usage"
-                ],
-                "foundations": [
-                  "rust-professional-usage"
-                ],
-                "owner_binding": {
-                  "primary_skill": "backend-change-builder",
-                  "review_skill": "ai-code-review-refactor"
-                }
-              }
             ]
           }
         ],
@@ -102091,30 +101895,20 @@
           "candidate_id": "implementation-owner:backend-change-builder",
           "candidate_layer3_context": {
             "domain_requests": [],
-            "foundation_requests": [
-              "rust-professional-usage"
-            ],
+            "foundation_requests": [],
             "kind": "fixed"
           },
           "candidate_type": "automatic-implementation-owner",
           "eligible_domain_layer3_skills": [],
-          "eligible_foundation_layer3_skills": [
-            "rust-professional-usage"
-          ],
-          "eligible_layer3_skills": [
-            "rust-professional-usage"
-          ],
+          "eligible_foundation_layer3_skills": [],
+          "eligible_layer3_skills": [],
           "evidence": [
             "backend-surface",
             "effect-changed",
-            "explicit-implementation-action",
-            "dynamic-helper:_language_semantic_layers",
-            "foundation-selector:dynamic-foundation:rust-professional-usage"
+            "explicit-implementation-action"
           ],
           "layer3_overflow": false,
-          "layer3_skills": [
-            "rust-professional-usage"
-          ],
+          "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
           "primary_skill": "backend-change-builder",
@@ -102126,22 +101920,6 @@
           "rule_id": null,
           "source_candidate_ids": [
             "implementation-owner:backend-change-builder"
-          ],
-          "source_foundation_candidates": [
-            {
-              "candidate_id": "dynamic-foundation:rust-professional-usage",
-              "evidence": [
-                "dynamic-helper:_language_semantic_layers",
-                "foundation-selector:dynamic-foundation:rust-professional-usage"
-              ],
-              "foundations": [
-                "rust-professional-usage"
-              ],
-              "owner_binding": {
-                "primary_skill": "backend-change-builder",
-                "review_skill": "ai-code-review-refactor"
-              }
-            }
           ]
         },
         "stage": "candidate-selection"
@@ -219900,5 +219678,5 @@
   ],
   "route_once": "proven",
   "schema_version": 6,
-  "status": "fail"
+  "status": "pass"
 }

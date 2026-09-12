@@ -29,10 +29,10 @@ Support `task-agent` in changing bounded repository tooling with authority, comp
 
 ## Professional Decision Rules
 
-- Keep the tooling decision within its owner, inputs, stops, and output contract.
-- Bind generated output and plugins to authoritative inputs, source ownership, destination, tool or host versions, compatibility, deterministic identity, and a non-circular clean-checkout bootstrap.
-- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior.
-- Prove the harness oracle with valid and invalid controls while keeping harness health distinct from the changed behavior's correctness.
+- Honor tooling ownership, inputs, stops and output contract.
+- Bind generated output/plugins to authoritative inputs, source ownership, destination, tool/host versions, compatibility, deterministic identity and non-circular clean-checkout bootstrap.
+- Bind mutating commands/subprocesses to resolved targets and invocation contracts, atomic completion or explicit recovery, cancellation/child cleanup and safe reruns.
+- Prove harness oracles with valid/invalid controls; distinguish harness health from changed behavior correctness.
 
 ## High-Value Gotchas
 

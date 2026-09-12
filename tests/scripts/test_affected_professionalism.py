@@ -321,13 +321,73 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 (repository / "evals/expert-panel/professional-completeness.json")
                 .read_text(encoding="utf-8")
             )
-            expected_stale = baseline["review_contract_fingerprint"] != (
-                panel._professional_evidence_review_contract_fingerprint()
+            expected_stale = (
+                baseline["schema_version"]
+                != panel.panel_attestation.ATTESTATION_SCHEMA_VERSION
+                or baseline["review_contract_fingerprint"]
+                != panel._professional_evidence_review_contract_fingerprint()
             )
-            expected_fresh = expected_direct_fresh
-            remaining = sorted(set(expected_bindings) - set(expected_fresh))
-            expected_carried = [] if expected_stale else remaining
-            expected_unevaluated = remaining if expected_stale else []
+            if expected_stale:
+                expected_fresh = expected_direct_fresh
+                expected_carried = []
+                expected_unevaluated = sorted(
+                    set(expected_bindings) - set(expected_fresh)
+                )
+            else:
+                # Global contract currentness does not make every package's
+                # prior source and adjacency evidence eligible for carry.
+                decoded = panel.panel_attestation.parse_attestation_storage_selector_bytes(
+                    (repository / "evals/expert-panel/professional-completeness.json").read_bytes()
+                )
+                eligible = set()
+                for finding in decoded["findings"]:
+                    skill_id = finding["skill_id"]
+                    binding = expected_bindings[skill_id]
+                    dependencies = finding["result"]["review_dependencies"]
+                    required = binding["adjacency"]["required_candidate_ids"]
+                    dependency_ids = set(required) | set(
+                        dependencies["reviewer_added_candidate_ids_union"]
+                    )
+                    if (
+                        all(finding[key] == binding[key] for key in (
+                            "package_material_binding", "review_unit_binding",
+                            "required_expertise_tags",
+                        ))
+                        and dependencies["required_candidate_ids"] == required
+                        and set(dependencies["dependency_candidate_ids"]) == dependency_ids
+                        and finding["dependency_ids"] == sorted(dependency_ids)
+                        and all(
+                            decoded["dependency_material_catalog"].get(candidate)
+                            == expected_bindings[candidate]["package_material_binding"]
+                            for candidate in dependency_ids
+                        )
+                        and finding["result"]["final_disposition"]
+                        == "accepted-current-professional-completeness"
+                        and dependencies["evidence_complete"] is True
+                    ):
+                        eligible.add(skill_id)
+                if decoded["review_cost_input"]["plan_lineage_depth"] >= (
+                    panel.PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH
+                ):
+                    eligible.clear()
+                self.assertTrue(eligible, "integration fixture needs current carry evidence")
+                direct_package_id = min(eligible)
+                context["professionalism"]["direct_package_ids"] = [direct_package_id]
+                expected_direct_fresh = {
+                    direct_package_id,
+                    *(
+                        skill_id
+                        for skill_id, binding in expected_bindings.items()
+                        if direct_package_id in binding["dependency_material_bindings"]
+                    ),
+                }
+                initially_fresh = set(expected_bindings) - eligible
+                expected_fresh = sorted(
+                    expected_direct_fresh | initially_fresh
+                )
+                expected_carried = sorted(eligible - expected_direct_fresh)
+                self.assertTrue(expected_carried, "fixture needs unaffected carry evidence")
+                expected_unevaluated = []
             audit_fixture = repository / "scripts/fixture-pass-content-audit.py"
             audit_fixture.write_text(
                 "from pathlib import Path\n"
@@ -415,6 +475,11 @@ class AffectedProfessionalismTests(unittest.TestCase):
             execution_scope["direct_package_ids"],
         )
         self.assertEqual(expected_fresh, execution_scope["fresh_package_ids"])
+        if not expected_stale:
+            self.assertIn(
+                direct_package_id,
+                set(execution_scope["fresh_package_ids"]) - initially_fresh,
+            )
         self.assertEqual(
             expected_carried,
             execution_scope["carried_package_ids"],

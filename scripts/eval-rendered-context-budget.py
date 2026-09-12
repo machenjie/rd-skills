@@ -2948,7 +2948,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                             "runtime": runtime_name,
                             "step": index,
                             "role": role,
-                            "mode": raw_step["mode"],
+                            "mode": raw_step.get("mode"),
                             "primary_skill": primary or None,
                             "layer3_skills": [str(item) for item in layer3],
                             "layer3_references": [

@@ -2,14 +2,14 @@
   "schema_version": 2,
   "status": "pass",
   "evidence_scope": "deterministic-fixtures",
-  "fixture_count": 24,
+  "fixture_count": 30,
   "rendered_context_summary": {
     "max_main": {
-      "tokens": 1745,
+      "tokens": 2067,
       "soft_target": 2305,
       "hard_ceiling": 2650,
-      "soft_margin_tokens": 560,
-      "hard_margin_tokens": 905,
+      "soft_margin_tokens": 238,
+      "hard_margin_tokens": 583,
       "within_soft_target": true,
       "within_hard_ceiling": true,
       "budget_signal": null,
@@ -19,11 +19,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 1721,
+        "tokens": 1743,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2779,
-        "hard_margin_tokens": 3279,
+        "soft_margin_tokens": 2757,
+        "hard_margin_tokens": 3257,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -34,11 +34,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2753,
+        "tokens": 2740,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 247,
-        "hard_margin_tokens": 447,
+        "soft_margin_tokens": 260,
+        "hard_margin_tokens": 460,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -49,11 +49,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "analyzed_task": {
-        "tokens": 946,
+        "tokens": 937,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 5054,
-        "hard_margin_tokens": 5554,
+        "soft_margin_tokens": 5063,
+        "hard_margin_tokens": 5563,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -64,11 +64,11 @@
         "primary_skill": "repository-tooling-change-builder"
       },
       "review": {
-        "tokens": 698,
+        "tokens": 693,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 3002,
-        "hard_margin_tokens": 3302,
+        "soft_margin_tokens": 3007,
+        "hard_margin_tokens": 3307,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,

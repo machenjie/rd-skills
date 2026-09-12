@@ -193,14 +193,65 @@ def _catalog(
         targets.append(target)
     return targets
 
-def _live_packet() -> dict:
-    return PANEL.prepare_professional_completeness_packet(
-        review_id="carry-baseline",
-        created_on="2026-07-17",
+def _historical_schema2_packet() -> dict:
+    """Exercise the historical schema against a closed synthetic catalog."""
+    targets = _synthetic_schema3_professional_targets(
+        negative_route_match_version=(
+            PANEL.PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+        )
     )
+    # Keep Reference anchoring and a required candidate beyond the top five
+    # reachable without binding historical packet tests to today's source graph.
+    targets[0]["indexed_references"] = [
+        _material(
+            targets[0]["skill_id"], "reference",
+            "# Atomic Containment Recovery\n"
+            "Containment checks preserve destination identity before replacement.\n"
+            "Atomic publication rejects incomplete temporary content.\n"
+            "Recovery evidence distinguishes rollback from uncertain commit.\n"
+            "Reference anchors bind source claims to specific failure conditions.\n"
+            "Verification exercises denied access and interrupted publication.\n",
+        )
+    ]
+    trigger = "cobalt zirconium platinum uranium radon rubidium tungsten tellurium niobium ruthenium"
+    for target in targets[:6]:
+        target["registry"]["responsibility_contract"]["trigger_signals"] = [trigger]
+    targets[6]["registry"]["responsibility_contract"]["anti_trigger_signals"] = [
+        "cobalt zirconium"
+    ]
+    legacy = PANEL.PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
+    bases, document_filter = PANEL._professional_catalog_adjacency_features(
+        targets, include_historical_alias=True, negative_route_match_version=legacy
+    )
+    rankings = PANEL._professional_catalog_rankings(
+        bases=bases, negative_route_match_version=legacy
+    )
+    for target in targets:
+        ranking = rankings[target["skill_id"]]
+        required = PANEL._professional_required_adjacency_candidates(
+            ranking, registry_declared_skills=[], source_declared_skills=[]
+        )
+        target["routing_adjacency"].update(
+            document_frequency_filter=copy.deepcopy(document_filter),
+            full_catalog_ranking=ranking,
+            full_catalog_ranking_fingerprint=_sha(ranking),
+            required_candidates=required,
+            required_candidates_fingerprint=_sha(required),
+        )
+        target.pop("registry_authority")
+        target.pop("reference_authority")
+        target["package_fingerprint"] = _sha(target)
+    PANEL._enforce_professional_adjacency_candidate_budget(targets)
+    with mock.patch.object(
+        PANEL, "_professional_package_targets", return_value=targets
+    ):
+        return PANEL.prepare_professional_completeness_packet(
+            review_id="carry-baseline",
+            created_on="2026-07-17",
+        )
 
 def _legacy_schema1_packet() -> dict:
-    current = _live_packet()
+    current = _historical_schema2_packet()
     targets = []
     for current_target in current["professional_targets"]:
         responsibility = copy.deepcopy(
@@ -951,7 +1002,9 @@ def _synthetic_schema1_professional_decision():
         yield packet, packet_path, ballots, decision, decision_path
 
 def _synthetic_schema3_professional_targets(
-    *, package_identities: list[tuple[str, str, list[str]]] | None = None
+    *,
+    package_identities: list[tuple[str, str, list[str]]] | None = None,
+    negative_route_match_version: str = PANEL.PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
 ) -> list[dict]:
     """Build the shared small-source catalog at the full current inventory."""
     content = "\n".join(
@@ -1065,11 +1118,14 @@ def _synthetic_schema3_professional_targets(
         PANEL._professional_catalog_adjacency_features(
             targets,
             include_historical_alias=True,
+            negative_route_match_version=negative_route_match_version,
         )
     )
     for target in targets:
         ranking = PANEL._professional_catalog_ranking(
-            target["skill_id"], bases=bases
+            target["skill_id"],
+            bases=bases,
+            negative_route_match_version=negative_route_match_version,
         )
         required_candidates = (
             PANEL._professional_required_adjacency_candidates(
@@ -1316,10 +1372,10 @@ def _synthetic_schema3_professional_decision(
 
 @functools.lru_cache(maxsize=1)
 def _professional_packet_cached() -> dict:
-    return PANEL.prepare_professional_completeness_packet(
-        review_id="professional-review-1",
-        created_on="2026-07-16",
-    )
+    packet = _historical_schema2_packet()
+    packet["review_id"] = "professional-review-1"
+    packet["created_on"] = "2026-07-16"
+    return packet
 
 def _professional_packet() -> dict:
     return copy.deepcopy(_professional_packet_cached())

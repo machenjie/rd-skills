@@ -2109,7 +2109,8 @@
       "path": "direct",
       "primary_skill": "backend-change-builder",
       "layer3_skills": [
-        "low-level-systems-extension"
+        "low-level-systems-extension",
+        "rust-professional-usage"
       ],
       "review_skill": null,
       "excluded_skills": [],
@@ -4794,7 +4795,7 @@
     "requirement-clarification": 1,
     "requirement-structuring": 0,
     "routing-navigation-design": 0,
-    "rust-professional-usage": 0,
+    "rust-professional-usage": 1,
     "scenario-decomposition": 0,
     "sdk-library-contract-design": 1,
     "search-analytics-design": 0,
@@ -5443,10 +5444,10 @@
   "admission_coverage": {
     "schema_version": 1,
     "evaluation_kind": "registry-derived-actual-route-admission",
-    "expected_obligation_count": 429,
-    "current_case_count": 429,
-    "passing_case_count": 429,
-    "covered_obligation_count": 429,
+    "expected_obligation_count": 453,
+    "current_case_count": 453,
+    "passing_case_count": 453,
+    "covered_obligation_count": 453,
     "missing_obligation_count": 0,
     "missing_obligations": [],
     "errors": []

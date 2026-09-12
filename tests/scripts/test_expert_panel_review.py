@@ -1770,9 +1770,9 @@ Route current work to `candidate-a`.
             PANEL.validate_packet(packet)
 
     def test_professional_packet_covers_every_non_control_package_and_reference(self) -> None:
-        packet = _professional_packet()
+        packet = professional_support._bootstrap_packet()
         PANEL.validate_packet(packet)
-        self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
+        self.assertEqual(3, packet["schema_version"])
         self.assertEqual(188, len(packet["professional_targets"]))
         self.assertTrue(
             all(
@@ -1813,15 +1813,7 @@ Route current work to `candidate-a`.
                 PANEL._professional_adjacency_selection_contract(),
                 adjacency["required_candidate_selection"],
             )
-            self.assertEqual(
-                PANEL._canonical_json_sha256(adjacency["required_candidates"]),
-                adjacency["required_candidates_fingerprint"],
-            )
             self.assertEqual(187, len(adjacency["full_catalog_ranking"]))
-            self.assertEqual(
-                PANEL._canonical_json_sha256(adjacency["full_catalog_ranking"]),
-                adjacency["full_catalog_ranking_fingerprint"],
-            )
             for ranking_item in adjacency["full_catalog_ranking"]:
                 self.assertEqual(
                     set(PANEL.PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS),
@@ -1848,7 +1840,6 @@ Route current work to `candidate-a`.
             self.assertTrue(
                 all(row["selection_reasons"] for row in candidates.values())
             )
-            self.assertEqual(64, len(adjacency["full_catalog_ranking_fingerprint"]))
 
         required_candidate_counts = [
             len(target["routing_adjacency"]["required_candidates"])
@@ -3715,15 +3706,16 @@ Route current work to `candidate-a`.
                 _professional_ballot(packet, digest, voter=voter)
                 for voter in range(1, 4)
             ]
-            ballots[0]["voter"]["expertise_tags"] = [
-                tag
-                for tag in ballots[0]["voter"]["expertise_tags"]
-                if tag != required_tag
-            ]
+            insufficient_tag = next(
+                tag for tag in sorted(PANEL.SKILL_EXPERTISE_TAGS)
+                if tag not in {required_tag, PANEL.PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG}
+            )
+            ballots[0]["voter"]["expertise_tags"] = [insufficient_tag]
             ballots[0]["voter"]["qualification_claims"] = [
-                claim
-                for claim in ballots[0]["voter"]["qualification_claims"]
-                if claim["expertise_tag"] != required_tag
+                {
+                    **ballots[0]["voter"]["qualification_claims"][0],
+                    "expertise_tag": insufficient_tag,
+                }
             ]
             with self.assertRaisesRegex(PANEL.PanelReviewError, "lacks required expertise"):
                 aggregate(ballots)

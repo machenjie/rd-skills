@@ -1527,7 +1527,7 @@
       "decision_rule_count": 3,
       "gotcha_count": 1,
       "reference_count": 6,
-      "routing_coverage_count": 26,
+      "routing_coverage_count": 28,
       "benchmark_coverage_count": 11
     },
     {
@@ -5711,7 +5711,7 @@
         "no task-local JVM source configuration generated surface or runtime lifecycle requires inspection or change"
       ],
       "layer3_candidates": [],
-      "line_count": 59,
+      "line_count": 58,
       "decision_rule_count": 8,
       "gotcha_count": 4,
       "reference_count": 1,
@@ -5752,7 +5752,7 @@
         "no task-local TypeScript source declaration generated compiler or emitted-runtime boundary requires inspection or change"
       ],
       "layer3_candidates": [],
-      "line_count": 56,
+      "line_count": 55,
       "decision_rule_count": 8,
       "gotcha_count": 4,
       "reference_count": 1,
@@ -5836,7 +5836,7 @@
       "decision_rule_count": 8,
       "gotcha_count": 4,
       "reference_count": 1,
-      "routing_coverage_count": 0,
+      "routing_coverage_count": 1,
       "benchmark_coverage_count": 1
     },
     {
@@ -8391,7 +8391,7 @@
       "decision_rule_count": 2,
       "gotcha_count": 1,
       "reference_count": 5,
-      "routing_coverage_count": 4,
+      "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
     },
     {

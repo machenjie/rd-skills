@@ -531,7 +531,7 @@ cases:
     main_execution: {producer: main-control-agent, task_id: low-level-transition-rust-to-os-resource}
     prompt: Migrate an ordinary Rust backend service to an OS resource boundary with native memory ownership.
     domain_transition: {domain: low-level-systems-extension, family: abi-ffi-memory}
-    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [low-level-systems-extension], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [low-level-systems-extension, rust-professional-usage], review_skill: null}
   - id: low-level-anti-rust-business-service
     main_execution: {producer: main-control-agent, task_id: low-level-anti-rust-business-service}
     prompt: Implement a local Rust backend service behavior fix with a targeted test; ABI, FFI, unsafe memory, operating-system, and native resource boundaries are unchanged.

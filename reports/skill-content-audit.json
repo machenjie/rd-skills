@@ -60,11 +60,11 @@
         "tighten_sentences": 0
       },
       "agent-profile-instructions": {
-        "advisory_documents": 3,
+        "advisory_documents": 2,
         "compound_bullets": 0,
         "documents": 4,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 3,
+        "review_as_complex_sentences": 2,
         "tighten_sentences": 0
       },
       "control-prompt": {
@@ -128,7 +128,7 @@
         "compound_bullets": 0,
         "documents": 150,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 288,
+        "review_as_complex_sentences": 284,
         "tighten_sentences": 0
       },
       "foundation-capability-description": {
@@ -156,11 +156,11 @@
         "tighten_sentences": 1
       },
       "professional-skill-body": {
-        "advisory_documents": 3,
+        "advisory_documents": 2,
         "compound_bullets": 0,
         "documents": 25,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 3,
+        "review_as_complex_sentences": 2,
         "tighten_sentences": 0
       },
       "professional-skill-description": {
@@ -506,18 +506,18 @@
       {
         "check_bullets": false,
         "compound_bullet_count": 0,
-        "content_fingerprint": "4b8a3671dad82c98f437e777ebd2c516239641ef4795ce1c5d01143e88b4f041",
+        "content_fingerprint": "002f5536bc9f770dcc7351b591c213e77b093cfe8929442e7919330d4cf7aa40",
         "document_context": {
           "line_count": 1,
           "line_offset": 0,
           "lines": [
             {
               "line": 1,
-              "text": "Implements or repairs one bounded task and runs targeted validation after the final material edit."
+              "text": "Implements/repairs bounded tasks; validates final edits."
             }
           ],
-          "sha256": "4b8a3671dad82c98f437e777ebd2c516239641ef4795ce1c5d01143e88b4f041",
-          "text": "Implements or repairs one bounded task and runs targeted validation after the final material edit."
+          "sha256": "002f5536bc9f770dcc7351b591c213e77b093cfe8929442e7919330d4cf7aa40",
+          "text": "Implements/repairs bounded tasks; validates final edits."
         },
         "document_id": "src/agent-profiles/role-agents.json#task-agent#description",
         "document_part": "description",
@@ -539,9 +539,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "fb022e73ded077d6dc21224a7c56799d4777a398c5e94ab53b3c38c8b2e0ecff",
+        "content_fingerprint": "8f51eb171acaf1c5cecb9e8fc49895cc99b92d67517e147c8dd8da202fdc0a6b",
         "document_context": {
-          "line_count": 14,
+          "line_count": 15,
           "line_offset": 0,
           "lines": [
             {
@@ -554,64 +554,68 @@
             },
             {
               "line": 3,
-              "text": "- Use read/search/edit/execute within authorized write scope; bounded search/read may expand discovery."
+              "text": "- Use read/search/edit/execute."
             },
             {
               "line": 4,
-              "text": "- Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners."
+              "text": "- Bounded search/read may expand, never authorized write scope."
             },
             {
               "line": 5,
-              "text": "- Close affected consumers/tests, changed contract/config/generated surfaces and reuse/placement locally. On resumption, reconstruct goal, saved/unfinished work and last confirmed/unknown results. Re-read current files/diff and necessary authorized Host status; settle unknown outcomes before repeating consequential actions. Analysis requires implementation-changing uncertainty (competing owners/contradicted invariants) unresolved by bounded read/search; no ordinary Analysis/Review."
+              "text": "- Before edits confirm source owners/consumers/signaled alternatives: behavior, invariants, writers, registration/DI/factories, contracts, generators, dependency direction. Paths/hits/tests/docs/callers/generated output alone prove no ownership. No repository enumeration; multiple enforcement owners allowed."
             },
             {
               "line": 6,
-              "text": "- Add structure/dependencies only for current requirements or repository evidence, not future reuse/robustness/consistency/safety alone. One test approach: normal, invalid, boundary, forbidden, regression."
+              "text": "- Close affected consumers/tests/contracts/config/generated surfaces and reuse/placement. Analysis only for unresolved implementation-changing owner/invariant uncertainty after bounded read/search; no routine Analysis/Review."
             },
             {
               "line": 7,
-              "text": "- Reproducible bugs/review defects need behavioral RED, verified cause and same-pattern scan; unrelated setup/import/syntax failure is not RED. If reproduction is currently unavailable or unsafe, retain verified cause and same-pattern scan, run available targeted checks after the final material edit, and report the unverified behavior without claiming it fixed."
+              "text": "- Reconstruct goal, saved/unfinished work, last confirmed/unknown results. Reread current files/diff and needed authorized Host status; resolve unknowns before consequential retries."
             },
             {
               "line": 8,
-              "text": "- Keep rules at owners; no unrelated refactors, duplicate helpers or test-only API widening. Self-check multi-requirement work both ways: requirements to implementation for omissions/partial/conflicting behavior, changes to requirements for unsupported additions."
+              "text": "- Only current requirements or repository evidence justify structure/dependencies, not speculative benefits. One approach tests normal/invalid/boundary/forbidden/regression."
             },
             {
               "line": 9,
-              "text": "- Run fresh targeted validation after final material edit."
+              "text": "- Defects need verified cause and same-pattern scan; behavioral RED when reproducible, never unrelated setup/import/syntax failure. Unavailable/unsafe reproduction: available checks, explicit unverified limits, no unproved fix claims."
             },
             {
               "line": 10,
-              "text": "- Report outcomes, skips/retries/flakiness/limits; edits invalidate proof."
+              "text": "- Keep rules at owners; no unrelated refactors/duplicate helpers/test-only API widening. Fresh targeted validation after final material edit; report outcomes/skips/retries/flakiness/limits. Edits invalidate proof."
             },
             {
               "line": 11,
-              "text": "- Process records/independent Review need real consumers/hard boundaries."
+              "text": "- Self-check requirements to implementation for omissions/partial/conflicting behavior and changes to requirements for unsupported additions."
             },
             {
               "line": 12,
-              "text": "- Repair current direction; redesign/re-review needs new decision evidence or unresolved independent judgment. After two same-path failures change approach or return Main, never reset by renaming."
+              "text": "- Records/Review need real consumers/hard boundaries."
             },
             {
               "line": 13,
-              "text": "- Honor authorization/Host enforcement; never self-authorize. Safety needs reachable boundaries/effects, not keywords. Blocked execution needs observed failure and operation/raw evidence; no capability self-proof or sandbox emulation."
+              "text": "- Repair current direction. Redesign/re-review requires new decision evidence or unresolved independent judgment. Two same-path failures require changed approach or Main; renaming never resets."
             },
             {
               "line": 14,
-              "text": "- Never dispatch or independently review; external-source-read is Analysis-only. No daemon/database/task engines, private evidence storage or hidden protocols."
+              "text": "- Honor authorization/Host enforcement; never self-authorize. Safety follows reachable boundaries/effects, not keywords. Execution blocks need observed operation/raw failure; no capability self-proof/sandbox emulation."
+            },
+            {
+              "line": 15,
+              "text": "- Never dispatch or independently review; external reads require Analysis. No daemon/database/task engines, private evidence storage or hidden protocols."
             }
           ],
-          "sha256": "fb022e73ded077d6dc21224a7c56799d4777a398c5e94ab53b3c38c8b2e0ecff",
-          "text": "- Follow assigned Professional/`## Layer 3 Delivery`; capsule-named Layer 3 only; no index/catalog/preload/rerouting.\n- Apply Core Runtime Asset Resolution and Core Environment Risk Calibration.\n- Use read/search/edit/execute within authorized write scope; bounded search/read may expand discovery.\n- Read candidate source, scan signaled alternatives, inspect minimum consumers, confirm owners, edit. Paths/names, search hits, tests/docs/callers/generated outputs alone prove no ownership. Confirm current authority: behavior/invariants, writes, registration/DI/factory, public/shared contracts, generator sources and dependency direction. Scan competing definitions, siblings, bindings, writers, contracts or generators only on evidence; no repository enumeration. Allow multiple necessary enforcement owners.\n- Close affected consumers/tests, changed contract/config/generated surfaces and reuse/placement locally. On resumption, reconstruct goal, saved/unfinished work and last confirmed/unknown results. Re-read current files/diff and necessary authorized Host status; settle unknown outcomes before repeating consequential actions. Analysis requires implementation-changing uncertainty (competing owners/contradicted invariants) unresolved by bounded read/search; no ordinary Analysis/Review.\n- Add structure/dependencies only for current requirements or repository evidence, not future reuse/robustness/consistency/safety alone. One test approach: normal, invalid, boundary, forbidden, regression.\n- Reproducible bugs/review defects need behavioral RED, verified cause and same-pattern scan; unrelated setup/import/syntax failure is not RED. If reproduction is currently unavailable or unsafe, retain verified cause and same-pattern scan, run available targeted checks after the final material edit, and report the unverified behavior without claiming it fixed.\n- Keep rules at owners; no unrelated refactors, duplicate helpers or test-only API widening. Self-check multi-requirement work both ways: requirements to implementation for omissions/partial/conflicting behavior, changes to requirements for unsupported additions.\n- Run fresh targeted validation after final material edit.\n- Report outcomes, skips/retries/flakiness/limits; edits invalidate proof.\n- Process records/independent Review need real consumers/hard boundaries.\n- Repair current direction; redesign/re-review needs new decision evidence or unresolved independent judgment. After two same-path failures change approach or return Main, never reset by renaming.\n- Honor authorization/Host enforcement; never self-authorize. Safety needs reachable boundaries/effects, not keywords. Blocked execution needs observed failure and operation/raw evidence; no capability self-proof or sandbox emulation.\n- Never dispatch or independently review; external-source-read is Analysis-only. No daemon/database/task engines, private evidence storage or hidden protocols."
+          "sha256": "8f51eb171acaf1c5cecb9e8fc49895cc99b92d67517e147c8dd8da202fdc0a6b",
+          "text": "- Follow assigned Professional/`## Layer 3 Delivery`; capsule-named Layer 3 only; no index/catalog/preload/rerouting.\n- Apply Core Runtime Asset Resolution and Core Environment Risk Calibration.\n- Use read/search/edit/execute.\n- Bounded search/read may expand, never authorized write scope.\n- Before edits confirm source owners/consumers/signaled alternatives: behavior, invariants, writers, registration/DI/factories, contracts, generators, dependency direction. Paths/hits/tests/docs/callers/generated output alone prove no ownership. No repository enumeration; multiple enforcement owners allowed.\n- Close affected consumers/tests/contracts/config/generated surfaces and reuse/placement. Analysis only for unresolved implementation-changing owner/invariant uncertainty after bounded read/search; no routine Analysis/Review.\n- Reconstruct goal, saved/unfinished work, last confirmed/unknown results. Reread current files/diff and needed authorized Host status; resolve unknowns before consequential retries.\n- Only current requirements or repository evidence justify structure/dependencies, not speculative benefits. One approach tests normal/invalid/boundary/forbidden/regression.\n- Defects need verified cause and same-pattern scan; behavioral RED when reproducible, never unrelated setup/import/syntax failure. Unavailable/unsafe reproduction: available checks, explicit unverified limits, no unproved fix claims.\n- Keep rules at owners; no unrelated refactors/duplicate helpers/test-only API widening. Fresh targeted validation after final material edit; report outcomes/skips/retries/flakiness/limits. Edits invalidate proof.\n- Self-check requirements to implementation for omissions/partial/conflicting behavior and changes to requirements for unsupported additions.\n- Records/Review need real consumers/hard boundaries.\n- Repair current direction. Redesign/re-review requires new decision evidence or unresolved independent judgment. Two same-path failures require changed approach or Main; renaming never resets.\n- Honor authorization/Host enforcement; never self-authorize. Safety follows reachable boundaries/effects, not keywords. Execution blocks need observed operation/raw failure; no capability self-proof/sandbox emulation.\n- Never dispatch or independently review; external reads require Analysis. No daemon/database/task engines, private evidence storage or hidden protocols."
         },
         "document_id": "src/agent-profiles/role-agents.json#task-agent#instructions",
         "document_part": "instructions",
         "hard_fail_count": 0,
-        "highest_advisory_band": "review-as-complex",
+        "highest_advisory_band": null,
         "line_offset": 0,
         "owner": "task-agent",
         "path": "src/agent-profiles/role-agents.json",
-        "review_as_complex_count": 1,
+        "review_as_complex_count": 0,
         "source_selector": {
           "field": "instructions",
           "kind": "json-profile-field",
@@ -63848,9 +63852,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "3d97ae21a1bc4bd591bc1a1bf66c0b2a6091ee85f4a19a40ae0e90a365091025",
+        "content_fingerprint": "d49426779a1d18efb1a9e9810870ecd1a3c0fdf5ec183122246ed3f95e75d5ce",
         "document_context": {
-          "line_count": 55,
+          "line_count": 54,
           "line_offset": 4,
           "lines": [
             {
@@ -63923,7 +63927,7 @@
             },
             {
               "line": 18,
-              "text": "Prevent JVM-specific failures in advice reachability, interruption, executors, classloaders, thread-local state, null/type boundaries, serialization, and exception propagation. Leave architecture, persistence, public contracts, and generic concurrency to their owners."
+              "text": "Protect JVM runtime semantics. Leave architecture, persistence, public contracts, and generic concurrency to their owners."
             },
             {
               "line": 19,
@@ -63939,7 +63943,7 @@
             },
             {
               "line": 22,
-              "text": "- Prove annotation-driven behavior from the runtime caller and proxy or weaving boundary; self-invocation can bypass advice."
+              "text": "- Verify runtime callers through proxies or weaving; self-invocation can bypass advice."
             },
             {
               "line": 23,
@@ -63947,7 +63951,7 @@
             },
             {
               "line": 24,
-              "text": "- Give each executor owned admission, rejection, failure observation, context propagation, and shutdown behavior."
+              "text": "- Own executor admission, rejection, failure observation, context propagation, and shutdown."
             },
             {
               "line": 25,
@@ -63955,7 +63959,7 @@
             },
             {
               "line": 26,
-              "text": "- Define cleanup ownership for static state, thread locals, executors, callbacks, and reflective caches across reload and shutdown."
+              "text": "- Define cleanup ownership for static/thread-local state, executors, callbacks, and reflective caches through reload and shutdown."
             },
             {
               "line": 27,
@@ -63967,7 +63971,7 @@
             },
             {
               "line": 29,
-              "text": "- Preserve exception cause and category through async, reflection, proxy, transaction, and framework boundaries."
+              "text": "- Preserve exception cause/category across async, reflection, proxies, transactions, and frameworks."
             },
             {
               "line": 30,
@@ -63983,19 +63987,19 @@
             },
             {
               "line": 33,
-              "text": "- Annotation presence is treated as proof that a transaction, async method, cache, or security interceptor ran."
+              "text": "- Annotations are mistaken for advice execution."
             },
             {
               "line": 34,
-              "text": "- `InterruptedException` or task failure is swallowed, converted to a default, or logged without restoring the caller's cancellation semantics."
+              "text": "- Swallowed interruption, substituted defaults, or logging alone lose cancellation."
             },
             {
               "line": 35,
-              "text": "- A default executor or virtual-thread slogan hides admission, pinning, context, failure, or shutdown behavior."
+              "text": "- Executor or virtual-thread defaults hide lifecycle obligations."
             },
             {
               "line": 36,
-              "text": "- A static, thread-local, ORM proxy, serializer, or reflection cache retains request data, resources, or an obsolete classloader."
+              "text": "- Cached/thread-local state retains requests, resources, or obsolete classloaders."
             },
             {
               "line": 37,
@@ -64011,71 +64015,67 @@
             },
             {
               "line": 40,
-              "text": "- Route propagation, isolation, rollback, and after-commit design to `transaction-consistency`."
+              "text": "- Return propagation, isolation, rollback, and after-commit design to `transaction-consistency`."
             },
             {
               "line": 41,
-              "text": "- Route ORM and data models to persistence owners."
+              "text": "- Return ORM/data models to persistence owners; public serialization shape/version to contract owners."
             },
             {
               "line": 42,
-              "text": "- Route public serialization shape and version to the relevant contract owner."
+              "text": "- Escalate deserialization to Main/`security-privacy-gate` when type admission, trust, executable sinks, authority, resource exhaustion, or privacy changes leave control/proof unresolved."
             },
             {
               "line": 43,
-              "text": "- Return deserialization work to Main for `security-privacy-gate` when an actual type-admission, trust, executable sink, authority, resource-exhaustion, or privacy change leaves control or proof unresolved."
+              "text": "- Keep ordinary format/compatibility validation with its owner."
             },
             {
               "line": 44,
-              "text": "- Preserve ordinary format and compatibility validation within its owner."
+              "text": "- Return locks, allocation, and tests to `concurrency-control`, `language-performance-safety`, and `language-testing-strategy`, respectively."
             },
             {
               "line": 45,
-              "text": "- Route locks to `concurrency-control`, allocation to `language-performance-safety`, and tests to `language-testing-strategy`."
+              "text": ""
             },
             {
               "line": 46,
-              "text": ""
-            },
-            {
-              "line": 47,
               "text": "## Output Contract"
             },
             {
-              "line": 48,
+              "line": 47,
               "text": ""
             },
             {
-              "line": 49,
+              "line": 48,
               "text": "- JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resource behavior, evidence and findings, proof limits, residual risk, and specialist routes"
             },
             {
-              "line": 50,
+              "line": 49,
               "text": ""
             },
             {
-              "line": 51,
+              "line": 50,
               "text": "## Targeted References"
             },
             {
-              "line": 52,
+              "line": 51,
               "text": ""
             },
             {
-              "line": 53,
+              "line": 52,
               "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
-              "line": 54,
+              "line": 53,
               "text": "|---|---|---|---|---|---|"
             },
             {
-              "line": 55,
+              "line": 54,
               "text": "| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A JVM change affects advice reachability interruption executor classloader null serialization or exception-resource semantics | The Java or JVM-runtime edit preserves established exception, resource, concurrency, class-loading, and serialization boundaries | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |"
             }
           ],
-          "sha256": "3d97ae21a1bc4bd591bc1a1bf66c0b2a6091ee85f4a19a40ae0e90a365091025",
-          "text": "\n# java-jvm-professional-usage\n\n## Registry Trigger\n\n**Use when**\n\n- Inspect or change Java source or shared JVM proxy/advice reachability, transaction behavior, interruption, executors, thread-local state, classloading, serialization, or Java null contracts.\n- A JDK, framework, container, or generated boundary can change runtime behavior beyond what compilation proves.\n\n**Do not use when**\n\n- The open question is generic idiom, package/build policy, performance tuning, test portfolio, or transaction design without a JVM-specific semantic decision.\n- No task-local JVM source, configuration, generated surface, or runtime lifecycle requires inspection or change.\n\n## Skill Role\n\nPrevent JVM-specific failures in advice reachability, interruption, executors, classloaders, thread-local state, null/type boundaries, serialization, and exception propagation. Leave architecture, persistence, public contracts, and generic concurrency to their owners.\n\n## High-Value Rules\n\n- Prove annotation-driven behavior from the runtime caller and proxy or weaving boundary; self-invocation can bypass advice.\n- Preserve interrupt status or translate cancellation at an explicit task boundary.\n- Give each executor owned admission, rejection, failure observation, context propagation, and shutdown behavior.\n- Select virtual threads from workload and pinning evidence.\n- Define cleanup ownership for static state, thread locals, executors, callbacks, and reflective caches across reload and shutdown.\n- Define nullability, variance, and collection-element contracts across reflection, persistence, and generated boundaries.\n- Bound serialization by format authority, versioning, polymorphism, unknown fields, size, depth, and compatibility.\n- Preserve exception cause and category through async, reflection, proxy, transaction, and framework boundaries.\n\n## Anti-Patterns\n\n- Annotation presence is treated as proof that a transaction, async method, cache, or security interceptor ran.\n- `InterruptedException` or task failure is swallowed, converted to a default, or logged without restoring the caller's cancellation semantics.\n- A default executor or virtual-thread slogan hides admission, pinning, context, failure, or shutdown behavior.\n- A static, thread-local, ORM proxy, serializer, or reflection cache retains request data, resources, or an obsolete classloader.\n\n## Stop Conditions\n\n- Route propagation, isolation, rollback, and after-commit design to `transaction-consistency`.\n- Route ORM and data models to persistence owners.\n- Route public serialization shape and version to the relevant contract owner.\n- Return deserialization work to Main for `security-privacy-gate` when an actual type-admission, trust, executable sink, authority, resource-exhaustion, or privacy change leaves control or proof unresolved.\n- Preserve ordinary format and compatibility validation within its owner.\n- Route locks to `concurrency-control`, allocation to `language-performance-safety`, and tests to `language-testing-strategy`.\n\n## Output Contract\n\n- JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resource behavior, evidence and findings, proof limits, residual risk, and specialist routes\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A JVM change affects advice reachability interruption executor classloader null serialization or exception-resource semantics | The Java or JVM-runtime edit preserves established exception, resource, concurrency, class-loading, and serialization boundaries | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |"
+          "sha256": "d49426779a1d18efb1a9e9810870ecd1a3c0fdf5ec183122246ed3f95e75d5ce",
+          "text": "\n# java-jvm-professional-usage\n\n## Registry Trigger\n\n**Use when**\n\n- Inspect or change Java source or shared JVM proxy/advice reachability, transaction behavior, interruption, executors, thread-local state, classloading, serialization, or Java null contracts.\n- A JDK, framework, container, or generated boundary can change runtime behavior beyond what compilation proves.\n\n**Do not use when**\n\n- The open question is generic idiom, package/build policy, performance tuning, test portfolio, or transaction design without a JVM-specific semantic decision.\n- No task-local JVM source, configuration, generated surface, or runtime lifecycle requires inspection or change.\n\n## Skill Role\n\nProtect JVM runtime semantics. Leave architecture, persistence, public contracts, and generic concurrency to their owners.\n\n## High-Value Rules\n\n- Verify runtime callers through proxies or weaving; self-invocation can bypass advice.\n- Preserve interrupt status or translate cancellation at an explicit task boundary.\n- Own executor admission, rejection, failure observation, context propagation, and shutdown.\n- Select virtual threads from workload and pinning evidence.\n- Define cleanup ownership for static/thread-local state, executors, callbacks, and reflective caches through reload and shutdown.\n- Define nullability, variance, and collection-element contracts across reflection, persistence, and generated boundaries.\n- Bound serialization by format authority, versioning, polymorphism, unknown fields, size, depth, and compatibility.\n- Preserve exception cause/category across async, reflection, proxies, transactions, and frameworks.\n\n## Anti-Patterns\n\n- Annotations are mistaken for advice execution.\n- Swallowed interruption, substituted defaults, or logging alone lose cancellation.\n- Executor or virtual-thread defaults hide lifecycle obligations.\n- Cached/thread-local state retains requests, resources, or obsolete classloaders.\n\n## Stop Conditions\n\n- Return propagation, isolation, rollback, and after-commit design to `transaction-consistency`.\n- Return ORM/data models to persistence owners; public serialization shape/version to contract owners.\n- Escalate deserialization to Main/`security-privacy-gate` when type admission, trust, executable sinks, authority, resource exhaustion, or privacy changes leave control/proof unresolved.\n- Keep ordinary format/compatibility validation with its owner.\n- Return locks, allocation, and tests to `concurrency-control`, `language-performance-safety`, and `language-testing-strategy`, respectively.\n\n## Output Contract\n\n- JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resource behavior, evidence and findings, proof limits, residual risk, and specialist routes\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A JVM change affects advice reachability interruption executor classloader null serialization or exception-resource semantics | The Java or JVM-runtime edit preserves established exception, resource, concurrency, class-loading, and serialization boundaries | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |"
         },
         "document_id": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md#body",
         "document_part": "body",
@@ -105552,9 +105552,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "197cc0113cfd649ade3060960aa646956160f45cfbeaa28214701ae2d84db57a",
+        "content_fingerprint": "c4932d93299b35d6d64da92642e592a01dec28621e12560c4f6cdca812c327c1",
         "document_context": {
-          "line_count": 52,
+          "line_count": 51,
           "line_offset": 4,
           "lines": [
             {
@@ -105627,7 +105627,7 @@
             },
             {
               "line": 18,
-              "text": "Protect TypeScript runtime narrowing, structural-type limits, unsafe escapes, promise and cancellation behavior, JavaScript numeric semantics, and emitted-module compatibility. Exclude product-state, API, package, and bundler decisions."
+              "text": "Protect TypeScript runtime semantics."
             },
             {
               "line": 19,
@@ -105643,35 +105643,35 @@
             },
             {
               "line": 22,
-              "text": "- Establish accepted runtime shape and compatibility from the actual producer, trust/version boundary, and current generation, storage, or prior parsing guarantees. Add owned runtime validation with an explicit invalid-input outcome where those guarantees leave a gap; TypeScript declarations alone prove neither safety nor runtime shape."
+              "text": "- Derive runtime shape/compatibility from producer, trust/version and generation/storage/parsing guarantees. Gaps require owned validation/invalid-input outcomes; declarations prove no runtime shape/safety."
             },
             {
               "line": 23,
-              "text": "- Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration."
+              "text": "- Structural assignability can admit extra capabilities, erase nominal identity, or conflate absent/present-undefined. Add discriminants, exact parsers, brands, or `satisfies` only for concrete invariants."
             },
             {
               "line": 24,
-              "text": "- Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger."
+              "text": "- `any`, assertions, non-null operators, and suppressions need inspected evidence; boundary escapes (trust/storage/generated/public) need owners and cleanup triggers."
             },
             {
               "line": 25,
-              "text": "- Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion."
+              "text": "- Require observation of owned promises/background tasks; propagate supported cancellation (`AbortSignal` or equivalent); settle cleanup/state on rejection, timeout or stale completion."
             },
             {
               "line": 26,
-              "text": "- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units wherever conversion or comparison changes behavior."
+              "text": "- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units at behavior-changing conversions/comparisons."
             },
             {
               "line": 27,
-              "text": "- Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target."
+              "text": "- Check emitted imports (type-only/runtime), side effects, ESM/CJS/conditional exports, module resolution, declarations, and generated entrypoints on every supported runtime/build target."
             },
             {
               "line": 28,
-              "text": "- Verify public-type and generated-contract changes with named consumer compilation scoped to the selected config, files, and module graph."
+              "text": "- Verify public/generated types through named consumer compilation using selected config/files/module graph."
             },
             {
               "line": 29,
-              "text": "- Add runtime version-skew cases when the changed contract affects or can mismatch supported runtime behavior; source/emission evidence may establish an unchanged runtime boundary."
+              "text": "- Test version skew for contracts affecting or mismatching supported runtime behavior; source/emission evidence can prove unchanged boundaries."
             },
             {
               "line": 30,
@@ -105687,19 +105687,19 @@
             },
             {
               "line": 33,
-              "text": "- A type annotation, assertion, schema type, or successful compilation is treated as runtime validation."
+              "text": "- Types/compilation substitute for runtime validation."
             },
             {
               "line": 34,
-              "text": "- Structural compatibility lets a database/domain object or authority-bearing value cross a DTO, SDK, storage, or message boundary unchanged."
+              "text": "- Structural compatibility moves domain/database objects or authority across DTO/SDK/storage/message boundaries."
             },
             {
               "line": 35,
-              "text": "- A floating promise, broad catch, default value, or stale completion hides rejection, cancellation, or user-visible state."
+              "text": "- Unobserved promises, broad catches/defaults, or stale completion hide rejection, cancellation, or user-visible state."
             },
             {
               "line": 36,
-              "text": "- Type tests pass while emitted imports, package exports, side effects, declarations, or numeric serialization fail at runtime."
+              "text": "- Type tests miss emitted-module/numeric-serialization failures."
             },
             {
               "line": 37,
@@ -105715,59 +105715,55 @@
             },
             {
               "line": 40,
-              "text": "- Stop fail-closed when decisive runtime, consumer, module-emission, or validation evidence is unknown or unavailable."
+              "text": "- Absent decisive runtime/consumer/emission/validation evidence, fail closed; types/assumptions cannot select behavior."
             },
             {
               "line": 41,
-              "text": "- Do not select behavior from typecheck-only or assumed evidence."
+              "text": "- Route API/SDK, product-state, money/timezone, security, package/build/bundler, runtime-performance/testing to their owners."
             },
             {
               "line": 42,
-              "text": "- Route API/SDK, product-state, money/timezone, security, package, build, runtime-performance, and testing decisions to their named owners."
+              "text": ""
             },
             {
               "line": 43,
-              "text": ""
-            },
-            {
-              "line": 44,
               "text": "## Output Contract"
             },
             {
-              "line": 45,
+              "line": 44,
               "text": ""
             },
             {
-              "line": 46,
+              "line": 45,
               "text": "- TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes."
             },
             {
-              "line": 47,
+              "line": 46,
               "text": ""
             },
             {
-              "line": 48,
+              "line": 47,
               "text": "## Targeted References"
             },
             {
-              "line": 49,
+              "line": 48,
               "text": ""
             },
             {
-              "line": 50,
+              "line": 49,
               "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
-              "line": 51,
+              "line": 50,
               "text": "|---|---|---|---|---|---|"
             },
             {
-              "line": 52,
+              "line": 51,
               "text": "| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A TypeScript change affects runtime validation structural typing unsafe escapes async numeric module-emission or public-type semantics | The TypeScript edit preserves these boundaries and established compiler plus runtime behavior resolves the mechanism | task-agent, analysis-agent, review-agent | option-comparison, selected-approach |"
             }
           ],
-          "sha256": "197cc0113cfd649ade3060960aa646956160f45cfbeaa28214701ae2d84db57a",
-          "text": "\n# typescript-professional-usage\n\n## Registry Trigger\n\n**Use when**\n\n- Inspect or change TypeScript trust-boundary validation, structural assignability, unsafe escapes, async cancellation, numeric meaning, emitted modules, or public declarations.\n- Browser, Node, SDK, generated-client, storage, message, or package-export behavior can differ from what the type checker accepts.\n\n**Do not use when**\n\n- The open question is generic frontend state, API policy, package/build configuration, performance, testing, or language style without a TypeScript-specific semantic risk.\n- No task-local TypeScript source, declaration, generated surface, compiler boundary, or emitted runtime behavior requires inspection or change.\n\n## Skill Role\n\nProtect TypeScript runtime narrowing, structural-type limits, unsafe escapes, promise and cancellation behavior, JavaScript numeric semantics, and emitted-module compatibility. Exclude product-state, API, package, and bundler decisions.\n\n## High-Value Rules\n\n- Establish accepted runtime shape and compatibility from the actual producer, trust/version boundary, and current generation, storage, or prior parsing guarantees. Add owned runtime validation with an explicit invalid-input outcome where those guarantees leave a gap; TypeScript declarations alone prove neither safety nor runtime shape.\n- Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration.\n- Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger.\n- Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion.\n- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units wherever conversion or comparison changes behavior.\n- Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target.\n- Verify public-type and generated-contract changes with named consumer compilation scoped to the selected config, files, and module graph.\n- Add runtime version-skew cases when the changed contract affects or can mismatch supported runtime behavior; source/emission evidence may establish an unchanged runtime boundary.\n\n## Anti-Patterns\n\n- A type annotation, assertion, schema type, or successful compilation is treated as runtime validation.\n- Structural compatibility lets a database/domain object or authority-bearing value cross a DTO, SDK, storage, or message boundary unchanged.\n- A floating promise, broad catch, default value, or stale completion hides rejection, cancellation, or user-visible state.\n- Type tests pass while emitted imports, package exports, side effects, declarations, or numeric serialization fail at runtime.\n\n## Stop Conditions\n\n- Stop fail-closed when decisive runtime, consumer, module-emission, or validation evidence is unknown or unavailable.\n- Do not select behavior from typecheck-only or assumed evidence.\n- Route API/SDK, product-state, money/timezone, security, package, build, runtime-performance, and testing decisions to their named owners.\n\n## Output Contract\n\n- TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A TypeScript change affects runtime validation structural typing unsafe escapes async numeric module-emission or public-type semantics | The TypeScript edit preserves these boundaries and established compiler plus runtime behavior resolves the mechanism | task-agent, analysis-agent, review-agent | option-comparison, selected-approach |"
+          "sha256": "c4932d93299b35d6d64da92642e592a01dec28621e12560c4f6cdca812c327c1",
+          "text": "\n# typescript-professional-usage\n\n## Registry Trigger\n\n**Use when**\n\n- Inspect or change TypeScript trust-boundary validation, structural assignability, unsafe escapes, async cancellation, numeric meaning, emitted modules, or public declarations.\n- Browser, Node, SDK, generated-client, storage, message, or package-export behavior can differ from what the type checker accepts.\n\n**Do not use when**\n\n- The open question is generic frontend state, API policy, package/build configuration, performance, testing, or language style without a TypeScript-specific semantic risk.\n- No task-local TypeScript source, declaration, generated surface, compiler boundary, or emitted runtime behavior requires inspection or change.\n\n## Skill Role\n\nProtect TypeScript runtime semantics.\n\n## High-Value Rules\n\n- Derive runtime shape/compatibility from producer, trust/version and generation/storage/parsing guarantees. Gaps require owned validation/invalid-input outcomes; declarations prove no runtime shape/safety.\n- Structural assignability can admit extra capabilities, erase nominal identity, or conflate absent/present-undefined. Add discriminants, exact parsers, brands, or `satisfies` only for concrete invariants.\n- `any`, assertions, non-null operators, and suppressions need inspected evidence; boundary escapes (trust/storage/generated/public) need owners and cleanup triggers.\n- Require observation of owned promises/background tasks; propagate supported cancellation (`AbortSignal` or equivalent); settle cleanup/state on rejection, timeout or stale completion.\n- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units at behavior-changing conversions/comparisons.\n- Check emitted imports (type-only/runtime), side effects, ESM/CJS/conditional exports, module resolution, declarations, and generated entrypoints on every supported runtime/build target.\n- Verify public/generated types through named consumer compilation using selected config/files/module graph.\n- Test version skew for contracts affecting or mismatching supported runtime behavior; source/emission evidence can prove unchanged boundaries.\n\n## Anti-Patterns\n\n- Types/compilation substitute for runtime validation.\n- Structural compatibility moves domain/database objects or authority across DTO/SDK/storage/message boundaries.\n- Unobserved promises, broad catches/defaults, or stale completion hide rejection, cancellation, or user-visible state.\n- Type tests miss emitted-module/numeric-serialization failures.\n\n## Stop Conditions\n\n- Absent decisive runtime/consumer/emission/validation evidence, fail closed; types/assumptions cannot select behavior.\n- Route API/SDK, product-state, money/timezone, security, package/build/bundler, runtime-performance/testing to their owners.\n\n## Output Contract\n\n- TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | A TypeScript change affects runtime validation structural typing unsafe escapes async numeric module-emission or public-type semantics | The TypeScript edit preserves these boundaries and established compiler plus runtime behavior resolves the mechanism | task-agent, analysis-agent, review-agent | option-comparison, selected-approach |"
         },
         "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
         "document_part": "body",
@@ -105776,7 +105772,7 @@
         "line_offset": 4,
         "owner": "typescript-professional-usage",
         "path": "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
-        "review_as_complex_count": 5,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/foundation/capabilities/typescript-professional-usage/SKILL.md"
@@ -128844,7 +128840,7 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "a9bc847d83442b2354aeea372fdf1d4c338c2be8cb95a3d1196ed2d646f836f9",
+        "content_fingerprint": "21d59785a173408034d6f1e593259b1a6b22d182b689ed280bfde1e8956633fc",
         "document_context": {
           "line_count": 64,
           "line_offset": 4,
@@ -128959,19 +128955,19 @@
             },
             {
               "line": 28,
-              "text": "- Keep the tooling decision within its owner, inputs, stops, and output contract."
+              "text": "- Honor tooling ownership, inputs, stops and output contract."
             },
             {
               "line": 29,
-              "text": "- Bind generated output and plugins to authoritative inputs, source ownership, destination, tool or host versions, compatibility, deterministic identity, and a non-circular clean-checkout bootstrap."
+              "text": "- Bind generated output/plugins to authoritative inputs, source ownership, destination, tool/host versions, compatibility, deterministic identity and non-circular clean-checkout bootstrap."
             },
             {
               "line": 30,
-              "text": "- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior."
+              "text": "- Bind mutating commands/subprocesses to resolved targets and invocation contracts, atomic completion or explicit recovery, cancellation/child cleanup and safe reruns."
             },
             {
               "line": 31,
-              "text": "- Prove the harness oracle with valid and invalid controls while keeping harness health distinct from the changed behavior's correctness."
+              "text": "- Prove harness oracles with valid/invalid controls; distinguish harness health from changed behavior correctness."
             },
             {
               "line": 32,
@@ -129106,17 +129102,17 @@
               "text": "| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
             }
           ],
-          "sha256": "a9bc847d83442b2354aeea372fdf1d4c338c2be8cb95a3d1196ed2d646f836f9",
-          "text": "\n# repository-tooling-change-builder\n\n## Role\n\nSupport `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.\n\n## When To Use\n\n- one bounded repository code generator, compiler plugin, linter, formatter, harness, internal CLI, build or monorepo automation, or maintenance utility change\n- a direct task whose primary consumers are repository developers, tests, builds, or local automation\n\n## Do Not Use\n\n- backend service, product behavior, or business logic\n- build-graph or build-configuration-only work with no repository-tool source change\n- documentation-only work\n- production mutation, deployment, release, or rollback\n- independent review, task decomposition, planning, routing, or control\n\n## Required Inputs\n\n- behavior, scope, owner, consumer, invocation, tests, and outcomes\n- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback\n\n## Professional Decision Rules\n\n- Keep the tooling decision within its owner, inputs, stops, and output contract.\n- Bind generated output and plugins to authoritative inputs, source ownership, destination, tool or host versions, compatibility, deterministic identity, and a non-circular clean-checkout bootstrap.\n- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior.\n- Prove the harness oracle with valid and invalid controls while keeping harness health distinct from the changed behavior's correctness.\n\n## High-Value Gotchas\n\n- Generated output can look correct while bootstrap order or source authority is wrong.\n- A subprocess can report success before output, cleanup, or child completion is durable.\n- A maintenance command can cross its intended workspace or mutate files on rerun.\n\n## Execution Checklist\n\n- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.\n- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.\n- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.\n- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.\n- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.\n\n## Stop / Escalation Conditions\n\n- Inspect affected owners, shared contracts, and dependencies directly. Request deeper analysis only when a concrete unresolved decision could change implementation.\n- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.\n- Keep other work at its owner; do not claim review.\n\n## Output Contract\n\n- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions\n- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |\n| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |\n| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
+          "sha256": "21d59785a173408034d6f1e593259b1a6b22d182b689ed280bfde1e8956633fc",
+          "text": "\n# repository-tooling-change-builder\n\n## Role\n\nSupport `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.\n\n## When To Use\n\n- one bounded repository code generator, compiler plugin, linter, formatter, harness, internal CLI, build or monorepo automation, or maintenance utility change\n- a direct task whose primary consumers are repository developers, tests, builds, or local automation\n\n## Do Not Use\n\n- backend service, product behavior, or business logic\n- build-graph or build-configuration-only work with no repository-tool source change\n- documentation-only work\n- production mutation, deployment, release, or rollback\n- independent review, task decomposition, planning, routing, or control\n\n## Required Inputs\n\n- behavior, scope, owner, consumer, invocation, tests, and outcomes\n- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback\n\n## Professional Decision Rules\n\n- Honor tooling ownership, inputs, stops and output contract.\n- Bind generated output/plugins to authoritative inputs, source ownership, destination, tool/host versions, compatibility, deterministic identity and non-circular clean-checkout bootstrap.\n- Bind mutating commands/subprocesses to resolved targets and invocation contracts, atomic completion or explicit recovery, cancellation/child cleanup and safe reruns.\n- Prove harness oracles with valid/invalid controls; distinguish harness health from changed behavior correctness.\n\n## High-Value Gotchas\n\n- Generated output can look correct while bootstrap order or source authority is wrong.\n- A subprocess can report success before output, cleanup, or child completion is durable.\n- A maintenance command can cross its intended workspace or mutate files on rerun.\n\n## Execution Checklist\n\n- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.\n- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.\n- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.\n- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.\n- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.\n\n## Stop / Escalation Conditions\n\n- Inspect affected owners, shared contracts, and dependencies directly. Request deeper analysis only when a concrete unresolved decision could change implementation.\n- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.\n- Keep other work at its owner; do not claim review.\n\n## Output Contract\n\n- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions\n- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |\n| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |\n| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
         },
         "document_id": "src/professional-skills/repository-tooling-change-builder/SKILL.md#body",
         "document_part": "body",
         "hard_fail_count": 0,
-        "highest_advisory_band": "review-as-complex",
+        "highest_advisory_band": null,
         "line_offset": 4,
         "owner": "repository-tooling-change-builder",
         "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-        "review_as_complex_count": 1,
+        "review_as_complex_count": 0,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md"
@@ -131386,34 +131382,6 @@
           "start_column": 3,
           "start_line": 6,
           "start_offset": 300
-        },
-        "words": 31
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/agent-profiles/role-agents.json#task-agent#instructions",
-        "finding_id": "b9bf3497eb5bd554ea064d24b982279a846a07631eb587d7a2f1530768fb9edb",
-        "kind": "sentence-length",
-        "line": 7,
-        "preview": "If reproduction is currently unavailable or unsafe, retain verified cause and same-pattern scan, run available targeted checks after the final material edit, and report the unverif",
-        "sentence": "If reproduction is currently unavailable or unsafe, retain verified cause and same-pattern scan, run available targeted checks after the final material edit, and report the unverified behavior without claiming it fixed.",
-        "sentence_fingerprint": "22382f2c177fa3c12dd7ea202244db4c0660d417405787e51d800aea11db23aa",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 364,
-          "end_line": 7,
-          "end_offset": 1867,
-          "lines": [
-            {
-              "line": 7,
-              "text": "- Reproducible bugs/review defects need behavioral RED, verified cause and same-pattern scan; unrelated setup/import/syntax failure is not RED. If reproduction is currently unavailable or unsafe, retain verified cause and same-pattern scan, run available targeted checks after the final material edit, and report the unverified behavior without claiming it fixed."
-            }
-          ],
-          "sha256": "d3e7c094f010fd97fc301628e42fcf8499ae67755e99260db8f156f57e64cbb5",
-          "start_column": 145,
-          "start_line": 7,
-          "start_offset": 1648
         },
         "words": 31
       },
@@ -142419,25 +142387,25 @@
         "document_id": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md#body",
         "finding_id": "cff7413a4b96b927dee2ba0613eb628855b1ddf10e2e9438542d0fd91b316dc3",
         "kind": "sentence-length",
-        "line": 49,
+        "line": 48,
         "preview": "JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resou",
         "sentence": "JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resource behavior, evidence and findings, proof limits, residual risk, and specialist routes",
         "sentence_fingerprint": "762c1e4a04295fb3eef72a7269dc352b0875b285ecfc83c0ff5eaa376087c5ba",
         "severity": "advisory",
         "source_span": {
           "end_column": 270,
-          "end_line": 49,
-          "end_offset": 3307,
+          "end_line": 48,
+          "end_offset": 2834,
           "lines": [
             {
-              "line": 49,
+              "line": 48,
               "text": "- JVM decision with inspected caller/task paths, advice reachability, interruption, executor lifecycle, classloader/scoped state, null/type boundaries, serialization, exception/resource behavior, evidence and findings, proof limits, residual risk, and specialist routes"
             }
           ],
           "sha256": "698609cc49ca6c15047404de64c6a3983c075ed09e30b5994715c16ad19c6607",
           "start_column": 3,
-          "start_line": 49,
-          "start_offset": 3040
+          "start_line": 48,
+          "start_offset": 2567
         },
         "words": 28
       },
@@ -151533,139 +151501,27 @@
         "band": "review-as-complex",
         "decisions": null,
         "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
-        "finding_id": "2449a937e3da2ecfb46b07990031cfb3c0f14ee48f71a57de238538a9a46dc29",
-        "kind": "sentence-length",
-        "line": 23,
-        "preview": "Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` whe",
-        "sentence": "Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration.",
-        "sentence_fingerprint": "ab1a9fbeb94acf0e6d6f1932f9ac65a4a8cecfa3ae29314287b46b4e133a6281",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 249,
-          "end_line": 23,
-          "end_offset": 1581,
-          "lines": [
-            {
-              "line": 23,
-              "text": "- Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration."
-            }
-          ],
-          "sha256": "10da09d2c8ccdad244587ba1ccff729979e5f6e0e78dbd16f6b54e2abca9cd5d",
-          "start_column": 3,
-          "start_line": 23,
-          "start_offset": 1335
-        },
-        "words": 31
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
-        "finding_id": "49e2ce5931f34c94122ad426a4e38e2cd9495ff8d1bc79da7cdf8217a439e62a",
-        "kind": "sentence-length",
-        "line": 24,
-        "preview": "Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger.",
-        "sentence": "Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger.",
-        "sentence_fingerprint": "39e8bbc695b6a5b3b1c3f4a6d166db7d9a49b1c14ad8878c1973101e8b1bb650",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 182,
-          "end_line": 24,
-          "end_offset": 1763,
-          "lines": [
-            {
-              "line": 24,
-              "text": "- Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger."
-            }
-          ],
-          "sha256": "c10094568c9f047c42ea289685bef3a10ed89d47e0bb346b0c51bf4a640efcbb",
-          "start_column": 3,
-          "start_line": 24,
-          "start_offset": 1584
-        },
-        "words": 26
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
-        "finding_id": "6f04f41717f7126aad631fc06c18e3fe59f1abb80f04ddadc0adab2bf073b1e9",
-        "kind": "sentence-length",
-        "line": 25,
-        "preview": "Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rej",
-        "sentence": "Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion.",
-        "sentence_fingerprint": "e9e45aa3fde4d7d1d0a4de2007a2ceda5a603d83d053dc8c865723e65808ab9b",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 221,
-          "end_line": 25,
-          "end_offset": 1984,
-          "lines": [
-            {
-              "line": 25,
-              "text": "- Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion."
-            }
-          ],
-          "sha256": "cf7929d42fb9d606dec7ba54b2fc86ea22f6922b88e6b1f659123b7577f39a63",
-          "start_column": 3,
-          "start_line": 25,
-          "start_offset": 1766
-        },
-        "words": 29
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
-        "finding_id": "52e391ef29c2a4d7ec5d8cbaeb5510c0f554eab537cd3ee65f6dda78f3fbbda6",
-        "kind": "sentence-length",
-        "line": 27,
-        "preview": "Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported ru",
-        "sentence": "Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target.",
-        "sentence_fingerprint": "3e1a85b61f39f71adb1d1aff697634d9d77aac97b849ac6fe65bfaba5f9497bd",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 206,
-          "end_line": 27,
-          "end_offset": 2353,
-          "lines": [
-            {
-              "line": 27,
-              "text": "- Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target."
-            }
-          ],
-          "sha256": "55a60496c4efe61b9a3036924efc9e4125c99e81109e05f50599da93b77ebbfa",
-          "start_column": 3,
-          "start_line": 27,
-          "start_offset": 2150
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/typescript-professional-usage/SKILL.md#body",
         "finding_id": "7029c5f5cd3e9d9e4bda20c38209040c543f02df592a11bac695babd089a26c3",
         "kind": "sentence-length",
-        "line": 46,
+        "line": 45,
         "preview": "TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated com",
         "sentence": "TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes.",
         "sentence_fingerprint": "320cc7a85291377f7aa16d799f95ff52a4e533947b7d597cd1d5ae52ecd431ba",
         "severity": "advisory",
         "source_span": {
           "end_column": 230,
-          "end_line": 46,
-          "end_offset": 3789,
+          "end_line": 45,
+          "end_offset": 3048,
           "lines": [
             {
-              "line": 46,
+              "line": 45,
               "text": "- TypeScript semantic decision with runtime boundary, structural-type limits, and bounded escapes; async, cancellation, and numeric behavior; module emission and public/generated compatibility; proof limits and specialist routes."
             }
           ],
           "sha256": "42dc4e03aa57900b5c321bec0fcd2ec0be4cf9e7f452d45c6d5fbc98d4f91b6d",
           "start_column": 3,
-          "start_line": 46,
-          "start_offset": 3562
+          "start_line": 45,
+          "start_offset": 2821
         },
         "words": 26
       },
@@ -155052,34 +154908,6 @@
       {
         "band": "review-as-complex",
         "decisions": null,
-        "document_id": "src/professional-skills/repository-tooling-change-builder/SKILL.md#body",
-        "finding_id": "bc334fbab7aa4b739ea01fa8175981648e1319605243231bbc7c0de1ed54a53a",
-        "kind": "sentence-length",
-        "line": 30,
-        "preview": "Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun be",
-        "sentence": "Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior.",
-        "sentence_fingerprint": "7c87e16d47805332069eac83d2f871ee57ecca940f2ef2f7a627bd9a3838cc51",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 190,
-          "end_line": 30,
-          "end_offset": 1444,
-          "lines": [
-            {
-              "line": 30,
-              "text": "- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior."
-            }
-          ],
-          "sha256": "4f8c5437e0f3daf46c920c2049383ef4892933dc1985a76f4b1993b963cfba6b",
-          "start_column": 3,
-          "start_line": 30,
-          "start_offset": 1257
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
         "document_id": "src/professional-skills/security-privacy-gate/references/evidence-patterns.md#reference",
         "finding_id": "9e3f0083140bb97c5e767fbf572d67b5693041b44a70d4d06acf510efd3cd881",
         "kind": "sentence-length",
@@ -155198,17 +155026,17 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 999,
-      "value": "d6b2d9127ea5537a4df95d2e62d1dd8388f1492b7bf0aab1990e14758011518f"
+      "value": "5082bef6236b9c87c661933eea347d667445a0f8688f0a633d57ce889739a242"
     },
     "summary": {
-      "advisory_documents": 335,
-      "advisory_sentences": 843,
+      "advisory_documents": 333,
+      "advisory_sentences": 837,
       "blocker_findings": 0,
       "compound_bullets": 0,
       "documents": 999,
       "hard_fail_sentences": 0,
       "hard_gate_ready": true,
-      "review_as_complex_sentences": 825,
+      "review_as_complex_sentences": 819,
       "tighten_sentences": 18
     }
   },
@@ -155480,7 +155308,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 972,
-        "value": "a0775c387094432a4595bbe7a53f18142cf04cc9e83a0c95525122b0082a3622"
+        "value": "d6d90a94cb4ffedb6877ce08fd05e0752d7f0182e7bf7b726645457f4558007b"
       },
       "source_precedence": [
         "local",
@@ -291517,7 +291345,6 @@
         "src/foundation/capabilities/git-professional-usage/SKILL.md",
         "src/foundation/capabilities/indexing-query-optimization/SKILL.md",
         "src/foundation/capabilities/information-architecture/SKILL.md",
-        "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
         "src/foundation/capabilities/language-idiom-enforcement/SKILL.md",
         "src/foundation/capabilities/language-runtime-selection/SKILL.md",
         "src/foundation/capabilities/language-testing-strategy/SKILL.md",
@@ -291536,7 +291363,6 @@
         "src/foundation/capabilities/repository-context-map/SKILL.md",
         "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
         "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
-        "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
         "src/professional-skills/incident-response-coordinator/SKILL.md"
       ],
       "domain_over_hard_tokens": [],
@@ -291554,7 +291380,6 @@
         "src/foundation/capabilities/git-professional-usage/SKILL.md",
         "src/foundation/capabilities/indexing-query-optimization/SKILL.md",
         "src/foundation/capabilities/information-architecture/SKILL.md",
-        "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
         "src/foundation/capabilities/language-idiom-enforcement/SKILL.md",
         "src/foundation/capabilities/language-runtime-selection/SKILL.md",
         "src/foundation/capabilities/language-testing-strategy/SKILL.md",
@@ -291569,7 +291394,6 @@
         "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
         "src/foundation/capabilities/task-handoff-context/SKILL.md",
         "src/foundation/capabilities/testability-seam-design/SKILL.md",
-        "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
         "src/foundation/capabilities/unit-testing/SKILL.md",
         "src/foundation/capabilities/user-flow-modeling/SKILL.md"
       ],
@@ -291589,7 +291413,6 @@
         "src/foundation/capabilities/git-professional-usage/SKILL.md",
         "src/foundation/capabilities/indexing-query-optimization/SKILL.md",
         "src/foundation/capabilities/information-architecture/SKILL.md",
-        "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
         "src/foundation/capabilities/language-idiom-enforcement/SKILL.md",
         "src/foundation/capabilities/language-runtime-selection/SKILL.md",
         "src/foundation/capabilities/language-testing-strategy/SKILL.md",
@@ -291604,7 +291427,6 @@
         "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
         "src/foundation/capabilities/task-handoff-context/SKILL.md",
         "src/foundation/capabilities/testability-seam-design/SKILL.md",
-        "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
         "src/foundation/capabilities/unit-testing/SKILL.md",
         "src/foundation/capabilities/user-flow-modeling/SKILL.md"
       ],
@@ -295290,11 +295112,11 @@
         "word_count": 19
       },
       {
-        "content_budget_classification": "REVIEW_DENSITY",
+        "content_budget_classification": "KEEP",
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": "compact",
         "content_class_rationale": null,
-        "content_fingerprint": "3d97ae21a1bc4bd591bc1a1bf66c0b2a6091ee85f4a19a40ae0e90a365091025",
+        "content_fingerprint": "d49426779a1d18efb1a9e9810870ecd1a3c0fdf5ec183122246ed3f95e75d5ce",
         "content_hard_tokens": 900,
         "content_hard_words": 500,
         "content_target_tokens": null,
@@ -295308,19 +295130,19 @@
         "high_value_rules_over_sentence_limit": 0,
         "high_value_rules_without_decision_semantics": 0,
         "layer": "foundation-capability",
-        "line_count": 55,
+        "line_count": 54,
         "max_prose_line_words": 28,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
-        "over_content_target": true,
+        "over_content_target": false,
         "over_content_target_tokens": false,
-        "over_content_target_words": true,
+        "over_content_target_words": false,
         "owner": "java-jvm-professional-usage",
         "path": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
-        "token_count": 620,
+        "token_count": 527,
         "tutorial_explanatory_density": 0.0,
-        "word_count": 415
+        "word_count": 339
       },
       {
         "content_fingerprint": "47cca227672e6ef9c639d40114dcc44db82cde4072dabacd4bbe94d370daea04",
@@ -298370,11 +298192,11 @@
         "word_count": 23
       },
       {
-        "content_budget_classification": "TIGHTEN_BODY",
+        "content_budget_classification": "KEEP",
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": "compact",
         "content_class_rationale": null,
-        "content_fingerprint": "197cc0113cfd649ade3060960aa646956160f45cfbeaa28214701ae2d84db57a",
+        "content_fingerprint": "c4932d93299b35d6d64da92642e592a01dec28621e12560c4f6cdca812c327c1",
         "content_hard_tokens": 900,
         "content_hard_words": 500,
         "content_target_tokens": null,
@@ -298388,19 +298210,19 @@
         "high_value_rules_over_sentence_limit": 0,
         "high_value_rules_without_decision_semantics": 0,
         "layer": "foundation-capability",
-        "line_count": 52,
-        "max_prose_line_words": 44,
+        "line_count": 51,
+        "max_prose_line_words": 26,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
-        "over_content_target": true,
+        "over_content_target": false,
         "over_content_target_tokens": false,
-        "over_content_target_words": true,
+        "over_content_target_words": false,
         "owner": "typescript-professional-usage",
         "path": "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
-        "token_count": 703,
+        "token_count": 574,
         "tutorial_explanatory_density": 0.0,
-        "word_count": 488
+        "word_count": 343
       },
       {
         "content_fingerprint": "143aaeceb03c423896635c965d50bc1bf236c9a7fd08945ff51791fa8dfbc319",
@@ -299518,7 +299340,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "a9bc847d83442b2354aeea372fdf1d4c338c2be8cb95a3d1196ed2d646f836f9",
+        "content_fingerprint": "21d59785a173408034d6f1e593259b1a6b22d182b689ed280bfde1e8956633fc",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -299535,8 +299357,8 @@
         "over_content_target_words": false,
         "owner": "repository-tooling-change-builder",
         "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-        "token_count": 576,
-        "word_count": 398
+        "token_count": 562,
+        "word_count": 377
       },
       {
         "content_fingerprint": "bd7e353914b8efd69c4f000d0b96afcf01a6506574e64702fda8b6a68e0b67ca",
@@ -305034,15 +304856,15 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 379,
-      "value": "fa47aefb89cc3068e3fdf255c70fd3555ffc4a0b77eec10cd6457aff6af47b50"
+      "value": "36bc48d5c94ae3972dad7f1f228ca5517e00b6af07f4d9c3173a8c4ddc92c8b7"
     },
     "summary": {
       "agent_facing_root_documents": 379,
       "agent_facing_root_files": 190,
       "content_blockers": 0,
-      "content_keep": 160,
-      "content_review_density": 22,
-      "content_tighten_body": 6,
+      "content_keep": 162,
+      "content_review_density": 21,
+      "content_tighten_body": 5,
       "control_prompts": 1,
       "control_skills": 1,
       "description_document_parts": 189,
@@ -305054,7 +304876,7 @@
       "foundation_capabilities": 150,
       "foundation_compact_capabilities": 128,
       "foundation_compact_over_hard_words": 0,
-      "foundation_compact_over_target_words": 27,
+      "foundation_compact_over_target_words": 25,
       "foundation_complex_capabilities": 22,
       "foundation_complex_over_hard_words": 0,
       "foundation_complex_over_target_words": 0,
@@ -305062,7 +304884,7 @@
       "foundation_low_decision_density": 0,
       "foundation_over_hard_tokens": 0,
       "foundation_over_hard_words": 0,
-      "foundation_over_target_words": 27,
+      "foundation_over_target_words": 25,
       "foundation_rule_count_outside_target": 0,
       "foundation_rules_over_sentence_limit": 0,
       "foundation_rules_without_decision_semantics": 0,
@@ -307320,19 +307142,17 @@
       "recommended_phase": "-",
       "reference_link_count": 3,
       "repeated_phrase_count": 0,
-      "review_reasons": [
-        "ai_readability_review_as_complex"
-      ],
-      "review_state": "REVIEW_READABILITY",
+      "review_reasons": [],
+      "review_state": "KEEP",
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 576,
+      "token_count": 562,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 398
+      "word_count": 377
     },
     {
       "actionability_applicable": false,
@@ -312889,8 +312709,8 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 7,
       "benchmark_section_length": 0,
-      "bullet_count": 23,
-      "classification": "REVIEW_DENSITY",
+      "bullet_count": 22,
+      "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
       "content_class": "compact",
@@ -312899,7 +312719,7 @@
       "content_hard_words": 500,
       "content_target_tokens": null,
       "content_target_words": 400,
-      "context_efficiency_score": 92,
+      "context_efficiency_score": 100,
       "control_boilerplate_density": 0.0,
       "control_scaffold_families": [],
       "control_scaffold_findings": [],
@@ -312907,12 +312727,10 @@
       "decision_density": 1.0,
       "description_findings": [],
       "description_length": 171,
-      "findings": [
-        "governed body 415 words exceeds target 400"
-      ],
+      "findings": [],
       "front_loaded_action_score": 40,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 50,
+      "governed_line_count": 49,
       "has_shared_optimality": false,
       "heading_count": 8,
       "high_confidence_control_scaffold": false,
@@ -312925,7 +312743,7 @@
       "largest_section_lines": 12,
       "largest_section_title": "Registry Trigger",
       "largest_table_rows": 2,
-      "line_count": 55,
+      "line_count": 54,
       "max_prose_line_words": 39,
       "name": "java-jvm-professional-usage",
       "optimality_section_length": 0,
@@ -312933,31 +312751,30 @@
       "over_content_hard": false,
       "over_content_hard_tokens": false,
       "over_content_hard_words": false,
-      "over_content_target": true,
+      "over_content_target": false,
       "over_content_target_tokens": false,
-      "over_content_target_words": true,
+      "over_content_target_words": false,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
       "professionalism_score": 100,
       "projection_overhead_lines": 5,
-      "recommended_phase": "P1",
+      "recommended_phase": "-",
       "reference_link_count": 1,
       "repeated_phrase_count": 0,
       "review_reasons": [
-        "ai_readability_review_as_complex",
-        "classification_review_density"
+        "ai_readability_review_as_complex"
       ],
       "review_state": "REVIEW_READABILITY",
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
-      "suggested_action": "Review density and retain the current body only with explicit expert disposition.",
+      "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 620,
+      "token_count": 527,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 4,
-      "word_count": 415
+      "word_count": 339
     },
     {
       "actionability_applicable": false,
@@ -318141,8 +317958,8 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 7,
       "benchmark_section_length": 0,
-      "bullet_count": 20,
-      "classification": "TIGHTEN_BODY",
+      "bullet_count": 19,
+      "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
       "content_class": "compact",
@@ -318151,7 +317968,7 @@
       "content_hard_words": 500,
       "content_target_tokens": null,
       "content_target_words": 400,
-      "context_efficiency_score": 92,
+      "context_efficiency_score": 100,
       "control_boilerplate_density": 0.0,
       "control_scaffold_families": [],
       "control_scaffold_findings": [],
@@ -318159,12 +317976,10 @@
       "decision_density": 1.0,
       "description_findings": [],
       "description_length": 167,
-      "findings": [
-        "governed body 488 words exceeds target 400"
-      ],
+      "findings": [],
       "front_loaded_action_score": 40,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 47,
+      "governed_line_count": 46,
       "has_shared_optimality": false,
       "heading_count": 8,
       "high_confidence_control_scaffold": false,
@@ -318177,39 +317992,38 @@
       "largest_section_lines": 12,
       "largest_section_title": "Registry Trigger",
       "largest_table_rows": 2,
-      "line_count": 52,
-      "max_prose_line_words": 44,
+      "line_count": 51,
+      "max_prose_line_words": 42,
       "name": "typescript-professional-usage",
       "optimality_section_length": 0,
       "output_contract_length": 4,
       "over_content_hard": false,
       "over_content_hard_tokens": false,
       "over_content_hard_words": false,
-      "over_content_target": true,
+      "over_content_target": false,
       "over_content_target_tokens": false,
-      "over_content_target_words": true,
+      "over_content_target_words": false,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
       "professionalism_score": 100,
       "projection_overhead_lines": 5,
-      "recommended_phase": "P1",
+      "recommended_phase": "-",
       "reference_link_count": 1,
       "repeated_phrase_count": 0,
       "review_reasons": [
-        "classification_tighten_body",
         "ai_readability_review_as_complex"
       ],
-      "review_state": "TIGHTEN_BODY",
+      "review_state": "REVIEW_READABILITY",
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
-      "suggested_action": "Keep decision-critical guidance. Trim duplication or move low-frequency detail into an existing targeted Reference.",
+      "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 703,
+      "token_count": 574,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 6,
-      "word_count": 488
+      "word_count": 343
     },
     {
       "actionability_applicable": false,
@@ -319706,13 +319520,13 @@
     "actionability_applicable_items": 0,
     "actionable_common_line_count": 8,
     "classifications": {
-      "KEEP": 160,
-      "REVIEW_DENSITY": 22,
-      "TIGHTEN_BODY": 6
+      "KEEP": 162,
+      "REVIEW_DENSITY": 21,
+      "TIGHTEN_BODY": 5
     },
     "content_blockers": 0,
-    "content_review_density_candidates": 22,
-    "content_tighten_candidates": 6,
+    "content_review_density_candidates": 21,
+    "content_tighten_candidates": 5,
     "control_boilerplate_risks": 0,
     "description_checked_by_kind": {
       "control-skill": 1,
@@ -319752,11 +319566,11 @@
       "actionable_duplicate_content": 8,
       "ai_readability_compound_bullet": 0,
       "ai_readability_hard_fail": 0,
-      "ai_readability_review_as_complex": 156,
+      "ai_readability_review_as_complex": 155,
       "ai_readability_tighten": 16,
       "classification_block": 0,
-      "classification_review_density": 22,
-      "classification_tighten_body": 6,
+      "classification_review_density": 21,
+      "classification_tighten_body": 5,
       "control_boilerplate_risk": 0,
       "description_authoring_advisory": 5,
       "professional_governed_lines_over_80": 0,
@@ -319765,11 +319579,11 @@
       "weak_front_loaded_action": 0
     },
     "review_states": {
-      "KEEP": 26,
+      "KEEP": 27,
       "KEEP_WITH_ADVISORY": 4,
       "REVIEW_CONTEXT": 2,
       "REVIEW_READABILITY": 150,
-      "TIGHTEN_BODY": 6
+      "TIGHTEN_BODY": 5
     },
     "split_candidates": 0,
     "weak_front_loaded_action_all_items": 0,

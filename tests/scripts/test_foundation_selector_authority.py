@@ -49,6 +49,15 @@ FOUNDATION_SOURCE_COUNTS = {
     "runtime-matcher": 3,
 }
 FOUNDATION_EFFECTS = ("selected", "domain-owned", "adjacent", "simple")
+LANGUAGE_ADMISSION_TRIPLES = frozenset(
+    ("foundation", skill, effect)
+    for skill in (
+        "python-professional-usage", "go-professional-usage",
+        "typescript-professional-usage", "rust-professional-usage",
+        "cpp-professional-usage", "java-jvm-professional-usage",
+    )
+    for effect in FOUNDATION_EFFECTS
+)
 WAVE1A_FOUNDATIONS = (
     "configuration-runtime-policy",
     "dependency-vulnerability-scanning",
@@ -6087,9 +6096,11 @@ class _FoundationSelectorSpec:
         ]
         actual_wave1a_sequence = [
             (row["layer"], row["skill"], row["case_kind"])
-            for row in self.admission["cases"][-len(expected_wave1a_sequence):]
+            for row in self.admission["cases"]
+            if (row["layer"], row["skill"], row["case_kind"]) in WAVE1A_FOUNDATION_TRIPLES
         ]
         self.assertEqual(expected_wave1a_sequence, actual_wave1a_sequence)
+        self.assertEqual(LANGUAGE_ADMISSION_TRIPLES, fixture & LANGUAGE_ADMISSION_TRIPLES)
 
         predecessor = self.admission["cases"][
             :PHASE2_A_PREDECESSOR_ROW_COUNT
@@ -6454,6 +6465,7 @@ class _FoundationSelectorSpec:
             and triple[1] not in PHASE2_F04_FOUNDATIONS
             and triple[1] not in PHASE2_A_FOUNDATIONS
             and triple not in WAVE1A_FOUNDATION_TRIPLES
+            and triple not in LANGUAGE_ADMISSION_TRIPLES
         }
         actual_wave1a = actual & WAVE1A_FOUNDATION_TRIPLES
         actual_f02 = {
@@ -6640,6 +6652,7 @@ class _FoundationSelectorSpec:
                 and triple[1] not in PHASE2_F04_FOUNDATIONS
                 and triple[1] not in PHASE2_A_FOUNDATIONS
                 and triple not in WAVE1A_FOUNDATION_TRIPLES
+                and triple not in LANGUAGE_ADMISSION_TRIPLES
             ),
             "f03": len(
                 {
@@ -7135,6 +7148,7 @@ class LanguageAuthorizationTests(unittest.TestCase):
     def test_language_names_build_only_and_unchanged_semantics_do_not_select(self):
         for prompt in [
             'Fix the internal Python CLI help wording.',
+            'Update a Rust backend service FFI ownership guide and OS resource copy; ABI behavior remains unchanged.',
             'Update the repository TypeScript compiler build configuration only; TypeScript runtime semantics remain unchanged.',
             'Fix the internal Rust CLI help wording; ownership and lifetime behavior remain unchanged.',
             'Review the actual diff for a Node.js CLI build policy; Node.js runtime behavior remains unchanged.',

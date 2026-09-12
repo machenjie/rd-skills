@@ -44,8 +44,12 @@ def main() -> int:
         errors.append(f"generated cache in source: {path.relative_to(ROOT)}")
 
     for validator in VALIDATORS:
+        argv = [sys.executable, str(ROOT / "scripts" / validator)]
+        if validator == "validate-agent-profiles.py":
+            # Core validates rendered Profiles separately after its build producer.
+            argv.append("--source-only")
         result = subprocess.run(
-            [sys.executable, str(ROOT / "scripts" / validator)],
+            argv,
             cwd=ROOT,
             text=True,
             capture_output=True,

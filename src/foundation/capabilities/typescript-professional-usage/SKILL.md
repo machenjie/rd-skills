@@ -19,31 +19,30 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when TypeScript 
 
 ## Skill Role
 
-Protect TypeScript runtime narrowing, structural-type limits, unsafe escapes, promise and cancellation behavior, JavaScript numeric semantics, and emitted-module compatibility. Exclude product-state, API, package, and bundler decisions.
+Protect TypeScript runtime semantics.
 
 ## High-Value Rules
 
-- Establish accepted runtime shape and compatibility from the actual producer, trust/version boundary, and current generation, storage, or prior parsing guarantees. Add owned runtime validation with an explicit invalid-input outcome where those guarantees leave a gap; TypeScript declarations alone prove neither safety nor runtime shape.
-- Structural assignability can admit extra capabilities, lose nominal identity, or collapse absent and present-undefined; use discriminants, exact parsers, brands, or `satisfies` when a concrete invariant requires them, not as universal decoration.
-- Scope `any`, assertions, non-null operators, and suppressions to inspected evidence; an escape at a trust, storage, generated, or public boundary has an owner and cleanup trigger.
-- Observe every owned promise and background task, propagate `AbortSignal` or equivalent cancellation where the boundary supports it, and settle cleanup and state transitions for rejection, timeout, and stale completion.
-- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units wherever conversion or comparison changes behavior.
-- Review type-only versus runtime imports, side effects, ESM/CJS and conditional exports, module resolution, declaration emission, and generated entrypoints against each supported runtime and build target.
-- Verify public-type and generated-contract changes with named consumer compilation scoped to the selected config, files, and module graph.
-- Add runtime version-skew cases when the changed contract affects or can mismatch supported runtime behavior; source/emission evidence may establish an unchanged runtime boundary.
+- Derive runtime shape/compatibility from producer, trust/version and generation/storage/parsing guarantees. Gaps require owned validation/invalid-input outcomes; declarations prove no runtime shape/safety.
+- Structural assignability can admit extra capabilities, erase nominal identity, or conflate absent/present-undefined. Add discriminants, exact parsers, brands, or `satisfies` only for concrete invariants.
+- `any`, assertions, non-null operators, and suppressions need inspected evidence; boundary escapes (trust/storage/generated/public) need owners and cleanup triggers.
+- Require observation of owned promises/background tasks; propagate supported cancellation (`AbortSignal` or equivalent); settle cleanup/state on rejection, timeout or stale completion.
+- Classify safe integers, fractions, `NaN`, infinities, decimal money, `bigint`, serialized numbers, and units at behavior-changing conversions/comparisons.
+- Check emitted imports (type-only/runtime), side effects, ESM/CJS/conditional exports, module resolution, declarations, and generated entrypoints on every supported runtime/build target.
+- Verify public/generated types through named consumer compilation using selected config/files/module graph.
+- Test version skew for contracts affecting or mismatching supported runtime behavior; source/emission evidence can prove unchanged boundaries.
 
 ## Anti-Patterns
 
-- A type annotation, assertion, schema type, or successful compilation is treated as runtime validation.
-- Structural compatibility lets a database/domain object or authority-bearing value cross a DTO, SDK, storage, or message boundary unchanged.
-- A floating promise, broad catch, default value, or stale completion hides rejection, cancellation, or user-visible state.
-- Type tests pass while emitted imports, package exports, side effects, declarations, or numeric serialization fail at runtime.
+- Types/compilation substitute for runtime validation.
+- Structural compatibility moves domain/database objects or authority across DTO/SDK/storage/message boundaries.
+- Unobserved promises, broad catches/defaults, or stale completion hide rejection, cancellation, or user-visible state.
+- Type tests miss emitted-module/numeric-serialization failures.
 
 ## Stop Conditions
 
-- Stop fail-closed when decisive runtime, consumer, module-emission, or validation evidence is unknown or unavailable.
-- Do not select behavior from typecheck-only or assumed evidence.
-- Route API/SDK, product-state, money/timezone, security, package, build, runtime-performance, and testing decisions to their named owners.
+- Absent decisive runtime/consumer/emission/validation evidence, fail closed; types/assumptions cannot select behavior.
+- Route API/SDK, product-state, money/timezone, security, package/build/bundler, runtime-performance/testing to their owners.
 
 ## Output Contract
 

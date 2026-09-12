@@ -47,6 +47,27 @@ INVALID_JSON_OBJECT_PAYLOADS = (
 
 
 class AgentProfileReadabilityTests(unittest.TestCase):
+    def test_source_composite_ignores_stale_built_profiles(self) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "source_invariants_profile_test", SCRIPTS / "validate-src-invariants.py"
+        )
+        assert spec is not None and spec.loader is not None
+        composite = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(composite)
+        calls = []
+
+        def run_validator(argv, **kwargs):
+            calls.append(argv)
+            if Path(argv[1]).name == "validate-agent-profiles.py" and "--source-only" not in argv:
+                return mock.Mock(returncode=1, stdout="", stderr="stale built Profile")
+            return mock.Mock(returncode=0, stdout="", stderr="")
+
+        with mock.patch.object(composite.subprocess, "run", side_effect=run_validator), redirect_stdout(io.StringIO()):
+            self.assertEqual(0, composite.main())
+        profile_calls = [argv for argv in calls if Path(argv[1]).name == "validate-agent-profiles.py"]
+        self.assertEqual(1, len(profile_calls))
+        self.assertIn("--source-only", profile_calls[0])
+
     def test_role_reference_consumers_are_source_declared_and_cross_role_safe(self) -> None:
         self.assertEqual(
             [],
@@ -429,10 +450,12 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         for role in ("main-control-agent", "task-agent", "review-agent"):
             self.assertNotIn("external-source-read", profiles[role]["tools"])
 
-        analysis = profiles["analysis-agent"]["instructions"]
-        for role in ("task-agent", "review-agent"):
-            instructions = profiles[role]["instructions"]
-            self.assertIn("external-source-read", instructions)
+        for role, boundary in (
+            ("task-agent", "external reads require Analysis"),
+            ("review-agent", "no edit, repair, dispatch, or independent external-source-read"),
+        ):
+            with self.subTest(role=role):
+                self.assertIn(boundary, profiles[role]["instructions"])
 
 
     def test_external_read_host_modes_and_native_tool_projection_are_exact(self) -> None:

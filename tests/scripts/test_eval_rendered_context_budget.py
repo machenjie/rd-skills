@@ -437,6 +437,36 @@ def _reconstruct_global_dominance_relation(
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def test_metadata_only_dispatch_renders_without_business_mode(self) -> None:
+        measurements = []
+        measure = EVAL._measure_context
+
+        def capture(components, **kwargs):
+            result = measure(components, **kwargs)
+            if any(
+                component["path"] == (
+                    "fixture:dispatch-only-host-routing-asset-read:step:0:canonical-capsule"
+                )
+                for component in components
+            ):
+                measurements.append(result)
+            return result
+
+        # Render the real fixtures and artifacts; the unrelated exhaustive
+        # combination phase is covered separately by the full budget gate.
+        with mock.patch.object(EVAL, "_measure_context", side_effect=capture), mock.patch.object(
+            EVAL, "_evaluate_admissible_context_compositions", side_effect=StopIteration
+        ):
+            with self.assertRaises(StopIteration):
+                EVAL.evaluate()
+
+        self.assertEqual(len(EVAL.HOST_PROFILE_ROOTS), len(measurements))
+        for measurement in measurements:
+            self.assertEqual("analysis-agent", measurement["role"])
+            self.assertIsNone(measurement["mode"])
+            self.assertEqual([], measurement["layer3_skills"])
+            self.assertEqual([], measurement["professional_references"])
+
     def _assert_canonical_runtime_receipt(self, receipt: dict[str, object]) -> None:
         manifest = json.loads(
             (
