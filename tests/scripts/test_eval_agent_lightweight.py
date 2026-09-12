@@ -24,6 +24,27 @@ class BehaviorTests(unittest.TestCase):
     def test_adjacent_authored_controls(self):
         self.assertEqual([], EVAL.evaluate(DOCUMENT)['errors'])
 
+    def test_unavailable_reproduction_still_needs_fresh_available_validation(self):
+        case = copy.deepcopy(next(c for c in DOCUMENT['cases']
+            if c['id'] == 'bugfix-unavailable-host-keeps-partial-proof'))
+        case['steps'] = [s for s in case['steps'] if s['action'] != 'validate']
+        self.assertIn('missing-post-final-edit-validation', EVAL.evaluate_case(case)[1])
+
+    def test_unavailable_reproduction_cannot_relabel_an_unrelated_green(self):
+        case = copy.deepcopy(next(c for c in DOCUMENT['cases']
+            if c['id'] == 'bugfix-unavailable-host-keeps-partial-proof'))
+        next(s for s in case['steps'] if s['action'] == 'validate')['assertion'] = 'formatter succeeds'
+        self.assertIn('changed-validation-oracle', EVAL.evaluate_case(case)[1])
+
+    def test_changed_material_starts_a_distinct_retry_path(self):
+        case = copy.deepcopy(next(c for c in DOCUMENT['cases']
+            if c['id'] == 'retry-changes-material-after-two-failures'))
+        case['steps'][-1].update(result='fail', output='new branch needs an import')
+        case['steps'].append(copy.deepcopy(case['steps'][-1]))
+        self.assertEqual([], EVAL.evaluate_case(case)[1])
+        case['steps'].append(copy.deepcopy(case['steps'][-1]))
+        self.assertIn('unchanged-retry-after-two-failures', EVAL.evaluate_case(case)[1])
+
     def test_reading_every_source_does_not_confirm_caller_ownership(self):
         case = copy.deepcopy(DOCUMENT['cases'][0])
         case.pop('needed_sources')
@@ -84,6 +105,18 @@ class BehaviorTests(unittest.TestCase):
             read = next(s for s in case['steps'] if s.get('action') == 'read' and s.get('agent_id') == 'reviewer')
             read['diff'] = payload
             self.assertIn('review-missing-actual-diff', EVAL.evaluate_case(case)[1])
+
+    def test_standalone_diff_review_requires_actual_diff_without_prior_edits(self):
+        case = {'user_request': 'Only review this diff.', 'steps': [
+            {'action': 'dispatch', 'agent_id': 'reviewer', 'profile': 'review-agent',
+             'primary_skill': 'ai-code-review-refactor', 'layer3_skills': [],
+             'goal': 'Review the current diff.', 'reason': 'User requested review.',
+             'needed_sources': ['src/owner.py']},
+            {'action': 'read', 'agent_id': 'reviewer', 'path': 'src/owner.py',
+             'current': True, 'diff': 'Summary only; no actual diff.'}]}
+        self.assertIn('review-missing-actual-diff', EVAL.evaluate_case(case)[1])
+        case['steps'][-1]['diff'] = 'diff --git a/src/owner.py b/src/owner.py\n--- a/src/owner.py\n+++ b/src/owner.py\n@@ -1 +1 @@\n-return None\n+return []\n'
+        self.assertEqual([], EVAL.evaluate_case(case)[1])
 
     def test_execute_effects_need_authorization(self):
         case = copy.deepcopy(DOCUMENT['cases'][0])

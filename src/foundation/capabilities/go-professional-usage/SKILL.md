@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when Go context,
 
 **Use when**
 
-- Go code changes context lineage, goroutine or channel lifetime, shared state, error identity, interface behavior, timers, or resource cleanup.
+- Inspect or change Go context lineage, goroutine or channel lifetime, shared state, error identity, interface behavior, timers, or resource cleanup.
 - Toolchain-version semantics, build tags, platform variants, or generated boundaries can change the meaning of an otherwise local Go edit.
 
 **Do not use when**
 
 - The open question is generic language style, package selection, build mechanics, performance tuning, or test portfolio without a Go-specific semantic decision.
-- No Go source, generated Go surface, or Go runtime obligation changes.
+- No task-local Go source, generated Go surface, or Go runtime obligation requires inspection or change.
 
 ## Skill Role
 

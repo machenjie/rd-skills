@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when Python chan
 
 **Use when**
 
-- Python code changes import or initialization, async and blocking work, owned resources, public typing, shared mutability, or serialization behavior.
+- Inspect or change Python import or initialization, async and blocking work, owned resources, public typing, shared mutability, or serialization behavior.
 - Python runtime semantics can change failure, cleanup, cancellation, isolation, or consumer compatibility in the current scope.
 
 **Do not use when**
 
 - The open decision is language/runtime selection, dependency policy, build mechanics, test strategy, or a measured performance bottleneck.
-- No Python-specific runtime or data boundary changes.
+- No task-local Python-specific runtime or data boundary requires inspection or change.
 
 ## Skill Role
 

@@ -158,6 +158,7 @@ EXPECTED_RECIPROCITY = {
         "ai-code-review-refactor",
         "backend-change-builder",
         "engineering-change-analysis",
+        "repository-tooling-change-builder",
     },
     "macos-platform-extension": {
         "ai-code-review-refactor",
@@ -297,7 +298,7 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
             for row in domains
         }
         self.assertEqual(EXPECTED_RECIPROCITY, actual)
-        self.assertEqual(47, sum(len(owners) for owners in actual.values()))
+        self.assertEqual(48, sum(len(owners) for owners in actual.values()))
         domain_names = set(actual)
         professional_edges = {
             (row["name"], candidate)
@@ -1701,7 +1702,7 @@ class DomainModifierRouteTests(unittest.TestCase):
             self.assertEqual("task-agent", route["profile"])
             self.assertEqual("backend-change-builder", route["primary_skill"])
             self.assertEqual(
-                ["low-level-systems-extension"],
+                ["low-level-systems-extension", "rust-professional-usage"],
                 route["layer3_skills"],
             )
             self.assertEqual(

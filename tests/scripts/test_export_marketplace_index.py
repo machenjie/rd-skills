@@ -194,7 +194,7 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         }
         self.assertEqual(len(domain_used_by), 13)
         self.assertTrue(all(domain_used_by.values()))
-        self.assertEqual(sum(map(len, domain_used_by.values())), 47)
+        self.assertEqual(sum(map(len, domain_used_by.values())), 48)
 
         foundations = [
             item

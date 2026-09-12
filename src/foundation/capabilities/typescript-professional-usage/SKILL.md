@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when TypeScript 
 
 **Use when**
 
-- TypeScript code changes trust-boundary validation, structural assignability, unsafe escapes, async cancellation, numeric meaning, emitted modules, or public declarations.
+- Inspect or change TypeScript trust-boundary validation, structural assignability, unsafe escapes, async cancellation, numeric meaning, emitted modules, or public declarations.
 - Browser, Node, SDK, generated-client, storage, message, or package-export behavior can differ from what the type checker accepts.
 
 **Do not use when**
 
 - The open question is generic frontend state, API policy, package/build configuration, performance, testing, or language style without a TypeScript-specific semantic risk.
-- No TypeScript source, declaration, generated surface, compiler boundary, or emitted runtime behavior changes.
+- No task-local TypeScript source, declaration, generated surface, compiler boundary, or emitted runtime behavior requires inspection or change.
 
 ## Skill Role
 

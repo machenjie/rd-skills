@@ -12,6 +12,7 @@ Do not add a level, risk score, mode, severity ladder, or state machine to choos
 ## Professional Routing
 
 Use references/professional-skill-router.md once to select expertise. Select exactly one Primary Professional Skill and zero to three authorized Layer 3 Skills as defined by the Core selection contract. The selected Professional's selector owns JIT Layer 3 selection. Preserve positive and anti-trigger routing, Domain authorization, and necessary professional References. Task and Review consume the assignment without rerouting or catalog preloading.
+Use routing assets supplied by the Host. If Main cannot read a required asset, delegate its exact Host-resolved path to analysis-agent with engineering-change-analysis and no Layer 3, solely to return the current asset text. This bootstrap reads only the named control router or selected Professional entrypoint/selector assets; it does not inspect target code, search other roots, select expertise, or grant Main read/execute tools. Main decides the route from the returned text.
 Core Runtime Asset Resolution binds the selected Professional root to its built assets. Preserve build/package freshness and integrity checks; do not ask agents to compute runtime digests.
 The router answers what expertise is needed. It does not impose Analysis, Brief, DAG, independent Review, or a fixed validation process. Select a Review Skill only when review is actually justified.
 
@@ -22,6 +23,7 @@ The task-agent first resolves local questions through bounded inspection. Send a
 Create an Engineering Brief only when complex cross-agent work needs stable engineering decisions; references/engineering-brief-template.md is optional. Keep Goal, important constraints/invariants, key decisions, validation, and unresolved issues. Decompose only for real dependencies or independently useful work; use a DAG only when it helps coordinate them.
 Ordinary single-agent changes need no formal Task Contract, Completion Contract, Signature, Fingerprint, readiness proof, ceremonial evidence fields, or Handoff. Formalize only when a real consumer or hard boundary needs it.
 Shared-workspace writes are serial. Parallel writes require Host-provided isolation and independent write surfaces. Prioritize the requested result and actual blockers; adjacent improvements do not preempt it.
+When the user cancels or narrows the task, propagate the new constraint to in-flight agents through the existing Host controls and stop affected writes. Reconcile pending results against the new scope; invalidate conflicting results and validation claims before using them. Continue only work still authorized by the updated request.
 
 ## Authority and Effects
 
@@ -35,6 +37,7 @@ Reuse existing authorization. Ask only for a missing user-owned decision or genu
 Task agents inspect current owner, relevant tests and minimum affected consumers; reuse existing structure and respect dependency direction before editing. Shared state, concurrency, transactions, public/shared contracts, external consumers, migrations, financial invariants, authority changes, multi-owner dependencies, and integration boundaries require enough depth to implement and validate correctly.
 Do not introduce an abstraction, protocol, contract, validator, extension point, factory, adapter, safety layer, or dependency without current requirements or repository evidence. Future extensibility, robustness, consistency, safety, or possible reuse alone do not justify structure. Real variation, multiple implementations, genuine boundaries, and existing architecture can justify it.
 Ordinary work follows inspect -> edit -> self-check -> targeted validation -> done. After the final material edit, require fresh validation of changed behavior. Preserve normal, invalid, boundary, forbidden and regression outcomes where relevant. For reproducible defects, prove the cause, scan for the same pattern, and establish a failing behavior test before repair.
+If a defect cannot currently be reproduced safely, retain verified cause and the same-pattern scan, run available targeted checks after the final edit, and report the unavailable reproduction and unverified behavior. Setup/import/syntax failures unrelated to the defect are not behavioral RED; limited checks do not prove the unavailable behavior fixed.
 The current policy bounds repeated retries at two same-path failures. After that point, retry only with a changed hypothesis, material, gap, or transition; otherwise report the concrete blocker. Do not reset the retry by renaming the task or repeating unchanged analysis.
 
 ## Review and Repair

@@ -596,10 +596,10 @@ def _validate_actual_behavior(
             if gate["review_boundary_due"] is not review["review_boundary_due"]:
                 raise ValueError(f"{context}: Main due projection disagrees with the declared boundary observation")
         return
-    readiness = _mapping(review.get("review_input_ready"))
+    readiness = _mapping(review.get("review_context"))
     actions = _mapping(review.get("reviewer_actions"))
     if (
-        set(readiness) != set(contract["review_input_ready_fields"])
+        set(readiness) != set(contract["review_context_fields"])
         or any(not isinstance(value, bool) for value in readiness.values())
         or set(actions) != set(contract["reviewer_forbidden_actions"])
         or any(not isinstance(value, bool) for value in actions.values())
@@ -611,7 +611,7 @@ def _validate_actual_behavior(
             set(initial) != set(observation["initial_review_fields"])
             or any(
                 not isinstance(initial.get(field), bool)
-                for field in ("completed_fixed_boundary", "stopped_after_ordinary_finding")
+                for field in ("covered_current_scope", "stopped_after_ordinary_finding")
             )
         ):
             raise ValueError(f"{context}: initial review schema is malformed")
@@ -1153,8 +1153,8 @@ def _review_boundary_correct(
         return False
     if actual.get("review_boundary_due") is not True:
         return False
-    readiness = _mapping(actual.get("review_input_ready"))
-    if set(readiness) != set(contract["review_input_ready_fields"]) or not all(
+    readiness = _mapping(actual.get("review_context"))
+    if set(readiness) != set(contract["review_context_fields"]) or not all(
         readiness.values()
     ):
         return False
@@ -1168,7 +1168,7 @@ def _review_boundary_correct(
     initial = _mapping(actual.get("initial_review"))
     if expected.get("initial_review_required") is True:
         if (
-            initial.get("completed_fixed_boundary") is not True
+            initial.get("covered_current_scope") is not True
             or initial.get("stopped_after_ordinary_finding") is not False
             or not set(_strings(expected.get("required_findings"))).issubset(
                 set(_strings(initial.get("returned_findings")))

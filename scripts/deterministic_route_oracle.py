@@ -87,6 +87,7 @@ _FOUNDATION_SOURCE_SYMBOLS = {
             "_accessibility_behavior_requested",
             "_build_route_candidates",
             "_implementation_owner_layer3",
+            "_language_semantic_layers",
             "_review_risk_layer3",
         }
     ),
@@ -2411,6 +2412,9 @@ def _build_route_candidates(
     if _accessibility_behavior_requested(normalized_text):
         support_foundations.append("accessibility-inclusive-design")
         support_foundations = list(dict.fromkeys(support_foundations))
+    support_foundations = list(dict.fromkeys([
+        *support_foundations, *_language_semantic_layers(normalized_text),
+    ]))
     support_rule_ids = [
         candidate["candidate_id"]
         for candidate in routes
@@ -7725,7 +7729,7 @@ def _routing_boundary_fact_snapshots(
             f"{action_id}:action",
             f"{clause_id}:clause",
         ]
-        repository_owner = any(
+        repository_owner = bool(_LANGUAGE_CLI_RE.search(scope)) or any(
             signal in scope
             for signal in (
                 "repository cli",
@@ -7745,7 +7749,7 @@ def _routing_boundary_fact_snapshots(
         )
         if not repository_owner and parent_action_id is not None:
             parent_scope = action_scope_by_id.get(parent_action_id, "")
-            repository_owner = any(
+            repository_owner = bool(_LANGUAGE_CLI_RE.search(parent_scope)) or any(
                 signal in parent_scope
                 for signal in (
                     "repository cli",
@@ -9011,7 +9015,7 @@ def _classify_professional_families(
         ),
         evidence=("integration-edge",),
     )
-    repository_subject = (
+    repository_subject = bool(_LANGUAGE_CLI_RE.search(effect_value)) or (
         "repository" in effect_value
         and any(
             signal in effect_value
@@ -9441,6 +9445,41 @@ def _accessibility_behavior_requested(value: str) -> bool:
     return False
 
 
+_LANGUAGE_CLI_RE = re.compile(
+    r"\b(?:internal|repository(?:-owned)?)\s+"
+    r"(?:python|go|typescript|rust|c\+\+|node\.?(?:js)?|java|jvm|kotlin|c#|\.net|swift)\s+cli\b"
+)
+
+
+def _language_semantic_layers(text: str) -> list[str]:
+    """Share concrete language evidence between implementation, analysis and review."""
+    patterns = (
+        ("python-professional-usage", r"\bpython\b", r"\b(?:import|reload|fork|spawn|async|cancellation|context propagation|resource lifetime|mutability|aliasing|serialization)\b"),
+        ("go-professional-usage", r"\b(?:go|golang)\b", r"\b(?:context|goroutine|channel|typed.nil|errors? (?:is|as|identity)|timer|ticker|slice|mutex|atomic)\b"),
+        ("typescript-professional-usage", r"\btypescript\b", r"\b(?:runtime validation|structural typing|type erasure|type.only import|discriminant|promise|abortsignal|safe integer|bigint|esm|cjs|declaration)\b"),
+        ("rust-professional-usage", r"\brust\b", r"\b(?:ownership|lifetimes?|borrow(?:ed|ing)?|drop|unsafe|ffi|panic|cancellation|send|sync|pinning)\b"),
+        ("cpp-professional-usage", r"\bcplusplus\b|\bc source\b", r"\b(?:ownership|raii|borrow(?:ed|ing)?|lifetimes?|iterator|view|undefined behavior|bounds|overflow|aliasing|alignment|exception|abi|ffi|memory order)\b"),
+        ("nodejs-runtime-professional-usage", r"\bnode(?:\.js|js|\s+js)\b", r"\b(?:event.loop|stream|backpressure|buffer|worker|async.context|module.cache|timer|cancellation|resource.handle|handles)\b"),
+        ("java-jvm-professional-usage", r"\b(?:java|jvm)\b", r"\b(?:classloader|interruptedexception|interruption|executor|virtual thread|thread.local|proxy|self.invocation|suppressed|generics|serialization)\b"),
+        ("kotlin-professional-usage", r"\bkotlin\b", r"\b(?:coroutine|flow|stateflow|null|java interop|sealed|reified|delegated|dsl|compose|kotlin code)\b"),
+        ("csharp-dotnet-professional-usage", r"\b(?:csharp|dotnet)\b", r"\b(?:async disposal|cancellationtoken|linq|nullable|di|trimming|aot behavior|assembly|com|ui dispatch)\b"),
+        ("swift-professional-usage", r"\bswift\b", r"\b(?:arc|actor isolation|mainactor|sendable|cancellation|copy.on.write|optional|type erasure|objective.c|swiftui|module semantics)\b"),
+    )
+    # Preserve language identity before the shared effect tokenizer removes punctuation.
+    text = text.casefold().replace("c++", "cplusplus").replace("c#", "csharp").replace(".net", "dotnet")
+    selected = []
+    for name, language, semantics in patterns:
+        for _scope_id, scope in _bounded_effect_scopes(text):
+            if _scope_is_unchanged(scope) or re.search(
+                r"\b(?:only in (?:comments|documentation)|(?:build|package|signing|packaging)(?:[- ](?:policy|mechanics|configuration))? only)\b", scope
+            ):
+                continue
+            if re.search(language, scope) and re.search(semantics, scope):
+                selected.append(name)
+                break
+    return selected
+
+
 def _implementation_owner_layer3(
     family: str,
     text: str,
@@ -9683,6 +9722,17 @@ def _implementation_owner_layer3(
             selected.append("configuration-runtime-policy")
         if _dependency_package_risk(text):
             selected.append("dependency-vulnerability-scanning")
+    if family in {"repository-tooling", "backend", "frontend", "installed-client"}:
+        languages = _language_semantic_layers(text)
+        if family == "frontend":
+            languages = [name for name in languages if name == "typescript-professional-usage"]
+        elif family == "backend":
+            languages = [name for name in languages if name != "swift-professional-usage"]
+        elif family == "installed-client":
+            languages = [name for name in languages if name not in {
+                "python-professional-usage", "go-professional-usage", "java-jvm-professional-usage",
+            }]
+        selected.extend(languages)
     return list(dict.fromkeys(selected))
 
 
@@ -16252,17 +16302,23 @@ def _route_impl(
     if "repository source evidence" in text and any(
         signal in text for signal in ("explain", "question")
     ):
-        add_candidate(
-            "analyzed",
-            "analysis-agent",
-            "engineering-change-analysis",
-            authority_repository_foundations,
-            "architecture-impact-reviewer",
-            rule_id="source-backed-repository-question",
-            stage="source-analysis",
-            precedence_class="analysis-mode",
-            match_evidence=["repository-source-evidence", "question-or-explanation"],
-        )
+        language_layers = _language_semantic_layers(text)
+        if language_layers:
+            add_candidate(
+                "analyzed", "analysis-agent", "engineering-change-analysis",
+                language_layers, "architecture-impact-reviewer",
+                rule_id="source-backed-language-question",
+                stage="source-analysis", precedence_class="analysis-mode",
+                match_evidence=["repository-source-evidence", "question-or-explanation"],
+            )
+        else:
+            add_candidate(
+                "analyzed", "analysis-agent", "engineering-change-analysis",
+                authority_repository_foundations, "architecture-impact-reviewer",
+                rule_id="source-backed-repository-question",
+                stage="source-analysis", precedence_class="analysis-mode",
+                match_evidence=["repository-source-evidence", "question-or-explanation"],
+            )
     if "ambiguous" in text:
         add_foundation_selector(
             selector_ambiguous_intake,

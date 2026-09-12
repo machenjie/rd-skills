@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when Rust change
 
 **Use when**
 
-- Rust code changes ownership or lifetime, unsafe or FFI, panic or error behavior, async cancellation, or `Send`/`Sync` boundaries.
+- Inspect or change Rust ownership or lifetime, unsafe or FFI, panic or error behavior, async cancellation, or `Send`/`Sync` boundaries.
 - Compiler-enforced safety depends on a caller, runtime, foreign-code, or shutdown invariant in the current scope.
 
 **Do not use when**
 
 - The open decision is language/runtime selection, package policy, build mechanics, test strategy, or measured performance work.
-- No Rust-specific ownership, unsafe, concurrency, panic, or foreign boundary changes.
+- No task-local Rust-specific ownership, unsafe, concurrency, panic, or foreign boundary requires inspection or change.
 
 ## Skill Role
 

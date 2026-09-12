@@ -473,7 +473,6 @@
           "dispatch_blockers": [
             "latest_diff_or_reference",
             "post_latest_edit_validation",
-            "fixed_review_boundary",
             "required_evidence"
           ],
           "required_findings": [

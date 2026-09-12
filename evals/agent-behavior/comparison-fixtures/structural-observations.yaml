@@ -1092,11 +1092,10 @@
 
               ],
               "boundary_decision": "initial-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": false,
                 "post_latest_edit_validation": false,
-                "fixed_review_boundary": false,
                 "required_evidence": false
               },
               "reviewer_actions": {
@@ -1159,14 +1158,13 @@
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": false,
                 "post_latest_edit_validation": false,
-                "fixed_review_boundary": false,
                 "required_evidence": false,
                 "review_boundary_due": true
               },
               "main_dispatch_surface": {
                 "decision_actor_profile": "main-control-agent",
                 "review_candidate_profile": "review-agent",
-                "decision": "review-input-ready",
+                "decision": "review-context-available",
                 "evaluated_before_review_execution": true,
                 "reviewer_executed": false,
                 "dispatch_count": 0
@@ -1221,11 +1219,10 @@
 
               ],
               "boundary_decision": "initial-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1237,7 +1234,7 @@
                 "requested_diff_export": false
               },
               "initial_review": {
-                "completed_fixed_boundary": false,
+                "covered_current_scope": false,
                 "stopped_after_ordinary_finding": true,
                 "covered_review_dimensions": [
                   "required-changed-scope"
@@ -1305,11 +1302,10 @@
 
               ],
               "boundary_decision": "initial-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1321,7 +1317,7 @@
                 "requested_diff_export": false
               },
               "initial_review": {
-                "completed_fixed_boundary": true,
+                "covered_current_scope": true,
                 "stopped_after_ordinary_finding": false,
                 "covered_review_dimensions": [
                   "required-changed-scope",
@@ -1407,11 +1403,10 @@
 
               ],
               "boundary_decision": "focused-re-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1512,11 +1507,10 @@
 
               ],
               "boundary_decision": "focused-re-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1622,11 +1616,10 @@
                 "security-privacy-gate"
               ],
               "boundary_decision": "initial-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1638,7 +1631,7 @@
                 "requested_diff_export": false
               },
               "initial_review": {
-                "completed_fixed_boundary": true,
+                "covered_current_scope": true,
                 "stopped_after_ordinary_finding": false,
                 "covered_review_dimensions": [
                   "required-changed-scope",
@@ -1699,11 +1692,10 @@
 
               ],
               "boundary_decision": "initial-review",
-              "review_input_ready": {
+              "review_context": {
                 "latest_changed_scope": true,
                 "latest_diff_or_reference": true,
                 "post_latest_edit_validation": true,
-                "fixed_review_boundary": true,
                 "required_evidence": true
               },
               "reviewer_actions": {
@@ -1715,7 +1707,7 @@
                 "requested_diff_export": false
               },
               "initial_review": {
-                "completed_fixed_boundary": true,
+                "covered_current_scope": true,
                 "stopped_after_ordinary_finding": false,
                 "covered_review_dimensions": [
                   "required-changed-scope",

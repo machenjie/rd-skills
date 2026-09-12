@@ -108,6 +108,7 @@ CANONICAL_CANDIDATE_RULE_IDS = frozenset(
         "security-anti-scanner-report",
         "security-credential-session-lifecycle",
         "source-backed-repository-question",
+        "source-backed-language-question",
         "ssrf-threat-professional-precedence",
         "ssrf-url-fetch-analysis",
         "technology-stack-commitment",

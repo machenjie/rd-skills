@@ -58,9 +58,10 @@ Domain false positives/negatives, unnecessary Layer 3, safe fallback,
 paraphrase stability, and boundary transitions. Review metrics cover primary
 Review Skill, Review Layer 3 precision/recall/F1, required-specialist
 recall/FNR/exact-set accuracy, unnecessary specialists, and
-the fixed Review Boundary contract. The latter includes Review Input Ready,
+the current review context. These development-only observations include current
+scope, source and validation evidence,
 the Main-owned pre-dispatch actor/candidate decision, Reviewer independence,
-complete Initial Review, fresh repair evidence, focused
+coverage of the assigned review scope, fresh repair evidence, focused
 Re-review, duplicate-final-review avoidance, and exact structured finding
 relations, materiality, eligibility, disposition, scope, and freshness. A
 per-case NEW regression dominates suite averages, and partial NEW success is

@@ -909,9 +909,9 @@ class ExpertPanelReviewTests(unittest.TestCase):
             },
             actual_graph["implementation-structure-design"],
         )
-        self.assertEqual(47, len(domain_declarations))
+        self.assertEqual(48, len(domain_declarations))
         self.assertEqual(
-            47,
+            48,
             sum(
                 source_id in actual_graph[adjacent_id]
                 for source_id, adjacent_id in domain_declarations

@@ -44,9 +44,9 @@ class SelectorJitDomainParityTests(unittest.TestCase):
     def test_shared_authority_is_complete_and_oracle_consumes_it(self) -> None:
         authority = self._authority()
         self.assertEqual("changeforge.layer3-selector-authority/v1", authority["contract"])
-        self.assertEqual(62, len(authority["selectors"]))
+        self.assertEqual(68, len(authority["selectors"]))
         self.assertEqual(
-            69,
+            75,
             len(
                 {
                     skill
@@ -56,7 +56,7 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            183,
+            257,
             sum(len(record["owner_bindings"]) for record in authority["selectors"]),
         )
         oracle = ORACLE.oracle_admission_authority(
@@ -407,12 +407,12 @@ class SelectorJitDomainParityTests(unittest.TestCase):
         with self.assertRaises(VALIDATION.ValidationProblem):
             self._authority(foundation=duplicate)
 
-    def test_three_domain_edges_are_reciprocal_and_total_is_47(self) -> None:
+    def test_domain_edges_are_reciprocal_and_total_is_48(self) -> None:
         authority = VALIDATION.domain_modifier_routing_authority(
             copy.deepcopy(DOMAIN),
             copy.deepcopy(PROFESSIONAL),
         )
-        self.assertEqual(47, authority["edge_count"])
+        self.assertEqual(48, authority["edge_count"])
         expected = {
             ("ai-code-review-refactor", "web3-product-extension"),
             ("ai-code-review-refactor", "low-level-systems-extension"),

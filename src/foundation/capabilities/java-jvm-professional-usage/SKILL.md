@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when JVM transac
 
 **Use when**
 
-- Java source or shared JVM runtime behavior changes proxy/advice reachability, transaction behavior, interruption, executors, thread-local state, classloading, serialization, or Java null contracts.
+- Inspect or change Java source or shared JVM proxy/advice reachability, transaction behavior, interruption, executors, thread-local state, classloading, serialization, or Java null contracts.
 - A JDK, framework, container, or generated boundary can change runtime behavior beyond what compilation proves.
 
 **Do not use when**
 
 - The open question is generic idiom, package/build policy, performance tuning, test portfolio, or transaction design without a JVM-specific semantic decision.
-- No JVM source, configuration, generated surface, or runtime lifecycle changes.
+- No task-local JVM source, configuration, generated surface, or runtime lifecycle requires inspection or change.
 
 ## Skill Role
 

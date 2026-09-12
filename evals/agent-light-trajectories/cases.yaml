@@ -1299,6 +1299,354 @@
         {"action": "edit", "agent_id": "worker", "path": "pkg/queue.py"},
         {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
       ]
+    },
+    {
+      "id": "bugfix-unavailable-host-keeps-partial-proof",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "tool-failure",
+          "invocation": "legacy-host run tests/test_owner.py",
+          "output": "legacy-host: executable not found"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "invocation": "legacy-host run tests/test_owner.py",
+        "output": "legacy-host: executable not found",
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter"
+      }
+    },
+    {
+      "id": "retry-changes-material-after-two-failures",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true,
+          "content": "start_worker() runs unguarded at module import"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "if __name__ == \"__main__\": start_worker()",
+          "result": "pass",
+          "output": "spawn child imported module without starting another worker",
+          "basis": "start_worker() runs unguarded at module import"
+        }
+      ]
+    },
+    {
+      "id": "dispatch-only-host-routing-asset-read",
+      "routing_assets": {
+        "references/professional-skill-router.md": "Main selects one Professional; Task consumes its selection."
+      },
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "asset-reader",
+          "profile": "analysis-agent",
+          "primary_skill": "engineering-change-analysis",
+          "layer3_skills": [],
+          "goal": "Return the exact Host-selected control routing asset.",
+          "reason": "Host did not supply routing metadata.",
+          "purpose": "routing-asset-read",
+          "asset_paths": [
+            "references/professional-skill-router.md"
+          ]
+        },
+        {
+          "action": "read",
+          "agent_id": "asset-reader",
+          "path": "references/professional-skill-router.md",
+          "current": true,
+          "content": "Main selects one Professional; Task consumes its selection."
+        },
+        {
+          "action": "route",
+          "agent_id": "main",
+          "primary_skill": "repository-tooling-change-builder"
+        },
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        }
+      ]
+    },
+    {
+      "id": "narrowing-propagates-and-invalidates-old-result",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "user-update",
+          "request": "Only document the issue; stop source changes.",
+          "write_scope": [
+            "docs/issue.md"
+          ]
+        },
+        {
+          "action": "notify",
+          "agent_id": "worker",
+          "request": "Only document the issue; stop source changes."
+        },
+        {
+          "action": "stop",
+          "agent_id": "worker"
+        },
+        {
+          "action": "invalidate-result",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        }
+      ]
+    },
+    {
+      "id": "cancellation-propagates-to-inflight-task",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "user-update",
+          "request": "Cancel this task.",
+          "write_scope": []
+        },
+        {
+          "action": "notify",
+          "agent_id": "worker",
+          "request": "Cancel this task."
+        },
+        {
+          "action": "stop",
+          "agent_id": "worker"
+        },
+        {
+          "action": "invalidate-result",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        }
+      ]
+    },
+    {
+      "id": "bugfix-user-forbids-unavailable-host-reproduction",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter",
+        "user_evidence": "This machine lacks legacy hardware; do not install from the network or operate external devices."
+      },
+      "user_request": "Repair from supplied production failure and source evidence. This machine lacks legacy hardware; do not install from the network or operate external devices."
     }
   ],
   "negative_cases": [
@@ -2730,6 +3078,856 @@
         {"action": "validate", "result": "pass", "output": "focused normalization assertion passed"}
       ],
       "expected_errors": ["wrong-owner-decision"]
+    },
+    {
+      "id": "bugfix-unavailable-without-observed-failure",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "invocation": "legacy-host run tests/test_owner.py",
+        "output": "legacy-host: executable not found",
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter"
+      },
+      "expected_errors": [
+        "unobserved-reproduction-limit"
+      ]
+    },
+    {
+      "id": "bugfix-unavailable-claims-fixed",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "tool-failure",
+          "invocation": "legacy-host run tests/test_owner.py",
+          "output": "legacy-host: executable not found"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "complete",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "invocation": "legacy-host run tests/test_owner.py",
+        "output": "legacy-host: executable not found",
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter"
+      },
+      "expected_errors": [
+        "unverified-completion-claim"
+      ]
+    },
+    {
+      "id": "bugfix-unavailable-without-cause",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "tool-failure",
+          "invocation": "legacy-host run tests/test_owner.py",
+          "output": "legacy-host: executable not found"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "invocation": "legacy-host run tests/test_owner.py",
+        "output": "legacy-host: executable not found",
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter"
+      },
+      "expected_errors": [
+        "unproved-cause"
+      ]
+    },
+    {
+      "id": "bugfix-unavailable-without-scan",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "tool-failure",
+          "invocation": "legacy-host run tests/test_owner.py",
+          "output": "legacy-host: executable not found"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "invocation": "legacy-host run tests/test_owner.py",
+        "output": "legacy-host: executable not found",
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter"
+      },
+      "expected_errors": [
+        "missing-same-pattern-scan"
+      ]
+    },
+    {
+      "id": "retry-third-unchanged-attempt",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true,
+          "content": "start_worker() runs unguarded at module import"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        }
+      ],
+      "expected_errors": [
+        "unchanged-retry-after-two-failures"
+      ]
+    },
+    {
+      "id": "retry-task-renaming-does-not-reset",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true,
+          "content": "start_worker() runs unguarded at module import"
+        },
+        {
+          "action": "dispatch",
+          "agent_id": "renamed-worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "execute",
+          "agent_id": "renamed-worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        }
+      ],
+      "expected_errors": [
+        "unchanged-retry-after-two-failures"
+      ]
+    },
+    {
+      "id": "retry-new-label-without-new-evidence",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "start_worker() at module import",
+          "result": "fail",
+          "output": "spawn child imports cli.py and starts another worker"
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true,
+          "content": "start_worker() runs unguarded at module import"
+        },
+        {
+          "action": "execute",
+          "agent_id": "worker",
+          "retry_target": "worker startup",
+          "invocation": "python cli.py",
+          "material": "if __name__ == \"__main__\": start_worker()",
+          "result": "pass",
+          "output": "spawn child imported module without starting another worker",
+          "basis": "new hypothesis"
+        }
+      ],
+      "expected_errors": [
+        "retry-change-without-evidence"
+      ]
+    },
+    {
+      "id": "routing-reader-cannot-route",
+      "routing_assets": {
+        "references/professional-skill-router.md": "Main selects one Professional; Task consumes its selection."
+      },
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "asset-reader",
+          "profile": "analysis-agent",
+          "primary_skill": "engineering-change-analysis",
+          "layer3_skills": [],
+          "goal": "Return the exact Host-selected control routing asset.",
+          "reason": "Host did not supply routing metadata.",
+          "purpose": "routing-asset-read",
+          "asset_paths": [
+            "references/professional-skill-router.md"
+          ]
+        },
+        {
+          "action": "read",
+          "agent_id": "asset-reader",
+          "path": "references/professional-skill-router.md",
+          "current": true,
+          "content": "Main selects one Professional; Task consumes its selection."
+        },
+        {
+          "action": "route",
+          "agent_id": "asset-reader",
+          "primary_skill": "repository-tooling-change-builder"
+        },
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        }
+      ],
+      "expected_errors": [
+        "routing-reader-rerouted"
+      ]
+    },
+    {
+      "id": "routing-reader-cannot-inspect-target-code",
+      "routing_assets": {
+        "references/professional-skill-router.md": "Main selects one Professional; Task consumes its selection."
+      },
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "asset-reader",
+          "profile": "analysis-agent",
+          "primary_skill": "engineering-change-analysis",
+          "layer3_skills": [],
+          "goal": "Return the exact Host-selected control routing asset.",
+          "reason": "Host did not supply routing metadata.",
+          "purpose": "routing-asset-read",
+          "asset_paths": [
+            "references/professional-skill-router.md"
+          ]
+        },
+        {
+          "action": "read",
+          "agent_id": "asset-reader",
+          "path": "references/professional-skill-router.md",
+          "current": true,
+          "content": "Main selects one Professional; Task consumes its selection."
+        },
+        {
+          "action": "read",
+          "agent_id": "asset-reader",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "route",
+          "agent_id": "main",
+          "primary_skill": "repository-tooling-change-builder"
+        },
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        }
+      ],
+      "expected_errors": [
+        "routing-reader-outside-assets"
+      ]
+    },
+    {
+      "id": "narrowing-not-propagated",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "user-update",
+          "request": "Only document the issue; stop source changes.",
+          "write_scope": [
+            "docs/issue.md"
+          ]
+        },
+        {
+          "action": "stop",
+          "agent_id": "worker"
+        },
+        {
+          "action": "invalidate-result",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        }
+      ],
+      "expected_errors": [
+        "user-update-not-propagated"
+      ]
+    },
+    {
+      "id": "narrowing-cannot-accept-old-result",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "user-update",
+          "request": "Only document the issue; stop source changes.",
+          "write_scope": [
+            "docs/issue.md"
+          ]
+        },
+        {
+          "action": "notify",
+          "agent_id": "worker",
+          "request": "Only document the issue; stop source changes."
+        },
+        {
+          "action": "stop",
+          "agent_id": "worker"
+        },
+        {
+          "action": "accept-result",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        }
+      ],
+      "expected_errors": [
+        "superseded-result-accepted"
+      ]
+    },
+    {
+      "id": "narrowing-cannot-continue-old-write",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "user-update",
+          "request": "Only document the issue; stop source changes.",
+          "write_scope": [
+            "docs/issue.md"
+          ]
+        },
+        {
+          "action": "notify",
+          "agent_id": "worker",
+          "request": "Only document the issue; stop source changes."
+        },
+        {
+          "action": "stop",
+          "agent_id": "worker"
+        },
+        {
+          "action": "invalidate-result",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "output": "1 passed"
+        }
+      ],
+      "expected_errors": [
+        "write-after-user-scope-change"
+      ]
+    },
+    {
+      "id": "bugfix-unavailable-user-evidence-not-supplied",
+      "needed_sources": [
+        "src/owner.py",
+        "tests/test_owner.py",
+        "src/caller.py"
+      ],
+      "assertion": "empty results are an empty list",
+      "steps": [
+        {
+          "action": "dispatch",
+          "agent_id": "worker",
+          "profile": "task-agent",
+          "primary_skill": "repository-tooling-change-builder",
+          "layer3_skills": [],
+          "layer3_references": [],
+          "professional_references": [],
+          "mode": "implementation",
+          "goal": "Correct the local repository command output.",
+          "write_scope": [
+            "src/owner.py"
+          ],
+          "validation": "Run the focused behavior check after the final edit."
+        },
+        {
+          "action": "search",
+          "agent_id": "worker",
+          "path": "src/**",
+          "complete": true,
+          "same_pattern": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "tests/test_owner.py",
+          "current": true
+        },
+        {
+          "action": "read",
+          "agent_id": "worker",
+          "path": "src/caller.py",
+          "current": true
+        },
+        {
+          "action": "cause",
+          "mechanism": "empty branch returns null",
+          "evidence": "owner empty branch and consumer iteration"
+        },
+        {
+          "action": "edit",
+          "agent_id": "worker",
+          "path": "src/owner.py"
+        },
+        {
+          "action": "validate",
+          "result": "pass",
+          "assertion": "empty branch returns an iterable under the available interpreter",
+          "output": "1 available interpreter check passed"
+        },
+        {
+          "action": "complete",
+          "status": "partial",
+          "proof_limit": "Legacy host behavior remains unverified."
+        }
+      ],
+      "bugfix": true,
+      "failure_mechanism": "empty branch returns null",
+      "reproduction_unavailable": {
+        "proof_limit": "Legacy host behavior remains unverified.",
+        "available_assertion": "empty branch returns an iterable under the available interpreter",
+        "user_evidence": "This machine lacks legacy hardware; do not install from the network or operate external devices."
+      },
+      "user_request": "Repair the observed failure.",
+      "expected_errors": [
+        "unobserved-reproduction-limit"
+      ]
     }
   ]
 }

@@ -3180,3 +3180,195 @@ cases:
     case_kind: simple
     prompt: Implement an accepted backend invoice calculation after the framework, deployment platform, datastore, managed services, and migration plan were fixed; no technology-stack commitment remains open.
     expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-python-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-python-professional-usage-selected}
+    layer: foundation
+    skill: python-professional-usage
+    case_kind: selected
+    prompt: "Fix the internal Python CLI import initialization that starts a worker during spawn."
+    expected: {selected: true, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-python-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-python-professional-usage-simple}
+    layer: foundation
+    skill: python-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal Python CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-python-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-python-professional-usage-adjacent}
+    layer: foundation
+    skill: python-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-python-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-python-professional-usage-domain-owned}
+    layer: foundation
+    skill: python-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-go-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-go-professional-usage-selected}
+    layer: foundation
+    skill: go-professional-usage
+    case_kind: selected
+    prompt: "Fix the internal Go CLI goroutine cancellation."
+    expected: {selected: true, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-go-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-go-professional-usage-simple}
+    layer: foundation
+    skill: go-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal Go CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-go-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-go-professional-usage-adjacent}
+    layer: foundation
+    skill: go-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-go-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-go-professional-usage-domain-owned}
+    layer: foundation
+    skill: go-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-typescript-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-typescript-professional-usage-selected}
+    layer: foundation
+    skill: typescript-professional-usage
+    case_kind: selected
+    prompt: "Review the actual diff for TypeScript type erasure and runtime validation."
+    expected: {selected: true, primary_skill: ai-code-review-refactor}
+
+  - id: capcov-admission-foundation-typescript-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-typescript-professional-usage-simple}
+    layer: foundation
+    skill: typescript-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal TypeScript CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-typescript-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-typescript-professional-usage-adjacent}
+    layer: foundation
+    skill: typescript-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-typescript-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-typescript-professional-usage-domain-owned}
+    layer: foundation
+    skill: typescript-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-rust-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-rust-professional-usage-selected}
+    layer: foundation
+    skill: rust-professional-usage
+    case_kind: selected
+    prompt: "Fix the Rust backend service unsafe FFI ownership boundary."
+    expected: {selected: true, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-rust-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-rust-professional-usage-simple}
+    layer: foundation
+    skill: rust-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal Rust CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-rust-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-rust-professional-usage-adjacent}
+    layer: foundation
+    skill: rust-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-rust-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-rust-professional-usage-domain-owned}
+    layer: foundation
+    skill: rust-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-cpp-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-cpp-professional-usage-selected}
+    layer: foundation
+    skill: cpp-professional-usage
+    case_kind: selected
+    prompt: "Fix the internal C++ CLI borrowed view lifetime after its owner is destroyed."
+    expected: {selected: true, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-cpp-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-cpp-professional-usage-simple}
+    layer: foundation
+    skill: cpp-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal C++ CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-cpp-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-cpp-professional-usage-adjacent}
+    layer: foundation
+    skill: cpp-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-cpp-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-cpp-professional-usage-domain-owned}
+    layer: foundation
+    skill: cpp-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-java-jvm-professional-usage-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-java-jvm-professional-usage-selected}
+    layer: foundation
+    skill: java-jvm-professional-usage
+    case_kind: selected
+    prompt: "Fix the internal Java CLI classloader lifetime."
+    expected: {selected: true, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-java-jvm-professional-usage-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-java-jvm-professional-usage-simple}
+    layer: foundation
+    skill: java-jvm-professional-usage
+    case_kind: simple
+    prompt: "Fix the internal Java CLI help wording."
+    expected: {selected: false, primary_skill: repository-tooling-change-builder}
+
+  - id: capcov-admission-foundation-java-jvm-professional-usage-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-java-jvm-professional-usage-adjacent}
+    layer: foundation
+    skill: java-jvm-professional-usage
+    case_kind: adjacent
+    prompt: "Implement an accepted backend service business-rule change with language runtime semantics unchanged."
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-java-jvm-professional-usage-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-java-jvm-professional-usage-domain-owned}
+    layer: foundation
+    skill: java-jvm-professional-usage
+    case_kind: domain-owned
+    prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
+    expected: {selected: false, primary_skill: engineering-change-analysis}

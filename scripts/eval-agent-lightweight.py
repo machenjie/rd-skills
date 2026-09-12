@@ -133,18 +133,53 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     reads = [s for s in steps if s.get("action") in {"read", "search"}]
     edits = [(i, s) for i, s in enumerate(steps) if s.get("action") == "edit"]
     validations = [(i, s) for i, s in enumerate(steps) if s.get("action") == "validate"]
+    unavailable = case.get("reproduction_unavailable")
+    validation_assertion = case.get("assertion")
+    if unavailable:
+        # These are authored observations, not an agent-controlled waiver of RED.
+        first_edit = min((i for i, _ in edits), default=len(steps))
+        user_evidence = unavailable.get("user_evidence")
+        supplied_limit = isinstance(user_evidence, str) and bool(user_evidence.strip()) and user_evidence in case.get("user_request", "")
+        observed_limit = all(unavailable.get(k) for k in ("invocation", "output")) and any(
+            s.get("action") == "tool-failure" and s.get("invocation") == unavailable.get("invocation")
+            and s.get("output") == unavailable.get("output") for s in steps[:first_edit]
+        )
+        if not all(unavailable.get(k) for k in ("proof_limit", "available_assertion")) or not (supplied_limit or observed_limit):
+            errors.append("unobserved-reproduction-limit")
+        completions = [s for s in steps if s.get("action") == "complete"]
+        if not completions or any(s.get("status") != "partial" or
+                s.get("proof_limit") != unavailable.get("proof_limit") for s in completions):
+            errors.append("unverified-completion-claim")
+        validation_assertion = unavailable.get("available_assertion")
     for index, dispatch in dispatches:
         try:
             validate_and_render_fixture_capsule(dispatch)
         except (FixtureCapsuleError, TypeError) as exc:
             errors.append(f"selection: {exc}")
         profile = dispatch.get("profile")
+        asset_read = dispatch.get("purpose") == "routing-asset-read"
+        if asset_read:
+            assets = case.get("routing_assets", {})
+            named = dispatch.get("asset_paths", [])
+            if (profile != "analysis-agent" or dispatch.get("primary_skill") != "engineering-change-analysis"
+                    or dispatch.get("layer3_skills") or not named or not set(named) <= set(assets)):
+                errors.append("invalid-routing-asset-read")
+            for step in steps[index + 1:]:
+                if step.get("agent_id") != dispatch.get("agent_id"):
+                    continue
+                if step.get("action") == "route":
+                    errors.append("routing-reader-rerouted")
+                if step.get("action") in {"read", "search"} and (
+                    step.get("action") != "read" or step.get("path") not in named
+                    or step.get("content") != assets.get(step.get("path")) or step.get("current") is not True
+                ):
+                    errors.append("routing-reader-outside-assets")
         if profile in {"analysis-agent", "review-agent"}:
             request_pattern = r"\breview\b" if profile == "review-agent" else r"\b(analy[sz]e|design|diagnose)\b"
             requested = bool(re.search(request_pattern, case.get("user_request", ""), re.I))
             question = any(s.get("action") == "question" and s.get("changes_implementation")
                            and s.get("evidence") for s in steps[:index])
-            if not dispatch.get("reason") or not (requested or question):
+            if not dispatch.get("reason") or not (requested or question or asset_read):
                 errors.append("extra-agent-without-question")
         if profile == "review-agent":
             if dispatch.get("agent_id") in {s.get("agent_id") for _, s in edits}:
@@ -160,8 +195,11 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
                 if (s.get("action") == "read" and s.get("current") is True
                         and s.get("agent_id") == dispatch.get("agent_id")):
                     diff_paths.update(unified_diff_paths(s.get("diff")) or [])
-            if not changed <= diff_paths:
+            diff_requested = bool(re.search(r"\bdiff\b", case.get("user_request", "") + " " + dispatch.get("goal", ""), re.I))
+            if not changed <= diff_paths or diff_requested and not diff_paths:
                 errors.append("review-missing-actual-diff")
+            if not diff_paths <= observed:
+                errors.append("review-missing-current-source")
         if profile == "analysis-agent" and not any(
             s.get("action") == "read" and s.get("current") is True and
             s.get("agent_id") == dispatch.get("agent_id") for s in steps[index + 1:]
@@ -215,7 +253,7 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
                 errors.append("unproved-cause")
             if not any(s.get("action") == "search" and s.get("same_pattern") and s.get("complete") for s in earlier):
                 errors.append("missing-same-pattern-scan")
-        if case.get("bugfix") or case.get("test_first_reason"):
+        if (case.get("bugfix") and not unavailable) or case.get("test_first_reason"):
             red = [s for i, s in validations if i < index and s.get("result") == "fail"]
             if not any(s.get("failure") == "target-behavior-missing" and s.get("assertion") == case.get("assertion")
                        and s.get("output") for s in red):
@@ -224,12 +262,12 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
         last_edit = max(i for i, _ in edits)
         passed = [s for i, s in validations if i > last_edit and s.get("result") == "pass" and s.get("output")]
         relevant = [s for i, s in validations if i > last_edit and
-                    (not case.get("assertion") or s.get("assertion") == case["assertion"])]
+                    (not validation_assertion or s.get("assertion") == validation_assertion)]
         if relevant and relevant[-1].get("result") != "pass":
             errors.append("latest-validation-failed")
         if not passed:
             errors.append("missing-post-final-edit-validation")
-        elif case.get("assertion") and not any(s.get("assertion") == case["assertion"] for s in passed):
+        elif validation_assertion and not any(s.get("assertion") == validation_assertion for s in passed):
             errors.append("changed-validation-oracle")
     # Actual temporal overlap, workspace isolation, and dependencies determine safe parallel writes.
     for i, left in edits:
@@ -253,6 +291,44 @@ def evaluate_case(case: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
                 errors.append("write-outside-scope")
             if s.get("untrusted_source") and s.get("executable_sink") and s.get("reachable") and not s.get("boundary_control"):
                 errors.append("reachable-boundary-unprotected")
+            if s.get("retry_target"):
+                previous = [p for p in steps[:index] if p.get("action") == "execute"
+                            and p.get("retry_target") == s["retry_target"]]
+                # Compare the command and actual supplied material, never Task ID,
+                # agent name, or a claimed new approach label.
+                failures = []
+                for prior in reversed(previous):
+                    if prior.get("result") != "fail" or failures and any(
+                        prior.get(k) != failures[0].get(k) for k in ("invocation", "material")
+                    ):
+                        break
+                    failures.append(prior)
+                if len(failures) >= 2:
+                    if all(s.get(k) == failures[0].get(k) for k in ("invocation", "material")):
+                        errors.append("unchanged-retry-after-two-failures")
+                    elif not s.get("basis") or not any(
+                        p.get("action") == "read" and p.get("current") is True and p.get("content") == s["basis"]
+                        or p.get("action") in {"execute", "validate", "tool-failure"} and p.get("output") == s["basis"]
+                        for p in steps[steps.index(failures[-1]) + 1:index]
+                    ):
+                        errors.append("retry-change-without-evidence")
+        if s.get("action") == "user-update":
+            active = {d["agent_id"] for i, d in dispatches if i < index and d.get("profile") == "task-agent"
+                      and not any(p.get("action") in {"complete", "stop"} and p.get("agent_id") == d["agent_id"]
+                                  for p in steps[i + 1:index])}
+            following = steps[index + 1:]
+            if any(not any(p.get("action") == "notify" and p.get("agent_id") == agent
+                           and p.get("request") == s.get("request") for p in following) for agent in active):
+                errors.append("user-update-not-propagated")
+            for p in following:
+                if p.get("action") == "user-update":
+                    break
+                paths = [p.get("path", "")] if p.get("action") in {"edit", "accept-result"} else p.get("write_targets", [])
+                if any(not _in_scope(path, s.get("write_scope", [])) for path in paths):
+                    if p.get("action") in {"edit", "execute"}:
+                        errors.append("write-after-user-scope-change")
+                    elif p.get("action") == "accept-result":
+                        errors.append("superseded-result-accepted")
         if s.get("action") == "finding" and not all(s.get(k) for k in ("defect", "evidence", "reachable_failure", "required_action")):
             errors.append("finding-without-failure-mechanism")
         if s.get("action") == "tool-failure" and not all(s.get(k) for k in ("invocation", "output")):

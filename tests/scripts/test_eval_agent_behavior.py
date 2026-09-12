@@ -122,7 +122,7 @@ class AgentBehaviorComparisonTests(unittest.TestCase):
             {
                 "decision_actor_profile": "main-control-agent",
                 "review_candidate_profile": "review-agent",
-                "decision": "review-input-ready",
+                "decision": "review-context-available",
                 "evaluated_before_review_execution": True,
                 "reviewer_executed": False,
                 "dispatch_count": 0,
@@ -193,9 +193,9 @@ class AgentBehaviorComparisonTests(unittest.TestCase):
             ],
             "evidence_classes": ["live_agent", "claimed_live"],
             "live_evidence_statuses": ["collected", "assumed"],
-            "review_input_ready_fields": [
+            "review_context_fields": [
                 "latest_changed_scope", "latest_diff_or_reference",
-                "post_latest_edit_validation", "fixed_review_boundary", "optional_evidence",
+                "post_latest_edit_validation", "optional_evidence",
             ],
             "reviewer_forbidden_actions": [
                 "edited", "repaired", "rerouted", "write_scope_expanded", "trusted_implementer",
@@ -848,7 +848,6 @@ class AgentBehaviorComparisonTests(unittest.TestCase):
             "latest_changed_scope",
             "latest_diff_or_reference",
             "post_latest_edit_validation",
-            "fixed_review_boundary",
             "required_evidence",
             "review_boundary_due",
         ]
@@ -993,7 +992,7 @@ class AgentBehaviorComparisonTests(unittest.TestCase):
             if item.case_id == "initial-review-complete-boundary"
         )
         nested_observations = review_case.observations
-        nested_observations[review_case.arm_ids[0]]["actual_behavior"]["review"]["initial_review"]["completed_fixed_boundary"] = "false"
+        nested_observations[review_case.arm_ids[0]]["actual_behavior"]["review"]["initial_review"]["covered_current_scope"] = "false"
         with self.assertRaisesRegex(ValueError, "schema|boolean"):
             BEHAVIOR._validate_case_parts(
                 review_case.agent_packet["id"],

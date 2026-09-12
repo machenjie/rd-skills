@@ -35,7 +35,7 @@ CAPABILITY_COVERAGE_PATH = ROOT / "scripts/capability_coverage.py"
 
 AUTHORITY_CONTRACT = "changeforge.oracle-admission-authority/v1"
 FOUNDATION_PROVENANCE_DIGEST = (
-    "cf33cee669ad4d53592b76a94703715097e72d2a5688c16feb4916263f436a93"
+    "4f04b33e3e7d75ba68356c892f2efc3d5aaccf7ae15a6eee14bcd15737137fe6"
 )
 PRIMARY_SKILL_DIGEST = (
     "b742f0d00594d178882479f7388e235bf2b387451d164b74fc76940434498f73"
@@ -45,7 +45,7 @@ REVIEW_SKILL_DIGEST = (
 )
 FOUNDATION_SOURCE_COUNTS = {
     "direct-static": 45,
-    "dynamic-helper-only": 21,
+    "dynamic-helper-only": 27,
     "runtime-matcher": 3,
 }
 FOUNDATION_EFFECTS = ("selected", "domain-owned", "adjacent", "simple")
@@ -988,6 +988,7 @@ INACTIVE_NEGATIVE_PROMPTS = {
     ),
 }
 DYNAMIC_SELECTOR_HELPERS = (
+    "_language_semantic_layers",
     "_implementation_owner_layer3",
     "_review_risk_layer3",
     "_build_route_candidates",
@@ -3791,8 +3792,8 @@ class _FoundationSelectorSpec:
             for foundation in foundations
         ]
         self.assertNotEqual(66, len(foundation_ids))
-        self.assertEqual(69, len(foundation_ids))
-        self.assertEqual(69, len(set(foundation_ids)))
+        self.assertEqual(75, len(foundation_ids))
+        self.assertEqual(75, len(set(foundation_ids)))
         self.assertEqual(
             FOUNDATION_SOURCE_COUNTS,
             {
@@ -3801,7 +3802,7 @@ class _FoundationSelectorSpec:
             },
         )
         grammar = "".join(f"{row}\n" for row in rows).encode("utf-8")
-        self.assertEqual(2822, len(grammar))
+        self.assertEqual(3095, len(grammar))
         self.assertTrue(
             grammar.startswith(
                 b"direct-static\tacceptance-standard-definition\n"
@@ -3833,7 +3834,7 @@ class _FoundationSelectorSpec:
         self.assertEqual(PRIMARY_SKILL_DIGEST, _sha256(primary_grammar))
         self.assertEqual(REVIEW_SKILL_DIGEST, _sha256(review_grammar))
 
-    def test_r0_04_admission_target_is_105_276_48_and_complete(
+    def test_r0_04_admission_target_is_105_300_48_and_complete(
         self,
     ) -> None:
         expected = self._expected_combinations_from_sources()
@@ -3842,7 +3843,7 @@ class _FoundationSelectorSpec:
             for layer in ("professional", "foundation", "domain")
         }
         self.assertEqual(
-            {"professional": 105, "foundation": 276, "domain": 48},
+            {"professional": 105, "foundation": 300, "domain": 48},
             counts,
         )
         self.assertNotEqual(
@@ -3855,15 +3856,15 @@ class _FoundationSelectorSpec:
             for row in fixture_rows
         }
         self.assertNotEqual(411, len(fixture_rows))
-        self.assertEqual(429, len(fixture_rows))
-        self.assertEqual(429, len(fixture))
+        self.assertEqual(453, len(fixture_rows))
+        self.assertEqual(453, len(fixture))
         self.assertEqual(set(), fixture - expected)
         missing = expected - fixture
         self.assertNotEqual(WAVE1A_FOUNDATION_TRIPLES, missing)
         self.assertEqual(set(), missing)
         self.assertTrue(WAVE1A_FOUNDATION_TRIPLES.issubset(fixture))
         self.assertNotEqual(411, len(expected))
-        self.assertEqual(429, len(expected))
+        self.assertEqual(453, len(expected))
 
     def test_r0_04b_capcov_projection_requires_authority_refactor(
         self,
@@ -3880,7 +3881,7 @@ class _FoundationSelectorSpec:
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 276,
+                "foundation": 300,
                 "domain": 48,
             },
             counts,
@@ -3893,7 +3894,7 @@ class _FoundationSelectorSpec:
             counts,
         )
         self.assertNotEqual(411, len(combinations))
-        self.assertEqual(429, len(combinations))
+        self.assertEqual(453, len(combinations))
 
     def test_r0_05_four_special_selectors_are_exact(self) -> None:
         foundation_names = set(self.foundation_rows)
@@ -5725,13 +5726,13 @@ class _FoundationSelectorSpec:
         validation_record = records_by_id[
             "dynamic-foundation:targeted-validation-selection"
         ]
-        backend_record = records_by_id[
-            "dynamic-foundation:csharp-dotnet-professional-usage"
+        frontend_record = records_by_id[
+            "dynamic-foundation:state-management-design"
         ]
         self.assertFalse(
             ORACLE._foundation_route_binding_declared(
                 repository_candidate,
-                [build_tool_record, backend_record],
+                [build_tool_record, frontend_record],
             ),
             "one exact source scope must not authorize a multi-record "
             "Foundation candidate",
@@ -6009,7 +6010,7 @@ class _FoundationSelectorSpec:
             for row in rows
         ]
         self.assertNotEqual(411, len(rows))
-        self.assertEqual(429, len(rows))
+        self.assertEqual(453, len(rows))
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(combinations), len(set(combinations)))
 
@@ -6164,8 +6165,8 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F01_PROFESSIONAL_TRIPLES, actual_f01)
         self.assertEqual(55, len(actual_f01))
-        self.assertEqual(429, len(rows))
-        self.assertEqual(429, len(rows_by_triple))
+        self.assertEqual(453, len(rows))
+        self.assertEqual(453, len(rows_by_triple))
 
         expected = self._expected_combinations_from_sources()
         actual = set(rows_by_triple)
@@ -6272,8 +6273,8 @@ class _FoundationSelectorSpec:
             actual_f02,
         )
         self.assertEqual(16, len(actual_f02))
-        self.assertEqual(429, len(rows))
-        self.assertEqual(429, len(rows_by_triple))
+        self.assertEqual(453, len(rows))
+        self.assertEqual(453, len(rows_by_triple))
 
         expected = self._expected_combinations_from_sources()
         actual = set(rows_by_triple)
@@ -6383,12 +6384,12 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F03_FOUNDATION_TRIPLES, actual_f03)
         self.assertEqual(28, len(actual_f03))
-        self.assertEqual(429, len(rows))
-        self.assertEqual(429, len(rows_by_triple))
+        self.assertEqual(453, len(rows))
+        self.assertEqual(453, len(rows_by_triple))
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 276,
+                "foundation": 300,
                 "domain": 48,
             },
             {
@@ -6560,12 +6561,12 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F04_FOUNDATION_TRIPLES, actual_f04)
         self.assertEqual(44, len(actual_f04))
-        self.assertEqual(429, len(rows))
-        self.assertEqual(429, len(rows_by_triple))
+        self.assertEqual(453, len(rows))
+        self.assertEqual(453, len(rows_by_triple))
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 276,
+                "foundation": 300,
                 "domain": 48,
             },
             {
@@ -7070,6 +7071,86 @@ class _FoundationSelectorSpec:
             )
         )
 
+
+
+class LanguageAuthorizationTests(unittest.TestCase):
+    languages = ('python-professional-usage', 'go-professional-usage',
+        'typescript-professional-usage', 'rust-professional-usage', 'cpp-professional-usage',
+        'nodejs-runtime-professional-usage', 'java-jvm-professional-usage',
+        'kotlin-professional-usage', 'csharp-dotnet-professional-usage', 'swift-professional-usage')
+
+    @classmethod
+    def setUpClass(cls):
+        cls.authority = VALIDATION.layer3_selector_authority(
+            VALIDATION.load_yaml_file(FOUNDATION_REGISTRY),
+            VALIDATION.load_yaml_file(PROFESSIONAL_REGISTRY),
+            VALIDATION.load_yaml_file(DOMAIN_REGISTRY))
+
+    def test_source_analysis_review_and_tooling_can_request_language_semantics(self):
+        for owner, profile in [('repository-tooling-change-builder', 'task-agent'),
+                ('engineering-change-analysis', 'analysis-agent'),
+                ('ai-code-review-refactor', 'review-agent')]:
+            for language in self.languages:
+                with self.subTest(owner=owner, language=language):
+                    projected = VALIDATION.layer3_selector_runtime_projection(self.authority,
+                        professional_skill=owner, profile=profile,
+                        selection_owner='main-control-agent', exact_layer3=[language])
+                    self.assertEqual([language], projected['exact_layer3'])
+
+    def test_first_selector_load_exposes_positive_and_negative_language_decisions(self):
+        for owner, profile in [('repository-tooling-change-builder', 'task-agent'),
+                ('engineering-change-analysis', 'analysis-agent'),
+                ('ai-code-review-refactor', 'review-agent')]:
+            projection = VALIDATION.layer3_selector_runtime_projection(self.authority,
+                professional_skill=owner, profile=profile,
+                selection_owner='main-control-agent', exact_layer3=None)
+            for language in self.languages:
+                with self.subTest(owner=owner, language=language):
+                    record = next(r for r in projection['selectors'] if r['selectable_layer3'] == [language])
+                    positive = record['positive_signal_groups'][0]
+                    selected = VALIDATION.layer3_selector_runtime_selection(projection,
+                        evidence_signals=positive, build_identity='AAECAwQFBgcICQoLDA0ODw')
+                    self.assertEqual([language], selected)
+                    self.assertNotIn(language, VALIDATION.layer3_selector_runtime_selection(projection,
+                        evidence_signals=[*positive, record['nearest_negative_signals'][0]],
+                        build_identity='AAECAwQFBgcICQoLDA0ODw'))
+
+    def test_natural_language_paths_select_semantics_without_internal_skill_names(self):
+        for prompt, owner, profile, language in [
+            ('Fix the internal Python CLI import initialization that starts a worker during spawn.', 'repository-tooling-change-builder', 'task-agent', 'python-professional-usage'),
+            ('Review the actual diff for Rust borrowed lifetime escaping its owner.', 'ai-code-review-refactor', 'review-agent', 'rust-professional-usage'),
+            ('Explain from repository source evidence why the Go context cancellation leaks a goroutine.', 'engineering-change-analysis', 'analysis-agent', 'go-professional-usage'),
+            ('Fix the Rust backend service unsafe FFI ownership boundary.', 'backend-change-builder', 'task-agent', 'rust-professional-usage'),
+            ('Fix the internal C++ CLI borrowed view lifetime after its owner is destroyed.', 'repository-tooling-change-builder', 'task-agent', 'cpp-professional-usage'),
+            ('Review the actual diff for TypeScript type erasure and runtime validation.', 'ai-code-review-refactor', 'review-agent', 'typescript-professional-usage'),
+            ('Fix the internal Node.js CLI stream backpressure and resource handles.', 'repository-tooling-change-builder', 'task-agent', 'nodejs-runtime-professional-usage'),
+        ]:
+            with self.subTest(prompt=prompt):
+                result = ORACLE.route(prompt, main_execution={'producer':'main-control-agent','task_id':'language-semantics'})['route_result']
+                self.assertEqual((owner, profile), (result['primary_skill'], result['start_profile']))
+                self.assertIn(language, result['layer3_skills'])
+                self.assertLessEqual(len(result['layer3_skills']), 3)
+
+    def test_language_names_build_only_and_unchanged_semantics_do_not_select(self):
+        for prompt in [
+            'Fix the internal Python CLI help wording.',
+            'Update the repository TypeScript compiler build configuration only; TypeScript runtime semantics remain unchanged.',
+            'Fix the internal Rust CLI help wording; ownership and lifetime behavior remain unchanged.',
+            'Review the actual diff for a Node.js CLI build policy; Node.js runtime behavior remains unchanged.',
+        ]:
+            with self.subTest(prompt=prompt):
+                result = ORACLE.route(prompt, main_execution={'producer':'main-control-agent','task_id':'language-negative'})['route_result']
+                self.assertFalse(set(result['layer3_skills']) & set(self.languages))
+
+    def test_wrong_profile_and_language_overflow_remain_forbidden(self):
+        for owner, profile, selected in [('repository-tooling-change-builder','review-agent',['python-professional-usage']),
+                ('frontend-change-builder','task-agent',['rust-professional-usage']),
+                ('repository-tooling-change-builder','task-agent',list(self.languages[:4]))]:
+            with self.subTest(owner=owner, profile=profile, selected=selected):
+                with self.assertRaises(VALIDATION.ValidationProblem):
+                    VALIDATION.layer3_selector_runtime_projection(self.authority,
+                        professional_skill=owner, profile=profile,
+                        selection_owner='main-control-agent', exact_layer3=selected)
 
 if __name__ == "__main__":
     unittest.main()

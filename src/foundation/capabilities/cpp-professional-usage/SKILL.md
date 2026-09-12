@@ -9,13 +9,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when C/C++ chang
 
 **Use when**
 
-- C or C++ code changes resource ownership, borrowed lifetime, undefined behavior exposure, ABI/FFI, exception flow, concurrency, or target-specific build behavior.
+- Inspect or change C or C++ resource ownership, borrowed lifetime, undefined behavior exposure, ABI/FFI, exception flow, concurrency, or target-specific build behavior.
 - Native correctness depends on compiler, optimizer, architecture, foreign runtime, or cleanup invariants in the current scope.
 
 **Do not use when**
 
 - The open decision is language/runtime selection, package policy, build-tool mechanics, test strategy, or a measured performance bottleneck.
-- No C/C++ source, native boundary, public header, generated binding, or target behavior changes.
+- No task-local C/C++ source, native boundary, public header, generated binding, or target behavior requires inspection or change.
 
 ## Skill Role
 

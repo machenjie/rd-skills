@@ -3022,7 +3022,7 @@ def behavior_eval_contract_errors(
         "cost_metrics",
         "quality_metrics",
         "metric_directions",
-        "review_input_ready_fields",
+        "review_context_fields",
         "reviewer_forbidden_actions",
         "finding_relations",
         "finding_dispositions",
@@ -3092,7 +3092,7 @@ def behavior_eval_contract_errors(
     review_metrics = closed_ids("review_metrics")
     cost_metrics = closed_ids("cost_metrics")
     quality_metrics = closed_ids("quality_metrics")
-    ready_fields = closed_ids("review_input_ready_fields")
+    ready_fields = closed_ids("review_context_fields")
     forbidden_actions = closed_ids("reviewer_forbidden_actions")
     finding_relations = closed_ids("finding_relations")
     verdicts = closed_ids("verdicts")
@@ -3124,9 +3124,9 @@ def behavior_eval_contract_errors(
             "review_boundary_correctness",
         ],
         "cost_metrics": ["tokens", "turns", "elapsed_ms"],
-        "review_input_ready_fields": [
+        "review_context_fields": [
             "latest_changed_scope", "latest_diff_or_reference",
-            "post_latest_edit_validation", "fixed_review_boundary", "required_evidence",
+            "post_latest_edit_validation", "required_evidence",
         ],
         "reviewer_forbidden_actions": [
             "edited", "repaired", "rerouted", "write_scope_expanded",
@@ -3143,7 +3143,7 @@ def behavior_eval_contract_errors(
         ],
         "review_dispatch_gate_fields": [
             "latest_changed_scope", "latest_diff_or_reference",
-            "post_latest_edit_validation", "fixed_review_boundary", "required_evidence", "review_boundary_due",
+            "post_latest_edit_validation", "required_evidence", "review_boundary_due",
         ],
         "verdicts": [
             "improved", "hardening_only", "no_effect", "regression",
@@ -3159,7 +3159,7 @@ def behavior_eval_contract_errors(
         "routing_metrics": routing_metrics,
         "review_metrics": review_metrics,
         "cost_metrics": cost_metrics,
-        "review_input_ready_fields": ready_fields,
+        "review_context_fields": ready_fields,
         "reviewer_forbidden_actions": forbidden_actions,
         "finding_relations": finding_relations,
         "finding_oracle_fields": closed_ids("finding_oracle_fields"),
@@ -3229,11 +3229,11 @@ def behavior_eval_contract_errors(
         ],
         "dispatch_review_fields": [
             "dispatch_count", "primary_review_skill", "layer3_skills",
-            "specialist_reviews", "boundary_decision", "review_input_ready",
+            "specialist_reviews", "boundary_decision", "review_context",
             "reviewer_actions", "initial_review", "repair_re_review", "findings", "review_boundary_due",
         ],
         "initial_review_fields": [
-            "completed_fixed_boundary", "stopped_after_ordinary_finding",
+            "covered_current_scope", "stopped_after_ordinary_finding",
             "covered_review_dimensions", "returned_findings",
         ],
         "repair_rereview_fields": [
@@ -3250,7 +3250,7 @@ def behavior_eval_contract_errors(
     if contract["main_dispatch_surface_contract"] != {
         "decision_actor_profile": "main-control-agent",
         "review_candidate_profile": "review-agent",
-        "decision": "review-input-ready",
+        "decision": "review-context-available",
         "evaluated_before_review_execution": True,
         "reviewer_executed": False,
         "dispatch_count": 0,
@@ -6944,9 +6944,9 @@ def domain_modifier_routing_authority(
             f"domain-only={sorted(declared_edges - reciprocal_edges)}; "
             f"professional-only={sorted(reciprocal_edges - declared_edges)}"
         )
-    if len(declared_edges) != 47:
+    if len(declared_edges) != 48:
         errors.append(
-            "Domain modifier authority must contain exactly 47 reciprocal "
+            "Domain modifier authority must contain exactly 48 reciprocal "
             f"edges, found {len(declared_edges)}"
         )
     analysis_domains = {
@@ -8864,6 +8864,7 @@ _LAYER3_SELECTOR_SOURCE_SYMBOLS = {
         "_accessibility_behavior_requested",
         "_build_route_candidates",
         "_implementation_owner_layer3",
+        "_language_semantic_layers",
         "_review_risk_layer3",
     },
     "runtime-matcher": {"foundation_runtime_matcher_authority"},

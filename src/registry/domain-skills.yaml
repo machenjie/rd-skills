@@ -343,7 +343,7 @@ domain_skills:
           must_co_trigger_with: []
   - name: low-level-systems-extension
     routing_mode: modifier-only
-    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis", "repository-tooling-change-builder"]
     required_expertise_tags: ["domain-low-level-systems-extension", "foundation-language-professional-usage", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-lang-cpp", "specialty-lang-rust"]
     path: "src/domain-extensions/low-level-systems-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
