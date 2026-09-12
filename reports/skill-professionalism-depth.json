@@ -2276,7 +2276,7 @@
       "status": "pass",
       "decision_rule_count": 7,
       "gotcha_count": 4,
-      "line_count": 70
+      "line_count": 71
     },
     {
       "name": "code-element-professionalism",

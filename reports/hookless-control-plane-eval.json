@@ -3,8 +3,8 @@
   "fixture_schema_version": 2,
   "status": "pass",
   "evidence_scope": "deterministic-fixtures",
-  "fixture_count": 24,
-  "negative_fixture_count": 26,
+  "fixture_count": 30,
+  "negative_fixture_count": 39,
   "cases": [
     {
       "id": "local-owner-discovery",
@@ -455,6 +455,120 @@
         "review_dispatch_count": 0,
         "loaded_skill_count": 1,
         "source_read_count": 5,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-host-keeps-partial-proof",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 8,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "retry-changes-material-after-two-failures",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "dispatch-only-host-routing-asset-read",
+      "metrics": {
+        "subagent_count": 2,
+        "control_turn_count": 3,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 1,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 2,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "narrowing-propagates-and-invalidates-old-result",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 0,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "cancellation-propagates-to-inflight-task",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 0,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-user-forbids-unavailable-host-reproduction",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
         "source_search_count": 1,
         "parallel_write_conflict": false,
         "preparation_loop_detected": false
@@ -1008,6 +1122,279 @@
       },
       "errors": [
         "wrong-owner-decision"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-without-observed-failure",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unobserved-reproduction-limit"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-claims-fixed",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 8,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unverified-completion-claim"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-without-cause",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unproved-cause"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-without-scan",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "missing-same-pattern-scan"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "retry-third-unchanged-attempt",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unchanged-retry-after-two-failures"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "retry-task-renaming-does-not-reset",
+      "metrics": {
+        "subagent_count": 2,
+        "control_turn_count": 3,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 2,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unchanged-retry-after-two-failures"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "retry-new-label-without-new-evidence",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "retry-change-without-evidence"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "routing-reader-cannot-route",
+      "metrics": {
+        "subagent_count": 2,
+        "control_turn_count": 3,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 1,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 2,
+        "source_read_count": 1,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "routing-reader-rerouted"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "routing-reader-cannot-inspect-target-code",
+      "metrics": {
+        "subagent_count": 2,
+        "control_turn_count": 3,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 1,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 2,
+        "source_read_count": 2,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "routing-reader-outside-assets"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "narrowing-not-propagated",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 0,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "user-update-not-propagated"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "narrowing-cannot-accept-old-result",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 0,
+        "first_edit_step": null,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 0,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "superseded-result-accepted"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "narrowing-cannot-continue-old-write",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 6,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 0,
+        "source_search_count": 0,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "write-after-user-scope-change"
+      ],
+      "matches_expected": true
+    },
+    {
+      "id": "bugfix-unavailable-user-evidence-not-supplied",
+      "metrics": {
+        "subagent_count": 1,
+        "control_turn_count": 2,
+        "duplicate_read_count": 0,
+        "verification_action_count": 1,
+        "first_edit_step": 7,
+        "analysis_dispatch_count": 0,
+        "review_dispatch_count": 0,
+        "loaded_skill_count": 1,
+        "source_read_count": 3,
+        "source_search_count": 1,
+        "parallel_write_conflict": false,
+        "preparation_loop_detected": false
+      },
+      "errors": [
+        "unobserved-reproduction-limit"
       ],
       "matches_expected": true
     }

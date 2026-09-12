@@ -67,11 +67,11 @@
           "outcomes": [
             {
               "id": "routing-valid",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-routing",
-          "producer_status": "pass"
+          "producer_status": "fail"
         },
         {
           "outcomes": [
@@ -128,35 +128,35 @@
           "outcomes": [
             {
               "id": "docs-exact-valid",
-              "status": "pass"
+              "status": "not_run"
             }
           ],
           "producer": "validate-docs-consistency",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         },
         {
           "outcomes": [
             {
               "id": "rendered-context-valid",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "final-goal-context-costs",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-rendered-context",
-          "producer_status": "pass"
+          "producer_status": "fail"
         },
         {
           "outcomes": [
             {
               "id": "context-control-valid",
-              "status": "pass"
+              "status": "not_run"
             }
           ],
           "producer": "eval-context-control",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         }
       ],
       "id": "context-budget-authority",
@@ -183,25 +183,25 @@
           "outcomes": [
             {
               "id": "rendered-context-valid",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "final-goal-context-costs",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-rendered-context",
-          "producer_status": "pass"
+          "producer_status": "fail"
         },
         {
           "outcomes": [
             {
               "id": "context-control-valid",
-              "status": "pass"
+              "status": "not_run"
             }
           ],
           "producer": "eval-context-control",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         },
         {
           "outcomes": [
@@ -264,11 +264,11 @@
           "outcomes": [
             {
               "id": "reference-content-valid",
-              "status": "not_run"
+              "status": "pass"
             }
           ],
           "producer": "validate-reference-content",
-          "producer_status": "not_run"
+          "producer_status": "pass"
         },
         {
           "outcomes": [
@@ -351,15 +351,15 @@
           "outcomes": [
             {
               "id": "rendered-context-valid",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "final-goal-context-costs",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-rendered-context",
-          "producer_status": "pass"
+          "producer_status": "fail"
         }
       ],
       "id": "prompt-contract-authority",
@@ -402,15 +402,15 @@
           "outcomes": [
             {
               "id": "rendered-context-valid",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "final-goal-context-costs",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-rendered-context",
-          "producer_status": "pass"
+          "producer_status": "fail"
         }
       ],
       "id": "profile-contract-authority",
@@ -440,11 +440,11 @@
           "outcomes": [
             {
               "id": "docs-exact-valid",
-              "status": "pass"
+              "status": "not_run"
             }
           ],
           "producer": "validate-docs-consistency",
-          "producer_status": "pass"
+          "producer_status": "not_run"
         }
       ],
       "id": "docs-contract-authority",
@@ -457,11 +457,11 @@
           "outcomes": [
             {
               "id": "routing-valid",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-routing",
-          "producer_status": "pass"
+          "producer_status": "fail"
         }
       ],
       "id": "decision-eval-authority",
@@ -474,15 +474,15 @@
           "outcomes": [
             {
               "id": "rendered-context-valid",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "final-goal-context-costs",
-              "status": "pass"
+              "status": "fail"
             }
           ],
           "producer": "eval-rendered-context",
-          "producer_status": "pass"
+          "producer_status": "fail"
         },
         {
           "outcomes": [
@@ -517,19 +517,19 @@
       "source": "src/control-model/core-contracts.json"
     }
   ],
-  "command_execution_count": 28,
+  "command_execution_count": 27,
   "contract_errors": [],
-  "contract_sha256": "11246970fea1173d9269cba664e94ed611b65b0700a0c6aab5b37e96bbc52b72",
+  "contract_sha256": "585997baef92eab7a8f71f47e783b6c4975ae29ce969e62dd090828031a9b2cb",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 7193,
-      "sha256": "a4b7d1e91eb72ccf454f75c23826fd1738c2ac8be232706231aac1caa4075899"
+      "file_count": 2117,
+      "sha256": "6ea1f23e308043f5de863c49e7e54a816b68179a08d0e6d2c4b7f0f27785cd87"
     },
     "pre": {
-      "file_count": 7193,
-      "sha256": "a4b7d1e91eb72ccf454f75c23826fd1738c2ac8be232706231aac1caa4075899"
+      "file_count": 2117,
+      "sha256": "6ea1f23e308043f5de863c49e7e54a816b68179a08d0e6d2c4b7f0f27785cd87"
     },
     "unchanged": true
   },
@@ -559,11 +559,11 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-skills",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -583,11 +583,11 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-capabilities",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -862,7 +862,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -884,11 +884,11 @@
           "pointer": "/ai_readability/summary/hard_gate_ready",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -908,11 +908,11 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
-            "length": 7,
+            "length": 4,
             "type": "string"
           },
           "expected": "pass",
@@ -920,7 +920,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -936,7 +936,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -956,7 +956,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1029,7 +1029,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1051,7 +1051,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1124,7 +1124,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1146,7 +1146,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1219,7 +1219,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1241,7 +1241,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1314,7 +1314,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1335,7 +1335,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1408,7 +1408,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1430,7 +1430,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1503,7 +1503,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1526,7 +1526,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1599,7 +1599,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1622,7 +1622,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1695,7 +1695,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1718,7 +1718,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1791,7 +1791,7 @@
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1806,18 +1806,18 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "validate-reference-content",
-      "status": "not_run"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1831,18 +1831,18 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "null"
+            "type": "integer"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "validate-root-content",
-      "status": "not_run"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1909,18 +1909,18 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-docs-consistency",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -2027,7 +2027,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2050,11 +2050,11 @@
           "pointer": "/status",
           "resolution_status": "resolved",
           "source": "reports/routing-eval.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "length": 0,
+            "length": 14,
             "type": "array"
           },
           "expected": [],
@@ -2062,11 +2062,11 @@
           "pointer": "/errors",
           "resolution_status": "resolved",
           "source": "reports/routing-eval.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "eval-routing",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -2087,7 +2087,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2148,7 +2148,7 @@
         },
         {
           "actual_metadata": {
-            "length": 0,
+            "length": 14,
             "type": "array"
           },
           "expected": [],
@@ -2156,11 +2156,11 @@
           "pointer": "/errors",
           "resolution_status": "resolved",
           "source": "reports/professional-coverage-matrix.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "eval-skill-professionalism",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -2243,14 +2243,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2277,7 +2277,7 @@
         }
       ],
       "producer": "validate-professional-routing",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -2449,7 +2449,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2472,11 +2472,11 @@
           "pointer": "/status",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "length": 0,
+            "length": 2,
             "type": "array"
           },
           "expected": [],
@@ -2484,11 +2484,11 @@
           "pointer": "/errors",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "eval-rendered-context",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -2508,7 +2508,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2554,7 +2554,7 @@
         },
         {
           "actual_metadata": {
-            "length": 0,
+            "length": 1,
             "type": "array"
           },
           "expected": [],
@@ -2562,7 +2562,7 @@
           "pointer": "/budget_governance/conformance_failures",
           "resolution_status": "resolved",
           "source": "reports/rendered-context-budget.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2581,7 +2581,7 @@
         }
       ],
       "producer": "eval-rendered-context",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -2598,14 +2598,14 @@
       "predicates": [
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -2644,7 +2644,7 @@
         }
       ],
       "producer": "eval-context-control",
-      "status": "pass"
+      "status": "not_run"
     },
     {
       "capabilities": [
@@ -3679,8 +3679,8 @@
       "status": "fail"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "fail",
+      "formal_release_status": "blocked",
       "id": "core-model",
       "name": "Core Model",
       "required_dimensions": [
@@ -3700,7 +3700,7 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "pass",
@@ -3723,8 +3723,8 @@
       "status": "pass"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "not_run",
+      "formal_release_status": "blocked",
       "id": "minimum-sufficient-process",
       "name": "Minimum Sufficient Process",
       "required_dimensions": [
@@ -3739,7 +3739,7 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "pass",
@@ -3762,8 +3762,8 @@
       "status": "pass"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "not_run",
+      "formal_release_status": "blocked",
       "id": "safe-parallelism",
       "name": "Safe Parallelism",
       "required_dimensions": [
@@ -3778,11 +3778,11 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "fail",
+      "formal_release_status": "blocked",
       "id": "context-isolation",
       "name": "Context Isolation",
       "required_dimensions": [
@@ -3800,7 +3800,7 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "fail",
@@ -3836,8 +3836,8 @@
       "status": "fail"
     },
     {
-      "authoring_status": "fail",
-      "formal_release_status": "blocked",
+      "authoring_status": "pass",
+      "formal_release_status": "pass",
       "id": "reference-loading",
       "name": "Reference Loading",
       "required_dimensions": [
@@ -3857,7 +3857,7 @@
         ],
         "formal_release": []
       },
-      "status": "fail"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -3880,8 +3880,8 @@
       "status": "pass"
     },
     {
-      "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "authoring_status": "not_run",
+      "formal_release_status": "blocked",
       "id": "single-source-of-truth",
       "name": "Single Source of Truth",
       "required_dimensions": [
@@ -3897,7 +3897,7 @@
         ],
         "formal_release": []
       },
-      "status": "pass"
+      "status": "fail"
     },
     {
       "authoring_status": "pass",
@@ -3961,7 +3961,7 @@
       "status": "pass"
     },
     {
-      "authoring_status": "not_run",
+      "authoring_status": "fail",
       "formal_release_status": "blocked",
       "id": "final-goal",
       "name": "Final Goal",
@@ -3997,13 +3997,15 @@
         "scripts/validate-skills.py"
       ],
       "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "validate-skills",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4013,13 +4015,15 @@
         "scripts/validate-capabilities.py"
       ],
       "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "validate-capabilities",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4191,10 +4195,8 @@
         "authoring"
       ],
       "depends_on": [],
-      "exit_code": 1,
-      "failure_reason_codes": [
-        "process-exit-nonzero"
-      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
       "id": "audit-skill-content",
       "release_reports": [],
       "reports": [
@@ -4205,7 +4207,7 @@
         }
       ],
       "source_unchanged": true,
-      "status": "fail",
+      "status": "pass",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4218,15 +4220,13 @@
       "depends_on": [
         "audit-skill-content"
       ],
-      "exit_code": null,
-      "failure_reason_codes": [
-        "dependency-not-pass"
-      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
       "id": "validate-reference-content",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "not_run",
+      "status": "pass",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4239,15 +4239,13 @@
       "depends_on": [
         "audit-skill-content"
       ],
-      "exit_code": null,
-      "failure_reason_codes": [
-        "dependency-not-pass"
-      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
       "id": "validate-root-content",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "not_run",
+      "status": "pass",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4334,8 +4332,10 @@
         "validate-built-links",
         "eval-agent-lightweight"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "eval-rendered-context",
       "release_reports": [],
       "reports": [
@@ -4346,7 +4346,7 @@
         }
       ],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4358,13 +4358,15 @@
       "depends_on": [
         "eval-rendered-context"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "validate-docs-consistency",
       "release_reports": [],
       "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4399,8 +4401,10 @@
         "scripts/eval-routing.py"
       ],
       "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "eval-routing",
       "release_reports": [],
       "reports": [
@@ -4411,7 +4415,7 @@
         }
       ],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4421,8 +4425,10 @@
         "scripts/eval-skill-professionalism.py"
       ],
       "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": 1,
+      "failure_reason_codes": [
+        "process-exit-nonzero"
+      ],
       "id": "eval-skill-professionalism",
       "release_reports": [],
       "reports": [
@@ -4443,7 +4449,7 @@
         }
       ],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "fail",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4484,19 +4490,15 @@
         "eval-skill-professionalism",
         "eval-professional-benchmarks"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "validate-professional-routing",
       "release_reports": [],
-      "reports": [
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/professional-routing-coverage.json"
-        }
-      ],
+      "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 600
     },
@@ -4509,19 +4511,15 @@
         "eval-agent-lightweight",
         "eval-rendered-context"
       ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
+      "exit_code": null,
+      "failure_reason_codes": [
+        "dependency-not-pass"
+      ],
       "id": "eval-context-control",
       "release_reports": [],
-      "reports": [
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/context-control-plane-eval.json"
-        }
-      ],
+      "reports": [],
       "source_unchanged": true,
-      "status": "pass",
+      "status": "not_run",
       "timed_out": false,
       "timeout_seconds": 600
     },

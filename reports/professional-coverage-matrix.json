@@ -791,7 +791,22 @@
     },
     "required_skill_count": 10
   },
-  "errors": [],
+  "errors": [
+    "routing: low-level-transition-rust-to-os-resource: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
+    "routing: low-level-anti-unchanged-ffi-documentation: expected {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}, got {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
+    "routing: low-level-transition-rust-to-os-resource: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension'], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['low-level-systems-extension', 'rust-professional-usage'], 'review_skill': None}",
+    "routing: low-level-anti-unchanged-ffi-documentation: expected route {'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': [], 'review_skill': None}; actual={'path': 'direct', 'profile': 'task-agent', 'primary_skill': 'backend-change-builder', 'layer3_skills': ['rust-professional-usage'], 'review_skill': None}",
+    "routing: capcov-admission-foundation-python-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capcov-admission-foundation-go-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capcov-admission-foundation-typescript-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capcov-admission-foundation-rust-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capcov-admission-foundation-cpp-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capcov-admission-foundation-java-jvm-professional-usage-adjacent: declared case_kind 'adjacent' does not match computed effect 'simple'",
+    "routing: capability admission evidence: missing obligations=[('foundation', 'cpp-professional-usage', 'adjacent'), ('foundation', 'go-professional-usage', 'adjacent'), ('foundation', 'java-jvm-professional-usage', 'adjacent'), ('foundation', 'python-professional-usage', 'adjacent'), ('foundation', 'rust-professional-usage', 'adjacent'), ('foundation', 'typescript-professional-usage', 'adjacent')]",
+    "routing: base-professional-vs-domain-modifier/distractor: routing case is not passing",
+    "routing: base-professional-vs-domain-modifier/transition: routing case is not passing",
+    "routing: base-professional-vs-domain-modifier: stable dimensions drifted; declared ['path', 'profile', 'primary_skill', 'layer3_skills', 'review_skill'], observed ['path', 'profile', 'primary_skill', 'review_skill']"
+  ],
   "gate_summary": {
     "required_skill_count": 10,
     "pass_count": 10,
@@ -929,7 +944,17 @@
         "windows-platform-extension",
         "repository-impact-inspection",
         "configuration-runtime-policy",
-        "dependency-vulnerability-scanning"
+        "dependency-vulnerability-scanning",
+        "python-professional-usage",
+        "go-professional-usage",
+        "typescript-professional-usage",
+        "rust-professional-usage",
+        "cpp-professional-usage",
+        "nodejs-runtime-professional-usage",
+        "java-jvm-professional-usage",
+        "kotlin-professional-usage",
+        "csharp-dotnet-professional-usage",
+        "swift-professional-usage"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -1595,14 +1620,15 @@
         "nodejs-runtime-professional-usage",
         "filesystem-process-safety",
         "configuration-runtime-policy",
-        "dependency-vulnerability-scanning"
+        "dependency-vulnerability-scanning",
+        "typescript-professional-usage",
+        "rust-professional-usage",
+        "cpp-professional-usage"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "low-level-anti-rust-business-service",
-          "low-level-anti-unchanged-ffi-documentation",
-          "low-level-transition-rust-to-os-resource",
           "security-anti-credential-session-internal-refactor",
           "structure-deliberate-separate-owner-implementations",
           "structure-ef-mapping-domain-facts-unchanged",
@@ -1652,7 +1678,7 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 28,
+        "positive_route": 26,
         "negative_route": 0,
         "behavior": 11,
         "pressure": 3,
@@ -2190,7 +2216,15 @@
         "linux-desktop-platform-extension",
         "cross-platform-client-extension",
         "web3-product-extension",
-        "low-level-systems-extension"
+        "low-level-systems-extension",
+        "python-professional-usage",
+        "go-professional-usage",
+        "typescript-professional-usage",
+        "nodejs-runtime-professional-usage",
+        "java-jvm-professional-usage",
+        "kotlin-professional-usage",
+        "csharp-dotnet-professional-usage",
+        "swift-professional-usage"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -2321,7 +2355,11 @@
         "cross-platform-client-extension",
         "filesystem-process-safety",
         "configuration-runtime-policy",
-        "dependency-vulnerability-scanning"
+        "dependency-vulnerability-scanning",
+        "typescript-professional-usage",
+        "nodejs-runtime-professional-usage",
+        "rust-professional-usage",
+        "cpp-professional-usage"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -2429,7 +2467,18 @@
         "filesystem-process-safety",
         "targeted-validation-selection",
         "configuration-runtime-policy",
-        "dependency-vulnerability-scanning"
+        "dependency-vulnerability-scanning",
+        "python-professional-usage",
+        "go-professional-usage",
+        "typescript-professional-usage",
+        "rust-professional-usage",
+        "cpp-professional-usage",
+        "nodejs-runtime-professional-usage",
+        "java-jvm-professional-usage",
+        "kotlin-professional-usage",
+        "csharp-dotnet-professional-usage",
+        "swift-professional-usage",
+        "low-level-systems-extension"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -9322,12 +9371,10 @@
           "low-level-ffi-ownership",
           "low-level-kernel-driver",
           "low-level-native-memory-paraphrase",
-          "low-level-realtime-paraphrase",
-          "low-level-transition-rust-to-os-resource"
+          "low-level-realtime-paraphrase"
         ],
         "negative_route": [
-          "low-level-anti-rust-business-service",
-          "low-level-anti-unchanged-ffi-documentation"
+          "low-level-anti-rust-business-service"
         ],
         "behavior": [
           "evals/professional-benchmarks/domain/low-level-ffi-unwind-allocator-publication"
@@ -9337,8 +9384,8 @@
         "adversarial_negative_control": []
       },
       "evidence_counts": {
-        "positive_route": 5,
-        "negative_route": 2,
+        "positive_route": 4,
+        "negative_route": 1,
         "behavior": 1,
         "pressure": 0,
         "release_critical": 0,
