@@ -11,6 +11,7 @@ description: "Select facts, artifacts, Layer 3 Skills, and References when decis
 
 - a working decision needs a minimum set of current facts, artifacts, Layer 3 Skills, or References
 - candidate context is stale, irrelevant, redundant, uncertain, or exceeds the available budget
+- interrupted work resumes with partial changes or an operation whose outcome is unknown
 
 **Do not use when**
 
@@ -67,4 +68,4 @@ packaging context for another agent.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [context selection](references/context-selection-checklist.md) | decision-checklist | candidate facts artifacts Layer 3 Skills or References need source freshness decision-use or budget comparison | the current minimum set and refresh conditions are already explicit | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [context selection](references/context-selection-checklist.md) | decision-checklist | working context needs freshness or budget comparison or interrupted work resumes with partial changes or unknown outcomes | current context and refresh conditions are explicit with no unresolved interruption state | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |

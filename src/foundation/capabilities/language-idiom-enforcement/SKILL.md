@@ -38,7 +38,7 @@ Select language-native expressions that affect correctness, ownership, failure h
 
 ## Stop Conditions
 
-Escalate when repository and language authorities conflict, public compatibility is uncertain, or the proposed idiom changes ownership or concurrency behavior. Also escalate when generated or framework code controls the surface, or validation cannot distinguish style from semantic change.
+Resolve conflicts from the current contract, supported version, and affected consumers using the targeted patterns. Preserve compatible behavior within the authorized scope. Ask for a user-owned choice only when supported sources leave competing behavior unresolved or a breaking change needs additional authorization; report unavailable semantic validation without treating style disagreement alone as a blocker.
 
 ## Output Contract
 

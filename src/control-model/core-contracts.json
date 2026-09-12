@@ -1177,7 +1177,7 @@
         "id": "example-assets-and-tooling",
         "path_patterns": ["examples/**", "scripts/generate-examples-showcase.py", "scripts/validate-examples.py"],
         "producer_ids": [],
-        "test_modules": ["tests/scripts/test_generate_examples_showcase.py", "tests/scripts/test_validate_docs_consistency.py"]
+        "test_modules": ["tests/scripts/test_generate_examples_showcase.py", "tests/scripts/test_invoice_download_example.py", "tests/scripts/test_validate_docs_consistency.py"]
       },
       {
         "id": "skill-content-config",

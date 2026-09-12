@@ -1,8 +1,11 @@
 # Examples
 
 These scenarios show how rd-skills selects mechanisms for the facts in a request.
-They are illustrative expectations, not executable demo repositories or evidence
-that a live host performed the work.
+The route and evidence files are illustrative expectations, not evidence that a
+live host performed the work. The invoice scenario also contains a small runnable
+[implementation walkthrough](01-backend-permission-change/implementation-walkthrough.md)
+with fictional data and standard-library behavior tests; it is not a deployable
+application or a framework template.
 
 Start with [the local form change](02-frontend-form-state-change/prompt.md): one
 Task inspects, edits, self-checks, and validates, without separate Analysis or

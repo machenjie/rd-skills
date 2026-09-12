@@ -4366,7 +4366,7 @@ foundation_skills:
     path: "src/foundation/capabilities/task-context-selection"
     content_class: compact
     role_support: ["analysis-agent", "task-agent", "review-agent"]
-    trigger_signals: ["working decision needs minimum current facts artifacts Layer 3 Skills or References with source freshness and decision use", "candidate context is stale irrelevant redundant uncertain or exceeds the available budget"]
+    trigger_signals: ["working decision needs minimum current facts artifacts Layer 3 Skills or References with source freshness and decision use", "candidate context is stale irrelevant redundant uncertain or exceeds the available budget", "interrupted work resumes with partial changes or an operation whose outcome is unknown"]
     anti_trigger_signals: ["current nonredundant context already supports the decision with no material omission", "context must be packaged or transferred downstream"]
     required_inputs: ["exact current decision alternatives and failure boundary", "candidate facts and artifacts with source identity and freshness basis", "candidate Layer 3 Skills and References plus available context budget"]
     output_contract: ["working-context selection with current decision, selected facts and artifacts, source, freshness, decision use, selected Layer 3 Skills and References, excluded context, refresh triggers, omissions, uncertainty, context-budget tradeoff, and residual risk"]
@@ -4374,8 +4374,8 @@ foundation_skills:
     reference_index:
       - path: "references/context-selection-checklist.md"
         type: decision-checklist
-        load_when: "candidate facts artifacts Layer 3 Skills or References need source freshness decision-use or budget comparison"
-        do_not_load_when: "the current minimum set and refresh conditions are already explicit"
+        load_when: "working context needs freshness or budget comparison or interrupted work resumes with partial changes or unknown outcomes"
+        do_not_load_when: "current context and refresh conditions are explicit with no unresolved interruption state"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
     used_by: []

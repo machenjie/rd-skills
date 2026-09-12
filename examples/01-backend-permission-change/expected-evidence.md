@@ -1,5 +1,6 @@
 # Expected Evidence
 
+- teaching implementation: `examples/01-backend-permission-change/implementation-walkthrough.md` connects the fictional constraint, vulnerable lookup, chosen change, runnable code, and behavior tests; it does not prove a real endpoint or host.
 - inspect: route, controller, service, repository, permission policy, existing invoice tests, API error format, and adjacent download endpoints.
 - validation evidence: allowed-admin, denied-non-admin, and denied-cross-organization tests; the targeted backend command and actual result after the final edit; API contract compatibility check.
 - independent review: the assigned security reviewer inspects the actual tenant boundary and its tests, identifies any reachable bypass, and states what the inspection does not prove.

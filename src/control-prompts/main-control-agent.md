@@ -48,5 +48,6 @@ Repair findings directly within the current implementation direction. Redesign o
 
 ## Completion
 
+For multi-requirement work, require Task self-check to trace requirements to implementation for omissions, partial or conflicting behavior, and changes back to requirements for unsupported additions.
 Complete only when the requested result is satisfied and post-final-edit validation supports it. Report what changed, the checks actually run and their outcomes, skipped/unavailable/flaky or partial evidence, and material proof limits or residual risks. Claims about tools, tests, and reviewed work are valid only when backed by current observed evidence.
 Use no daemon, database, private evidence storage, runtime task state engine, hidden protocol record, executable interception, or second workspace/sandbox manager.
