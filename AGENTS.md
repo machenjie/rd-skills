@@ -114,7 +114,7 @@ four static Agent Profiles; Runtime is not an Agent Profile dimension.
 
 Foundation is a capability-modifier layer and Domain is `modifier-only`.
 Neither may become a Runtime top-level Skill. Runtime selection remains Primary
-Professional -> selector -> 0..3 Layer 3 -> required References. Task and Review
+Professional -> selector -> needed Layer 3 -> required References. Task and Review
 consume Main's Route Once result, do not rerun global routing, and load only
 capsule-named Layer 3 and necessary Targeted References. Never load the complete
 Foundation/Domain catalog.

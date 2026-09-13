@@ -41,6 +41,139 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             context="focused selector parity",
         )
 
+    def test_generator_constraints_survive_ordinary_exact_expansion_and_replay(self) -> None:
+        # One generator owner must preserve deterministic build inputs, atomic
+        # output replacement, Python cleanup, and the affected consumer proof.
+        # These are engineering obligations, not permission to add architecture.
+        authority = self._authority()
+        owner = "repository-tooling-change-builder"
+        selected = [
+            "build-tool-professional-usage",
+            "filesystem-process-safety",
+            "python-professional-usage",
+            "targeted-validation-selection",
+        ]
+        projection = VALIDATION.layer3_selector_runtime_projection(
+            authority, professional_skill=owner, profile="task-agent",
+            selection_owner="main-control-agent", exact_layer3=None,
+        )
+        records = [record for record in projection["selectors"]
+                   if set(record["selectable_layer3"]) <= set(selected)]
+        evidence = list(dict.fromkeys(
+            group[0] for record in records
+            for group in record["positive_signal_groups"]
+        ))
+        build = "AAAAAAAAAAAAAAAAAAAAAA"
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
+            projection, evidence_signals=evidence, build_identity=build,
+        )
+        self.assertEqual(selected, receipt["selected_layer3"])
+        self.assertEqual([], VALIDATION.layer3_selector_runtime_selection_receipt_errors(
+            receipt, expected_owner="main-control-agent", expected_profile="task-agent",
+            expected_professional=owner, expected_selection_kind="implementation-risk",
+            expected_selected_layer3=selected, expected_build_identity=build,
+        ))
+        base = VALIDATION.layer3_selector_normalized_control_projections(authority)[0][f"{owner}.json"]
+        expanded = VALIDATION.layer3_selector_expand_runtime_projection(
+            base, None, profile="task-agent", selection_owner="main-control-agent",
+            exact_layer3=selected, selected_layer3=selected, exact_references=[],
+        )
+        exact = VALIDATION.layer3_selector_runtime_selection_receipt(
+            expanded, evidence_signals=[], build_identity=build,
+        )
+        self.assertEqual(selected, exact["selected_layer3"])
+        self.assertEqual([], VALIDATION.layer3_selector_runtime_selection_receipt_errors(
+            exact, expected_owner="main-control-agent", expected_profile="task-agent",
+            expected_professional=owner, expected_selection_kind="implementation-risk",
+            expected_selected_layer3=selected, expected_build_identity=build,
+        ))
+        # Additional quantity never masks unknown, wrong-owner, or duplicate items.
+        for invalid in [selected + ["transaction-consistency"], selected + ["unknown-skill"],
+                        selected + [selected[0]]]:
+            with self.subTest(invalid=invalid), self.assertRaises(VALIDATION.ValidationProblem):
+                VALIDATION.layer3_selector_runtime_projection(
+                    authority, professional_skill=owner, profile="task-agent",
+                    selection_owner="main-control-agent", exact_layer3=invalid,
+                )
+        # An already established command/coverage mapping suppresses the duplicate
+        # validation-selection check, while output/cleanup constraints remain.
+        validation_record = next(record for record in records
+                                 if record["selectable_layer3"] == [selected[-1]])
+        covered = VALIDATION.layer3_selector_runtime_selection_receipt(
+            projection, evidence_signals=evidence + [validation_record["nearest_negative_signals"][-1]],
+            build_identity=build,
+        )
+        self.assertEqual(selected[:-1], covered["selected_layer3"])
+
+    def test_five_generator_constraints_are_legal_outside_the_render_sample(self) -> None:
+        # Typed generator flags add a configuration invariant to the existing
+        # four build/output/Python/consumer obligations. No new capacity applies.
+        authority = self._authority()
+        owner = "repository-tooling-change-builder"
+        selected = ["build-tool-professional-usage", "configuration-runtime-policy",
+                    "filesystem-process-safety", "python-professional-usage",
+                    "targeted-validation-selection"]
+        kwargs = dict(professional_skill=owner, profile="task-agent", selection_owner="main-control-agent")
+        ordinary = VALIDATION.layer3_selector_runtime_projection(authority, exact_layer3=None, **kwargs)
+        evidence = list(dict.fromkeys(group[0] for record in ordinary["selectors"]
+                       if set(record["selectable_layer3"]) <= set(selected)
+                       for group in record["positive_signal_groups"]))
+        build = "AAAAAAAAAAAAAAAAAAAAAA"
+        normal = VALIDATION.layer3_selector_runtime_selection_receipt(
+            ordinary, evidence_signals=evidence, build_identity=build)
+        base = VALIDATION.layer3_selector_normalized_control_projections(authority)[0][f"{owner}.json"]
+        expanded = VALIDATION.layer3_selector_expand_runtime_projection(
+            base, None, profile="task-agent", selection_owner="main-control-agent",
+            exact_layer3=selected, selected_layer3=selected, exact_references=[])
+        exact = VALIDATION.layer3_selector_runtime_selection_receipt(
+            expanded, evidence_signals=[], build_identity=build)
+        for receipt in [normal, exact]:
+            self.assertEqual(selected, receipt["selected_layer3"])
+            self.assertEqual([], VALIDATION.layer3_selector_runtime_selection_receipt_errors(
+                receipt, expected_owner="main-control-agent", expected_profile="task-agent",
+                expected_professional=owner, expected_selection_kind="implementation-risk",
+                expected_selected_layer3=selected, expected_build_identity=build))
+
+    def test_help_wording_with_unrelated_technology_names_stays_local(self) -> None:
+        prompt = "Fix the internal Python CLI help wording."
+        expected = dict(start_profile="task-agent", primary_skill="repository-tooling-change-builder",
+                        layer3_skills=[], review_skill=None)
+        for text in [prompt, prompt + " The help examples mention Kubernetes, transactions, "
+                     "concurrency, rollback, authentication, and monitoring; all behavior remains unchanged."]:
+            observed = ORACLE.route(text, main_execution={"producer": "main-control-agent", "task_id": "jit-wording"})
+            self.assertEqual(expected, observed["route_result"])
+            self.assertTrue(observed["route_once"])
+
+    def test_new_evidence_revises_selection_without_conflating_empty_or_reusing_receipt(self) -> None:
+        authority = self._authority()
+        kwargs = dict(professional_skill="repository-tooling-change-builder",
+                      profile="task-agent", selection_owner="main-control-agent")
+        ordinary = VALIDATION.layer3_selector_runtime_projection(authority, exact_layer3=None, **kwargs)
+        empty = VALIDATION.layer3_selector_runtime_projection(authority, exact_layer3=[], **kwargs)
+        self.assertTrue(ordinary["selector_loaded"])
+        self.assertFalse(empty["selector_loaded"])
+        python = next(record for record in ordinary["selectors"]
+                      if record["selectable_layer3"] == ["python-professional-usage"])
+        evidence = [group[0] for group in python["positive_signal_groups"]]
+        build = "AAAAAAAAAAAAAAAAAAAAAA"
+        added = VALIDATION.layer3_selector_runtime_selection_receipt(
+            ordinary, evidence_signals=evidence, build_identity=build,
+        )
+        self.assertEqual(["python-professional-usage"], added["selected_layer3"])
+        removed = VALIDATION.layer3_selector_runtime_selection_receipt(
+            ordinary, evidence_signals=evidence + [python["nearest_negative_signals"][-1]],
+            build_identity=build,
+        )
+        self.assertEqual([], removed["selected_layer3"])
+        replay = dict(expected_owner="main-control-agent", expected_profile="task-agent",
+                      expected_professional=kwargs["professional_skill"],
+                      expected_selection_kind="implementation-risk", expected_selected_layer3=[],
+                      expected_build_identity=build)
+        self.assertTrue(VALIDATION.layer3_selector_runtime_selection_receipt_errors(added, **replay))
+        self.assertEqual([], VALIDATION.layer3_selector_runtime_selection_receipt_errors(removed, **replay))
+        # This proves declared selection/revision consumption, not that a live
+        # model independently notices evidence or chooses the right professional.
+
     def test_shared_authority_is_complete_and_oracle_consumes_it(self) -> None:
         authority = self._authority()
         self.assertEqual("changeforge.layer3-selector-authority/v1", authority["contract"])
@@ -492,7 +625,9 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             contract["selection_owners"],
         )
         self.assertEqual("independent-review-risk", contract["review_selection"])
-        self.assertEqual("fail-closed", contract["over_maximum"])
+        self.assertNotIn("maximum", contract)
+        self.assertNotIn("over_maximum", contract)
+        self.assertFalse(contract["quantity_changes_route_or_workflow"])
         self.assertEqual(
             "professional-local-runtime-selector-closure",
             contract["delivery_projection"],

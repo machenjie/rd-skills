@@ -43,7 +43,7 @@ repair, or perform independent external-source-read.
 
 ## Context and Coordination
 
-Main selects one Primary Professional and zero to three authorized Layer 3
+Main selects one Primary Professional and task-needed authorized Layer 3
 Skills for an assignment. Workers receive the goal, necessary constraints,
 write scope, validation expectations, and selected expertise. Read locations
 are starting points for discovery. Ordinary single-agent work needs no complete

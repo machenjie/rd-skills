@@ -2146,40 +2146,22 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             ),
         )
 
-    def test_backend_companion_overflow_falls_back_without_truncation(self) -> None:
+    def test_backend_companion_constraints_keep_the_implementation_owner(self) -> None:
         prompt = (
             "Implement a Node.js backend service stream pipeline that atomically "
             "replaces a local file and includes Kotlin coroutine code plus C# "
             "CancellationToken async disposal behavior."
         )
-        self.assertEqual(
-            {
-                "path": "analyzed",
-                "profile": "analysis-agent",
-                "primary_skill": "engineering-change-analysis",
-                "layer3_skills": ["repository-context-map"],
-                "review_skill": None,
-            },
-            _route(prompt, task_id=self._testMethodName),
-        )
+        selected_skills = ["filesystem-process-safety", "nodejs-runtime-professional-usage",
+                           "kotlin-professional-usage", "csharp-dotnet-professional-usage"]
+        expected = {"path": "direct", "profile": "task-agent",
+                    "primary_skill": "backend-change-builder", "review_skill": None,
+                    "layer3_skills": selected_skills}
+        self.assertEqual(expected, _route(prompt, task_id=self._testMethodName))
         traced = _trace(prompt, task_id=self._testMethodName)
         selected = traced["winner_trace"]["selected_candidate"]
-        self.assertEqual("foundation-layer3-overflow", selected["candidate_id"])
-        self.assertEqual(
-            ["foundation-layer3-overflow"],
-            selected["evidence"],
-        )
-        self.assertEqual(
-            sorted(
-                [
-                    "nodejs-runtime-professional-usage",
-                    "filesystem-process-safety",
-                    "kotlin-professional-usage",
-                    "csharp-dotnet-professional-usage",
-                ]
-            ),
-            selected["eligible_layer3_skills"],
-        )
+        self.assertEqual("implementation-owner:backend-change-builder", selected["candidate_id"])
+        self.assertEqual(selected_skills, selected["eligible_layer3_skills"])
         self.assertEqual(
             4,
             len(selected["eligible_layer3_skills"]),
@@ -2829,19 +2811,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             and isinstance(entry.get("id"), str)
         }
         errors: list[str] = []
-        over_limit: dict[str, int] = {}
-        for entry_id, entry in by_id.items():
-            domains = entry.get("expected_domain_extensions")
-            foundations = entry.get("expected_foundation_skills")
-            if isinstance(domains, list) and isinstance(foundations, list):
-                total = len(domains) + len(foundations)
-                if total > 3:
-                    over_limit[entry_id] = total
-        if over_limit:
-            errors.append(
-                f"[{case_id}] expected every_entry.expected_layer3_count<=3; "
-                f"actual={json.dumps(over_limit, sort_keys=True)}"
-            )
         with tempfile.TemporaryDirectory(
             prefix="capcov-t16-layer3-budget-"
         ) as raw:
@@ -2869,12 +2838,11 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             folded_errors = " ".join(first_errors).casefold()
             if (
                 first_errors != second_errors
-                or "entries[0]" not in folded_errors
-                or "at most 3" not in folded_errors
-                or "total=4" not in folded_errors
+                or "at most 3" in folded_errors
+                or "total=4" in folded_errors
             ):
                 errors.append(
-                    f"[{case_id}] expected deterministic validator rejection "
+                    f"[{case_id}] expected no quantity rejection "
                     "for one four-Skill JIT projection; "
                     f"actual={json.dumps([first_errors, second_errors])}"
                 )
@@ -4981,7 +4949,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         self.assertEqual(62, len(report["results"]))
         self.assertEqual("full", report["candidate_coverage"])
         self.assertEqual("proven", report["route_once"])
-        self.assertLessEqual(report["max_layer3_per_case"], 3)
+        self.assertEqual(max(len(row["actual"]["layer3_skills"]) for row in report["results"]), report["max_layer3_per_case"])
         results = {
             result["id"]: result
             for result in report["results"]
@@ -5096,11 +5064,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 harness_errors.append(
                     f"[{target_id}] expected canonical provenance and route-once proof"
                 )
-            if len(actual.get("layer3_skills", [])) > 3:
-                harness_errors.append(
-                    f"[{target_id}] actual Layer 3 exceeds budget: "
-                    f"{actual['layer3_skills']!r}"
-                )
             if actual != expected:
                 route_mismatches.append(
                     f"[{target_id}] expected={json.dumps(expected, sort_keys=True)}; "
@@ -5143,7 +5106,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         self.assertEqual(62, len(report["results"]))
         self.assertEqual("full", report["candidate_coverage"])
         self.assertEqual("proven", report["route_once"])
-        self.assertLessEqual(report["max_layer3_per_case"], 3)
+        self.assertEqual(max(len(row["actual"]["layer3_skills"]) for row in report["results"]), report["max_layer3_per_case"])
         results = {
             result["id"]: result
             for result in report["results"]
@@ -5220,11 +5183,10 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 or decision.get("route_once") is not True
                 or trace.get("candidate_coverage") != "full"
                 or trace.get("route_once") != "proven"
-                or len(actual.get("layer3_skills", [])) > 3
             ):
                 harness_errors.append(
                     f"[{target_id}] expected consistent L4 route envelope, "
-                    "route-once proof, and Layer 3 budget; "
+                    "route-once proof, and selected expertise; "
                     f"actual={json.dumps({'decision_path': decision.get('path'), 'route_result': actual_projection, 'trace': trace}, sort_keys=True)}"
                 )
                 continue
@@ -5266,11 +5228,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                         f"{json.dumps(expected.get(field), separators=(',', ':'))}; "
                         f"actual={json.dumps(actual.get(field), separators=(',', ':'))}"
                     )
-            if len(actual.get("layer3_skills", [])) > 3:
-                errors.append(
-                    f"[{case_id}] expected layer3_count<=3; "
-                    f"actual={len(actual.get('layer3_skills', []))}"
-                )
         if errors:
             self.fail("\n".join(errors))
 
@@ -7733,8 +7690,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 "explicit-task-dag",
                 "foundation-selector:accepted-brief-task-dag",
             ],
-            "layer3_overflow": False,
-            "layer3_skills": ["task-dag-decomposition"],
+                "layer3_skills": ["task-dag-decomposition"],
             "path": "analyzed",
             "precedence": 5,
             "precedence_class": "analysis-artifact",
@@ -7929,7 +7885,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             "eligible_domain_layer3_skills",
             "eligible_layer3_skills",
             "reserved_domain_capacity",
-            "layer3_overflow",
         )
         self.assertEqual(
             expected_layer3_fields,
@@ -8007,10 +7962,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                         len(expected_layer3),
                         candidate["reserved_domain_capacity"],
                     )
-                    self.assertIs(
-                        False,
-                        candidate["layer3_overflow"],
-                    )
+                    self.assertNotIn("layer3_overflow", candidate)
                     self.assertEqual(
                         expected_layer3,
                         candidate["layer3_skills"],
@@ -8097,9 +8049,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             if field == "reserved_domain_capacity":
                 assert isinstance(current, int)
                 return current + 1
-            if field == "layer3_overflow":
-                assert isinstance(current, bool)
-                return not current
             assert isinstance(current, list)
             addition = (
                 "cloud-platform-extension"
@@ -8194,8 +8143,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             "eligible_domain_layer3_skills": [forged_domain],
             "eligible_layer3_skills": [forged_domain],
             "reserved_domain_capacity": 1,
-            "layer3_overflow": False,
-            "layer3_skills": [forged_domain],
+                "layer3_skills": [forged_domain],
         }
         coupled_forgery["route_decision"]["route_result"][
             "layer3_skills"

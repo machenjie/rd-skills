@@ -77,7 +77,6 @@ selector_authority:
   aliases:
     - {"candidate_id":"api-compatibility-artifact","source_selector_ids":["production-release-decision"],"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"}
     - {"candidate_id":"backend-effects-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
-    - {"candidate_id":"backend-layer-budget","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
     - {"candidate_id":"cache-stampede-reliability-controls","source_selector_ids":["concurrency-control-analysis", "security-anti-reliability-only"],"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"}
     - {"candidate_id":"data-consistency-artifact","source_selector_ids":["distributed-workflow-analysis"],"primary_skill":"data-middleware-change-builder","review_skill":"quality-test-gate"}
     - {"candidate_id":"database-migration-coexistence-rollback","source_selector_ids":["database-migration-analysis", "distributed-workflow-analysis", "production-release-decision"],"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"}
@@ -106,7 +105,6 @@ selector_authority:
     - {"candidate_id":"repository-first-default","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
     - {"candidate_id":"repository-first-default","source_selector_ids":["review-ambiguous-structure-repository-first", "dynamic-foundation:configuration-runtime-policy"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
     - {"candidate_id":"repository-tooling-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
-    - {"candidate_id":"repository-tooling-layer-budget","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
     - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["design-pattern-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
     - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["domain-object-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
     - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["design-pattern-analysis", "domain-object-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}

@@ -15,7 +15,7 @@ there is no dependency or shared write surface.
 
 Engineering correctness comes first, followed by accurate Professional routing,
 professional substance, token cost, and execution time. Each assignment uses
-one Primary Professional and zero to three authorized Layer 3 Skills, with
+one Primary Professional and task-needed authorized Layer 3 Skills, with
 positive and anti-trigger evidence. When independent Review is needed, Main
 selects its Professional and Layer 3 expertise separately. The reviewer consumes
 that assignment without rerouting or copying the implementation's Layer 3 selection.

@@ -232,8 +232,6 @@ def _case(
         result.errors.append(f"unknown primary Professional Skill '{result.primary_skill}'")
     elif result.primary_skill not in routable:
         result.errors.append(f"primary Professional Skill is not task-routable: '{result.primary_skill}'")
-    if len(result.layer3_skills) > 3:
-        result.errors.append("benchmark loads more than three Layer 3 Skills; narrow the risk surface")
     if len(result.layer3_skills) != len(set(result.layer3_skills)):
         result.errors.append("benchmark repeats a Layer 3 Skill")
     for name in result.layer3_skills:

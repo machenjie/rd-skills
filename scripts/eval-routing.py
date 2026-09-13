@@ -1027,8 +1027,6 @@ def _evaluate_routes(
                 errors.append(
                     f"{case_id}: Review Skill {review} does not support review-agent"
                 )
-        if len(actual["layer3_skills"]) > 3:
-            errors.append(f"{case_id}: ordinary route exceeds three Layer 3 Skills")
         if len(actual["layer3_skills"]) != len(set(actual["layer3_skills"])):
             errors.append(f"{case_id}: route selects duplicate Layer 3 Skills")
         for name in actual["layer3_skills"]:

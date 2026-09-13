@@ -9,7 +9,7 @@ Language capabilities are professional engineering rules, not language tutorials
 ## Runtime Delivery Rules
 
 - Foundation capabilities never become Runtime top-level Skills.
-- The Primary Professional selector chooses zero to three applicable Layer 3 items.
+- The Primary Professional selector chooses task-needed applicable Layer 3 items.
 - Complete Foundation projection is restricted to cleaned temporary validation storage.
 
 ## Authoring Rules

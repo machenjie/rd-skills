@@ -506,11 +506,6 @@ def _case(
         result.errors.append(
             f"profile '{result.profile}' is not supported by primary Skill '{result.primary_skill}'"
         )
-    if len(result.layer3_skills) > 3:
-        result.errors.append(
-            "selected Layer 3 list exceeds the hard maximum of three; "
-            "selection must fail closed and must never be truncated"
-        )
     if len(result.layer3_skills) != len(set(result.layer3_skills)):
         result.errors.append(
             "selected Layer 3 list contains duplicates; selection must be "

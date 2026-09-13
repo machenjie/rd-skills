@@ -1152,7 +1152,6 @@ class DomainModifierCompositionTests(unittest.TestCase):
                 composition = ORACLE.compose_domain_extensions(
                     candidates,
                     registered_domains=registered,
-                    max_domains=13,
                 )
                 self.assertEqual(expected, composition["ordered_domains"])
 
@@ -1164,12 +1163,6 @@ class DomainModifierCompositionTests(unittest.TestCase):
             ["cross-platform-client-extension"],
             ["ai-product-extension", "ai-product-extension"],
             ["unknown-domain"],
-            [
-                "ai-product-extension",
-                "bigdata-product-extension",
-                "iot-embedded-extension",
-                "payment-trading-extension",
-            ],
         )
         for candidates in invalid:
             with self.subTest(candidates=candidates):
@@ -2070,7 +2063,7 @@ class DomainModifierRouteTests(unittest.TestCase):
             "Flutter installed-client; target platforms are unknown."
         ))
 
-    def test_total_layer3_budget_is_fail_closed_without_truncation(self) -> None:
+    def test_review_total_layer3_preserves_all_current_constraints(self) -> None:
         error_type = getattr(ORACLE, "RoutingIntegrityError", None)
         self.assertTrue(isinstance(error_type, type))
         accepted = COHORTS._projected_route(
@@ -2084,15 +2077,15 @@ class DomainModifierRouteTests(unittest.TestCase):
             )
         )
         self.assertEqual(3, len(accepted["layer3_skills"]))
-        with self.assertRaises(error_type):
-            ORACLE.route_with_trace(
-                "Review regression tests where tenant authorization permission "
-                "bypass may cross a trust boundary; a model decision has "
-                "delegated authority.",
-                main_execution=COHORTS._test_main_execution(
-                    "t2g-domain-budget-overflow"
-                ),
-            )
+        expanded = COHORTS._projected_route(ORACLE.route_with_trace(
+            "Review regression tests where tenant authorization permission "
+            "bypass may cross a trust boundary; a model decision has delegated authority.",
+            main_execution=COHORTS._test_main_execution("t2g-domain-four-constraints"),
+        ))
+        self.assertEqual("review-agent", expanded["profile"])
+        self.assertEqual("security-privacy-gate", expanded["primary_skill"])
+        self.assertEqual(set(accepted["layer3_skills"]) | {"regression-testing"},
+                         set(expanded["layer3_skills"]))
 
     def test_route_impl_has_no_domain_suppression_gate(self) -> None:
         tree = ast.parse(ORACLE_PATH.read_text(encoding="utf-8"))

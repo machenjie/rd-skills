@@ -10,7 +10,6 @@ automatic_routing_policy:
       layer3:
         source: task-evidence
         default: []
-        max: 3
       review:
         source: selected-one-T2C-risk-or-default
         default: ai-code-review-refactor

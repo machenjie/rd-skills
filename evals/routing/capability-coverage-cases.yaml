@@ -238,7 +238,7 @@ cases:
   - id: capcov-route-flutter-android-ios-accessibility-overflow
     main_execution: {producer: main-control-agent, task_id: capcov-route-flutter-android-ios-accessibility-overflow}
     prompt: Implement an accepted Flutter application change targeting Android and iOS for accessibility behavior affecting TalkBack and VoiceOver.
-    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [cross-platform-client-extension, android-platform-extension, ios-ipados-platform-extension, accessibility-inclusive-design], review_skill: null}
   - id: capcov-route-android-accessibility-api-name-negative
     main_execution: {producer: main-control-agent, task_id: capcov-route-android-accessibility-api-name-negative}
     prompt: Inspect Android TalkBack API names only; no Android behavior changes and no implementation is requested.

@@ -1909,16 +1909,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 if covered
             },
         )
-        self.assertEqual(
-            {"0", "1", "2", "3"},
-            {
-                cardinality
-                for cardinality, count in composition["inventory"][
-                    "layer3_cardinality_counts"
-                ].items()
-                if count
-            },
-        )
+        counts = composition["inventory"]["layer3_cardinality_counts"]
+        self.assertTrue({"0", "1", "2", "3", "4"} <= {key for key, count in counts.items() if count})
         obligations = composition["obligation_preservation"]
         self.assertTrue(obligations["professional_preserved"])
         self.assertTrue(obligations["domain_authorization_preserved"])
@@ -1939,8 +1931,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_admissible_compositions_fail_closed_without_truncation(self) -> None:
         forbidden = self._admissible_report()["forbidden_combinations"]
 
-        self.assertEqual(3, forbidden["maximum_layer3"])
-        self.assertGreater(forbidden["over_max_rejection_count"], 0)
+        self.assertNotIn("maximum_layer3", forbidden)
+        self.assertNotIn("overflow_failure_id", forbidden)
+        self.assertNotIn("over_max_rejection_count", forbidden)
         self.assertGreater(forbidden["unauthorized_exact_rejection_count"], 0)
         self.assertGreater(forbidden["duplicate_exact_rejection_count"], 0)
         self.assertEqual(0, forbidden["silent_truncation_count"])
@@ -1952,10 +1945,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(0, inventory["four_plus_reference_measurement_count"])
         self.assertGreaterEqual(inventory["maximum_selected_reference_count"], 4)
         self.assertEqual(0, inventory["path_excluded_composition_count"])
-        self.assertEqual(
-            "admissible-context-layer3-overflow",
-            forbidden["overflow_failure_id"],
-        )
+
 
     def test_admissible_composition_worst_cases_report_current_frontier(self) -> None:
         composition = self._admissible_report()

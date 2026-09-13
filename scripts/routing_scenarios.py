@@ -22,10 +22,10 @@ def release_routing_scenario_errors(rows: list[dict[str, Any]]) -> list[str]:
             errors.append(f"{row.get('id')}: missing expertise projection")
         for field in ("layer3",):
             selected = expected.get(field)
-            if not isinstance(selected, list) or any(not isinstance(item, str) or not item for item in selected) or len(selected) > 3 or len(set(selected)) != len(selected):
+            if not isinstance(selected, list) or any(not isinstance(item, str) or not item for item in selected) or len(set(selected)) != len(selected):
                 errors.append(f"{row.get('id')}: invalid Layer 3 selection")
         override = row.get("codegen_layer3", [])
-        if not isinstance(override, list) or any(not isinstance(item, str) or not item for item in override) or len(override) > 3 or len(set(override)) != len(override):
+        if not isinstance(override, list) or any(not isinstance(item, str) or not item for item in override) or len(set(override)) != len(override):
             errors.append(f"{row.get('id')}: invalid codegen Layer 3 selection")
     return errors
 

@@ -698,22 +698,13 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 exact_references=None,
             )
 
-        over_three = copy.deepcopy(base)
-        profile = next(
-            row
-            for row in over_three["profile_authority"]
-            if row["profile"] == "task-agent"
+        four_items = next(row for row in base["profile_authority"]
+                          if row["profile"] == "task-agent")["authorized_layer3"][:4]
+        expanded = expander(
+            base, None, profile="task-agent", selection_owner="main-control-agent",
+            exact_layer3=four_items, selected_layer3=four_items, exact_references=[],
         )
-        with self.assertRaisesRegex(VALIDATION.ValidationProblem, "0..3"):
-            expander(
-                over_three,
-                None,
-                profile="task-agent",
-                selection_owner="main-control-agent",
-                exact_layer3=profile["authorized_layer3"][:4],
-                selected_layer3=profile["authorized_layer3"][:4],
-                exact_references=[],
-            )
+        self.assertEqual(four_items, expanded["exact_layer3"])
 
     def test_exact_reference_skips_reference_selector_and_fails_closed(self) -> None:
         exact_path = "references/generator-and-plugin-contracts.md"

@@ -947,10 +947,19 @@ stable, independent Primary Route and a distinct task boundary that cannot be
 owned coherently by an existing Professional Skill.
 
 Foundation is a capability-modifier layer and Domain is `modifier-only`.
-Neither becomes a Runtime top-level Skill. Layer 3 selection is an ordered
-unique list of zero to three items. More than three items or any duplicate fails
-closed; never truncate the selection. Higher risk changes which Layer 3 items
-are selected, not the maximum count. Each task receives one Primary
+Neither becomes a Runtime top-level Skill. Layer 3 selection is an ordered unique list for the current engineering need.
+Duplicates and unauthorized items fail closed; never truncate necessary knowledge.
+Skill count does not change Primary, Profile, decomposition, or Review.
+Select knowledge for confirmation, invariants, concrete failure modes, and relevant
+uncertainty; it need not change the final decision. Skip sufficiently covered
+duplicates, background associations, and unsupported future risks. Keywords or
+claimed model familiarity alone do not decide critical professional checks.
+Consider known compatibility, concurrency, transaction, and recovery constraints
+before affected design or edits; defer only later-operation Reference detail.
+New source evidence may make Main add, remove, or replace affected selections
+through the existing handoff, without automatic Analysis, redesign, or Review.
+Authoring render budgets are not live Host capacity; batching does not unload
+prior context or authorize silently dropping required knowledge. Each task receives one Primary
 Professional Skill, the selected Layer 3 items, then only the necessary Targeted
 References. Task and Review consume the route fixed by Main and do not globally
 reroute.

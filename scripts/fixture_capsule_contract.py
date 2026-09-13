@@ -43,8 +43,8 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     if primary not in authority["primary_skills_by_profile"].get(role, []):
         raise FixtureCapsuleError("Primary Professional is not authorized for this Profile")
     layer3 = step.get("layer3_skills", [])
-    if not isinstance(layer3, list) or len(layer3) > 3 or len(set(layer3)) != len(layer3):
-        raise FixtureCapsuleError("Layer 3 selection must contain zero to three unique Skills")
+    if not isinstance(layer3, list) or len(set(layer3)) != len(layer3):
+        raise FixtureCapsuleError("Layer 3 selection must contain an ordered list of unique Skills")
     if any(name not in authority["layer3_candidates_by_primary"][primary] for name in layer3):
         raise FixtureCapsuleError("Layer 3 selection is not authorized for the Primary Professional")
     rows = _source_rows()

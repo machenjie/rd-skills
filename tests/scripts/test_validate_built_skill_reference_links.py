@@ -705,7 +705,6 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                         "contract": "changeforge.layer3-selector-normalized-control/v1",
                         "authority_contract": "changeforge.layer3-selector-authority/v1",
                         "professional_skill": "sample-professional",
-                        "maximum_layer3": 3,
                         "exact_layer3_bypass": True,
                         "profile_authority": [
                             {

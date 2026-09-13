@@ -35,7 +35,7 @@ class Layer3ReferenceTests(unittest.TestCase):
         with self.assertRaises(FixtureCapsuleError):
             validate_and_render_fixture_capsule(step)
 
-    def test_duplicate_or_over_budget_selection_is_rejected(self):
+    def test_duplicate_selection_is_rejected_at_multiple_cardinalities(self):
         for selection in (['code-review', 'code-review'], ['code-review'] * 4):
             step = self.step(); step['layer3_skills'] = selection
             with self.assertRaises(FixtureCapsuleError):

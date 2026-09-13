@@ -356,10 +356,6 @@ class FoundationSelectorRecord:
                 )
             for value in values:
                 _validated_text(value, label=label)
-        if len(self.foundations) > 3:
-            raise RoutingIntegrityError(
-                "Foundation selector may admit at most three Foundations"
-            )
         terminal = f"foundation-selector:{selector_id}"
         if self.evidence_ids[-1] != terminal or self.evidence_ids.count(
             terminal
@@ -2348,7 +2344,6 @@ def _build_route_candidates(
         "eligible_domain_layer3_skills",
         "eligible_layer3_skills",
         "reserved_domain_capacity",
-        "layer3_overflow",
         "source_candidate_ids",
         *ROUTE_CANDIDATE_CONTRACT_FIELDS,
     }
@@ -2711,7 +2706,6 @@ def _enrich_route_candidates(
     domain_specs: dict[str, dict[str, Any]],
     domain_authority: dict[str, Any],
     layer3_authority_by_primary: dict[str, list[str]],
-    maximum_layer3: int,
     admission_authority: OracleAdmissionAuthority | None = None,
 ) -> list[dict[str, Any]]:
     if not isinstance(candidates, list):
@@ -2938,10 +2932,6 @@ def _enrich_route_candidates(
     ):
         raise RoutingIntegrityError(
             "Professional Layer 3 authority must map owners to unique Skill lists"
-        )
-    if type(maximum_layer3) is not int or maximum_layer3 <= 0:
-        raise RoutingIntegrityError(
-            "maximum Layer 3 capacity must be a positive integer"
         )
 
     domain_names = set(domain_order)
@@ -3283,7 +3273,6 @@ def _enrich_route_candidates(
         compose_domain_extensions(
             domains,
             registered_domains=domain_order,
-            max_domains=len(domain_order),
         )
 
         evidence = candidate.get("evidence")
@@ -3330,7 +3319,6 @@ def _enrich_route_candidates(
         domain_composition = compose_domain_extensions(
             compatible_domains,
             registered_domains=domain_order,
-            max_domains=len(domain_order),
         )
         eligible_domains = domain_composition["ordered_domains"]
 
@@ -3388,9 +3376,6 @@ def _enrich_route_candidates(
                     "eligible_domain_layer3_skills": eligible_domains,
                     "eligible_layer3_skills": eligible_layer3,
                     "reserved_domain_capacity": len(eligible_domains),
-                    "layer3_overflow": (
-                        len(eligible_layer3) > maximum_layer3
-                    ),
                     "layer3_skills": eligible_layer3,
                     "evidence": [
                         *evidence,
@@ -3417,7 +3402,6 @@ def _compose_foundation_activation_candidates(
     *,
     candidate_origins: tuple[_FoundationRouteOrigin | None, ...],
     admission_authority: OracleAdmissionAuthority,
-    maximum_layer3: int,
 ) -> list[dict[str, Any]]:
     """Compose compatible Foundation activations in authority order."""
 
@@ -3463,11 +3447,6 @@ def _compose_foundation_activation_candidates(
     ):
         raise RoutingIntegrityError(
             "Foundation activation IDs must be ordered unique text"
-        )
-    if type(maximum_layer3) is not int or maximum_layer3 <= 0:
-        raise RoutingIntegrityError(
-            "Foundation activation composition requires a positive Layer 3 "
-            "maximum"
         )
 
     copied = copy.deepcopy(candidates)
@@ -3616,46 +3595,6 @@ def _compose_foundation_activation_candidates(
         candidate["candidate_id"]
         for candidate in ordered
     ]
-    if len(layer3_skills) > maximum_layer3:
-        overflow = {
-            "candidate_id": "foundation-layer3-overflow",
-            "candidate_type": "explicit-route",
-            "evidence": [
-                *list(
-                    dict.fromkeys(
-                        evidence
-                        for row in source_foundation_candidates
-                        for evidence in row["evidence"]
-                    )
-                ),
-                "foundation-layer3-overflow",
-            ],
-            "source_candidate_ids": source_candidate_ids,
-            "source_foundation_candidates": source_foundation_candidates,
-            "precedence": EXPLICIT_ROUTE_PRECEDENCE,
-            "reason": "foundation-layer3-overflow",
-            "path": "analyzed",
-            "profile": "analysis-agent",
-            "primary_skill": "engineering-change-analysis",
-            "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
-            "rule_id": "foundation-layer3-overflow",
-            "stage": "foundation-activation",
-            "precedence_class": "layer-budget",
-            "candidate_layer3_context": {
-                "kind": "fixed",
-                "foundation_requests": ["repository-context-map"],
-                "domain_requests": [],
-            },
-            "eligible_foundation_layer3_skills": [
-                "repository-context-map"
-            ],
-            "eligible_domain_layer3_skills": [],
-            "eligible_layer3_skills": ["repository-context-map"],
-            "reserved_domain_capacity": 0,
-            "layer3_overflow": True,
-        }
-        return insert_at_first([overflow])
 
     composite = copy.deepcopy(ordered[0])
     composite.update(
@@ -3680,7 +3619,7 @@ def _compose_foundation_activation_candidates(
             "reserved_domain_capacity": len(
                 ordered_union("eligible_domain_layer3_skills")
             ),
-            "layer3_overflow": False,
+
         }
     )
     contexts = [
@@ -3858,9 +3797,8 @@ def compose_domain_extensions(
     concrete_platform_domains: set[str] | frozenset[str] = frozenset(
         CONCRETE_CLIENT_PLATFORM_ORDER
     ),
-    max_domains: int = 3,
 ) -> dict[str, Any]:
-    """Return one ordered, bounded Domain composition or fail closed."""
+    """Return one authorized ordered Domain composition or fail closed."""
 
     if not isinstance(registered_domains, (list, tuple)):
         raise RoutingIntegrityError(
@@ -3917,10 +3855,6 @@ def compose_domain_extensions(
             if name in concrete
         )
         ordered.insert(first_concrete, CROSS_PLATFORM_MODIFIER)
-    if len(ordered) > max_domains:
-        raise RoutingIntegrityError(
-            f"Domain modifier budget exceeded: {ordered!r}"
-        )
     return {
         "outcome": "selected",
         "ordered_domains": ordered,
@@ -6965,7 +6899,7 @@ ROUTE_CANDIDATE_LAYER3_FIELDS = (
     "eligible_domain_layer3_skills",
     "eligible_layer3_skills",
     "reserved_domain_capacity",
-    "layer3_overflow",
+
 )
 _ARTIFACT_REVIEW_SPECIALIST_IDS = frozenset(
     {
@@ -9750,10 +9684,9 @@ def _validated_implementation_owner_layer3(
     *,
     allowed: list[str],
     known: set[str],
-    maximum: int,
     family: str,
-) -> tuple[list[str], bool]:
-    """Validate complete owner evidence and report a legitimate budget overflow."""
+) -> list[str]:
+    """Validate the complete owner selection without a quantity threshold."""
 
     if (
         not isinstance(selected, list)
@@ -9777,11 +9710,7 @@ def _validated_implementation_owner_layer3(
             f"{family!r} selected unauthorized Layer 3 evidence "
             f"{unauthorized!r}"
         )
-    if type(maximum) is not int or maximum < 0:
-        raise RoutingIntegrityError(
-            f"{family!r} has corrupt Layer 3 maximum {maximum!r}"
-        )
-    return list(selected), len(selected) > maximum
+    return list(selected)
 
 
 def _installed_target_domains(value: str) -> list[str]:
@@ -10305,7 +10234,6 @@ def _merge_bound_high_risk_artifact_specialists(
     candidates: list[dict[str, Any]],
     *,
     layer3_authority_by_primary: dict[str, Any] | None,
-    maximum_layer3: int | None,
 ) -> dict[str, Any]:
     """Merge the exact same-binding high-risk specialist pair."""
 
@@ -10383,10 +10311,6 @@ def _merge_bound_high_risk_artifact_specialists(
         raise RoutingIntegrityError(
             "bound high-risk specialist Layer 3 authority is invalid"
         )
-    if not isinstance(maximum_layer3, int) or maximum_layer3 < 1:
-        raise RoutingIntegrityError(
-            "bound high-risk specialist merge lacks Layer 3 budget authority"
-        )
 
     requested: set[str] = set()
     source_foundation_candidates: list[dict[str, Any]] = []
@@ -10401,7 +10325,6 @@ def _merge_bound_high_risk_artifact_specialists(
             or candidate.get("eligible_domain_layer3_skills") != []
             or candidate.get("eligible_layer3_skills") != layer3
             or candidate.get("reserved_domain_capacity") != 0
-            or candidate.get("layer3_overflow") is not False
             or not isinstance(context, dict)
             or context.get("kind") != "fixed"
             or context.get("foundation_requests") != layer3
@@ -10434,25 +10357,6 @@ def _merge_bound_high_risk_artifact_specialists(
             for item in candidate["evidence"]
         }
     )
-    if len(merged_layer3) > maximum_layer3:
-        return {
-            "candidate_id": "foundation-layer3-overflow",
-            "candidate_type": "derived-conflict",
-            "evidence": ["foundation-layer3-overflow"],
-            "eligible_foundation_layer3_skills": merged_layer3,
-            "eligible_domain_layer3_skills": [],
-            "eligible_layer3_skills": merged_layer3,
-            "source_candidate_ids": source_candidate_ids,
-            "precedence": contract[7],
-            "reason": "foundation-layer3-overflow",
-            "path": "analyzed",
-            "profile": "analysis-agent",
-            "primary_skill": "engineering-change-analysis",
-            "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
-            "reserved_domain_capacity": 0,
-            "layer3_overflow": True,
-        }
 
     authority_position = {
         skill: index for index, skill in enumerate(authority_order)
@@ -10492,7 +10396,7 @@ def _merge_bound_high_risk_artifact_specialists(
         "eligible_domain_layer3_skills": [],
         "eligible_layer3_skills": merged_layer3,
         "reserved_domain_capacity": 0,
-        "layer3_overflow": False,
+
         **(
             {
                 "source_foundation_candidates": (
@@ -10551,7 +10455,7 @@ def _validated_audit_analysis_conflict_candidates(
             "eligible_domain_layer3_skills": [],
             "eligible_layer3_skills": ["logging-error-handling"],
             "reserved_domain_capacity": 0,
-            "layer3_overflow": False,
+
         },
         "audit-integrity-change": {
             "candidate_type": "explicit-route",
@@ -10578,7 +10482,7 @@ def _validated_audit_analysis_conflict_candidates(
             "eligible_domain_layer3_skills": [],
             "eligible_layer3_skills": ["audit-evidence-integrity"],
             "reserved_domain_capacity": 0,
-            "layer3_overflow": False,
+
         },
     }
     expected_ids = set(expected)
@@ -10890,20 +10794,13 @@ def _select_route_cohort_candidate(
                 )
                 resolved_artifact.pop("artifact_review_request", None)
             else:
-                maximum_layer3 = (
-                    implementation_policy.get("accepted", {})
-                    .get("layer3", {})
-                    .get("max")
-                    if isinstance(implementation_policy, dict)
-                    else None
-                )
                 resolved_artifact = (
                     _merge_bound_high_risk_artifact_specialists(
                         compatible_specialists,
                         layer3_authority_by_primary=(
                             layer3_authority_by_primary
                         ),
-                        maximum_layer3=maximum_layer3,
+
                     )
                 )
                 specialist_reason = (
@@ -11087,11 +10984,6 @@ def _select_route_cohort_candidate(
         )
         for candidate in top_implementation_owners
     }
-    overflow_owners = [
-        candidate
-        for candidate in top_implementation_owners
-        if candidate.get("layer3_overflow")
-    ]
     top_explicit_routes = [
         candidate
         for candidate in ordered
@@ -11103,54 +10995,7 @@ def _select_route_cohort_candidate(
             "fallback-route",
         }
     ]
-    if overflow_owners:
-        eligible = list(
-            dict.fromkeys(
-                layer3
-                for candidate in overflow_owners
-                for layer3 in candidate["eligible_layer3_skills"]
-            )
-        )
-        if not any(
-            candidate["eligible_domain_layer3_skills"]
-            for candidate in overflow_owners
-        ):
-            eligible = sorted(eligible)
-        selected = {
-            "candidate_id": "foundation-layer3-overflow",
-            "candidate_type": "derived-conflict",
-            "evidence": ["foundation-layer3-overflow"],
-            "eligible_layer3_skills": eligible,
-            "source_candidate_ids": sorted(
-                candidate["candidate_id"]
-                for candidate in overflow_owners
-            ),
-            "precedence": top_precedence,
-            "reason": "foundation-layer3-overflow",
-            "path": "analyzed",
-            "profile": "analysis-agent",
-            "primary_skill": "engineering-change-analysis",
-            "layer3_skills": ["repository-context-map"],
-            "review_skill": "architecture-impact-reviewer",
-            "eligible_foundation_layer3_skills": [
-                "repository-context-map"
-            ],
-            "eligible_domain_layer3_skills": [],
-            "reserved_domain_capacity": 0,
-            "layer3_overflow": True,
-        }
-        excluded = [
-            _copy_route_candidate_with_reason(
-                candidate,
-                (
-                    "foundation-layer3-overflow"
-                    if candidate in overflow_owners
-                    else "lower-precedence-than-foundation-layer3-overflow"
-                ),
-            )
-            for candidate in ordered
-        ]
-    elif any(
+    if any(
         identity in owner_contract_conflicts
         for identity in distinct_implementation_identities
     ):
@@ -11192,7 +11037,7 @@ def _select_route_cohort_candidate(
             "eligible_domain_layer3_skills": [],
             "eligible_layer3_skills": ["repository-context-map"],
             "reserved_domain_capacity": 0,
-            "layer3_overflow": False,
+
         }
         conflicting_ids = {
             id(candidate) for candidate in conflicting_owners
@@ -11541,7 +11386,6 @@ def _professional_automatic_decision_authority(
         "implementation_owner_policy": {
             "accepted_path": accepted["path"],
             "accepted_profile": accepted["profile"],
-            "max_layer3": accepted["layer3"]["max"],
             "default_review_skill": accepted["review"]["default"],
             "conflict": {
                 "path": conflict["path"],
@@ -14349,12 +14193,11 @@ def _route_impl(
             node_effect_state=node_effect_state,
             structure_states=structure_states,
         )
-        layer3, foundation_layer3_overflow = (
+        layer3 = (
             _validated_implementation_owner_layer3(
                 layer3,
                 allowed=allowed_layer3,
                 known=known_foundation_layer3,
-                maximum=implementation_policy["accepted"]["layer3"]["max"],
                 family=family,
             )
         )
@@ -14386,7 +14229,6 @@ def _route_impl(
                 "layer3_skills": layer3,
                 "review_skill": owner_review,
                 "eligible_layer3_skills": sorted(layer3),
-                "foundation_layer3_overflow": foundation_layer3_overflow,
             }
         )
         candidate_id = f"implementation-owner:{primary}"
@@ -15209,7 +15051,6 @@ def _route_impl(
             )
         )
         if selected_id in {
-            "foundation-layer3-overflow",
             "implementation-owner-conflict",
             "route-contract-conflict",
         }:
@@ -15219,11 +15060,7 @@ def _route_impl(
                 if selected_id != "route-contract-conflict"
                 else "candidate-selection"
             )
-            precedence_class = (
-                "layer-budget"
-                if selected_id == "foundation-layer3-overflow"
-                else "unresolved-boundary"
-            )
+            precedence_class = "unresolved-boundary"
         elif selected_id == "review-risk-owner-conflict":
             path = "analyzed"
             profile = "analysis-agent"
@@ -15248,10 +15085,6 @@ def _route_impl(
             raise RoutingIntegrityError(
                 f"duplicate total Layer 3 selection is invalid: {layer3!r}"
             )
-        if len(layer3) > implementation_policy["accepted"]["layer3"]["max"]:
-            raise RoutingIntegrityError(
-                f"total Layer 3 budget exceeded: {layer3!r}"
-            )
         if winner_trace:
             raise RoutingIntegrityError(
                 "route-once pipeline projected more than one winner"
@@ -15275,21 +15108,6 @@ def _route_impl(
             trace["semantic_atoms"] = copy.deepcopy(
                 selected_candidate["semantic_atoms"]
             )
-        if selected_id == "foundation-layer3-overflow":
-            trace["deferred_handoff"] = {
-                "status": "unresolved",
-                "cohorts": [
-                    "layer3",
-                    "review",
-                ],
-                "source_rule_id": "foundation-layer3-overflow",
-                "retained_layer3": list(layer3),
-                "deferred_layer3": list(
-                    selected_candidate["eligible_layer3_skills"]
-                ),
-                "review_skill": review,
-                "reason": "foundation-layer3-overflow",
-            }
         context = selected_candidate.get("candidate_layer3_context")
         if (
             selected_id == "implementation-preparation"
@@ -15770,18 +15588,6 @@ def _route_impl(
             repository_layers.insert(1, "minimal-correct-implementation")
         if filesystem_effect_state == EFFECT_CHANGED:
             repository_layers.insert(1, "filesystem-process-safety")
-        if len(repository_layers) > 3:
-            add_candidate(
-                "analyzed",
-                "analysis-agent",
-                "engineering-change-analysis",
-                authority_repository_foundations,
-                "architecture-impact-reviewer",
-                rule_id="repository-tooling-layer-budget",
-                stage="repository-tooling",
-                precedence_class="layer-budget",
-                match_evidence=["repository-tooling-change", "layer-budget-exceeded"],
-            )
     if (
         "active multi-responder incident" in text
         and any(
@@ -15916,18 +15722,6 @@ def _route_impl(
         if structure_states["owner-placement"] == EFFECT_CHANGED:
             language_layers.append("implementation-structure-design")
         language_layers = list(dict.fromkeys(language_layers))
-        if len(language_layers) > 3:
-            add_candidate(
-                "analyzed",
-                "analysis-agent",
-                "engineering-change-analysis",
-                authority_repository_foundations,
-                "architecture-impact-reviewer",
-                rule_id="backend-layer-budget",
-                stage="backend",
-                precedence_class="layer-budget",
-                match_evidence=["backend-subject", "layer-budget-exceeded"],
-            )
 
     if (
         "tenant isolation" in text
@@ -16194,10 +15988,6 @@ def _route_impl(
         ):
             client_layers.append("swift-professional-usage")
         client_layers = list(dict.fromkeys(client_layers))
-        if len(client_layers) > 3:
-            raise RoutingIntegrityError(
-                f"installed-client Layer 3 budget exceeded: {client_layers!r}"
-            )
 
     test_strategy_professional_analysis = any(
         all(
@@ -16864,14 +16654,14 @@ def _route_impl(
         domain_specs=domain_specs,
         domain_authority=domain_authority,
         layer3_authority_by_primary=layer3_authority_by_primary,
-        maximum_layer3=implementation_policy["accepted"]["layer3"]["max"],
+
         admission_authority=admission_authority,
     )
     composed_candidates = _compose_foundation_activation_candidates(
         enriched_candidates,
         candidate_origins=candidate_origins,
         admission_authority=admission_authority,
-        maximum_layer3=implementation_policy["accepted"]["layer3"]["max"],
+
     )
     cohort_selection = _select_route_cohort_candidate(
         composed_candidates,

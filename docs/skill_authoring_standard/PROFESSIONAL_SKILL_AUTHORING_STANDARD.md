@@ -64,10 +64,19 @@ physical `line_count`, governed `governed_line_count`, and canonical Registry
 ## Layer 3 Loading
 
 Name only plausible candidates in the registry. Load a candidate only when the
-current task triggers its decision problem. Layer 3 selection is an ordered
-unique list of zero to three items. More than three items or any duplicate fails
-closed; never truncate the selection. Higher risk changes which Layer 3 items
-are selected, not the maximum count. Foundation and modifier-only Domain items
+current task triggers its decision problem. Layer 3 selection is an ordered unique list for the current engineering need.
+Duplicates and unauthorized items fail closed; never truncate necessary knowledge.
+Skill count does not change Primary, Profile, decomposition, or Review.
+Select knowledge for confirmation, invariants, concrete failure modes, and relevant
+uncertainty; it need not change the final decision. Skip sufficiently covered
+duplicates, background associations, and unsupported future risks. Keywords or
+claimed model familiarity alone do not decide critical professional checks.
+Consider known compatibility, concurrency, transaction, and recovery constraints
+before affected design or edits; defer only later-operation Reference detail.
+New source evidence may make Main add, remove, or replace affected selections
+through the existing handoff, without automatic Analysis, redesign, or Review.
+Authoring render budgets are not live Host capacity; batching does not unload
+prior context or authorize silently dropping required knowledge. Foundation and modifier-only Domain items
 remain behind the Professional selector and never become Runtime top-level
 Skills. Task and Review consume Main's fixed Primary Route instead of rerunning
 global routing.

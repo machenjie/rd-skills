@@ -82,8 +82,6 @@ def parse_layer3_cell(cell: str) -> tuple[list[str], str | None]:
         return [], "must contain exact kebab-case Skill names or 'none'"
     if ", ".join(names) != cell:
         return [], "must use comma-space separators between exact Skill names"
-    if len(names) > 3:
-        return names, "must select no more than three Layer 3 Skills"
     if len(names) != len(set(names)):
         return names, "must not select duplicate Layer 3 Skills"
     return names, None
@@ -459,7 +457,7 @@ def main() -> int:
         return fail_many("validate-skill-routing", errors)
     text = ROUTER.read_text(encoding="utf-8")
     folded = text.casefold()
-    for phrase in ("implementation requests start", "primary professional", "zero to three", "positive", "anti-trigger", "expertise", "catalog"):
+    for phrase in ("implementation requests start", "primary professional", "needed layer 3", "positive", "anti-trigger", "expertise", "catalog"):
         if phrase not in folded:
             errors.append(f"router missing {phrase!r}")
     router_rows: list[list[str]] = []

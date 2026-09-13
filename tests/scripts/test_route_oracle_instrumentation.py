@@ -69,7 +69,6 @@ ACTIVATION_V2_139A_LAYER3_FIELDS = (
     "eligible_domain_layer3_skills",
     "eligible_layer3_skills",
     "reserved_domain_capacity",
-    "layer3_overflow",
 )
 ACTIVATION_V2_139C_DIRECT_STAGES = (
     "_normalize_route_prompt",

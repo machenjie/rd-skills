@@ -109,7 +109,7 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
         self.assertIn("Review Skill 'primary-skill' does not support review-agent",
                       self.module._case(raw, self.professional, {}).errors)
 
-    def test_layer3_cardinality_diagnostics_are_hard_and_never_allow_rationale(
+    def test_four_authorized_items_pass_while_duplicates_fail(
         self,
     ) -> None:
         layer3 = {
@@ -123,17 +123,7 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
 
         overflow_result = self.module._case(overflow, professional, layer3)
 
-        self.assertIn(
-            (
-                "selected Layer 3 list exceeds the hard maximum of three; "
-                "selection must fail closed and must never be truncated"
-            ),
-            overflow_result.errors,
-        )
-        self.assertFalse(
-            any("rationale" in error.casefold() for error in overflow_result.errors),
-            overflow_result.errors,
-        )
+        self.assertEqual([], overflow_result.errors)
 
         duplicate = self._raw([])
         duplicate["actual"]["layer3_skills"] = ["layer-0", "layer-0"]

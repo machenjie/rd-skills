@@ -72,7 +72,6 @@ EXPECTED_POLICY = {
             "layer3": {
                 "source": "task-evidence",
                 "default": [],
-                "max": 3,
             },
             "review": {
                 "source": "selected-one-T2C-risk-or-default",
@@ -104,7 +103,7 @@ T2E_ECA_DOMAIN_ADDITIONS = {
     "windows-platform-extension",
 }
 POLICY_SHA256 = (
-    "81efd6d39cefc37df743253378fa0783117c5ea3b221987981d1de95f685f293"
+    "b28950598bbcc60f9d3cbbb07c04dc9b31e1859d5e60eba90f47a9a4b6fa8041"
 )
 FULL13 = {
     "repository-tooling-direct",
@@ -123,9 +122,7 @@ FULL13 = {
 }
 RETAINED63_CONTROLS = {
     "repository-tooling-ambiguous",
-    "repository-tooling-layer-budget",
     "backend-effects-ambiguous",
-    "backend-layer-budget",
     "installed-filesystem-ambiguous",
     "audit-integrity-change",
     "backend-idempotency-analysis",
@@ -4388,7 +4385,7 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
             ],
         )
 
-    def test_android_accessibility_layer3_overflow_preserves_handoff(
+    def test_cross_platform_accessibility_keeps_four_current_constraints(
         self,
     ) -> None:
         prompt = (
@@ -4398,29 +4395,14 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
         )
         observed = _route(prompt)
         self.assertEqual(
-            {
-                "path": "analyzed",
-                "profile": "analysis-agent",
-                "primary_skill": "engineering-change-analysis",
-                "layer3_skills": ["repository-context-map"],
-                "review_skill": None,
-            },
+            {"path": "direct", "profile": "task-agent",
+             "primary_skill": "installed-client-change-builder",
+             "layer3_skills": ["cross-platform-client-extension", "android-platform-extension",
+                               "ios-ipados-platform-extension", "accessibility-inclusive-design"],
+             "review_skill": None},
             _projected_route(observed),
         )
-        trace = observed["winner_trace"]
-        self.assertEqual(
-            "foundation-layer3-overflow",
-            trace["selected_candidate"]["candidate_id"],
-        )
-        self.assertEqual(
-            [
-                "cross-platform-client-extension",
-                "android-platform-extension",
-                "ios-ipados-platform-extension",
-                "accessibility-inclusive-design",
-            ],
-            trace["deferred_handoff"]["deferred_layer3"],
-        )
+        self.assertNotIn("deferred_handoff", observed["winner_trace"])
 
     def test_accessibility_negatives_do_not_over_route(self) -> None:
         prompts = {
@@ -5039,10 +5021,6 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
                     f"{case_id}: route-mismatch expected={expected!r}; "
                     f"actual={actual!r}"
                 )
-            if len(expected["layer3_skills"]) > 3:
-                failures.append(
-                    f"{case_id}: invalid-expected-layer3-budget"
-                )
         dependency_target_ids = (
             "wave1a-dependency-frontend",
             "wave1a-dependency-installed-client",
@@ -5093,10 +5071,6 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
                     f"{case_id}: route-mismatch expected={expected!r}; "
                     f"actual={actual!r}"
                 )
-            if len(expected["layer3_skills"]) > 3:
-                failures.append(
-                    f"{case_id}: invalid-expected-layer3-budget"
-                )
         self.assertEqual([], failures)
 
     def test_wave1a_config_dependency_and_sandbox_negatives_stay_green(
@@ -5140,11 +5114,6 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
             )
             if leaked:
                 failures.append(f"{case_id}: leaked={leaked!r}")
-            if len(actual["layer3_skills"]) > 3:
-                failures.append(
-                    f"{case_id}: layer3-overflow="
-                    f"{actual['layer3_skills']!r}"
-                )
         self.assertEqual([], failures)
 
 
@@ -5237,7 +5206,7 @@ class RoutingIntegrityTests(unittest.TestCase):
             _projected_route(observed)["primary_skill"],
         )
 
-    def test_derived_layer3_accepts_three_and_fails_closed_for_invalid_sets(
+    def test_derived_layer3_accepts_four_and_fails_closed_for_invalid_sets(
         self,
     ) -> None:
         error_type = getattr(ORACLE, "RoutingIntegrityError", None)
@@ -5268,20 +5237,10 @@ class RoutingIntegrityTests(unittest.TestCase):
             return_value=overflow,
         ):
             observed = _route(prompt)
-        self.assertEqual(
-            "foundation-layer3-overflow",
-            observed["winner_trace"]["selected_candidate"]["candidate_id"],
-        )
-        self.assertEqual(
-            sorted(overflow),
-            observed["winner_trace"]["selected_candidate"][
-                "eligible_layer3_skills"
-            ],
-        )
-        self.assertEqual(
-            ["repository-context-map"],
-            _projected_route(observed)["layer3_skills"],
-        )
+        self.assertEqual(overflow, _projected_route(observed)["layer3_skills"])
+        self.assertEqual("backend-change-builder", _projected_route(observed)["primary_skill"])
+        self.assertEqual("task-agent", _projected_route(observed)["profile"])
+        self.assertIsNone(_projected_route(observed)["review_skill"])
 
         invalid_sets = (
             ["regression-testing", "regression-testing"],
@@ -5301,12 +5260,7 @@ class RoutingIntegrityTests(unittest.TestCase):
                 )
 
     def test_evaluator_records_derived_layer3_integrity_failure(self) -> None:
-        invalid = [
-            "domain-object-identification",
-            "implementation-structure-design",
-            "minimal-correct-implementation",
-            "regression-testing",
-        ]
+        invalid = ["unknown-layer3"]
         with patch.object(
             ORACLE,
             "_implementation_owner_layer3",
@@ -5390,7 +5344,7 @@ class InventoryAndEvaluatorTests(unittest.TestCase):
         }
         direct_retained = RETAINED63_CONTROLS & direct_candidate_ids
         selector_retained = RETAINED63_CONTROLS & wired_selector_ids
-        self.assertEqual(7, len(direct_retained))
+        self.assertEqual(5, len(direct_retained))
         self.assertEqual(6, len(selector_retained))
         candidate_ids = direct_candidate_ids | wired_selector_ids
         self.assertTrue(RETAINED63_CONTROLS.issubset(candidate_ids))

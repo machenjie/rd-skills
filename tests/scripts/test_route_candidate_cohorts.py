@@ -74,9 +74,7 @@ EXPECTED_DIRECT_RETURN_COUNT = 0
 SPLIT_GUARD_RULE_IDS = {
     "review-ambiguous-structure-repository-first",
     "repository-tooling-ambiguous",
-    "repository-tooling-layer-budget",
     "backend-effects-ambiguous",
-    "backend-layer-budget",
     "distributed-effect-ambiguous",
     "installed-filesystem-ambiguous",
     "security-anti-input-shape",
@@ -95,7 +93,7 @@ CANDIDATE_PRESELECTION_FIELDS = {
     "eligible_domain_layer3_skills",
     "eligible_layer3_skills",
     "reserved_domain_capacity",
-    "layer3_overflow",
+
 }
 PAYMENT_FOUNDATION_PROMPT = (
     "Prepare a repository-backed payment retry change. Trace validation through "
@@ -903,7 +901,7 @@ def _artifact_review_candidate(
             "eligible_domain_layer3_skills": [],
             "eligible_layer3_skills": foundations,
             "reserved_domain_capacity": 0,
-            "layer3_overflow": False,
+
         }
     return {
         "candidate_id": "engineering-artifact-review",
@@ -920,7 +918,7 @@ def _artifact_review_candidate(
         "eligible_domain_layer3_skills": [],
         "eligible_layer3_skills": [],
         "reserved_domain_capacity": 0,
-        "layer3_overflow": False,
+
     }
 
 
@@ -953,7 +951,7 @@ def _wave1a_bound_high_risk_candidate(
         "eligible_domain_layer3_skills": [],
         "eligible_layer3_skills": list(foundations),
         "reserved_domain_capacity": 0,
-        "layer3_overflow": False,
+
     }
 
 
@@ -1020,9 +1018,6 @@ def _activation_v2_139b_authority() -> dict[str, object]:
         "layer3_authority_by_primary": professional_authority[
             "layer3_candidates_by_primary"
         ],
-        "maximum_layer3": professional_data[
-            "automatic_routing_policy"
-        ]["implementation_owner"]["accepted"]["layer3"]["max"],
     }
 
 
@@ -7193,7 +7188,6 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 domain_specs={},
                 domain_authority={},
                 layer3_authority_by_primary={},
-                maximum_layer3=3,
             )
         self.assertIs(
             candidates,
@@ -7274,9 +7268,9 @@ class RouteCandidateCohortTests(unittest.TestCase):
             candidate["layer3_skills"],
         )
         self.assertEqual(1, candidate["reserved_domain_capacity"])
-        self.assertFalse(candidate["layer3_overflow"])
+        self.assertNotIn("layer3_overflow", candidate)
 
-    def test_activation_v2_139b_reversed_domains_use_registry_order_and_overflow(
+    def test_activation_v2_139b_four_items_preserve_registry_domain_order(
         self,
     ) -> None:
         authority = _activation_v2_139b_authority()
@@ -7325,7 +7319,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
         )
         with _activation_v2_139b_direct_enrichment_isolation():
             ORACLE._enrich_route_candidates([candidate], **authority)
-        self.assertTrue(candidate.get("layer3_overflow"))
+        self.assertNotIn("layer3_overflow", candidate)
         self.assertEqual(
             registry_domains,
             candidate.get("eligible_domain_layer3_skills"),
@@ -7341,7 +7335,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
         self.assertEqual(2, candidate.get("reserved_domain_capacity"))
         self.assertEqual(4, len(candidate["eligible_layer3_skills"]))
 
-    def test_activation_v2_139b_four_foundations_overflow_without_domain_capacity(
+    def test_activation_v2_139b_four_review_foundations_preserve_authority(
         self,
     ) -> None:
         authority = _activation_v2_139b_authority()
@@ -7359,7 +7353,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             if skill in set(foundations)
         ]
         self.assertEqual(foundations, actual_foundations)
-        self.assertEqual(3, authority["maximum_layer3"])
+        self.assertNotIn("maximum_layer3", authority)
         candidate = _activation_v2_139b_fixed_candidate(
             "activation-v2-139b-four-foundations",
             primary_skill="high-risk-design-review",
@@ -7372,7 +7366,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
         )
         with _activation_v2_139b_direct_enrichment_isolation():
             ORACLE._enrich_route_candidates([candidate], **authority)
-        self.assertTrue(candidate.get("layer3_overflow"))
+        self.assertNotIn("layer3_overflow", candidate)
         self.assertEqual(
             foundations,
             candidate.get("eligible_foundation_layer3_skills"),
@@ -7657,7 +7651,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             multi_surface["primary_skill"],
         )
 
-    def test_ai_product_layer3_budget_preserves_exact_three_and_overflow(
+    def test_ai_product_additional_configuration_preserves_current_owner(
         self,
     ) -> None:
         exact_three = _projected_route(
@@ -7693,28 +7687,14 @@ class RouteCandidateCohortTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            "foundation-layer3-overflow",
-            overflow["winner_trace"]["selected_candidate"]["candidate_id"],
-        )
-        self.assertEqual(
-            [
-                "ai-product-extension",
-                "android-platform-extension",
-                "accessibility-inclusive-design",
-                "configuration-runtime-policy",
-            ],
-            overflow["winner_trace"]["deferred_handoff"]["deferred_layer3"],
-        )
-        self.assertEqual(
-            {
-                "path": "analyzed",
-                "profile": "analysis-agent",
-                "primary_skill": "engineering-change-analysis",
-                "layer3_skills": ["repository-context-map"],
-                "review_skill": None,
-            },
+            {"path": "direct", "profile": "task-agent",
+             "primary_skill": "installed-client-change-builder",
+             "layer3_skills": ["ai-product-extension", "android-platform-extension",
+                               "accessibility-inclusive-design", "configuration-runtime-policy"],
+             "review_skill": None},
             _projected_route(overflow),
         )
+        self.assertNotIn("deferred_handoff", overflow["winner_trace"])
 
     def test_activation_v2_139b_compatible_mixed_preserves_ordinary_metadata(
         self,
@@ -7782,7 +7762,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             )
         )
         self.assertEqual(1, candidate.get("reserved_domain_capacity"))
-        self.assertFalse(candidate.get("layer3_overflow"))
+        self.assertNotIn("layer3_overflow", candidate)
 
     def test_activation_v2_139b_fixed_invalid_inputs_fail_closed(
         self,
@@ -9001,7 +8981,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             "outside the risk owner's authority must remain local exclusions",
         )
         self.assertEqual(3, len(candidate["eligible_layer3_skills"]))
-        self.assertFalse(candidate["layer3_overflow"])
+        self.assertNotIn("layer3_overflow", candidate)
 
     def test_139c_build_strips_only_reserved_spoof_values(self) -> None:
         def spoof(reason: str) -> dict[str, object]:
@@ -9018,7 +8998,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 "eligible_domain_layer3_skills": ["spoof-domain"],
                 "eligible_layer3_skills": ["spoof-layer3"],
                 "reserved_domain_capacity": 99,
-                "layer3_overflow": True,
+
                 "source_candidate_ids": ["spoof-source"],
                 "reason": reason,
             }
@@ -9313,7 +9293,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 "eligible_domain_layer3_skills": [],
                 "eligible_layer3_skills": ["code-review"],
                 "reserved_domain_capacity": 0,
-                "layer3_overflow": False,
+
                 "source_candidate_ids": ["review-generic"],
             }
         )
@@ -9332,7 +9312,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 "eligible_domain_layer3_skills": [],
                 "eligible_layer3_skills": ["refactoring"],
                 "reserved_domain_capacity": 0,
-                "layer3_overflow": False,
+
                 "reason": "lower-precedence-than-review-generic",
             }
         )
@@ -9406,7 +9386,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             "candidate field may leak through nested selection evidence",
         )
 
-    def test_139c_top_overflow_wins_before_marker_and_loser_overflow_is_local(
+    def test_139c_large_selection_preserves_domain_conflict_and_loser_locality(
         self,
     ) -> None:
         overflow = _activation_v2_139c_fixed_candidate(
@@ -9425,7 +9405,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             evidence=["ordinary-overflow-evidence"],
         )
         _activation_v2_139c_enrich([overflow])
-        self.assertTrue(overflow["layer3_overflow"])
+        self.assertNotIn("layer3_overflow", overflow)
         marker_evidence = [
             item
             for item in overflow["evidence"]
@@ -9439,17 +9419,16 @@ class RouteCandidateCohortTests(unittest.TestCase):
         )
         selected = top["selected_candidate"]
         self.assertEqual(
-            "foundation-layer3-overflow",
+            "route-contract-conflict",
             selected["candidate_id"],
-            "[activation-v2-139c-overflow-first] top overflow must win before "
-            "authorization-marker derivation",
+            "A large selection must still expose its actual unauthorized Domain",
         )
         for surface in ("raw_candidates", "excluded_candidates"):
             retained = _activation_v2_139c_candidate_by_id(
                 top[surface],
                 "implementation-owner:quality-test-gate",
             )
-            self.assertTrue(retained["layer3_overflow"])
+            self.assertNotIn("layer3_overflow", retained)
             self.assertEqual(
                 marker_evidence,
                 [
@@ -9487,7 +9466,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
             local["excluded_candidates"],
             "implementation-owner:quality-test-gate",
         )
-        self.assertTrue(lower_overflow["layer3_overflow"])
+        self.assertNotIn("layer3_overflow", lower_overflow)
         self.assertEqual(
             marker_evidence,
             [
@@ -9496,11 +9475,7 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 if item.startswith(ACTIVATION_V2_139C_MARKER_PREFIX)
             ],
         )
-        self.assertFalse(
-            local["selected_candidate"]["layer3_overflow"],
-            "[activation-v2-139c-lower-overflow-local] a lower candidate's "
-            "overflow state must not contaminate the selected critical route",
-        )
+        self.assertNotIn("layer3_overflow", local["selected_candidate"])
         self.assertFalse(
             any(
                 item.startswith(ACTIVATION_V2_139C_MARKER_PREFIX)
@@ -10368,20 +10343,12 @@ class RouteCandidateCohortTests(unittest.TestCase):
                 "composer-c6-overflow",
             )
         selected = observed["winner_trace"]["selected_candidate"]
-        self.assertEqual(
-            "foundation-layer3-overflow",
-            selected["candidate_id"],
-            "C6 more than three compatible activations must fail closed",
-        )
-        self.assertEqual(
-            ["repository-context-map"],
-            _repair177_final_route(observed)["layer3_skills"],
-        )
-        self.assertFalse(
-            set(REPAIR177_TARGETS)
-            & set(_repair177_final_route(observed)["layer3_skills"]),
-            "C6 cannot publish a truncated or partial Foundation composition",
-        )
+        self.assertEqual("foundation-activation-composite", selected["candidate_id"])
+        self.assertEqual(set(overflow_foundations),
+                         set(_repair177_final_route(observed)["layer3_skills"]))
+        self.assertEqual("analyzed", observed["route_decision"]["path"])
+        self.assertEqual("analysis-agent", _repair177_final_route(observed)["start_profile"])
+        self.assertEqual("security-privacy-gate", _repair177_final_route(observed)["primary_skill"])
 
     def test_repair177_no_fixed_layer3_bypass_same_pattern(self) -> None:
         oracle_tree = ast.parse(ORACLE_PATH.read_text(encoding="utf-8"))
@@ -10784,11 +10751,6 @@ class RouteCandidateCohortTests(unittest.TestCase):
                     main_execution=copy.deepcopy(row["main_execution"]),
                 )
             )
-            if len(actual["layer3_skills"]) > 3:
-                failures.append(
-                    f"{row['id']}: layer3-overflow="
-                    f"{actual['layer3_skills']!r}"
-                )
         self.assertEqual([], failures)
 
 

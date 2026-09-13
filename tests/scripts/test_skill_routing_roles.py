@@ -2337,11 +2337,12 @@ class SkillRoutingRoleTests(unittest.TestCase):
             ),
         )
 
-    def test_layer3_cell_rejects_vague_duplicate_and_over_budget_values(self) -> None:
+    def test_layer3_cell_accepts_four_and_rejects_vague_or_duplicate_values(self) -> None:
+        self.assertEqual((["one", "two", "three", "four"], None),
+                         self.routing.parse_layer3_cell("one, two, three, four"))
         for value in (
             "transaction, concurrency when triggered",
             "concurrency-control, concurrency-control",
-            "one, two, three, four",
             "Concurrency-Control",
             "concurrency-控制",
             "-concurrency-control",
@@ -3045,7 +3046,6 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "windows-platform-extension",
             ),
             registered_domains=registered,
-            max_domains=4,
         )
         self.assertEqual("selected", cohesive_three_platforms["outcome"])
         self.assertEqual(
@@ -3060,16 +3060,6 @@ class SkillRoutingRoleTests(unittest.TestCase):
         with self.assertRaises(RoutingIntegrityError):
             compose_domain_extensions(
                 ("cross-platform-client-extension",),
-                registered_domains=registered,
-            )
-        with self.assertRaises(RoutingIntegrityError):
-            compose_domain_extensions(
-                (
-                    "cross-platform-client-extension",
-                    "android-platform-extension",
-                    "ios-ipados-platform-extension",
-                    "windows-platform-extension",
-                ),
                 registered_domains=registered,
             )
 

@@ -26,7 +26,7 @@ This focused Layer 3 Domain Skill modifies installed-client decisions for `analy
 ## Professional Decision Rules
 
 - Unknown targets after source inspection prohibit loading and require one bounded target question.
-- Load only active ownership, bridge, parity, or target-evidence References and capsule-named platform Domains within Main's zero-to-three Layer 3 assignment.
+- Load only active ownership, bridge, parity, or target-evidence References and capsule-named platform Domains within Main's task-needed Layer 3 assignment.
 - Return newly confirmed target needs to Main for selection.
 - Keep cohesive targets together. Use Analysis when an unresolved ownership, dependency, validation, or integration decision could change execution or its split.
 - Return signing, rollout, release, and rollback authority to `delivery-release-gate`.
