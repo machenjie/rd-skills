@@ -4389,7 +4389,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             },
             "runtime_domains": {},
         }
-        for cardinality in (0, 1, 3):
+        for cardinality in (0, 1, 3, 4):
             with self.subTest(cardinality=cardinality):
                 projection = VALIDATION.layer3_selector_runtime_projection(
                     authority,
@@ -4402,14 +4402,13 @@ class ContextContentRelocationTests(unittest.TestCase):
                     candidates[:cardinality],
                     projection["exact_layer3"],
                 )
-        with self.assertRaisesRegex(
-            VALIDATION.ValidationProblem,
-            r"ordered unique 0\.\.3 list",
-        ):
-            VALIDATION.layer3_selector_runtime_projection(
-                authority,
-                professional_skill=owner,
-                profile="task-agent",
-                selection_owner="main-control-agent",
-                exact_layer3=candidates[:4],
-            )
+        for invalid in ([*candidates, candidates[0]], [*candidates, "unauthorized"]):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(VALIDATION.ValidationProblem):
+                    VALIDATION.layer3_selector_runtime_projection(
+                        authority,
+                        professional_skill=owner,
+                        profile="task-agent",
+                        selection_owner="main-control-agent",
+                        exact_layer3=invalid,
+                    )

@@ -519,17 +519,17 @@
   ],
   "command_execution_count": 31,
   "contract_errors": [],
-  "contract_sha256": "585997baef92eab7a8f71f47e783b6c4975ae29ce969e62dd090828031a9b2cb",
+  "contract_sha256": "a7190fa02d086d6a96e09302ad03e58fa37cd4b6bf77dd90d4588863df433212",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2117,
-      "sha256": "339ab72a27736c0e5322c9de413de81e29ff2ef7646bdb39f8f41bb8a730f4ce"
+      "file_count": 7196,
+      "sha256": "5541fe9bbcf403c3e3951e40cbca48d78585861217d69ed6e8c914ab2c2a71bf"
     },
     "pre": {
-      "file_count": 2117,
-      "sha256": "339ab72a27736c0e5322c9de413de81e29ff2ef7646bdb39f8f41bb8a730f4ce"
+      "file_count": 7196,
+      "sha256": "5541fe9bbcf403c3e3951e40cbca48d78585861217d69ed6e8c914ab2c2a71bf"
     },
     "unchanged": true
   },
@@ -912,7 +912,7 @@
         },
         {
           "actual_metadata": {
-            "length": 4,
+            "length": 7,
             "type": "string"
           },
           "expected": "pass",
@@ -920,7 +920,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -932,11 +932,11 @@
           "pointer": "/semantic_disposition_application/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [

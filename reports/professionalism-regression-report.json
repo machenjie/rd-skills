@@ -8,15 +8,18 @@
   "baseline_comparison": "not-numerically-comparable",
   "evidence_scope": "deterministic-fixtures",
   "content_audit_summary": {
-    "skill_detector_fingerprint": "a6013faaa5271ec3e459a72a860445c4a89a96cfc2a524e506f72d55d092e2e4",
+    "skill_detector_fingerprint": "f5f8db5dcfa4e9542d1a2e4260447bed372f148db772f7d2a4deaabfb23d9609",
     "audit_gate_status": {
       "selected_gate": "authoring",
       "authoring": "pass",
-      "formal_release": "pass"
+      "formal_release": "blocked"
     },
     "semantic_disposition_application": {
-      "status": "current",
-      "error": null
+      "status": "invalid",
+      "error": {
+        "id": "semantic-decision-application-invalid",
+        "message": "semantic fixed detector contract is stale"
+      }
     },
     "content_review_density_candidates": 21,
     "content_tighten_candidates": 5,
@@ -53,7 +56,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "5082bef6236b9c87c661933eea347d667445a0f8688f0a633d57ce889739a242",
+    "source_fingerprint": "039b7fc3a88d612f373450a2bbd269a59bfbc0013ef3582eefc9ef2c5216b622",
     "source_fingerprint_document_count": 999,
     "contract": {
       "bullet_decision_max": 1,
@@ -64,12 +67,12 @@
       "schema_version": 2
     },
     "documents": 999,
-    "advisory_documents": 333,
-    "review_as_complex_sentences": 819,
+    "advisory_documents": 334,
+    "review_as_complex_sentences": 820,
     "tighten_sentences": 18,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 837,
+    "advisory_sentences": 838,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -98,11 +101,11 @@
         "tighten_sentences": 1
       },
       "control-reference": {
-        "advisory_documents": 0,
+        "advisory_documents": 1,
         "compound_bullets": 0,
         "documents": 7,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 0,
+        "review_as_complex_sentences": 1,
         "tighten_sentences": 0
       },
       "control-skill-body": {
@@ -203,7 +206,7 @@
     "decision_item_limit": 15,
     "effective_preface_schema_version": 3,
     "strict_ready_basis": "reference-strict-v4",
-    "source_fingerprint": "d6d90a94cb4ffedb6877ce08fd05e0752d7f0182e7bf7b726645457f4558007b",
+    "source_fingerprint": "4cf3e9e98022a4362cac62ee683c1e76536efdc13b9efaa878ad66454f8a3fb6",
     "source_fingerprint_document_count": 972,
     "indexed_references": 611,
     "existing_indexed_references": 611,
@@ -242,12 +245,12 @@
       "exact_normalized_duplicate_block",
       "templated_block_candidate"
     ],
-    "semantic_raw_candidates": 710,
+    "semantic_raw_candidates": 709,
     "semantic_detector_downgraded_candidates": 617,
     "semantic_untriaged_candidates": 0,
     "semantic_needs_confirmation_candidates": 0,
     "semantic_rewrite_candidates": 0,
-    "semantic_resolved_candidates": 93,
+    "semantic_resolved_candidates": 92,
     "semantic_unresolved_candidates": 0,
     "unconditional_absolute_p0_p1_unresolved_candidates": 0,
     "fixed_number_unresolved_candidates": 0,
@@ -258,8 +261,8 @@
     "exact_duplicate_tokens": 0,
     "templated_block_occurrences": 28,
     "templated_block_tokens": 528,
-    "semantic_disposition_configured": 93,
-    "semantic_disposition_applied": 93,
+    "semantic_disposition_configured": 92,
+    "semantic_disposition_applied": 92,
     "semantic_disposition_errors": 0,
     "structural_strict_ready": true,
     "semantic_triage_complete": true,
@@ -269,7 +272,7 @@
     "source": "skill-content-audit.json#root_content",
     "readiness_scope": "agent-facing-root-content",
     "strict_ready_basis": "root-strict-v5",
-    "source_fingerprint": "36bc48d5c94ae3972dad7f1f228ca5517e00b6af07f4d9c3173a8c4ddc92c8b7",
+    "source_fingerprint": "1261a43691941c1e08f0e8402a4968757e761e8b5db47b04c462c9fd28efd10a",
     "source_fingerprint_document_count": 379,
     "agent_facing_root_documents": 379,
     "foundation_compact_capabilities": 128,
@@ -328,7 +331,7 @@
     "schema_version": 10,
     "reference": {
       "scope": "reference-content",
-      "source_fingerprint": "d6d90a94cb4ffedb6877ce08fd05e0752d7f0182e7bf7b726645457f4558007b",
+      "source_fingerprint": "4cf3e9e98022a4362cac62ee683c1e76536efdc13b9efaa878ad66454f8a3fb6",
       "strict_ready_basis": "reference-strict-v4",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -336,7 +339,7 @@
     },
     "root": {
       "scope": "agent-facing-root-content",
-      "source_fingerprint": "36bc48d5c94ae3972dad7f1f228ca5517e00b6af07f4d9c3173a8c4ddc92c8b7",
+      "source_fingerprint": "1261a43691941c1e08f0e8402a4968757e761e8b5db47b04c462c9fd28efd10a",
       "strict_ready_basis": "root-strict-v5",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -365,7 +368,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "22966f0ba1ebcd8146ee238e0c2bc79c03a064efd56dcfff8c7eb89d82f9a105",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "4fe958617cf26dc276d9d55671dba66fec006eb5f7dec9b96369af6f7ad6c7cc"
+          "readability_target_manifest": "4b542a64faf459f2c533b2f627741407540feeb5cebef0f22fc9abeafa483714"
         },
         "attested_by": null,
         "attested_on": null,
@@ -384,7 +387,7 @@
         "panel_artifact_schema_version": null,
         "required_density_disposition_count": 26,
         "applied_density_disposition_count": 0,
-        "required_readability_disposition_count": 333,
+        "required_readability_disposition_count": 334,
         "applied_readability_disposition_count": 0,
         "required_actionability_disposition_count": 0,
         "applied_actionability_disposition_count": 0,
@@ -502,7 +505,7 @@
     },
     "routing_neutral_isolated_material_binding_sensitivity": {
       "case_count": 188,
-      "full_rereview_deduplicated_capsule_input_bytes_proxy": 115913619,
+      "full_rereview_deduplicated_capsule_input_bytes_proxy": 115913718,
       "fresh_target_count": {
         "min": 3,
         "sum": 2605,
@@ -511,18 +514,18 @@
         "max": 65
       },
       "input_ratio_ppm": {
-        "min": 35394,
-        "sum": 23858381,
+        "min": 35393,
+        "sum": 23858331,
         "mean": 126906,
-        "p95": 228503,
+        "p95": 228502,
         "max": 407738
       },
       "named_isolated_case": {
         "skill_id": "acceptance-criteria-builder",
         "fresh_target_count": 8,
         "carried_forward_target_count": 180,
-        "canonical_capsule_input_bytes_proxy": 12029574,
-        "input_ratio_ppm": 103780
+        "canonical_capsule_input_bytes_proxy": 12029493,
+        "input_ratio_ppm": 103779
       }
     },
     "representative_routing_adjacency_mutation": {
@@ -563,6 +566,12 @@
       "severity": "error"
     },
     {
+      "category": "semantic-disposition-application-release-gate",
+      "target": "skill-content-audit.json#semantic_disposition_application",
+      "message": "semantic-decision-application-invalid: semantic fixed detector contract is stale",
+      "severity": "error"
+    },
+    {
       "category": "readability-review-release-gate",
       "target": "config/professionalism-release-review.yaml#readability_review_attestation",
       "message": "formal release requires a checked-in three-expert majority readability and actionability review over current Root, Reference, AI-readability, and Skill-detector fingerprints with no tracked tightening, unresolved detector false positives, or rewrite-required decisions; status=panel-majority-stale; tracked_tightening_count=None; detector_false_positive_count=None; rewrite_required_count=None",
@@ -597,7 +606,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=333; review_as_complex_sentences=819; tighten_sentences=18",
+      "message": "advisory_documents=334; review_as_complex_sentences=820; tighten_sentences=18",
       "severity": "warning"
     }
   ],
@@ -611,7 +620,7 @@
     "coverage_gate_passes": 10,
     "coverage_gate_failures": 0,
     "blocker_count": 0,
-    "release_blocker_count": 3,
+    "release_blocker_count": 4,
     "advisory_count": 4
   },
   "limitations": [
@@ -622,6 +631,7 @@
     "reference_content_summary.strict_ready is Reference-only and preserves the reference-strict-v4 contract; it does not attest Root content or expert review.",
     "Root strict readiness is recomputed from fresh agent-facing Root source and blocks the authoring gate when its strict structural or semantic contract fails.",
     "AI-readability uses one three-reviewer full-coverage panel; Professional Completeness uses a separate per-Skill qualified reviewer pool with domain-critical fail-closed decisions. Neither axis can substitute for the other, and pending or stale evidence does not redefine the authoring gate.",
-    "Coverage gates are recomputed from deterministic routing, captured benchmark, and captured pressure fixtures; they do not prove live-agent behavior."
+    "Coverage gates are recomputed from deterministic routing, captured benchmark, and captured pressure fixtures; they do not prove live-agent behavior.",
+    "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed detector contract is stale"
   ]
 }

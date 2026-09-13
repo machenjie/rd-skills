@@ -1396,7 +1396,7 @@
     },
     "runtime_inline_verification": {
       "inputs": ["professional-entrypoint", "logical-selection-receipt", "current-fixed-assets"],
-      "checks": ["professional-frontmatter-name", "professional-jit-runtime-version-build", "base64url-nopad-22-build-identity", "selector-or-partition-build-on-existing-read", "selection-receipt-build", "layer3-first-line-build", "profile", "selection-owner", "selection-kind", "selected-or-exact-layer3", "unique-max-three", "itemwise-profile-domain-authorization", "current-asset-professional-binding", "reference-record-path-verbatim"],
+      "checks": ["professional-frontmatter-name", "professional-jit-runtime-version-build", "base64url-nopad-22-build-identity", "selector-or-partition-build-on-existing-read", "selection-receipt-build", "layer3-first-line-build", "profile", "selection-owner", "selection-kind", "selected-or-exact-layer3", "ordered-unique", "itemwise-profile-domain-authorization", "current-asset-professional-binding", "reference-record-path-verbatim"],
       "proof_limits": ["full-digest-derivation", "raw-byte-integrity", "coherent-old-bundle-currentness"]
     },
     "non_runtime_verifier": {
@@ -1601,7 +1601,7 @@
     ],
     "compatibility_baseline": {"routing_cases":233,"capability_cases":62},
     "route_once": "required",
-    "layer3_cardinality": {"minimum":0,"maximum":3,"duplicates":"fail","overflow":"fail-never-truncate"},
+    "layer3_cardinality": {"minimum":0,"duplicates":"fail","selection":"current-engineering-need"},
     "runtime_dependency": false
   },
   "behavior_eval_contract": {
@@ -1718,12 +1718,11 @@
     "main_analysis_assignment_fields": ["producer", "task_id"],
     "main_execution_provenance_fields": ["producer", "task_id"],
     "execution_provenance_by_path": {"direct":{"input":"main-assignment","main_execution_provenance":"required"},"analyzed":{"input":"main-assignment","main_execution_provenance":"required"}},
-    "maximum_layer3_skills": 3,
     "main_execution_producer": "main-control-agent",
     "typed_skill_projection": {
       "public_fields": {
         "Primary Professional Skill": {"machine_field":"primary_skill","registry_layer":"professional","cardinality":"exactly-one-per-task"},
-        "Layer 3 Skills": {"machine_field":"layer3_skills","registry_layers":["foundation","domain"],"cardinality":"ordered-unique-0..3","authorization":"current-professional-selector-profile-domain-itemwise"},
+        "Layer 3 Skills": {"machine_field":"layer3_skills","registry_layers":["foundation","domain"],"cardinality":"ordered-unique","authorization":"current-professional-selector-profile-domain-itemwise"},
         "Review Skill": {"machine_field":"review_skill","registry_layer":"professional","cardinality":"exactly-one-per-review-assignment","relation_to_task_primary":"independent"}
       },
       "forbidden_shared_labels": ["Professional Skill"],
@@ -1742,9 +1741,10 @@
     "exact_layer3": "skip-selection-signals-after-authorization",
     "authorization": "itemwise-professional-profile-domain",
     "minimum": 0,
-    "maximum": 3,
     "duplicates": "fail-closed",
-    "over_maximum": "fail-closed",
+    "selection_basis": "current-engineering-need-including-confirmation-invariants-failure-modes-and-relevant-uncertainty",
+    "quantity_changes_route_or_workflow": false,
+    "selection_revision": "new-source-evidence-main-owned-add-remove-or-replace-existing-handoff",
     "worker_reroute": "forbidden-return-main",
     "review_selection": "independent-review-risk",
     "review_projection": "fixed-review-skill-and-review-risk",

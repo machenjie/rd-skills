@@ -37,8 +37,18 @@ class ReleaseRoutingScenarioAuthorityTests(unittest.TestCase):
                 rows[0]['codegen_case_id'] = value
                 self.assertTrue(release_routing_scenario_errors(rows))
 
-    def test_layer3_cannot_overflow_duplicate_or_be_malformed(self):
-        for value in (None, 'threat-modeling', ['x'] * 2, ['a', 'b', 'c', 'd'], [[]]):
+    def test_layer3_allows_four_but_rejects_duplicate_or_malformed(self):
+        rows = copy.deepcopy(self.rows)
+        selected = ['transaction-consistency', 'concurrency-control', 'idempotency-retry-design', 'failure-contract-design']
+        rows[0]['router']['expected']['layer3'] = selected
+        rows[0]['codegen_layer3'] = selected
+        self.assertEqual([], release_routing_scenario_errors(rows))
+        hints = project_release_route_hints(rows[0])
+        self.assertEqual(selected, hints['layer3_skills'])
+        self.assertEqual('backend-change-builder', hints['primary_skill'])
+        self.assertEqual('task-agent', hints['agent_profile'])
+        self.assertIsNone(hints['review_skill'])
+        for value in (None, 'threat-modeling', ['x'] * 2, [[]]):
             with self.subTest(value=value):
                 rows = copy.deepcopy(self.rows)
                 rows[0]['router']['expected']['layer3'] = value

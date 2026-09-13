@@ -132,7 +132,7 @@ def _validate_profile_instruction_contract(*, role_name, error_label, readabilit
     required = {
         "main-control-agent": ["Dispatch only", "task-agent", "Route expertise once", "Host boundaries"],
         "analysis-agent": ["current-source read/search", "decision-relevant evidence", "read-only", "proof limits"],
-        "task-agent": ["read/search/edit/execute", "bounded search/read", "authorized write scope", "final material edit", "fresh targeted validation", "Self-check", "current requirements or repository evidence"],
+        "task-agent": ["selection-changing source evidence", "no rerouting", "bounded search/read", "authorized write scope", "final material edit", "fresh targeted validation", "Self-check", "current requirements or repository evidence"],
         "review-agent": ["Independently inspect", "current diff", "reachable failure", "new evidence", "read-only"],
     }
     limits = PROFILE_CONTRACT_MODEL["instruction_rule_count"]

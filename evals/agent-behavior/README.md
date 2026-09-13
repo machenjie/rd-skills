@@ -6,7 +6,7 @@ private reasoning. It scores supplied observations only; a checked-in
 structural comparison is not host-execution evidence.
 
 The default suite is `professional-samples/`. Each YAML case declares one
-expected dispatched Profile, one primary Professional Skill, zero to three
+expected dispatched Profile, one primary Professional Skill, task-needed
 Layer 3 Skills, one Review Skill, professional obligations, forbidden
 shortcuts, and a natural-language handoff.
 
@@ -28,7 +28,7 @@ Validation checks that:
 - the actual route matches the expected route once;
 - the primary Skill supports the dispatched Profile;
 - each Layer 3 Skill exists, is unique, is declared by the primary Skill, and
-  the task loads at most three;
+  the task loads only currently needed authorized expertise;
 - the Review Skill supports `review-agent`;
 - the handoff covers every required observable field and professional
   obligation;

@@ -105,8 +105,8 @@ The deterministic owner checks cover:
 - routing regression, including Domain positive, neighboring negative,
   transition-positive, and unchanged-paraphrase controls;
 - Route Once behavior, role authorization, and Review route stability;
-- rendered-context budgets across the fixed Runtime, selected zero-to-three
-  Layer 3 items, and explicitly named nested References; and
+- rendered-context budgets across the fixed Runtime, representative task-needed
+  Layer 3 selections (including more than three items), and explicitly named nested References; and
 - code-generation definition, harness, and negative-control evidence.
 
 When all Foundation and Domain sources must be expanded, the owning validator

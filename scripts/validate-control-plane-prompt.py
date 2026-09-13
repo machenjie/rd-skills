@@ -9,7 +9,7 @@ PROMPT_MAX_O200K_BASE_TOKENS = 1750
 REQUIRED_BEHAVIOR = (
     "Implementation requests default to task-agent with read/search/edit/execute",
     "Unknown local owner, files, tests, or callers require bounded discovery",
-    "exactly one Primary Professional Skill and zero to three authorized Layer 3 Skills",
+    "exactly one Primary Professional Skill and authorized Layer 3 Skills for the current engineering need",
     "positive and anti-trigger routing",
     "Do not repeat analysis or redesign without new decision-relevant evidence",
     "Engineering Brief only when complex cross-agent work needs stable engineering decisions",

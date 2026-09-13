@@ -473,8 +473,6 @@ def _validate_expected_qualities(
     if layer3_values is None:
         errors.append(f"{rel}: route_hints.layer3_skills must be a list of strings")
         layer3_values = []
-    if len(layer3_values) > 3:
-        errors.append(f"{rel}: route_hints.layer3_skills must contain at most 3 entries")
     if len(set(layer3_values)) != len(layer3_values):
         errors.append(f"{rel}: route_hints.layer3_skills must not contain duplicates")
     for value in layer3_values:

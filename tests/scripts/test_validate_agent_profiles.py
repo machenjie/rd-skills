@@ -367,6 +367,25 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 )
                 self.assertEqual(0, result, output)
 
+    def test_task_tool_boundary_survives_instruction_deduplication(self) -> None:
+        profiles = {row["name"]: row for row in BUILDER._load_agent_profiles()}
+        task = profiles["task-agent"]
+        self.assertEqual(["read", "search", "edit", "execute"], task["tools"])
+        self.assertNotIn("- Use read/search/edit/execute.", task["instructions"])
+        self.assertIn("selection-changing source evidence to Main", task["instructions"])
+        boundary = "Declared tool boundary: read, search, edit, execute."
+        for platform in ("codex", "claude", "copilot"):
+            with self.subTest(platform=platform):
+                result, output = self._mutated_built_result(
+                    platform, "task-agent", boundary, boundary
+                )
+                self.assertEqual(0, result, output)
+                result, output = self._mutated_built_result(
+                    platform, "task-agent", boundary, "Declared tool boundary: read."
+                )
+                self.assertEqual(1, result, output)
+                self.assertIn("decoded instruction surface", output)
+
     def test_built_profiles_reject_crlf_raw_bytes(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         enforcement = json.loads(

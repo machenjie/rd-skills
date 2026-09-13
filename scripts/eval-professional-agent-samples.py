@@ -186,8 +186,6 @@ def _sample(
         result.errors.append(
             f"profile '{result.profile}' is not supported by primary Skill '{result.primary_skill}'"
         )
-    if len(result.layer3_skills) > 3:
-        result.errors.append("captured task loads more than three Layer 3 Skills")
     if len(result.layer3_skills) != len(set(result.layer3_skills)):
         result.errors.append("captured task repeats a Layer 3 Skill")
     primary_candidates = set(_strings(_mapping(primary).get("layer3_candidates")))

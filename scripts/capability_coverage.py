@@ -685,7 +685,6 @@ def _admission_multitask_trace_assessment(
             "explicit-task-dag",
             "foundation-selector:accepted-brief-task-dag",
         ],
-        "layer3_overflow": False,
         "layer3_skills": ["task-dag-decomposition"],
         "path": "analyzed",
         "precedence": 5,
@@ -809,7 +808,6 @@ def _admission_multitask_trace_assessment(
         "eligible_domain_layer3_skills": expected_domains,
         "eligible_foundation_layer3_skills": [],
         "eligible_layer3_skills": expected_domains,
-        "layer3_overflow": False,
         "layer3_skills": expected_domains,
         "reserved_domain_capacity": len(expected_domains),
     }
@@ -1402,18 +1400,6 @@ def _validate_entry(
             field=field,
             errors=errors,
             nonempty=field == "evidence_fixtures",
-        )
-    domain_count = len(validated_lists["expected_domain_extensions"])
-    foundation_count = len(validated_lists["expected_foundation_skills"])
-    layer3_count = domain_count + foundation_count
-    if layer3_count > 3:
-        errors.append(
-            _problem(
-                context,
-                "combined expected Domain+Foundation Skill count must be at "
-                f"most 3 for one JIT capsule; found domains={domain_count}, "
-                f"foundations={foundation_count}, total={layer3_count}",
-            )
         )
     if entry.get("coverage_status") not in COVERAGE_STATUSES:
         errors.append(

@@ -1,6 +1,6 @@
 {
   "architecture": "hookless-control-plane-v1",
-  "automatic_routing_policy_fingerprint": "81efd6d39cefc37df743253378fa0783117c5ea3b221987981d1de95f685f293",
+  "automatic_routing_policy_fingerprint": "b28950598bbcc60f9d3cbbb07c04dc9b31e1859d5e60eba90f47a9a4b6fa8041",
   "boundary_relations": {
     "candidate_coverage": "full",
     "errors": [],
@@ -711,7 +711,6 @@
               "ambiguous-request",
               "foundation-selector:ambiguous-intake"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "requirement-clarification"
             ],
@@ -766,7 +765,6 @@
             "ambiguous-request",
             "foundation-selector:ambiguous-intake"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "requirement-clarification"
           ],
@@ -1206,7 +1204,6 @@
               "observable-acceptance",
               "foundation-selector:acceptance-definition"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "acceptance-standard-definition"
             ],
@@ -1261,7 +1258,6 @@
             "observable-acceptance",
             "foundation-selector:acceptance-definition"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "acceptance-standard-definition"
           ],
@@ -1984,7 +1980,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cross-platform-client-extension",
               "android-platform-extension"
@@ -2029,7 +2024,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "cross-platform-client-extension",
             "android-platform-extension"
@@ -2952,7 +2946,6 @@
               "repository-source-evidence",
               "question-or-explanation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cross-platform-client-extension",
               "ios-ipados-platform-extension",
@@ -3017,7 +3010,6 @@
             "repository-source-evidence",
             "question-or-explanation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "cross-platform-client-extension",
             "ios-ipados-platform-extension",
@@ -4102,7 +4094,6 @@
               "coordination",
               "foundation-selector:incident-response-coordination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "failure-diagnosis"
             ],
@@ -4159,7 +4150,6 @@
             "coordination",
             "foundation-selector:incident-response-coordination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "failure-diagnosis"
           ],
@@ -5009,7 +4999,6 @@
             "evidence": [
               "multiple-dependent-tasks"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "linux-desktop-platform-extension"
             ],
@@ -5044,7 +5033,6 @@
             "evidence": [
               "multiple-dependent-tasks"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "linux-desktop-platform-extension"
             ],
@@ -5085,7 +5073,6 @@
             "evidence": [
               "multiple-dependent-tasks"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "linux-desktop-platform-extension"
             ],
@@ -5119,7 +5106,6 @@
             "evidence": [
               "multiple-dependent-tasks"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "linux-desktop-platform-extension"
             ],
@@ -5156,7 +5142,6 @@
           "evidence": [
             "multiple-dependent-tasks"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "linux-desktop-platform-extension"
           ],
@@ -5603,7 +5588,6 @@
               "explicit-task-dag",
               "foundation-selector:accepted-brief-task-dag"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "task-dag-decomposition"
             ],
@@ -5660,7 +5644,6 @@
             "explicit-task-dag",
             "foundation-selector:accepted-brief-task-dag"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "task-dag-decomposition"
           ],
@@ -6745,7 +6728,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback"
             ],
@@ -6802,7 +6784,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback"
           ],
@@ -7479,7 +7460,6 @@
               "governed-state-object",
               "foundation-selector:foundation-activation-state-machine-modeling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "business-rule-extraction",
               "state-machine-modeling"
@@ -7567,7 +7547,6 @@
             "governed-state-object",
             "foundation-selector:foundation-activation-state-machine-modeling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "business-rule-extraction",
             "state-machine-modeling"
@@ -8312,7 +8291,6 @@
               "unresolved-structure-decision",
               "foundation-selector:owner-internal-structure-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design"
             ],
@@ -8375,7 +8353,6 @@
             "unresolved-structure-decision",
             "foundation-selector:owner-internal-structure-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "implementation-structure-design"
           ],
@@ -9247,7 +9224,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cloud-platform-extension",
               "api-contract-design",
@@ -9327,7 +9303,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cloud-platform-extension",
               "repository-context-map"
@@ -9392,7 +9367,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cloud-platform-extension",
               "api-contract-design",
@@ -9468,7 +9442,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "cloud-platform-extension",
             "repository-context-map"
@@ -10284,7 +10257,6 @@
               "foundation-selector:dynamic-foundation:build-tool-professional-usage",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection"
@@ -10362,7 +10334,6 @@
             "foundation-selector:dynamic-foundation:build-tool-professional-usage",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "targeted-validation-selection"
@@ -11277,7 +11248,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -11310,7 +11280,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -12192,7 +12161,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -12225,7 +12193,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -13048,7 +13015,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -13102,7 +13068,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -13945,7 +13910,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -13999,7 +13963,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -14842,7 +14805,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -14896,7 +14858,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -15798,7 +15759,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -15831,7 +15791,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -17153,7 +17112,6 @@
               "unresolved-structure-decision",
               "foundation-selector:owner-internal-structure-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design"
             ],
@@ -17220,7 +17178,6 @@
             "unresolved-structure-decision",
             "foundation-selector:owner-internal-structure-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "implementation-structure-design"
           ],
@@ -18564,7 +18521,6 @@
               "unresolved-structure-decision",
               "foundation-selector:owner-internal-structure-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design"
             ],
@@ -18631,7 +18587,6 @@
             "unresolved-structure-decision",
             "foundation-selector:owner-internal-structure-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "implementation-structure-design"
           ],
@@ -19975,7 +19930,6 @@
               "unresolved-structure-decision",
               "foundation-selector:owner-internal-structure-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design"
             ],
@@ -20042,7 +19996,6 @@
             "unresolved-structure-decision",
             "foundation-selector:owner-internal-structure-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "implementation-structure-design"
           ],
@@ -21169,7 +21122,6 @@
               "foundation-selector:dynamic-foundation:build-tool-professional-usage",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "implementation-structure-design",
@@ -21275,7 +21227,6 @@
             "foundation-selector:dynamic-foundation:build-tool-professional-usage",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "implementation-structure-design",
@@ -22146,7 +22097,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -22204,7 +22154,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -22256,7 +22205,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -22310,7 +22258,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -23149,7 +23096,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -23207,7 +23153,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -23259,7 +23204,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -23313,7 +23257,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -24487,7 +24430,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design",
               "refactoring"
@@ -24588,7 +24530,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design",
               "refactoring"
@@ -24670,7 +24611,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "implementation-structure-design",
               "refactoring"
@@ -24758,7 +24698,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "implementation-structure-design",
             "refactoring"
@@ -25324,7 +25263,6 @@
               "analysis-only",
               "foundation-selector:domain-object-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "domain-object-identification"
             ],
@@ -25381,7 +25319,6 @@
             "analysis-only",
             "foundation-selector:domain-object-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "domain-object-identification"
           ],
@@ -26670,7 +26607,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "cloud-platform-extension",
               "design-pattern-selection",
@@ -26757,7 +26693,6 @@
             "analysis-only",
             "foundation-selector:design-pattern-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "cloud-platform-extension",
             "design-pattern-selection",
@@ -27355,7 +27290,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -27412,7 +27346,6 @@
             "analysis-only",
             "foundation-selector:design-pattern-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "design-pattern-selection"
           ],
@@ -28386,7 +28319,6 @@
               "foundation-selector:dynamic-foundation:build-tool-professional-usage",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "design-pattern-selection",
@@ -28486,7 +28418,6 @@
             "foundation-selector:dynamic-foundation:build-tool-professional-usage",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "design-pattern-selection",
@@ -29330,7 +29261,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -29387,7 +29317,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -29454,7 +29383,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -29507,7 +29435,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -29563,7 +29490,6 @@
               "analysis-only",
               "foundation-selector:design-pattern-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-pattern-selection"
             ],
@@ -29623,7 +29549,6 @@
             "analysis-only",
             "foundation-selector:design-pattern-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "design-pattern-selection"
           ],
@@ -30440,7 +30365,6 @@
               "analysis-only",
               "foundation-selector:domain-object-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "domain-object-identification"
             ],
@@ -30507,7 +30431,6 @@
               "analysis-only",
               "foundation-selector:domain-object-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "domain-object-identification"
             ],
@@ -30562,7 +30485,6 @@
               "analysis-only",
               "foundation-selector:domain-object-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "domain-object-identification"
             ],
@@ -30622,7 +30544,6 @@
             "analysis-only",
             "foundation-selector:domain-object-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "domain-object-identification"
           ],
@@ -31438,7 +31359,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -31492,7 +31412,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -31560,7 +31479,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -31614,7 +31532,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -31667,7 +31584,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -31728,7 +31644,6 @@
             "minimality-change",
             "foundation-selector:review-minimality-change"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "minimal-correct-implementation"
           ],
@@ -32811,7 +32726,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "minimal-correct-implementation"
             ],
@@ -32868,7 +32782,6 @@
             "minimality-change",
             "foundation-selector:review-minimality-change"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "minimal-correct-implementation"
           ],
@@ -33964,7 +33877,6 @@
               "minimality-change",
               "foundation-selector:review-minimality-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "windows-platform-extension",
               "minimal-correct-implementation"
@@ -34027,7 +33939,6 @@
             "minimality-change",
             "foundation-selector:review-minimality-change"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "windows-platform-extension",
             "minimal-correct-implementation"
@@ -35000,7 +34911,6 @@
               "foundation-selector:dynamic-foundation:build-tool-professional-usage",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "minimal-correct-implementation",
@@ -35100,7 +35010,6 @@
             "foundation-selector:dynamic-foundation:build-tool-professional-usage",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "minimal-correct-implementation",
@@ -35694,7 +35603,6 @@
               "analysis-only",
               "foundation-selector:domain-object-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "windows-platform-extension",
               "domain-object-identification"
@@ -35757,7 +35665,6 @@
             "analysis-only",
             "foundation-selector:domain-object-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "windows-platform-extension",
             "domain-object-identification"
@@ -36679,7 +36586,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "windows-platform-extension"
             ],
@@ -36720,7 +36626,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "windows-platform-extension"
           ],
@@ -38059,7 +37964,6 @@
               "unresolved-structure-decision",
               "foundation-selector:owner-internal-structure-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "windows-platform-extension",
               "implementation-structure-design"
@@ -38132,7 +38036,6 @@
             "unresolved-structure-decision",
             "foundation-selector:owner-internal-structure-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "windows-platform-extension",
             "implementation-structure-design"
@@ -38990,7 +38893,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "macos-platform-extension"
             ],
@@ -39039,7 +38941,6 @@
               "domain-layer3-incompatible:macos-platform-extension:professional-layer3",
               "domain-layer3-incompatible:macos-platform-extension:reciprocity"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection"
@@ -39118,7 +39019,6 @@
             "evidence": [
               "critical-authority-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "macos-platform-extension",
               "repository-context-map"
@@ -39172,7 +39072,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "macos-platform-extension"
             ],
@@ -39220,7 +39119,6 @@
               "domain-layer3-incompatible:macos-platform-extension:professional-layer3",
               "domain-layer3-incompatible:macos-platform-extension:reciprocity"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection"
@@ -39295,7 +39193,6 @@
           "evidence": [
             "critical-authority-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "macos-platform-extension",
             "repository-context-map"
@@ -39836,7 +39733,6 @@
               "module-boundary-change",
               "foundation-selector:module-boundary-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "module-boundary-design"
             ],
@@ -39891,7 +39787,6 @@
             "module-boundary-change",
             "foundation-selector:module-boundary-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "module-boundary-design"
           ],
@@ -40709,7 +40604,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -40765,7 +40659,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -40832,7 +40725,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -40885,7 +40777,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -40940,7 +40831,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -41000,7 +40890,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -42018,7 +41907,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "macos-platform-extension",
               "refactoring"
@@ -42081,7 +41969,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "macos-platform-extension",
             "refactoring"
@@ -42942,7 +42829,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "linux-desktop-platform-extension",
               "repository-context-map"
@@ -43002,7 +42888,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "linux-desktop-platform-extension",
             "repository-context-map"
@@ -43822,7 +43707,6 @@
               "readability-change",
               "foundation-selector:review-readability-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-clarity-maintainability"
             ],
@@ -43890,7 +43774,6 @@
               "readability-change",
               "foundation-selector:review-readability-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-clarity-maintainability"
             ],
@@ -43943,7 +43826,6 @@
               "readability-change",
               "foundation-selector:review-readability-change"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-clarity-maintainability"
             ],
@@ -44004,7 +43886,6 @@
             "readability-change",
             "foundation-selector:review-readability-change"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "code-clarity-maintainability"
           ],
@@ -44589,7 +44470,6 @@
               "dto-mapping",
               "foundation-selector:dto-model-boundary-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "model-boundary-mapping"
             ],
@@ -44646,7 +44526,6 @@
             "dto-mapping",
             "foundation-selector:dto-model-boundary-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "model-boundary-mapping"
           ],
@@ -45186,7 +45065,6 @@
               "no-security-verdict",
               "foundation-selector:security-anti-scanner-report"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "documentation-generation"
             ],
@@ -45244,7 +45122,6 @@
             "no-security-verdict",
             "foundation-selector:security-anti-scanner-report"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "documentation-generation"
           ],
@@ -45782,7 +45659,6 @@
               "no-security-verdict",
               "foundation-selector:security-anti-scanner-report"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "documentation-generation"
             ],
@@ -45840,7 +45716,6 @@
             "no-security-verdict",
             "foundation-selector:security-anti-scanner-report"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "documentation-generation"
           ],
@@ -46380,7 +46255,6 @@
               "module-boundary-change",
               "foundation-selector:module-boundary-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "module-boundary-design"
             ],
@@ -46435,7 +46309,6 @@
             "module-boundary-change",
             "foundation-selector:module-boundary-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "module-boundary-design"
           ],
@@ -47285,7 +47158,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design",
               "version-compatibility"
@@ -47359,7 +47231,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -47418,7 +47289,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design",
               "version-compatibility"
@@ -47488,7 +47358,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -48544,7 +48413,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:filesystem-process-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "filesystem-process-safety"
             ],
@@ -48603,7 +48471,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:filesystem-process-safety"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "filesystem-process-safety"
           ],
@@ -49186,7 +49053,6 @@
               "sdk-contract",
               "foundation-selector:sdk-contract-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "sdk-library-contract-design"
             ],
@@ -49243,7 +49109,6 @@
             "sdk-contract",
             "foundation-selector:sdk-contract-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "sdk-library-contract-design"
           ],
@@ -50250,7 +50115,6 @@
               "supply-chain-decision",
               "foundation-selector:package-dependency-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "package-dependency-management"
             ],
@@ -50307,7 +50171,6 @@
             "supply-chain-decision",
             "foundation-selector:package-dependency-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "package-dependency-management"
           ],
@@ -50876,7 +50739,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "infrastructure-as-code-safety"
             ],
@@ -50935,7 +50797,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "infrastructure-as-code-safety"
           ],
@@ -51750,7 +51611,6 @@
               "foundation-selector:dynamic-foundation:build-tool-professional-usage",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection"
@@ -51828,7 +51688,6 @@
             "foundation-selector:dynamic-foundation:build-tool-professional-usage",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "targeted-validation-selection"
@@ -52415,7 +52274,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "failure-diagnosis",
               "observability"
@@ -52495,7 +52353,6 @@
             "no-abuse-or-privacy-risk",
             "foundation-selector:security-anti-reliability-only"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "failure-diagnosis",
             "observability"
@@ -53517,7 +53374,6 @@
               "retry-replay-or-duplicate-side-effect",
               "foundation-selector:backend-idempotency-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "idempotency-retry-design"
             ],
@@ -53574,7 +53430,6 @@
             "retry-replay-or-duplicate-side-effect",
             "foundation-selector:backend-idempotency-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "idempotency-retry-design"
           ],
@@ -54255,7 +54110,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -54314,7 +54168,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -54811,7 +54664,6 @@
               "user-flow",
               "foundation-selector:user-flow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "interaction-state-modeling"
             ],
@@ -54867,7 +54719,6 @@
             "user-flow",
             "foundation-selector:user-flow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "interaction-state-modeling"
           ],
@@ -55366,7 +55217,6 @@
               "user-flow",
               "foundation-selector:user-flow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "design-system-rules"
             ],
@@ -55422,7 +55272,6 @@
             "user-flow",
             "foundation-selector:user-flow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "design-system-rules"
           ],
@@ -55887,7 +55736,6 @@
               "user-flow",
               "foundation-selector:user-flow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "interaction-state-modeling",
               "design-system-rules"
@@ -55947,7 +55795,6 @@
             "user-flow",
             "foundation-selector:user-flow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "interaction-state-modeling",
             "design-system-rules"
@@ -56796,7 +56643,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -56850,7 +56696,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -58097,7 +57942,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design",
               "version-compatibility"
@@ -58175,7 +58019,6 @@
             "no-security-sink",
             "foundation-selector:security-anti-input-shape"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "api-contract-design",
             "version-compatibility"
@@ -58819,7 +58662,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "version-compatibility"
             ],
@@ -58876,7 +58718,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "version-compatibility"
           ],
@@ -60127,7 +59968,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "data-migration-design",
               "transaction-consistency",
@@ -60223,7 +60063,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "data-migration-design",
             "transaction-consistency",
@@ -61000,7 +60839,6 @@
               "distributed-effect-change",
               "foundation-selector:distributed-workflow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "transaction-consistency"
             ],
@@ -61056,7 +60894,6 @@
             "distributed-effect-change",
             "foundation-selector:distributed-workflow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "transaction-consistency"
           ],
@@ -61982,7 +61819,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis",
               "failure-contract-design"
@@ -62042,7 +61878,6 @@
             "external-integration",
             "foundation-selector:external-integration-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "consumer-impact-analysis",
             "failure-contract-design"
@@ -62604,7 +62439,6 @@
               "integration-handoff",
               "foundation-selector:integration-handoff-artifact"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "contract-testing"
             ],
@@ -62661,7 +62495,6 @@
             "integration-handoff",
             "foundation-selector:integration-handoff-artifact"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "contract-testing"
           ],
@@ -63327,7 +63160,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "regression-testing"
             ],
@@ -63386,7 +63218,6 @@
             "dynamic-helper:_build_route_candidates",
             "foundation-selector:dynamic-foundation:regression-testing"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "regression-testing"
           ],
@@ -64231,7 +64062,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -64312,7 +64142,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -65337,7 +65166,6 @@
               "url-fetch",
               "foundation-selector:ssrf-url-fetch-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "threat-modeling",
               "web-security"
@@ -65399,7 +65227,6 @@
             "url-fetch",
             "foundation-selector:ssrf-url-fetch-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "threat-modeling",
             "web-security"
@@ -66154,7 +65981,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -66211,7 +66037,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -66302,7 +66127,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -66376,7 +66200,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -66432,7 +66255,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -66511,7 +66333,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:backup-recovery"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability",
@@ -67699,7 +67520,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "concurrency-control",
               "degradation-circuit-breaking",
@@ -67781,7 +67601,6 @@
             "no-abuse-or-privacy-risk",
             "foundation-selector:security-anti-reliability-only"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "concurrency-control",
             "degradation-circuit-breaking",
@@ -68352,7 +68171,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling"
             ],
@@ -68411,7 +68229,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:logging-error-handling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "logging-error-handling"
           ],
@@ -68943,7 +68760,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -68998,7 +68814,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -69057,7 +68872,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -69129,7 +68943,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -69187,7 +69000,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -69241,7 +69053,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -69299,7 +69110,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -69365,7 +69175,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -69870,7 +69679,6 @@
               "no-security-verdict",
               "foundation-selector:security-anti-scanner-report"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "documentation-generation"
             ],
@@ -69927,7 +69735,6 @@
             "no-security-verdict",
             "foundation-selector:security-anti-scanner-report"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "documentation-generation"
           ],
@@ -70692,7 +70499,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -70748,7 +70554,6 @@
             "dynamic-helper:_build_route_candidates",
             "foundation-selector:dynamic-foundation:code-review"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "code-review"
           ],
@@ -71100,7 +70905,6 @@
               "engineering-brief",
               "task-plan"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 3,
@@ -71130,7 +70934,6 @@
             "engineering-brief",
             "task-plan"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 3,
@@ -71967,7 +71770,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -72027,7 +71829,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -72884,7 +72685,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -72944,7 +72744,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -73801,7 +73600,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -73861,7 +73659,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -74718,7 +74515,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -74778,7 +74574,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -75634,7 +75429,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -75694,7 +75488,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -76551,7 +76344,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -76611,7 +76403,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -77457,7 +77248,6 @@
             "evidence": [
               "owner-and-blast-radius"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -77511,7 +77301,6 @@
           "evidence": [
             "owner-and-blast-radius"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -78356,7 +78145,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -78410,7 +78198,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -79255,7 +79042,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -79309,7 +79095,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -80165,7 +79950,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "bigdata-product-extension",
               "repository-context-map"
@@ -80225,7 +80009,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "bigdata-product-extension",
             "repository-context-map"
@@ -81082,7 +80865,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "bigdata-product-extension",
               "repository-context-map"
@@ -81142,7 +80924,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "bigdata-product-extension",
             "repository-context-map"
@@ -81999,7 +81780,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "bigdata-product-extension",
               "repository-context-map"
@@ -82059,7 +81839,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "bigdata-product-extension",
             "repository-context-map"
@@ -82916,7 +82695,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "bigdata-product-extension",
               "repository-context-map"
@@ -82976,7 +82754,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "bigdata-product-extension",
             "repository-context-map"
@@ -83665,7 +83442,6 @@
               "explicit-implementation-action",
               "middleware-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "bigdata-product-extension"
             ],
@@ -83706,7 +83482,6 @@
             "explicit-implementation-action",
             "middleware-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "bigdata-product-extension"
           ],
@@ -84435,7 +84210,6 @@
               "distributed-effect-change",
               "foundation-selector:distributed-workflow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "transaction-consistency"
             ],
@@ -84491,7 +84265,6 @@
             "distributed-effect-change",
             "foundation-selector:distributed-workflow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "transaction-consistency"
           ],
@@ -85237,7 +85010,6 @@
               "distributed-effect-change",
               "foundation-selector:distributed-workflow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "transaction-consistency"
             ],
@@ -85293,7 +85065,6 @@
             "distributed-effect-change",
             "foundation-selector:distributed-workflow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "transaction-consistency"
           ],
@@ -86137,7 +85908,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -86191,7 +85961,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -87047,7 +86816,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "iot-embedded-extension",
               "repository-context-map"
@@ -87107,7 +86875,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "iot-embedded-extension",
             "repository-context-map"
@@ -87964,7 +87731,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "iot-embedded-extension",
               "repository-context-map"
@@ -88024,7 +87790,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "iot-embedded-extension",
             "repository-context-map"
@@ -88881,7 +88646,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "iot-embedded-extension",
               "repository-context-map"
@@ -88941,7 +88705,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "iot-embedded-extension",
             "repository-context-map"
@@ -89798,7 +89561,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "iot-embedded-extension",
               "repository-context-map"
@@ -89858,7 +89620,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "iot-embedded-extension",
             "repository-context-map"
@@ -90714,7 +90475,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "iot-embedded-extension",
               "repository-context-map"
@@ -90774,7 +90534,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "iot-embedded-extension",
             "repository-context-map"
@@ -92024,7 +91783,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design",
               "version-compatibility"
@@ -92102,7 +91860,6 @@
             "no-security-sink",
             "foundation-selector:security-anti-input-shape"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "api-contract-design",
             "version-compatibility"
@@ -93367,7 +93124,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design",
               "version-compatibility"
@@ -93445,7 +93201,6 @@
             "no-security-sink",
             "foundation-selector:security-anti-input-shape"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "api-contract-design",
             "version-compatibility"
@@ -94306,7 +94061,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -94360,7 +94114,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -95205,7 +94958,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -95259,7 +95011,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -96115,7 +95866,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "low-level-systems-extension",
               "repository-context-map"
@@ -96175,7 +95925,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "low-level-systems-extension",
             "repository-context-map"
@@ -97032,7 +96781,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "low-level-systems-extension",
               "repository-context-map"
@@ -97092,7 +96840,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "low-level-systems-extension",
             "repository-context-map"
@@ -97949,7 +97696,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "low-level-systems-extension",
               "repository-context-map"
@@ -98009,7 +97755,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "low-level-systems-extension",
             "repository-context-map"
@@ -98866,7 +98611,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "low-level-systems-extension",
               "repository-context-map"
@@ -98926,7 +98670,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "low-level-systems-extension",
             "repository-context-map"
@@ -99993,7 +99736,6 @@
               "dynamic-helper:_language_semantic_layers",
               "foundation-selector:dynamic-foundation:rust-professional-usage"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "low-level-systems-extension",
               "rust-professional-usage"
@@ -100058,7 +99800,6 @@
             "dynamic-helper:_language_semantic_layers",
             "foundation-selector:dynamic-foundation:rust-professional-usage"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "low-level-systems-extension",
             "rust-professional-usage"
@@ -100959,7 +100700,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -100992,7 +100732,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -101874,7 +101613,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -101907,7 +101645,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -102600,7 +102337,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "android-platform-extension"
             ],
@@ -102641,7 +102377,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "android-platform-extension"
           ],
@@ -103336,7 +103071,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "android-platform-extension"
             ],
@@ -103377,7 +103111,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "android-platform-extension"
           ],
@@ -104188,7 +103921,6 @@
               "dynamic-helper:_accessibility_behavior_requested",
               "foundation-selector:dynamic-foundation:accessibility-inclusive-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "android-platform-extension",
               "accessibility-inclusive-design"
@@ -104253,7 +103985,6 @@
             "dynamic-helper:_accessibility_behavior_requested",
             "foundation-selector:dynamic-foundation:accessibility-inclusive-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "android-platform-extension",
             "accessibility-inclusive-design"
@@ -105081,7 +104812,6 @@
               "dynamic-helper:_accessibility_behavior_requested",
               "foundation-selector:dynamic-foundation:accessibility-inclusive-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "android-platform-extension",
               "accessibility-inclusive-design"
@@ -105146,7 +104876,6 @@
             "dynamic-helper:_accessibility_behavior_requested",
             "foundation-selector:dynamic-foundation:accessibility-inclusive-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "android-platform-extension",
             "accessibility-inclusive-design"
@@ -105863,7 +105592,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ios-ipados-platform-extension"
             ],
@@ -105904,7 +105632,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ios-ipados-platform-extension"
           ],
@@ -106599,7 +106326,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ios-ipados-platform-extension"
             ],
@@ -106640,7 +106366,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ios-ipados-platform-extension"
           ],
@@ -107334,7 +107059,6 @@
               "explicit-implementation-action",
               "installed-application-surface"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "android-platform-extension"
             ],
@@ -107375,7 +107099,6 @@
             "explicit-implementation-action",
             "installed-application-surface"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "android-platform-extension"
           ],
@@ -108035,7 +107758,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -108094,7 +107816,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -108770,7 +108491,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -108829,7 +108549,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -109683,7 +109402,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -109743,7 +109461,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -110600,7 +110317,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -110660,7 +110376,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -111517,7 +111232,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -111577,7 +111291,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -112434,7 +112147,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -112494,7 +112206,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -113350,7 +113061,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -113410,7 +113120,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -114267,7 +113976,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -114327,7 +114035,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -115007,7 +114714,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -115066,7 +114772,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -115743,7 +115448,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -115802,7 +115506,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -116479,7 +116182,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -116538,7 +116240,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -117215,7 +116916,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -117274,7 +116974,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -118128,7 +117827,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web3-product-extension",
               "repository-context-map"
@@ -118188,7 +117886,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web3-product-extension",
             "repository-context-map"
@@ -119045,7 +118742,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web3-product-extension",
               "repository-context-map"
@@ -119105,7 +118801,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web3-product-extension",
             "repository-context-map"
@@ -119962,7 +119657,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web3-product-extension",
               "repository-context-map"
@@ -120022,7 +119716,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web3-product-extension",
             "repository-context-map"
@@ -120879,7 +120572,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web3-product-extension",
               "repository-context-map"
@@ -120939,7 +120631,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web3-product-extension",
             "repository-context-map"
@@ -121795,7 +121486,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web3-product-extension",
               "repository-context-map"
@@ -121855,7 +121545,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web3-product-extension",
             "repository-context-map"
@@ -122758,7 +122447,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -122791,7 +122479,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -123673,7 +123360,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -123706,7 +123392,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -124364,7 +124049,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:state-management-design"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "state-management-design"
             ],
@@ -124423,7 +124107,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:state-management-design"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "state-management-design"
           ],
@@ -125323,7 +125006,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -125356,7 +125038,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -125929,7 +125610,6 @@
               "credential-or-session-lifecycle-change",
               "foundation-selector:security-credential-session-lifecycle"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "authentication-security"
             ],
@@ -125984,7 +125664,6 @@
             "credential-or-session-lifecycle-change",
             "foundation-selector:security-credential-session-lifecycle"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "authentication-security"
           ],
@@ -126700,7 +126379,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -126757,7 +126435,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -126816,7 +126493,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -126905,7 +126581,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -126979,7 +126654,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -127035,7 +126709,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -127093,7 +126766,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -127171,7 +126843,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:backup-recovery"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability",
@@ -127773,7 +127444,6 @@
               "no-security-sink",
               "foundation-selector:security-anti-input-shape"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "api-contract-design"
             ],
@@ -127830,7 +127500,6 @@
             "no-security-sink",
             "foundation-selector:security-anti-input-shape"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "api-contract-design"
           ],
@@ -128300,7 +127969,6 @@
               "no-security-verdict",
               "foundation-selector:security-anti-scanner-report"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "documentation-generation"
             ],
@@ -128357,7 +128025,6 @@
             "no-security-verdict",
             "foundation-selector:security-anti-scanner-report"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "documentation-generation"
           ],
@@ -129023,7 +128690,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "regression-testing"
             ],
@@ -129082,7 +128748,6 @@
             "dynamic-helper:_build_route_candidates",
             "foundation-selector:dynamic-foundation:regression-testing"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "regression-testing"
           ],
@@ -129632,7 +129297,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling"
             ],
@@ -129691,7 +129355,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:logging-error-handling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "logging-error-handling"
           ],
@@ -130225,7 +129888,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -130280,7 +129942,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -130339,7 +130000,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -130411,7 +130071,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -130469,7 +130128,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -130523,7 +130181,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -130581,7 +130238,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -130647,7 +130303,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -131395,7 +131050,6 @@
               "distributed-effect-change",
               "foundation-selector:distributed-workflow-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "transaction-consistency"
             ],
@@ -131451,7 +131105,6 @@
             "distributed-effect-change",
             "foundation-selector:distributed-workflow-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "transaction-consistency"
           ],
@@ -132350,7 +132003,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -132383,7 +132035,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -133202,7 +132853,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -133260,7 +132910,6 @@
             "evidence": [
               "critical-placement-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -133312,7 +132961,6 @@
               "backend-subject",
               "ambiguous-effect"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -133366,7 +133014,6 @@
           "evidence": [
             "critical-placement-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -134200,7 +133847,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -134241,7 +133887,6 @@
             "evidence": [
               "critical-acceptance-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -134288,7 +133933,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -134325,7 +133969,6 @@
           "evidence": [
             "critical-acceptance-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -135225,7 +134868,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -135258,7 +134900,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -136072,7 +135713,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -136113,7 +135753,6 @@
             "evidence": [
               "critical-rollback-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -136160,7 +135799,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -136197,7 +135835,6 @@
           "evidence": [
             "critical-rollback-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -137031,7 +136668,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -137072,7 +136708,6 @@
             "evidence": [
               "critical-rollback-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -137119,7 +136754,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -137156,7 +136790,6 @@
           "evidence": [
             "critical-rollback-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -138056,7 +137689,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -138089,7 +137721,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -138969,7 +138600,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -139002,7 +138632,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -139882,7 +139511,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -139915,7 +139543,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -140795,7 +140422,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -140828,7 +140454,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -141708,7 +141333,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -141741,7 +141365,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -142621,7 +142244,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -142654,7 +142276,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -143482,7 +143103,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -143537,7 +143157,6 @@
             "evidence": [
               "explicit-repair-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -143584,7 +143203,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -143635,7 +143253,6 @@
           "evidence": [
             "explicit-repair-preparation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -144973,7 +144590,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -145052,7 +144668,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -145158,7 +144773,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -145242,7 +144856,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -145320,7 +144933,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -145416,7 +145028,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -146281,7 +145892,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -146362,7 +145972,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -147248,7 +146857,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -147309,7 +146917,6 @@
           "evidence": [
             "explicit-implementation-preparation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -148162,7 +147769,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "payment-trading-extension",
               "repository-context-map"
@@ -148222,7 +147828,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -149091,7 +148696,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -149152,7 +148756,6 @@
           "evidence": [
             "explicit-implementation-preparation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -150005,7 +149608,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "ai-product-extension",
               "repository-context-map"
@@ -150065,7 +149667,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "ai-product-extension",
             "repository-context-map"
@@ -150918,7 +150519,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "infrastructure-as-code-safety"
             ],
@@ -150991,7 +150591,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "analyzed",
             "precedence": 1,
@@ -151027,7 +150626,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "infrastructure-as-code-safety"
             ],
@@ -151096,7 +150694,6 @@
           "evidence": [
             "explicit-implementation-preparation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "analyzed",
           "precedence": 1,
@@ -151920,7 +151517,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -151974,7 +151570,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -152826,7 +152421,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -152874,7 +152468,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -152915,7 +152508,6 @@
             "evidence": [
               "critical-rollback-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -152980,7 +152572,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -153027,7 +152618,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -153064,7 +152654,6 @@
           "evidence": [
             "critical-rollback-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -153916,7 +153505,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -153964,7 +153552,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -154005,7 +153592,6 @@
             "evidence": [
               "critical-rollback-unknown"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -154070,7 +153656,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -154117,7 +153702,6 @@
               "effect-changed",
               "explicit-preparation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -154154,7 +153738,6 @@
           "evidence": [
             "critical-rollback-unknown"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -155054,7 +154637,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -155087,7 +154669,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -155907,7 +155488,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -155967,7 +155547,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -156070,7 +155649,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -156145,7 +155723,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -156204,7 +155781,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -156295,7 +155871,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -157138,7 +156713,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -157196,7 +156770,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -158021,7 +157594,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -158079,7 +157651,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -158691,7 +158262,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -158746,7 +158316,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -158805,7 +158374,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -158883,7 +158451,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -158941,7 +158508,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -158995,7 +158561,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -159053,7 +158618,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -159123,7 +158687,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -159941,7 +159504,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -160000,7 +159562,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -160069,7 +159630,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -160124,7 +159684,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -160182,7 +159741,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -160244,7 +159802,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -160787,7 +160344,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -160867,7 +160423,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security"
@@ -160936,7 +160491,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -161006,7 +160560,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:logging-error-handling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "logging-error-handling",
             "secret-configuration-security"
@@ -161846,7 +161399,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -161904,7 +161456,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -162617,7 +162168,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -162674,7 +162224,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -162762,7 +162311,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -162836,7 +162384,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -162892,7 +162439,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -162969,7 +162515,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:backup-recovery"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability",
@@ -163805,7 +163350,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -163875,7 +163419,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -163932,7 +163475,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -163995,7 +163537,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -164811,7 +164352,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -164878,7 +164418,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -164932,7 +164471,6 @@
               "fixed-destination",
               "foundation-selector:refactor-fixed-destination"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "refactoring"
             ],
@@ -164992,7 +164530,6 @@
             "fixed-destination",
             "foundation-selector:refactor-fixed-destination"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "refactoring"
           ],
@@ -165876,7 +165413,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "regression-testing"
             ],
@@ -165936,7 +165472,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -166042,7 +165577,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling",
@@ -166132,7 +165666,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "regression-testing"
             ],
@@ -166191,7 +165724,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -166284,7 +165816,6 @@
             "dynamic-helper:_build_route_candidates",
             "foundation-selector:dynamic-foundation:regression-testing"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling",
@@ -167082,7 +166613,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:regression-testing"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "regression-testing"
             ],
@@ -167138,7 +166668,6 @@
             "dynamic-helper:_build_route_candidates",
             "foundation-selector:dynamic-foundation:regression-testing"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "regression-testing"
           ],
@@ -168484,7 +168013,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling",
@@ -168564,7 +168092,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -168673,7 +168200,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -168764,7 +168290,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling",
@@ -168843,7 +168368,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -168942,7 +168466,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -169984,7 +169507,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170041,7 +169563,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170100,7 +169621,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170183,7 +169703,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170248,7 +169767,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170304,7 +169822,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170362,7 +169879,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -170439,7 +169955,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -171307,7 +170822,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security"
@@ -171389,7 +170903,6 @@
             "evidence": [
               "explicit-implementation-preparation"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "analyzed",
             "precedence": 1,
@@ -171438,7 +170951,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security"
@@ -171516,7 +171028,6 @@
           "evidence": [
             "explicit-implementation-preparation"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "analyzed",
           "precedence": 1,
@@ -172607,7 +172118,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -172682,7 +172192,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -172768,7 +172277,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -172840,7 +172348,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -172914,7 +172421,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -172993,7 +172499,6 @@
             "no-abuse-or-privacy-risk",
             "foundation-selector:security-anti-reliability-only"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability"
@@ -173792,7 +173297,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -173852,7 +173356,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -173952,7 +173455,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -174027,7 +173529,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -174086,7 +173587,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -174175,7 +173675,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -174736,7 +174235,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -174816,7 +174314,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security"
@@ -174885,7 +174382,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -174955,7 +174451,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:logging-error-handling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "logging-error-handling",
             "secret-configuration-security"
@@ -175769,7 +175264,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -175829,7 +175323,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -175903,7 +175396,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -175962,7 +175454,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -176048,7 +175539,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -176125,7 +175615,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -176184,7 +175673,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -176257,7 +175745,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -176315,7 +175802,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -176390,7 +175876,6 @@
             "propagated-boundary",
             "foundation-selector:tenant-isolation-security"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "permission-boundary-modeling",
             "threat-modeling"
@@ -176981,7 +176466,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -177036,7 +176520,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -177095,7 +176578,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -177170,7 +176652,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -177228,7 +176709,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -177282,7 +176762,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -177340,7 +176819,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -177408,7 +176886,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -177984,7 +177461,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -178039,7 +177515,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -178098,7 +177573,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -178157,7 +177631,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -178236,7 +177709,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -178296,7 +177768,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -178350,7 +177821,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -178408,7 +177878,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -178466,7 +177935,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -178538,7 +178006,6 @@
             "production-apply-or-rollout",
             "foundation-selector:production-release-decision"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "release-rollback",
             "version-compatibility"
@@ -179254,7 +178721,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -179309,7 +178775,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -179368,7 +178833,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -179427,7 +178891,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -179518,7 +178981,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -179594,7 +179056,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -179648,7 +179109,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -179706,7 +179166,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -179764,7 +179223,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -179844,7 +179302,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:backup-recovery"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability",
@@ -180498,7 +179955,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -180555,7 +180011,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -180649,7 +180104,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security",
@@ -180738,7 +180192,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -180794,7 +180247,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -180875,7 +180327,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:logging-error-handling"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "logging-error-handling",
             "secret-configuration-security",
@@ -181620,7 +181071,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -181677,7 +181127,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -181765,7 +181214,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -181839,7 +181287,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -181895,7 +181342,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -181972,7 +181418,6 @@
             "dynamic-helper:_review_risk_layer3",
             "foundation-selector:dynamic-foundation:backup-recovery"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "degradation-circuit-breaking",
             "observability",
@@ -182921,7 +182366,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -182996,7 +182440,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -183074,7 +182517,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -183134,7 +182576,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -183208,7 +182649,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -183267,7 +182707,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -183343,7 +182782,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -183417,7 +182855,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -183494,7 +182931,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -183553,7 +182989,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -183626,7 +183061,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -183684,7 +183118,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -184629,7 +184062,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -184704,7 +184136,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -184782,7 +184213,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -184842,7 +184272,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -184916,7 +184345,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -184975,7 +184403,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -185051,7 +184478,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -185125,7 +184551,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -185202,7 +184627,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -185261,7 +184685,6 @@
               "propagated-boundary",
               "foundation-selector:tenant-isolation-security"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "permission-boundary-modeling",
               "threat-modeling"
@@ -185334,7 +184757,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -185392,7 +184814,6 @@
               "production-apply-or-rollout",
               "foundation-selector:production-release-decision"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "release-rollback",
               "version-compatibility"
@@ -186346,7 +185767,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security",
@@ -186451,7 +185871,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -186526,7 +185945,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -186583,7 +186001,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -186669,7 +186086,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security",
@@ -186773,7 +186189,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -186847,7 +186262,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -186903,7 +186317,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -187858,7 +187271,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security",
@@ -187963,7 +187375,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -188038,7 +187449,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -188095,7 +187505,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -188181,7 +187590,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:logging-error-handling"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "logging-error-handling",
               "secret-configuration-security",
@@ -188285,7 +187693,6 @@
               "dynamic-helper:_review_risk_layer3",
               "foundation-selector:dynamic-foundation:backup-recovery"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability",
@@ -188359,7 +187766,6 @@
               "dynamic-helper:_build_route_candidates",
               "foundation-selector:dynamic-foundation:code-review"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "code-review"
             ],
@@ -188415,7 +187821,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -189432,7 +188837,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis"
             ],
@@ -189488,7 +188892,6 @@
             "external-integration",
             "foundation-selector:external-integration-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "consumer-impact-analysis"
           ],
@@ -190491,7 +189894,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "failure-contract-design"
             ],
@@ -190547,7 +189949,6 @@
             "external-integration",
             "foundation-selector:external-integration-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "failure-contract-design"
           ],
@@ -191855,7 +191256,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis"
             ],
@@ -191913,7 +191313,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -191981,7 +191380,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis"
             ],
@@ -192038,7 +191436,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -193373,7 +192770,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "failure-contract-design"
             ],
@@ -193431,7 +192827,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -193499,7 +192894,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "failure-contract-design"
             ],
@@ -193556,7 +192950,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -194815,7 +194208,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis",
               "failure-contract-design"
@@ -194875,7 +194267,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -194944,7 +194335,6 @@
               "external-integration",
               "foundation-selector:external-integration-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "consumer-impact-analysis",
               "failure-contract-design"
@@ -195003,7 +194393,6 @@
               "no-abuse-or-privacy-risk",
               "foundation-selector:security-anti-reliability-only"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "degradation-circuit-breaking",
               "observability"
@@ -195567,7 +194956,6 @@
               "technology-stack-commitment",
               "foundation-selector:technology-stack-commitment"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "technology-stack-selection"
             ],
@@ -195622,7 +195010,6 @@
             "technology-stack-commitment",
             "foundation-selector:technology-stack-commitment"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "technology-stack-selection"
           ],
@@ -196052,7 +195439,6 @@
               "technology-stack-commitment",
               "foundation-selector:technology-stack-commitment"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "technology-stack-selection"
             ],
@@ -196106,7 +195492,6 @@
             "technology-stack-commitment",
             "foundation-selector:technology-stack-commitment"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "technology-stack-selection"
           ],
@@ -196534,7 +195919,6 @@
               "module-boundary-change",
               "foundation-selector:module-boundary-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "module-boundary-design"
             ],
@@ -196588,7 +195972,6 @@
             "module-boundary-change",
             "foundation-selector:module-boundary-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "module-boundary-design"
           ],
@@ -197312,7 +196695,6 @@
               "foundation-selector:dynamic-foundation:configuration-runtime-policy",
               "foundation-selector:dynamic-foundation:web-platform-professional-usage"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web-platform-professional-usage",
               "configuration-runtime-policy"
@@ -197390,7 +196772,6 @@
             "foundation-selector:dynamic-foundation:configuration-runtime-policy",
             "foundation-selector:dynamic-foundation:web-platform-professional-usage"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web-platform-professional-usage",
             "configuration-runtime-policy"
@@ -198219,7 +197600,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:configuration-runtime-policy"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "configuration-runtime-policy"
             ],
@@ -198278,7 +197658,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:configuration-runtime-policy"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "configuration-runtime-policy"
           ],
@@ -199330,7 +198709,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:configuration-runtime-policy"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "configuration-runtime-policy"
             ],
@@ -199389,7 +198767,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:configuration-runtime-policy"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "configuration-runtime-policy"
           ],
@@ -200175,7 +199552,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:configuration-runtime-policy"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "configuration-runtime-policy"
             ],
@@ -200234,7 +199610,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:configuration-runtime-policy"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "configuration-runtime-policy"
           ],
@@ -200837,7 +200212,6 @@
               "foundation-selector:dynamic-foundation:configuration-runtime-policy",
               "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "infrastructure-as-code-safety",
               "configuration-runtime-policy"
@@ -200915,7 +200289,6 @@
             "foundation-selector:dynamic-foundation:configuration-runtime-policy",
             "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "infrastructure-as-code-safety",
             "configuration-runtime-policy"
@@ -201562,7 +200935,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:configuration-runtime-policy"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "configuration-runtime-policy"
             ],
@@ -201621,7 +200993,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:configuration-runtime-policy"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "configuration-runtime-policy"
           ],
@@ -202489,7 +201860,6 @@
               "foundation-selector:dynamic-foundation:configuration-runtime-policy",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection",
@@ -202586,7 +201956,6 @@
             "foundation-selector:dynamic-foundation:configuration-runtime-policy",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "targeted-validation-selection",
@@ -203621,7 +202990,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:configuration-runtime-policy"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map",
               "configuration-runtime-policy"
@@ -203695,7 +203063,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:configuration-runtime-policy"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map",
             "configuration-runtime-policy"
@@ -204435,7 +203802,6 @@
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
               "foundation-selector:dynamic-foundation:web-platform-professional-usage"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "web-platform-professional-usage",
               "dependency-vulnerability-scanning"
@@ -204513,7 +203879,6 @@
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
             "foundation-selector:dynamic-foundation:web-platform-professional-usage"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "web-platform-professional-usage",
             "dependency-vulnerability-scanning"
@@ -205342,7 +204707,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "dependency-vulnerability-scanning"
             ],
@@ -205401,7 +204765,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "dependency-vulnerability-scanning"
           ],
@@ -206453,7 +205816,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "dependency-vulnerability-scanning"
             ],
@@ -206512,7 +205874,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "dependency-vulnerability-scanning"
           ],
@@ -207298,7 +206659,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "dependency-vulnerability-scanning"
             ],
@@ -207357,7 +206717,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "dependency-vulnerability-scanning"
           ],
@@ -207960,7 +207319,6 @@
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
               "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "infrastructure-as-code-safety",
               "dependency-vulnerability-scanning"
@@ -208038,7 +207396,6 @@
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
             "foundation-selector:dynamic-foundation:infrastructure-as-code-safety"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "infrastructure-as-code-safety",
             "dependency-vulnerability-scanning"
@@ -208685,7 +208042,6 @@
               "dynamic-helper:_implementation_owner_layer3",
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "dependency-vulnerability-scanning"
             ],
@@ -208744,7 +208100,6 @@
             "dynamic-helper:_implementation_owner_layer3",
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "dependency-vulnerability-scanning"
           ],
@@ -209612,7 +208967,6 @@
               "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
               "foundation-selector:dynamic-foundation:targeted-validation-selection"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "build-tool-professional-usage",
               "targeted-validation-selection",
@@ -209709,7 +209063,6 @@
             "foundation-selector:dynamic-foundation:dependency-vulnerability-scanning",
             "foundation-selector:dynamic-foundation:targeted-validation-selection"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "build-tool-professional-usage",
             "targeted-validation-selection",
@@ -210582,7 +209935,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -210636,7 +209988,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -211481,7 +210832,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -211535,7 +210885,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -211964,7 +211313,6 @@
               "technology-stack-commitment",
               "foundation-selector:technology-stack-commitment"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "technology-stack-selection"
             ],
@@ -212018,7 +211366,6 @@
             "technology-stack-commitment",
             "foundation-selector:technology-stack-commitment"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "technology-stack-selection"
           ],
@@ -212446,7 +211793,6 @@
               "technology-stack-commitment",
               "foundation-selector:technology-stack-commitment"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "technology-stack-selection"
             ],
@@ -212500,7 +211846,6 @@
             "technology-stack-commitment",
             "foundation-selector:technology-stack-commitment"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "technology-stack-selection"
           ],
@@ -213344,7 +212689,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -213398,7 +212742,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -214243,7 +213586,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -214297,7 +213639,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -215142,7 +214483,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -215196,7 +214536,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -216098,7 +215437,6 @@
               "effect-changed",
               "explicit-implementation-action"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -216131,7 +215469,6 @@
             "effect-changed",
             "explicit-implementation-action"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -217117,7 +216454,6 @@
               "supply-chain-decision",
               "foundation-selector:package-dependency-analysis"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "package-dependency-management"
             ],
@@ -217174,7 +216510,6 @@
             "supply-chain-decision",
             "foundation-selector:package-dependency-analysis"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "package-dependency-management"
           ],
@@ -217826,7 +217161,6 @@
               "explicit-implementation-action",
               "repository-developer-tool"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [],
             "path": "direct",
             "precedence": 4,
@@ -217859,7 +217193,6 @@
             "explicit-implementation-action",
             "repository-developer-tool"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [],
           "path": "direct",
           "precedence": 4,
@@ -218684,7 +218017,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -218738,7 +218070,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],
@@ -219583,7 +218914,6 @@
             "evidence": [
               "no-eligible-specific-candidate"
             ],
-            "layer3_overflow": false,
             "layer3_skills": [
               "repository-context-map"
             ],
@@ -219637,7 +218967,6 @@
           "evidence": [
             "no-eligible-specific-candidate"
           ],
-          "layer3_overflow": false,
           "layer3_skills": [
             "repository-context-map"
           ],

@@ -32,7 +32,7 @@ The payload retains `profile: recommended` only as fixed compatibility metadata.
 
 Foundation and Domain items never enter Host top-level discovery, installation,
 or top-level OpenAI zip packaging. The fixed flow is Primary Professional,
-selector, zero to three JIT Layer 3 items, then only required References.
+selector, task-needed JIT Layer 3 items, then only required References.
 
 ## Source Fields
 

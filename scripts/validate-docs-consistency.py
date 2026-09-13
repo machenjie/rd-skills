@@ -276,19 +276,12 @@ LAYER3_CARDINALITY_GUIDANCE_FILES = (
     "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md",
 )
 LAYER3_CARDINALITY_GUIDANCE_FACTS = (
-    "Layer 3 selection is an ordered unique list of zero to three items.",
-    "More than three items or any duplicate fails closed; never truncate the selection.",
-    "Higher risk changes which Layer 3 items are selected, not the maximum count.",
+    "Layer 3 selection is an ordered unique list for the current engineering need.",
+    "Duplicates and unauthorized items fail closed; never truncate necessary knowledge.",
+    "Skill count does not change Primary, Profile, decomposition, or Review.",
 )
-SOFTENED_LAYER3_CARDINALITY_PATTERNS = (
-    re.compile(
-        r"\bnormally\b[^\n]{0,100}\b(?:zero\s+to\s+three|0\s*(?:\.\.|to)\s*3)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(?:may|can)\s+(?:use|select|load)\s+more\b",
-        re.IGNORECASE,
-    ),
+RETIRED_LAYER3_CARDINALITY_PATTERNS = (
+    re.compile(r"\b(?:zero to three|0\.\.3|at most three|maximum of three)\b", re.IGNORECASE),
     re.compile(r"\brisk[- ]rationale\b", re.IGNORECASE),
 )
 DELETED_PATH_MARKERS = (
@@ -1844,12 +1837,12 @@ def _layer3_cardinality_guidance_errors(root: Path) -> list[str]:
         ):
             errors.append(
                 f"{relative}: Layer 3 cardinality guidance must state the exact "
-                "ordered-unique zero-to-three, fail-closed, never-truncate contract"
+                "ordered-unique current-engineering-need contract without quantity routing"
             )
-        if any(pattern.search(raw) for pattern in SOFTENED_LAYER3_CARDINALITY_PATTERNS):
+        if any(pattern.search(raw) for pattern in RETIRED_LAYER3_CARDINALITY_PATTERNS):
             errors.append(
                 f"{relative}: Layer 3 cardinality guidance must not permit "
-                "risk-based exceptions to the hard maximum"
+                "a quantity limit or risk-based count permission"
             )
     return errors
 

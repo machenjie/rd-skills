@@ -2976,13 +2976,12 @@ def decision_eval_contract_errors(
         errors.append("decision_eval_contract.route_once must be required")
     if contract["layer3_cardinality"] != {
         "minimum": 0,
-        "maximum": 3,
         "duplicates": "fail",
-        "overflow": "fail-never-truncate",
+        "selection": "current-engineering-need",
     }:
         errors.append(
-            "decision_eval_contract.layer3_cardinality must require unique 0..3 "
-            "and fail without truncation"
+            "decision_eval_contract.layer3_cardinality must require an ordered unique selection "
+            "for the current engineering need"
         )
     if contract["runtime_dependency"] is not False:
         errors.append("Decision Eval must remain test/eval-only")
@@ -4031,7 +4030,7 @@ def validate_core_contracts(
                 "selection-owner",
                 "selection-kind",
                 "selected-or-exact-layer3",
-                "unique-max-three",
+                "ordered-unique",
                 "itemwise-profile-domain-authorization",
                 "current-asset-professional-binding",
                 "reference-record-path-verbatim",
@@ -6173,7 +6172,6 @@ def validate_route_decision(
     selected_layer3 = string_items(
         result["layer3_skills"],
         "route_result.layer3_skills",
-        maximum=model["maximum_layer3_skills"],
     )
     allowed_layer3 = set(
         layer3_authority.get(primary_skill, [])
@@ -6558,7 +6556,6 @@ PROFESSIONAL_AUTOMATIC_ROUTING_POLICY = {
             "layer3": {
                 "source": "task-evidence",
                 "default": [],
-                "max": 3,
             },
             "review": {
                 "source": "selected-one-T2C-risk-or-default",
@@ -9022,12 +9019,11 @@ def layer3_selector_authority(
         if (
             not isinstance(selectable, list)
             or not selectable
-            or len(selectable) > 3
             or len(selectable) != len(set(selectable))
             or not all(isinstance(item, str) and item for item in selectable)
         ):
             errors.append(
-                f"{record_context}.selectable_layer3 must be unique 1..3 Skill ids"
+                f"{record_context}.selectable_layer3 must be non-empty unique Skill ids"
             )
             selectable = []
         duplicate_layer3 = sorted(set(selectable) & seen_layer3)
@@ -9288,7 +9284,6 @@ def layer3_selector_authority(
             not isinstance(candidate_id, str)
             or not isinstance(subset, list)
             or not subset
-            or len(subset) > 3
             or len(subset) != len(set(subset))
             or not set(subset) <= seen_layer3
             or not any(alias["candidate_id"] == candidate_id for alias in aliases)
@@ -9568,12 +9563,11 @@ def layer3_selector_runtime_projection(
     if exact_layer3 is not None:
         if (
             not isinstance(exact_layer3, list)
-            or len(exact_layer3) > 3
             or len(exact_layer3) != len(set(exact_layer3))
             or not all(isinstance(item, str) and item for item in exact_layer3)
         ):
             raise ValidationProblem(
-                "exact Layer 3 must be an ordered unique 0..3 list; never truncate"
+                "exact Layer 3 must be an ordered unique list; never truncate"
             )
         unauthorized = [
             item for item in exact_layer3 if item not in authorized_layer3
@@ -10032,7 +10026,6 @@ def layer3_selector_normalized_control_projections(
             "contract": LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT,
             "authority_contract": authority["contract"],
             "professional_skill": professional_skill,
-            "maximum_layer3": 3,
             "exact_layer3_bypass": True,
             "profile_authority": profile_authority,
             "owner_surfaces": owner_surfaces,
@@ -10163,7 +10156,6 @@ def layer3_selector_normalized_control_projections(
             "contract": LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT,
             "authority_contract": authority["contract"],
             "professional_skill": professional_skill,
-            "maximum_layer3": 3,
             "exact_layer3_bypass": True,
             "decisions": [envelope_decision],
             "complete": {
@@ -10191,7 +10183,6 @@ def layer3_selector_resolve_control_projection(
         "contract",
         "authority_contract",
         "professional_skill",
-        "maximum_layer3",
         "exact_layer3_bypass",
         "decisions",
         "complete",
@@ -10212,7 +10203,6 @@ def layer3_selector_resolve_control_projection(
         != LAYER3_SELECTOR_AUTHORITY_CONTRACT
         or not isinstance(envelope.get("professional_skill"), str)
         or not envelope["professional_skill"]
-        or envelope.get("maximum_layer3") != 3
         or envelope.get("exact_layer3_bypass") is not True
         or not isinstance(envelope.get("decisions"), list)
         or not envelope["decisions"]
@@ -10355,7 +10345,6 @@ def layer3_selector_resolve_control_projection(
             or shard.get("review_skill") != runtime_key["review_skill"]
             or not isinstance(shard_selected, list)
             or not shard_selected
-            or len(shard_selected) > 3
             or len(shard_selected) != len(set(shard_selected))
             or any(not isinstance(item, str) or not item for item in shard_selected)
             or not isinstance(shard.get("selector_ids"), list)
@@ -10491,7 +10480,6 @@ def layer3_selector_expand_runtime_projection(
         "contract",
         "authority_contract",
         "professional_skill",
-        "maximum_layer3",
         "exact_layer3_bypass",
         "profile_authority",
         "owner_surfaces",
@@ -10511,7 +10499,6 @@ def layer3_selector_expand_runtime_projection(
         or base.get("authority_contract") != LAYER3_SELECTOR_AUTHORITY_CONTRACT
         or not isinstance(base.get("professional_skill"), str)
         or not base["professional_skill"]
-        or base.get("maximum_layer3") != 3
         or base.get("exact_layer3_bypass") is not True
     ):
         raise ValidationProblem("normalized selector base is malformed")
@@ -10585,12 +10572,11 @@ def layer3_selector_expand_runtime_projection(
     if exact_layer3 is not None:
         if (
             not isinstance(exact_layer3, list)
-            or len(exact_layer3) > base["maximum_layer3"]
             or len(exact_layer3) != len(set(exact_layer3))
             or not all(isinstance(item, str) and item for item in exact_layer3)
         ):
             raise ValidationProblem(
-                "exact Layer 3 must be an ordered unique 0..3 list; never truncate"
+                "exact Layer 3 must be an ordered unique list; never truncate"
             )
         unauthorized = [
             item for item in exact_layer3 if item not in authorized_layer3
@@ -10609,13 +10595,12 @@ def layer3_selector_expand_runtime_projection(
         selected_layer3 = list(exact_layer3) if exact_layer3 is not None else []
     if (
         not isinstance(selected_layer3, list)
-        or len(selected_layer3) > base["maximum_layer3"]
         or len(selected_layer3) != len(set(selected_layer3))
         or not all(isinstance(item, str) and item for item in selected_layer3)
         or any(item not in authorized_layer3 for item in selected_layer3)
     ):
         raise ValidationProblem(
-            "selected Layer 3 must be an authorized ordered unique 0..3 list"
+            "selected Layer 3 must be an authorized ordered unique list"
         )
     if exact_layer3 is not None and selected_layer3 != exact_layer3:
         raise ValidationProblem("selected Layer 3 disagrees with exact Layer 3")
@@ -10886,10 +10871,6 @@ def layer3_selector_runtime_selection_receipt(
             raise ValidationProblem(
                 "runtime selector selected unauthorized Layer 3"
             )
-        if len(selected) > 3:
-            raise ValidationProblem(
-                "runtime selector selected more than three Layer 3 items; never truncate"
-            )
 
     profile = projection.get("profile")
     selection_kinds = {
@@ -10969,7 +10950,6 @@ def layer3_selector_runtime_selection_receipt_errors(
         or not isinstance(expected_professional, str)
         or not expected_professional
         or not isinstance(expected_selected_layer3, list)
-        or len(expected_selected_layer3) > 3
         or len(expected_selected_layer3) != len(set(expected_selected_layer3))
         or not all(
             isinstance(item, str) and item

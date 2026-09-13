@@ -73,8 +73,6 @@ def validate_examples(root: Path = ROOT) -> list[str]:
             if name not in professional:
                 errors.append(f"{relative}: unknown Professional Skill {name}")
         selected_layer3 = [name for name in layer3 if f"`{name}`" in route]
-        if len(selected_layer3) > 3:
-            errors.append(f"{relative}: route loads more than three Layer 3 Skills")
         available = {
             candidate
             for name in primary

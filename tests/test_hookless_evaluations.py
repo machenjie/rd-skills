@@ -227,7 +227,7 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual(
             ["authentication-security"], lifecycle["actual"]["layer3_skills"]
         )
-        self.assertLessEqual(report["max_layer3_per_case"], 3)
+        self.assertEqual(max(len(row["actual"]["layer3_skills"]) for row in report["results"]), report["max_layer3_per_case"])
         self.assertEqual("deterministic-fixtures", report["evidence_scope"])
         folded = " ".join(report["limitations"])
         self.assertIn("wall-clock performance", folded)

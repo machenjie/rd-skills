@@ -1336,13 +1336,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             )
 
     def test_layer3_cardinality_guard_ignores_historical_prose(self) -> None:
-        canonical = (
-            "Layer 3 selection is an ordered unique list of zero to three items.\n"
-            "More than three items or any duplicate fails closed; never truncate "
-            "the selection.\n"
-            "Higher risk changes which Layer 3 items are selected, not the "
-            "maximum count.\n"
-        )
+        canonical = "\n".join(self.validator.LAYER3_CARDINALITY_GUIDANCE_FACTS)
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             professional = (

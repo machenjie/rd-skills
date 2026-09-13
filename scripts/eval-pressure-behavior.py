@@ -185,8 +185,7 @@ def _case(
 
     primary_candidates = set(_strings(_mapping(professional.get(primary)).get("layer3_candidates")))
     scores["layer3_jit"] = float(
-        len(selected_layer3) <= 3
-        and len(selected_layer3) == len(set(selected_layer3))
+        len(selected_layer3) == len(set(selected_layer3))
         and all(name in layer3 for name in selected_layer3)
         and all(name in primary_candidates for name in selected_layer3)
         and all(
@@ -196,7 +195,7 @@ def _case(
     )
     if not scores["layer3_jit"]:
         errors.append(
-            "Layer 3 selection is unknown, duplicated, exceeds three, or is not "
+            "Layer 3 selection is unknown, duplicated, or is not "
             "declared by the primary Skill, or compatible with the dispatch profile"
         )
 

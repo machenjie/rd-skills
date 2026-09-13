@@ -3,7 +3,7 @@
 Use this optional template when work is delegated and the receiver needs explicit context. Ordinary single-agent changes do not need a formal Task Contract.
 
 - Goal and observable acceptance.
-- Primary Professional Skill and zero to three authorized Layer 3 Skills.
+- Primary Professional Skill and task-needed authorized Layer 3 Skills.
 - Relevant starting source, constraints, and authorized write scope.
 - Validation and any material unresolved question.
 

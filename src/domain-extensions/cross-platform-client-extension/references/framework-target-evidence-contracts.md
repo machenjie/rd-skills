@@ -21,7 +21,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 - When evidence confirms a new affected target, report its knowledge needs to Main.
 - Main selects required platform expertise under the current role-compatible
-  Professional within the zero-to-three Layer 3 limit.
+  Professional with task-needed Layer 3 selection.
 - Task and Review load only capsule-named Domains.
 - Keep confirmed targets in a cohesive executable slice when dependency,
   ownership, write, validation, release, rollback, and integration-risk

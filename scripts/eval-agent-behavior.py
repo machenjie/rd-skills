@@ -1314,8 +1314,7 @@ def _score(
         errors.append(f"profile '{profile}' is not supported by primary Skill '{primary}'")
 
     scores["layer3_jit"] = float(
-        len(selected_layer3) <= 3
-        and len(selected_layer3) == len(set(selected_layer3))
+        len(selected_layer3) == len(set(selected_layer3))
         and all(name in layer3 for name in selected_layer3)
         and all(
             name
@@ -1329,7 +1328,7 @@ def _score(
     )
     if not scores["layer3_jit"]:
         errors.append(
-            "Layer 3 selection is unknown, duplicated, exceeds the JIT budget, "
+            "Layer 3 selection is unknown, duplicated, "
             "is not declared by the primary Skill, or is incompatible with the dispatch profile"
         )
 

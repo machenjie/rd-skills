@@ -498,21 +498,6 @@ FOUNDATION_ALIAS_PRODUCER_FIXTURES = (
         "review_skill": "architecture-impact-reviewer",
     },
     {
-        "fixture_id": "alias-backend-layer-budget",
-        "prompt": (
-            "Implement a Node.js backend service that atomically replaces "
-            "a local file, changes Kotlin coroutine behavior, changes .NET "
-            "async disposal behavior, and chooses provider variants with a "
-            "current substitution contract."
-        ),
-        "alias_id": "backend-layer-budget",
-        "source_ids": (
-            "review-ambiguous-structure-repository-first",
-        ),
-        "primary_skill": "engineering-change-analysis",
-        "review_skill": "architecture-impact-reviewer",
-    },
-    {
         "fixture_id": "alias-data-consistency-artifact",
         "prompt": (
             "With an accepted Engineering Brief, analyze only the data "
@@ -741,20 +726,6 @@ FOUNDATION_ALIAS_PRODUCER_FIXTURES = (
             "mutation both changes and remains unchanged."
         ),
         "alias_id": "repository-tooling-ambiguous",
-        "source_ids": (
-            "review-ambiguous-structure-repository-first",
-        ),
-        "primary_skill": "engineering-change-analysis",
-        "review_skill": "architecture-impact-reviewer",
-    },
-    {
-        "fixture_id": "alias-repository-tooling-layer-budget",
-        "prompt": (
-            "Implement an accepted repository-owned generator source change "
-            "that atomically replaces a local file while choosing a pattern "
-            "for provider variants with a current substitution contract."
-        ),
-        "alias_id": "repository-tooling-layer-budget",
         "source_ids": (
             "review-ambiguous-structure-repository-first",
         ),
@@ -4174,10 +4145,6 @@ class _FoundationSelectorSpec:
                             "backend-subject",
                             "ambiguous-effect",
                         ],
-                        "backend-layer-budget": [
-                            "backend-subject",
-                            "layer-budget-exceeded",
-                        ],
                         "distributed-effect-ambiguous": [
                             "distributed-effect-ambiguous",
                         ],
@@ -4195,10 +4162,6 @@ class _FoundationSelectorSpec:
                             "repository-tooling-change",
                             "ambiguous-effect",
                         ],
-                        "repository-tooling-layer-budget": [
-                            "repository-tooling-change",
-                            "layer-budget-exceeded",
-                        ],
                         "source-backed-repository-question": [
                             "repository-source-evidence",
                             "question-or-explanation",
@@ -4209,7 +4172,7 @@ class _FoundationSelectorSpec:
                 if fixture["source_ids"] == (selector_id,)
             ],
         ]
-        self.assertEqual(11, len(derived_cases))
+        self.assertEqual(9, len(derived_cases))
         for label, prompt, candidate_id, expected_evidence in derived_cases:
             with self.subTest(label=label):
                 observed = ORACLE.route_with_trace(
@@ -4613,7 +4576,7 @@ class _FoundationSelectorSpec:
             )
         )
 
-    def test_r0_10e_overflow_preserves_order_and_fails_closed(self) -> None:
+    def test_r0_10e_four_compatible_foundations_preserve_order_and_evidence(self) -> None:
         names = (
             "audit-evidence-integrity",
             "authentication-authorization",
@@ -4712,7 +4675,7 @@ class _FoundationSelectorSpec:
         self._assert_source_foundation_mutations_detected(
             trace,
             "R0-10e",
-            overflow=True,
+            overflow=False,
         )
         self.assertEqual(trace_bytes, _canonical_json_bytes(trace))
         self.assertEqual(public, observed["route_decision"])
@@ -4723,7 +4686,7 @@ class _FoundationSelectorSpec:
             )
         )
         self.assertEqual(
-            "foundation-layer3-overflow",
+            "foundation-activation-composite",
             selected["candidate_id"],
         )
         self.assertEqual(
@@ -4747,15 +4710,10 @@ class _FoundationSelectorSpec:
                 for row in source_rows
             )
         )
-        self.assertTrue(
-            set(names).isdisjoint(
-                observed["route_decision"]["route_result"][
-                    "layer3_skills"
-                ]
-            )
-        )
+        self.assertEqual(set(names), set(observed["route_decision"]["route_result"]["layer3_skills"]))
+        self.assertEqual("security-privacy-gate", observed["route_decision"]["route_result"]["primary_skill"])
 
-    def test_r0_10f_derived_owner_overflow_is_not_foundation_carrier(
+    def test_r0_10f_multi_language_owner_preserves_foundation_provenance(
         self,
     ) -> None:
         prompt = (
@@ -4774,54 +4732,16 @@ class _FoundationSelectorSpec:
         )
         trace = observed["winner_trace"]
         selected = trace["selected_candidate"]
-        self.assertEqual(
-            {
-                "candidate_id",
-                "candidate_type",
-                "eligible_domain_layer3_skills",
-                "eligible_foundation_layer3_skills",
-                "eligible_layer3_skills",
-                "evidence",
-                "layer3_overflow",
-                "layer3_skills",
-                "path",
-                "precedence",
-                "primary_skill",
-                "profile",
-                "reason",
-                "reserved_domain_capacity",
-                "review_skill",
-                "source_candidate_ids",
-            },
-            set(selected),
-        )
-        selected_bytes = _canonical_json_bytes(selected)
-        self.assertEqual(731, len(selected_bytes))
-        pass
-        self.assertEqual(
-            ["foundation-layer3-overflow"],
-            selected["evidence"],
-        )
+        self.assertEqual("implementation-owner:backend-change-builder", selected["candidate_id"])
         route_result = observed["route_decision"]["route_result"]
-        self.assertEqual(
-            {
-                "path": "analyzed",
-                "route_once": True,
-                "start_profile": "analysis-agent",
-                "primary_skill": "engineering-change-analysis",
-                "layer3_skills": ["repository-context-map"],
-                "review_skill": None,
-            },
-            {
-                "path": observed["route_decision"]["path"],
-                "route_once": observed["route_decision"]["route_once"],
-                "start_profile": route_result["start_profile"],
-                "primary_skill": route_result["primary_skill"],
-                "layer3_skills": route_result["layer3_skills"],
-                "review_skill": route_result["review_skill"],
-            },
-        )
-        self.assertFalse(_carries_source_foundation_candidates(selected))
+        self.assertEqual("direct", observed["route_decision"]["path"])
+        self.assertEqual("task-agent", route_result["start_profile"])
+        self.assertEqual("backend-change-builder", route_result["primary_skill"])
+        self.assertIsNone(route_result["review_skill"])
+        self.assertEqual({"nodejs-runtime-professional-usage", "filesystem-process-safety",
+                          "kotlin-professional-usage", "csharp-dotnet-professional-usage"},
+                         set(route_result["layer3_skills"]))
+        self.assertTrue(_carries_source_foundation_candidates(selected))
         self.assertTrue(
             _contains_mapping_key(
                 trace,
@@ -5070,8 +4990,8 @@ class _FoundationSelectorSpec:
             )
             for fixture in FOUNDATION_ALIAS_PRODUCER_FIXTURES
         }
-        self.assertEqual(39, len(FOUNDATION_ALIAS_PRODUCER_FIXTURES))
-        self.assertEqual(39, len(literal_variants))
+        self.assertEqual(37, len(FOUNDATION_ALIAS_PRODUCER_FIXTURES))
+        self.assertEqual(37, len(literal_variants))
 
         production_variants = {
             (alias_id, source_ids, primary_skill, review_skill)
@@ -5947,7 +5867,7 @@ class _FoundationSelectorSpec:
         )
         self.assertNotIn("capability_coverage", oracle_imports)
 
-    def test_r0_12_factory_is_jit_side_effect_free_and_max_three(self) -> None:
+    def test_r0_12_factory_is_jit_side_effect_free_and_nonempty(self) -> None:
         *_, authority_type, factory = self._authority_api("R0-12")
         eager_instances = [
             f"{module.__name__}.{name}"
@@ -5986,7 +5906,7 @@ class _FoundationSelectorSpec:
         forbidden_calls["route_with_trace"].assert_not_called()
         self.assertTrue(
             all(
-                1 <= len(record.foundations) <= 3
+                1 <= len(record.foundations)
                 for record in authority.foundation_selectors
             )
         )
@@ -7157,10 +7077,9 @@ class LanguageAuthorizationTests(unittest.TestCase):
                 result = ORACLE.route(prompt, main_execution={'producer':'main-control-agent','task_id':'language-negative'})['route_result']
                 self.assertFalse(set(result['layer3_skills']) & set(self.languages))
 
-    def test_wrong_profile_and_language_overflow_remain_forbidden(self):
+    def test_wrong_profile_and_unauthorized_language_remain_forbidden(self):
         for owner, profile, selected in [('repository-tooling-change-builder','review-agent',['python-professional-usage']),
-                ('frontend-change-builder','task-agent',['rust-professional-usage']),
-                ('repository-tooling-change-builder','task-agent',list(self.languages[:4]))]:
+                ('frontend-change-builder','task-agent',['rust-professional-usage'])]:
             with self.subTest(owner=owner, profile=profile, selected=selected):
                 with self.assertRaises(VALIDATION.ValidationProblem):
                     VALIDATION.layer3_selector_runtime_projection(self.authority,

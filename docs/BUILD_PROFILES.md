@@ -25,7 +25,7 @@ The fixed request path is:
 
 ```text
 User -> engineering-control-plane -> Primary Professional
-     -> selector -> 0..3 JIT Layer 3 -> required References
+     -> selector -> needed JIT Layer 3 -> required References
 ```
 
 Primary Professional routing happens once. Task and Review assignments consume

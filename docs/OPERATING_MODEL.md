@@ -38,7 +38,7 @@ not create tasks, a DAG, or review requirements.
 ## Professional Knowledge
 
 The Professional Router answers which expertise is needed. Select one Primary
-Professional, then zero to three Layer 3 Skills from that Professional's
+Professional, then task-needed Layer 3 Skills from that Professional's
 selector. Each item must satisfy Profile, Professional, and reciprocal Domain
 authorization, including positive and anti-trigger evidence. Load only selected
 Layer 3 and necessary Targeted References. Task and Review consume Main's route;

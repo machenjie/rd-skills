@@ -13,7 +13,7 @@ Each case declares:
 
 - a concrete prompt and pressure type;
 - one expected Profile and primary Professional Skill;
-- zero to three Layer 3 Skills that must be candidates of that primary Skill;
+- task-needed Layer 3 Skills that must be candidates of that primary Skill;
 - one Review Skill that supports `review-agent`;
 - required observable behavior and forbidden shortcuts;
 - a captured route, validation status, residual risk, and completion claim;

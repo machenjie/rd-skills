@@ -939,7 +939,11 @@ def _admissible_selector_equivalence_classes(
     projection: dict[str, Any],
     build_identity: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, int], list[str]]:
-    """Invoke the canonical selector over every legal <=3 activation class."""
+    """Sample canonical activations, preserving the old small-combination baseline.
+
+    Pair/triple depth is an authoring sample, never a legal selection ceiling.
+    Engineering witnesses cover larger selections without a candidate powerset.
+    """
 
     if build_identity is None:
         runtime_manifest = json.loads(
@@ -964,7 +968,6 @@ def _admissible_selector_equivalence_classes(
     positive_cases = 0
     nearest_negative_cases = 0
     nearest_negative_leaks = 0
-    over_max_rejections = 0
     unauthorized_exact_rejections = 0
     duplicate_exact_rejections = 0
 
@@ -1024,8 +1027,12 @@ def _admissible_selector_equivalence_classes(
                     build_identity=build_identity,
                 )
             except ValidationProblem as exc:
-                if "more than three Layer 3" not in str(exc):
-                    errors.append(str(exc))
+                errors.append(str(exc))
+                continue
+            # Preserve the historical small-selection sample population.
+            # Larger selections are legal and tested by named engineering
+            # witnesses below, not by synthetic unions of every candidate.
+            if len(receipt["selected_layer3"]) > 3:
                 continue
             classes_by_selected.setdefault(
                 tuple(receipt["selected_layer3"]),
@@ -1034,6 +1041,27 @@ def _admissible_selector_equivalence_classes(
                     "receipt": receipt,
                 },
             )
+
+    if (projection["professional_skill"] == "repository-tooling-change-builder"
+            and projection["profile"] == "task-agent"):
+        generator_constraints = {
+            "build-tool-professional-usage", "filesystem-process-safety",
+            "python-professional-usage", "targeted-validation-selection",
+        }
+        witness_records = [record for record in selectors
+                           if set(record["selectable_layer3"]) <= generator_constraints]
+        evidence = _activation_evidence(witness_records)
+        if evidence is None:
+            errors.append("generator constraints have incompatible activation evidence")
+        else:
+            receipt = layer3_selector_runtime_selection_receipt(
+                projection, evidence_signals=evidence, build_identity=build_identity,
+            )
+            if set(receipt["selected_layer3"]) != generator_constraints:
+                errors.append("generator selection lost a current engineering constraint")
+            classes_by_selected.setdefault(tuple(receipt["selected_layer3"]), {
+                "selected_layer3": list(receipt["selected_layer3"]), "receipt": receipt,
+            })
 
     for selected_class in classes_by_selected.values():
         selected = selected_class["selected_layer3"]
@@ -1092,28 +1120,6 @@ def _admissible_selector_equivalence_classes(
         except ValidationProblem:
             duplicate_exact_rejections += 1
 
-    overflow_found = False
-    for size in range(2, min(4, len(selectors)) + 1):
-        if overflow_found:
-            break
-        for selected_records in combinations(selectors, size):
-            if sum(len(record["selectable_layer3"]) for record in selected_records) <= 3:
-                continue
-            evidence = _activation_evidence(selected_records)
-            if evidence is None:
-                continue
-            try:
-                layer3_selector_runtime_selection_receipt(
-                    projection,
-                    evidence_signals=evidence,
-                    build_identity=build_identity,
-                )
-            except ValidationProblem as exc:
-                if "more than three Layer 3" in str(exc):
-                    over_max_rejections += 1
-                    overflow_found = True
-                    break
-                errors.append(str(exc))
 
     return (
         sorted(
@@ -1124,7 +1130,6 @@ def _admissible_selector_equivalence_classes(
             "positive_selector_case_count": positive_cases,
             "nearest_negative_case_count": nearest_negative_cases,
             "nearest_negative_leak_count": nearest_negative_leaks,
-            "over_max_rejection_count": over_max_rejections,
             "unauthorized_exact_rejection_count": unauthorized_exact_rejections,
             "duplicate_exact_rejection_count": duplicate_exact_rejections,
             "receipt_replay_count": 1 if not replay_errors else 0,
@@ -1805,7 +1810,7 @@ def _evaluate_admissible_context_compositions(
         "dropped_reference_obligation_count": 0,
         "path_excluded_composition_count": 0,
         "path_exclusions": {},
-        "layer3_cardinality_counts": {str(value): 0 for value in range(4)},
+        "layer3_cardinality_counts": {},
         "candidate_composition_count": 0,
         "canonical_representative_count": 0,
         "coverage_mapping_count": 0,
@@ -1814,9 +1819,6 @@ def _evaluate_admissible_context_compositions(
         "host_variant_dominated_count": 0,
     }
     forbidden = {
-        "maximum_layer3": 3,
-        "overflow_failure_id": "admissible-context-layer3-overflow",
-        "over_max_rejection_count": 0,
         "unauthorized_exact_rejection_count": 0,
         "duplicate_exact_rejection_count": 0,
         "nearest_negative_leak_count": 0,
@@ -1874,7 +1876,6 @@ def _evaluate_admissible_context_compositions(
             ):
                 inventory[key] += selector_stats[key]
             for key in (
-                "over_max_rejection_count",
                 "unauthorized_exact_rejection_count",
                 "duplicate_exact_rejection_count",
                 "nearest_negative_leak_count",
@@ -1939,7 +1940,8 @@ def _evaluate_admissible_context_compositions(
 
             for selected_class in classes:
                 selected = selected_class["selected_layer3"]
-                inventory["layer3_cardinality_counts"][str(len(selected))] += 1
+                counts = inventory["layer3_cardinality_counts"]
+                counts[str(len(selected))] = counts.get(str(len(selected)), 0) + 1
                 foundations = [item for item in selected if item not in domain_names]
                 domains = [item for item in selected if item in domain_names]
                 if profile == "analysis-agent" and foundations and domains:
@@ -2484,8 +2486,6 @@ def _evaluate_admissible_context_compositions(
         errors.append("admissible composition loaded an index or catalog")
     if forbidden["reference_conflict_leak_count"]:
         errors.append("admissible composition loaded conflicting References")
-    if forbidden["over_max_rejection_count"] == 0:
-        errors.append("admissible composition did not prove >3 fail-closed")
     for budget_class in ADMISSIBLE_BUDGET_CLASSES:
         maximum = maxima[budget_class]
         if maximum is None:
@@ -2564,10 +2564,12 @@ def _evaluate_admissible_context_compositions(
         },
         "forbidden_combinations": forbidden,
         "proof_limits": [
+            "Historical 0..3 activation samples plus named engineering witnesses do not exhaust all legal Layer 3 subsets.",
+            "Authoring render budgets are not live Host capacity; stage reads do not unload prior context.",
             "Selector equivalence classes use declarative positive and nearest-negative signals; the evaluator does not classify task prose.",
             "Reference subset coverage is a conservative role-compatible upper envelope; registry indexes and catalogs are forbidden and mode contracts remain isolated.",
             "Capsule contribution uses the largest validated checked-in fixture Capsule per budget class, not arbitrary future user prose.",
-            "Every legal render candidate maps to one source-derived reduction stratum; exact tokenization is memoized by ordered component fingerprint and applied to the highest component-token representative of every stratum.",
+            "Every sampled legal render candidate maps to one source-derived reduction stratum; exact tokenization is memoized by ordered component fingerprint and applied to the highest component-token representative of every stratum.",
             "Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.",
             "Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.",
         ],

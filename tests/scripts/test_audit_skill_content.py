@@ -2355,8 +2355,8 @@ Return security authority decisions to the service that owns the protected resou
             "Level, or Level Basis."
         )
         replacement = (
-            "Main owns the route. Task and Review consume their assigned expertise "
-            "and necessary Targeted References."
+            "Main owns selection. Task and Review read assigned Skills and necessary "
+            "References through the existing delivery mechanism."
         )
 
         def mechanism_candidates(sentence: str) -> list[tuple[str, str]]:

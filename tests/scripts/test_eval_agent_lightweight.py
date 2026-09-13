@@ -146,6 +146,53 @@ class BehaviorTests(unittest.TestCase):
         next(s for s in case['steps'] if s.get('profile') == 'review-agent')['reason'] = 'The user requested independent review.'
         self.assertEqual([], EVAL.evaluate_case(case)[1])
 
+    def test_four_generator_checks_preserve_owner_consumer_and_failure_boundaries(self):
+        from fixture_capsule_contract import FixtureCapsuleError, validate_and_render_fixture_capsule
+        case = copy.deepcopy(next(c for c in DOCUMENT['cases']
+                                  if c['id'] == 'owner-generated-follows-authoring-source'))
+        assignment = case['steps'][0]
+        assignment['layer3_skills'] = ['build-tool-professional-usage', 'filesystem-process-safety',
+                                       'python-professional-usage', 'targeted-validation-selection']
+        rendered = validate_and_render_fixture_capsule(assignment)
+        self.assertTrue(all(name in rendered for name in assignment['layer3_skills']))
+        self.assertEqual([], EVAL.evaluate_case(case)[1])
+        self.assertEqual(['task-agent'], [step['profile'] for step in case['steps']
+                                          if step['action'] == 'dispatch'])
+        # More knowledge does not excuse editing generated output, omitting its
+        # consumer, inventing a new helper, or using validation before the edit.
+        for mutation, expected in [('consumer', 'owner-impact-not-closed'),
+                                   ('structure', 'unsupported-new-structure'),
+                                   ('validation', 'missing-post-final-edit-validation')]:
+            changed = copy.deepcopy(case)
+            if mutation == 'consumer':
+                changed['steps'] = [step for step in changed['steps']
+                                    if not (step['action'] == 'read' and step.get('path') == 'pkg/run.py')]
+            elif mutation == 'structure':
+                next(step for step in changed['steps'] if step['action'] == 'edit')['new_structure'] = True
+            else:
+                validation = changed['steps'].pop()
+                edit = next(i for i, step in enumerate(changed['steps']) if step['action'] == 'edit')
+                changed['steps'].insert(edit, validation)
+            with self.subTest(mutation=mutation):
+                self.assertIn(expected, EVAL.evaluate_case(changed)[1])
+        assignment['layer3_skills'].append('transaction-consistency')
+        with self.assertRaises(FixtureCapsuleError):
+            validate_and_render_fixture_capsule(assignment)
+
+    def test_known_recovery_constraint_is_resolved_before_edit_without_extra_stage(self):
+        case = copy.deepcopy(DOCUMENT['cases'][0])
+        edit = next(i for i, step in enumerate(case['steps']) if step['action'] == 'edit')
+        question = {'action': 'question', 'question': 'Can recovery replay commit the output twice?',
+                    'changes_implementation': True,
+                    'evidence': 'The existing writer can be retried after interrupted output replacement.'}
+        answer = {'action': 'answer', 'question': question['question'],
+                  'evidence': 'The current owner replaces one destination atomically and restores on failure.'}
+        case['steps'][edit:edit] = [question, answer]
+        self.assertEqual([], EVAL.evaluate_case(case)[1])
+        case['steps'].remove(answer)
+        case['steps'].append(answer)
+        self.assertIn('important-decision-unresolved', EVAL.evaluate_case(case)[1])
+
     def test_layer3_role_authorization_is_itemwise(self):
         from fixture_capsule_contract import FixtureCapsuleError, validate_and_render_fixture_capsule
         with self.assertRaises(FixtureCapsuleError):
