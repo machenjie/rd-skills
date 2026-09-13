@@ -7,7 +7,7 @@
 - Verify the intended protection instead of requiring one universal attribute set.
 - Select MFA/step-up, refresh rotation/reuse detection, sender constraints, revocation, and recovery controls from assurance, IdP/client capability, replay/takeover risk, UX, and policy.
 - Ensure secrets, credentials, tokens, reset links, and session identifiers do not leak through URLs, logs, analytics, crash reports, referrers, or artifacts.
-- `analysis-agent` defines attack paths and validation plans and inspects already-existing source/provider/config/test evidence; it does not run dynamic validation.
+- `analysis-agent` defines attack paths and validation plans and inspects source/provider/config/test evidence, using bounded non-mutating checks to resolve analysis questions; state-changing attacks remain outside analysis.
 - `task-agent` runs only accepted post-edit dynamic checks that the changed flow triggers: fixation, replay/reuse, logout/revocation, recovery/linking, enumeration, password verification, callback, or denied step-up.
 - `review-agent` independently inspects the actual diff/evidence and runs only host-permitted, non-modifying checks; missing dynamic proof remains an explicit residual exposure.
 

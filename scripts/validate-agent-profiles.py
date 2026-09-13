@@ -309,8 +309,8 @@ def main(argv: list[str] | None = None) -> int:
         tools = profile.get("tools") if isinstance(profile.get("tools"), list) else []
         projected_capabilities = {
             "may_dispatch": "dispatch" in tools,
-            "may_edit": {"edit", "execute"} <= set(tools),
-            "may_review": "execute-read-only" in tools,
+            "may_edit": bool({"edit", "execute"} & set(tools)),
+            "may_review": name == "review-agent",
         }
         for capability, projected in projected_capabilities.items():
             if projected != role_contract[capability]:
@@ -429,20 +429,21 @@ def main(argv: list[str] | None = None) -> int:
         "Read",
         "Grep",
         "Glob",
+        "Bash",
         "WebSearch",
         "WebFetch",
     ]:
         errors.append(
-            "claude:analysis-agent must expose only the native read and Web read tools"
+            "claude:analysis-agent must expose read, Bash, and Web read tools without edit"
         )
     surfaces = enforcement.get("host_surfaces")
     if not isinstance(surfaces, dict) or set(surfaces) != COPILOT_SURFACES:
         errors.append("host enforcement must declare the three Copilot surfaces")
         surfaces = {}
     expected_surface_tools = {
-        "copilot-cli": ["read", "search"],
-        "copilot-vscode": ["read", "search", "web"],
-        "copilot-coding-agent": ["read", "search"],
+        "copilot-cli": ["read", "search", "execute"],
+        "copilot-vscode": ["read", "search", "execute", "web"],
+        "copilot-coding-agent": ["read", "search", "execute"],
     }
     for surface, expected_analysis_tools in expected_surface_tools.items():
         entry = surfaces.get(surface)
@@ -481,11 +482,19 @@ def main(argv: list[str] | None = None) -> int:
         .get("analysis-agent", {})
         .get("rendered_tools")
     )
-    if copilot_analysis_tools != ["read", "search", "web"]:
+    if copilot_analysis_tools != ["read", "search", "execute", "web"]:
         errors.append(
-            "copilot:analysis-agent must expose only read, search, and web "
+            "copilot:analysis-agent must expose only read, search, execute, and web "
             "as the portable surface union"
         )
+    for host in ("codex", "claude", "copilot"):
+        analysis = hosts.get(host, {}).get("roles", {}).get("analysis-agent", {})
+        mode = "sandbox-enforced" if host == "codex" else "prompt-enforced"
+        for capability in ("workspace_write_protection", "read_only_command_semantics"):
+            if analysis.get(capability) != mode:
+                errors.append(f"{host}:analysis-agent {capability} must be {mode}")
+        if host == "codex" and analysis.get("rendered_tools") != ["read", "search", "execute-read-only"]:
+            errors.append("codex:analysis-agent must expose read, search, and execute-read-only")
     for host in ("claude", "copilot"):
         review = hosts.get(host, {}).get("roles", {}).get("review-agent", {})
         if review.get("read_only_command_semantics") != "unsupported":
@@ -547,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
                 )
             if "Declared tool boundary" not in text:
                 errors.append(f"{platform}:{name}: missing declared tool boundary")
-            if name == "review-agent" and "execute-read-only" not in text:
+            if name in {"analysis-agent", "review-agent"} and "execute-read-only" not in text:
                 errors.append(f"{platform}:{name}: must preserve read-only execution intent")
             if name == "main-control-agent":
                 canonical_prompt = (

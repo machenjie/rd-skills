@@ -808,7 +808,8 @@ class HooklessBuildInstallTests(unittest.TestCase):
             tools = set(profile["tools"])
             self.assertEqual("dispatch" in tools, role["may_dispatch"])
             self.assertEqual({"edit", "execute"} <= tools, role["may_edit"])
-            self.assertEqual("execute-read-only" in tools, role["may_review"])
+            self.assertEqual(name == "review-agent", role["may_review"])
+            self.assertEqual(name in {"analysis-agent", "review-agent"}, "execute-read-only" in tools)
 
             rules = profile["instructions"].splitlines()
             maximum = limits["maximum"]

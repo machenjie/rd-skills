@@ -221,6 +221,6 @@ review contracts, byte-equal to `HEAD`, and clean. Stale evidence cannot satisfy
 Formal Release and must be replaced in place after a fresh review. The
 final-tree Core formal gate must pass.
 
-Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads and searches; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
+Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads, searches, and executes non-mutating commands without edit; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
 
 Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, private prompts, secrets, full command logs, personal archives, or user-specific mappings to generated artifacts.

@@ -1,7 +1,7 @@
 # Diagnosis Only
 
 Use this contract only when the selected mode is `diagnosis-only`. Remain
-read/search-only and determine cause from bounded evidence; do not repair the
+read-only and determine cause from bounded evidence; do not repair the
 failure or convert the result into implementation preparation.
 
 ## Analysis Requirements

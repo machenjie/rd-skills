@@ -30,6 +30,14 @@ normalization. Destructive, production, privilege, sensitive external-data and
 irreversible effects remain subject to authorization and Host enforcement.
 Unknown command effects remain Host-enforced; no second sandbox is introduced.
 
+Analysis receives execution for non-mutating observations without editing tools.
+Codex retains its read-only sandbox; its declared tool subset is prompt-enforced.
+Claude exposes Bash and Copilot exposes execute while omitting Edit/Write/edit.
+Those command tools can write, so the no-mutation boundary on those Hosts is
+prompt-enforced, not a native read-only shell guarantee. Commands must respect
+Host permissions and must not bypass the no-edit boundary or cause external
+side effects. Review retains its existing Host tool ceilings.
+
 Only an actual tool, permission, sandbox or required-artifact failure proves an
 execution blocker. Report the operation and observed output against the same real
 task identity. Prior authorization remains effective across retries; after two

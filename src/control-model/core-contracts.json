@@ -1310,7 +1310,7 @@
   },
   "roles": {
     "main-control-agent": {"sandbox":"dispatch-only","tools":["dispatch"],"may_dispatch":true,"may_edit":false,"may_review":false},
-    "analysis-agent": {"sandbox":"read-only","tools":["read","search","external-source-read"],"may_dispatch":false,"may_edit":false,"may_review":false},
+    "analysis-agent": {"sandbox":"read-only","tools":["read","search","execute-read-only","external-source-read"],"may_dispatch":false,"may_edit":false,"may_review":false},
     "task-agent": {"sandbox":"workspace-write","tools":["read","search","edit","execute"],"may_dispatch":false,"may_edit":true,"may_review":false},
     "review-agent": {"sandbox":"read-only","tools":["read","search","execute-read-only"],"may_dispatch":false,"may_edit":false,"may_review":true}
   },

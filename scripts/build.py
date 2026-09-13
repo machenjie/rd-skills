@@ -1997,19 +1997,20 @@ def _load_host_enforcement() -> dict[str, Any]:
         "Read",
         "Grep",
         "Glob",
+        "Bash",
         "WebSearch",
         "WebFetch",
     ]:
         raise BuildError(
-            "claude:analysis-agent must expose only the native read and Web read tools"
+            "claude:analysis-agent must expose read, Bash, and Web read tools without edit"
         )
     surfaces = data.get("host_surfaces")
     if not isinstance(surfaces, dict) or tuple(surfaces) != COPILOT_SURFACES:
         raise BuildError("host enforcement must declare the three Copilot surfaces")
     expected_surface_tools = {
-        "copilot-cli": ["read", "search"],
-        "copilot-vscode": ["read", "search", "web"],
-        "copilot-coding-agent": ["read", "search"],
+        "copilot-cli": ["read", "search", "execute"],
+        "copilot-vscode": ["read", "search", "execute", "web"],
+        "copilot-coding-agent": ["read", "search", "execute"],
     }
     for surface, expected_analysis_tools in expected_surface_tools.items():
         entry = surfaces[surface]
@@ -2049,6 +2050,14 @@ def _load_host_enforcement() -> dict[str, Any]:
         data, "analysis-agent"
     ):
         raise BuildError("copilot:analysis-agent must equal the portable surface union")
+    for host in ("codex", "claude", "copilot"):
+        analysis = hosts[host]["roles"]["analysis-agent"]
+        mode = "sandbox-enforced" if host == "codex" else "prompt-enforced"
+        for capability in ("workspace_write_protection", "read_only_command_semantics"):
+            if analysis[capability] != mode:
+                raise BuildError(f"{host}:analysis-agent {capability} must be {mode}")
+        if host == "codex" and analysis["rendered_tools"] != ["read", "search", "execute-read-only"]:
+            raise BuildError("codex:analysis-agent must expose read, search, and execute-read-only")
     for host in ("claude", "copilot"):
         review = hosts[host]["roles"]["review-agent"]
         if review["read_only_command_semantics"] != "unsupported":

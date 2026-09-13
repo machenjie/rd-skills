@@ -5,7 +5,7 @@
 | Profile | Responsibility | Tools |
 | --- | --- | --- |
 | main-control-agent | Select expertise, dispatch, coordinate results | Dispatch only |
-| analysis-agent | Resolve evidence-backed questions, diagnosis, or requested design | Read, search, and conditional external-source-read |
+| analysis-agent | Resolve evidence-backed questions, diagnosis, or requested design | Read, search, execute-read-only, and conditional external-source-read |
 | task-agent | Inspect, implement, self-check, and validate bounded work | Read, search, edit, execute |
 | review-agent | Independent non-modifying assessment when selected | Read, search, and execute-read-only |
 
@@ -30,6 +30,11 @@ contradicted invariants or other uncertainty that can change implementation
 justify deeper Analysis. An ordinary resolved task stays **Task → validation →
 done**, without fixed Analysis or Review. Actual Host failures and permission boundaries remain
 visible; a declaration of capability does not grant authority.
+
+Analysis runs bounded non-mutating commands directly when their output resolves
+the assigned question. It cannot edit files through an editor or shell, implement,
+or independently review. An observation requiring mutation returns to Main for
+Task execution.
 
 Analysis uses external-source-read only after local evidence leaves a material
 question unresolved, with minimal public information and within Host boundaries.

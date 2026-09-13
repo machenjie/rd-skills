@@ -3697,10 +3697,12 @@ def validate_core_contracts(
                 errors.append(f"{capability} must belong only to {owner}")
         if bool(role["may_dispatch"]) != ("dispatch" in tools):
             errors.append(f"roles.{role_name}: dispatch tool and may_dispatch disagree")
-        if bool(role["may_edit"]) != ({"edit", "execute"} <= set(tools)):
+        if ({"edit", "execute"} & set(tools)) != (
+            {"edit", "execute"} if role["may_edit"] else set()
+        ):
             errors.append(f"roles.{role_name}: write tools and may_edit disagree")
-        if bool(role["may_review"]) != ("execute-read-only" in tools):
-            errors.append(f"roles.{role_name}: review tool and may_review disagree")
+        if ("execute-read-only" in tools) != (role_name in {"analysis-agent", "review-agent"}):
+            errors.append(f"roles.{role_name}: read-only execution belongs to analysis and review")
         if ("external-source-read" in tools) != (role_name == "analysis-agent"):
             errors.append(
                 "external-source-read must belong only to analysis-agent and be absent "

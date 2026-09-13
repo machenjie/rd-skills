@@ -1,6 +1,6 @@
 # Source-Backed Answer
 
-For mode `source-backed-answer`, remain read/search-only and answer the
+For mode `source-backed-answer`, remain read-only and answer the
 repository question without diagnosis or implementation preparation.
 
 ## Analysis Requirements

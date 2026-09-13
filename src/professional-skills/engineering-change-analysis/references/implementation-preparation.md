@@ -1,6 +1,6 @@
 # Implementation Preparation
 
-Use read/search-only analysis when the user requests design or current source evidence leaves an important implementation decision unresolved. Unknown local files, owners, tests, or callers normally stay with the implementation agent's bounded discovery.
+Use read-only analysis when the user requests design or current source evidence leaves an important implementation decision unresolved. Unknown local files, owners, tests, or callers normally stay with the implementation agent's bounded discovery.
 
 Resolve the named question: competing owner, behavior or invariant, shared contract or consumer, concurrency, transaction, recovery, migration, authority, or integration semantics. Inspect enough current source and relevant tests to distinguish alternatives and their consequences. Return the key decision, evidence, validation implications, and remaining issues; stop when implementation can proceed correctly.
 

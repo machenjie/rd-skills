@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import tempfile
+import tomllib
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
@@ -19,7 +20,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import build as BUILDER
-from validation_utils import count_o200k_base_tokens
+from validation_utils import CORE_CONTRACTS, count_o200k_base_tokens, validate_core_contracts
 
 
 def _load_validator():
@@ -47,6 +48,78 @@ INVALID_JSON_OBJECT_PAYLOADS = (
 
 
 class AgentProfileReadabilityTests(unittest.TestCase):
+    def test_analysis_executes_observations_without_edit_or_review_authority(self) -> None:
+        profiles = {profile["name"]: profile for profile in BUILDER._load_agent_profiles()}
+        analysis = profiles["analysis-agent"]
+        self.assertIn("execute-read-only", analysis["tools"])
+        self.assertFalse({"edit", "execute", "dispatch"} & set(analysis["tools"]))
+        self.assertEqual("read-only", analysis["sandbox"])
+        self.assertFalse(CORE_CONTRACTS["roles"]["analysis-agent"]["may_review"])
+        self.assertTrue(CORE_CONTRACTS["roles"]["review-agent"]["may_review"])
+        self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
+
+        matrix = BUILDER._load_host_enforcement()
+        codex = tomllib.loads(BUILDER._render_codex_profile(analysis, matrix))
+        self.assertEqual("read-only", codex["sandbox_mode"])
+        self.assertIn("execute-read-only", codex["developer_instructions"])
+        for host, renderer, command in (
+            ("claude", BUILDER._render_claude_profile, "Bash"),
+            ("copilot", BUILDER._render_copilot_profile, "execute"),
+        ):
+            with self.subTest(host=host):
+                rendered = renderer(analysis, matrix)
+                tools_line = next(line for line in rendered.splitlines() if line.startswith("tools: "))
+                tools = (json.loads(tools_line[7:]) if host == "copilot"
+                         else tools_line[7:].split(", "))
+                self.assertIn(command, tools)
+                self.assertFalse({"Edit", "Write", "edit", "Task", "agent"} & set(tools))
+                role = matrix["hosts"][host]["roles"]["analysis-agent"]
+                self.assertEqual("prompt-enforced", role["workspace_write_protection"])
+                self.assertEqual("prompt-enforced", role["read_only_command_semantics"])
+        for surface in matrix["host_surfaces"].values():
+            tools = surface["roles"]["analysis-agent"]["rendered_tools"]
+            self.assertIn("execute", tools)
+            self.assertNotIn("edit", tools)
+
+    def test_core_rejects_analysis_mutation_and_review_authority(self) -> None:
+        for tool in ("edit", "execute", "dispatch"):
+            with self.subTest(tool=tool):
+                core = copy.deepcopy(CORE_CONTRACTS)
+                core["roles"]["analysis-agent"]["tools"].append(tool)
+                self.assertTrue(validate_core_contracts(core))
+        core = copy.deepcopy(CORE_CONTRACTS)
+        core["roles"]["analysis-agent"]["may_review"] = True
+        self.assertIn("may_review must belong only to review-agent", validate_core_contracts(core))
+
+    def test_analysis_host_delivery_rejects_missing_execution_edits_and_false_enforcement(self) -> None:
+        baseline = json.loads(VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
+        for host, command, edit in (
+            ("codex", "execute-read-only", "edit"),
+            ("claude", "Bash", "Write"),
+            ("copilot", "execute", "edit"),
+        ):
+            for change in ("missing-execution", "edit", "false-enforcement"):
+                with self.subTest(host=host, change=change):
+                    matrix = copy.deepcopy(baseline)
+                    role = matrix["hosts"][host]["roles"]["analysis-agent"]
+                    if change == "missing-execution":
+                        role["rendered_tools"].remove(command)
+                    elif change == "edit":
+                        role["rendered_tools"].append(edit)
+                    else:
+                        role["workspace_write_protection"] = "native-enforced"
+                    with tempfile.TemporaryDirectory() as raw:
+                        path = Path(raw) / "host-enforcement.json"
+                        path.write_text(json.dumps(matrix), encoding="utf-8")
+                        with mock.patch.object(BUILDER, "HOST_ENFORCEMENT_SOURCE", path):
+                            with self.assertRaises(BUILDER.BuildError):
+                                BUILDER._load_host_enforcement()
+                    result, output = self._mutated_enforcement_result(
+                        lambda data: data.update(matrix)
+                    )
+                    self.assertEqual(1, result, output)
+                    self.assertIn("analysis-agent", output)
+
     def test_source_composite_ignores_stale_built_profiles(self) -> None:
         spec = importlib.util.spec_from_file_location(
             "source_invariants_profile_test", SCRIPTS / "validate-src-invariants.py"
@@ -227,14 +300,14 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             set(surfaces),
         )
         self.assertEqual(
-            ["read", "search", "web"],
+            ["read", "search", "execute", "web"],
             surfaces["copilot-vscode"]["roles"]["analysis-agent"][
                 "rendered_tools"
             ],
         )
         for surface in ("copilot-cli", "copilot-coding-agent"):
             self.assertEqual(
-                ["read", "search"],
+                ["read", "search", "execute"],
                 surfaces[surface]["roles"]["analysis-agent"]["rendered_tools"],
             )
 
@@ -475,13 +548,13 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             for role in ("main-control-agent", "task-agent", "review-agent"):
                 self.assertEqual("unsupported", roles[role]["external_source_read"])
         self.assertEqual(
-            ["Skill", "Read", "Grep", "Glob", "WebSearch", "WebFetch"],
+            ["Skill", "Read", "Grep", "Glob", "Bash", "WebSearch", "WebFetch"],
             enforcement["hosts"]["claude"]["roles"]["analysis-agent"][
                 "rendered_tools"
             ],
         )
         self.assertEqual(
-            ["read", "search", "web"],
+            ["read", "search", "execute", "web"],
             enforcement["hosts"]["copilot"]["roles"]["analysis-agent"][
                 "rendered_tools"
             ],
@@ -508,7 +581,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
     def test_copilot_analysis_tool_projection_drift_is_rejected(self) -> None:
         mutations = (
             ["read", "search"],
-            ["read", "search", "web", "execute"],
+            ["read", "search", "execute", "web", "edit"],
             ["web", "read", "search"],
         )
         for rendered_tools in mutations:
@@ -520,7 +593,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 )
                 self.assertEqual(1, result)
                 self.assertIn(
-                    "copilot:analysis-agent must expose only read, search, and web",
+                    "copilot:analysis-agent must expose only read, search, execute, and web",
                     output,
                 )
 
