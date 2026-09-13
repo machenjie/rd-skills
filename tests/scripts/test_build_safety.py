@@ -1251,23 +1251,25 @@ Own one bounded decision.
                 self.assertNotIn("Current capability facts:", rendered)
                 self.assertNotIn("CAPABILITY_MISMATCH", rendered)
 
-    def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
+    def test_copilot_analysis_projects_bounded_execution_and_web_read_tools(self) -> None:
         matrix = BUILD._load_host_enforcement()
         profiles = {
             profile["name"]: profile for profile in BUILD._load_agent_profiles()
         }
         analysis = matrix["hosts"]["copilot"]["roles"]["analysis-agent"]
 
-        self.assertEqual(["read", "search", "web"], analysis["rendered_tools"])
+        self.assertEqual(["read", "search", "execute", "web"], analysis["rendered_tools"])
         self.assertEqual("prompt-enforced", analysis["external_source_read"])
+        self.assertEqual("prompt-enforced", analysis["read_only_command_semantics"])
+        self.assertEqual("prompt-enforced", analysis["workspace_write_protection"])
         rendered = BUILD._render_copilot_profile(
             profiles["analysis-agent"],
             matrix,
         )
         frontmatter = rendered.split("---", 2)[1]
-        compact_tools_line = 'tools: ["read","search","web"]'
+        compact_tools_line = 'tools: ["read","search","execute","web"]'
         self.assertIn(compact_tools_line, frontmatter)
-        self.assertEqual(9, count_o200k_base_tokens(compact_tools_line))
+        self.assertEqual(11, count_o200k_base_tokens(compact_tools_line))
         expected_tools_lines = {
             "main-control-agent": 'tools: ["agent"]',
             "analysis-agent": compact_tools_line,
@@ -1285,7 +1287,7 @@ Own one bounded decision.
                     if line.startswith("tools: ")
                 )
                 self.assertEqual(expected_line, tools_line)
-        for forbidden in ("edit", "execute", "agent", "*", "mcp"):
+        for forbidden in ("edit", "agent", "*", "mcp"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(f'"{forbidden}"', frontmatter)
 
@@ -1310,8 +1312,8 @@ Own one bounded decision.
                 "invalid tool_allowlist enforcement status",
             ),
             (
-                '"rendered_tools": ["read", "search", "web"]',
-                '"rendered_tools": ["read", "search", "web", "execute"]',
+                '"rendered_tools": ["read", "search", "execute", "web"]',
+                '"rendered_tools": ["read", "search", "execute", "web", "edit"]',
                 "copilot-vscode: analysis tools do not match the surface ceiling",
             ),
         )

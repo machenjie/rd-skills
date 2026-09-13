@@ -890,15 +890,15 @@ class HooklessBuildInstallTests(unittest.TestCase):
         copilot_analysis = (copilot / "analysis-agent.agent.md").read_text()
         copilot_analysis_frontmatter = copilot_analysis.split("---", 2)[1]
         self.assertIn(
-            'tools: ["read","search","web"]',
+            'tools: ["read","search","execute","web"]',
             copilot_analysis_frontmatter,
         )
         self.assertNotIn("Current external-read mode:", copilot_analysis)
         self.assertIn(
-            "Declared tool boundary: read, search, external-source-read.",
+            "Declared tool boundary: read, search, execute-read-only, external-source-read.",
             copilot_analysis,
         )
-        for forbidden in ("edit", "execute", "agent", "*", "mcp"):
+        for forbidden in ("edit", "agent", "*", "mcp"):
             with self.subTest(copilot_analysis_forbidden=forbidden):
                 self.assertNotIn(f'"{forbidden}"', copilot_analysis_frontmatter)
         self.assertEqual(
