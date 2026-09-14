@@ -461,9 +461,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
         for components, measurement in captures:
             with self.subTest(host=measurement["host"], role=measurement["role"]):
                 profile_text = components[0]["_text"]
-                self.assertIn("Use Main's assigned Primary Professional Skill", profile_text)
-                self.assertIn("already in context without reloading", profile_text)
-                self.assertIn("Layer 3 may be empty", profile_text)
+                self.assertIn("Apply Main's assigned Primary Professional Skill", profile_text)
+                self.assertIn("Reuse content; load missing via Host", profile_text)
+                self.assertIn("possibly empty", profile_text)
+                assignment = next(
+                    item["_text"] for item in components if item["kind"] == "dispatch_capsule"
+                )
+                self.assertIn(
+                    f"Primary Professional Skill: {measurement['primary_skill']}", assignment
+                )
+                self.assertIn("Use content or load missing", assignment)
+                self.assertIn("Host entrypoint/Layer 3 Delivery", assignment)
+                self.assertIn("return unavailable assets/new evidence to Main", assignment)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
                 self.assertTrue(primary[0]["path"].endswith(
@@ -3897,7 +3906,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertTrue(set(review_layer3).isdisjoint(task_layer3))
         self.assertIn("Use Main's independent Review assignment", review_components[0]["_text"])
         self.assertIn("Never copy/union Task Layer 3", review_components[0]["_text"])
-        self.assertIn("already in context without reloading", review_components[0]["_text"])
+        self.assertIn("Reuse content; load missing via Host", review_components[0]["_text"])
         self._assert_semantic_budget_witness(
             review_components,
             budget_class="review",

@@ -377,7 +377,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     self.assertEqual(0, result, output)
 
     def test_worker_primary_consumption_cannot_be_removed(self) -> None:
-        consumption = "Use Main's assigned Primary Professional Skill"
+        consumption = "Apply Main's assigned Primary Professional Skill"
         for role in ("analysis-agent", "task-agent", "review-agent"):
             with self.subTest(role=role):
                 result, output = self._mutated_source_result(
@@ -399,17 +399,16 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         # Each mutation removes or reverses one instruction. These are static
         # contract checks, not a simulated Worker or evidence of Host invocation.
         mutations = (
-            ("only decision-relevant capsule-named Layer 3/necessary References",
+            ("only capsule-named Layer 3/needed References",
              "any related Layer 3/References"),
-            ("to guide engineering judgment", "for an assignment log"),
-            ("Layer 3 may be empty", "Layer 3 must never be empty"),
-            ("already in context without reloading", "already in context after reloading"),
-            ("otherwise load only missing assigned content", "otherwise load all assigned content"),
-            ("mechanism when decision-relevant", "mechanism before any source read"),
-            ("Model familiarity is not supplied context", "Model familiarity is supplied context"),
-            ("Bounded source discovery may precede loading", "Bounded source discovery requires prior loading"),
-            ("No rerouting or catalog preload", "Reroute and preload the catalog"),
-            ("return selection-changing source evidence to Main", "adjust selection from source evidence"),
+            ("when relevant", "for an assignment log"),
+            ("possibly empty", "Layer 3 must never be empty"),
+            ("Reuse content; load missing via Host", "reload context or load missing content"),
+            ("load missing via Host", "load all through model familiarity"),
+            ("Familiarity is not context", "familiarity supplies context"),
+            ("bounded discovery may precede loading", "Bounded source discovery requires prior loading"),
+            ("No rerouting/catalog preload", "Reroute and preload the catalog"),
+            ("Return selection-changing source evidence to Main", "adjust selection from source evidence"),
         )
         for role in ("analysis-agent", "task-agent", "review-agent"):
             for old, new in mutations:

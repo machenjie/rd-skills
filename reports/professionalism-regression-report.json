@@ -56,7 +56,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "039b7fc3a88d612f373450a2bbd269a59bfbc0013ef3582eefc9ef2c5216b622",
+    "source_fingerprint": "714da4f0480248d3e288c06504c968db064f9e34a30ee3546554761b9b921ad2",
     "source_fingerprint_document_count": 999,
     "contract": {
       "bullet_decision_max": 1,
@@ -69,10 +69,10 @@
     "documents": 999,
     "advisory_documents": 334,
     "review_as_complex_sentences": 820,
-    "tighten_sentences": 18,
+    "tighten_sentences": 19,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 838,
+    "advisory_sentences": 839,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -98,7 +98,7 @@
         "documents": 1,
         "hard_fail_sentences": 0,
         "review_as_complex_sentences": 7,
-        "tighten_sentences": 1
+        "tighten_sentences": 2
       },
       "control-reference": {
         "advisory_documents": 1,
@@ -206,7 +206,7 @@
     "decision_item_limit": 15,
     "effective_preface_schema_version": 3,
     "strict_ready_basis": "reference-strict-v4",
-    "source_fingerprint": "4cf3e9e98022a4362cac62ee683c1e76536efdc13b9efaa878ad66454f8a3fb6",
+    "source_fingerprint": "141b5f6621130cffef916582aaa6248f8db3702d9eefa584dfb5192343e15c77",
     "source_fingerprint_document_count": 972,
     "indexed_references": 611,
     "existing_indexed_references": 611,
@@ -272,7 +272,7 @@
     "source": "skill-content-audit.json#root_content",
     "readiness_scope": "agent-facing-root-content",
     "strict_ready_basis": "root-strict-v5",
-    "source_fingerprint": "1261a43691941c1e08f0e8402a4968757e761e8b5db47b04c462c9fd28efd10a",
+    "source_fingerprint": "353625833d4749a66d988f8aa0f0fd2cce4bc96dc46b86940438db1848158a18",
     "source_fingerprint_document_count": 379,
     "agent_facing_root_documents": 379,
     "foundation_compact_capabilities": 128,
@@ -331,7 +331,7 @@
     "schema_version": 10,
     "reference": {
       "scope": "reference-content",
-      "source_fingerprint": "4cf3e9e98022a4362cac62ee683c1e76536efdc13b9efaa878ad66454f8a3fb6",
+      "source_fingerprint": "141b5f6621130cffef916582aaa6248f8db3702d9eefa584dfb5192343e15c77",
       "strict_ready_basis": "reference-strict-v4",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -339,7 +339,7 @@
     },
     "root": {
       "scope": "agent-facing-root-content",
-      "source_fingerprint": "1261a43691941c1e08f0e8402a4968757e761e8b5db47b04c462c9fd28efd10a",
+      "source_fingerprint": "353625833d4749a66d988f8aa0f0fd2cce4bc96dc46b86940438db1848158a18",
       "strict_ready_basis": "root-strict-v5",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -368,7 +368,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "22966f0ba1ebcd8146ee238e0c2bc79c03a064efd56dcfff8c7eb89d82f9a105",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "4b542a64faf459f2c533b2f627741407540feeb5cebef0f22fc9abeafa483714"
+          "readability_target_manifest": "a7a7bd967693759572e7c6bf692d1d2e76cf0bfa8517b88f857396ca0251aad7"
         },
         "attested_by": null,
         "attested_on": null,
@@ -606,7 +606,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=334; review_as_complex_sentences=820; tighten_sentences=18",
+      "message": "advisory_documents=334; review_as_complex_sentences=820; tighten_sentences=19",
       "severity": "warning"
     }
   ],

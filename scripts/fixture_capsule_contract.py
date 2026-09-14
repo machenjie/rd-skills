@@ -58,7 +58,11 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     goal = step.get("goal")
     if not isinstance(goal, str) or not goal.strip():
         raise FixtureCapsuleError("assignment needs a concrete goal")
-    lines = [goal, "", f"Primary Professional: {primary}"]
+    lines = [
+        goal, "", f"Primary Professional Skill: {primary}",
+        "Use content or load missing via Host entrypoint/Layer 3 Delivery; "
+        "return unavailable assets/new evidence to Main.",
+    ]
     if step.get("constraints"):
         lines.extend(["", "Constraints:", *[f"- {item}" for item in step["constraints"]]])
     if step.get("write_scope"):

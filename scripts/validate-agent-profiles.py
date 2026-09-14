@@ -150,17 +150,15 @@ def _validate_profile_instruction_contract(*, role_name, error_label, readabilit
         # Static consumption instructions apply to source and decoded Host output;
         # they do not attest that a live Worker used a Skill or called a tool.
         for term in (
-            "Use Main's assigned Primary Professional Skill",
-            "only decision-relevant capsule-named Layer 3/necessary References",
-            "Layer 3 Delivery",
-            "to guide engineering judgment",
-            "Layer 3 may be empty",
-            "already in context without reloading",
-            "otherwise load only missing assigned content through the Host-supported mechanism when decision-relevant",
-            "Model familiarity is not supplied context",
-            "Bounded source discovery may precede loading",
-            "No rerouting or catalog preload",
-            "return selection-changing source evidence to Main",
+            "Apply Main's assigned Primary Professional Skill",
+            "only capsule-named Layer 3/needed References",
+            "when relevant",
+            "possibly empty",
+            "Reuse content; load missing via Host",
+            "Familiarity is not context",
+            "bounded discovery may precede loading",
+            "No rerouting/catalog preload",
+            "Return selection-changing source evidence to Main",
             "Core Runtime Asset Resolution",
             "Core Environment Risk Calibration",
         ):

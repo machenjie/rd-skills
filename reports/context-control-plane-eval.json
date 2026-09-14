@@ -5,11 +5,11 @@
   "fixture_count": 30,
   "rendered_context_summary": {
     "max_main": {
-      "tokens": 2069,
+      "tokens": 2119,
       "soft_target": 2305,
       "hard_ceiling": 2650,
-      "soft_margin_tokens": 236,
-      "hard_margin_tokens": 581,
+      "soft_margin_tokens": 186,
+      "hard_margin_tokens": 531,
       "within_soft_target": true,
       "within_hard_ceiling": true,
       "budget_signal": null,
@@ -19,11 +19,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 1779,
+        "tokens": 1839,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2721,
-        "hard_margin_tokens": 3221,
+        "soft_margin_tokens": 2661,
+        "hard_margin_tokens": 3161,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -34,11 +34,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2745,
+        "tokens": 2762,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 255,
-        "hard_margin_tokens": 455,
+        "soft_margin_tokens": 238,
+        "hard_margin_tokens": 438,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -49,11 +49,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "analyzed_task": {
-        "tokens": 933,
+        "tokens": 944,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 5067,
-        "hard_margin_tokens": 5567,
+        "soft_margin_tokens": 5056,
+        "hard_margin_tokens": 5556,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -64,11 +64,11 @@
         "primary_skill": "repository-tooling-change-builder"
       },
       "review": {
-        "tokens": 696,
+        "tokens": 759,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 3004,
-        "hard_margin_tokens": 3304,
+        "soft_margin_tokens": 2941,
+        "hard_margin_tokens": 3241,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,

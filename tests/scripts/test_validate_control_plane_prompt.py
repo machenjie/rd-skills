@@ -48,6 +48,32 @@ class ControlPromptTests(unittest.TestCase):
         text = VALIDATOR.PROMPT.read_text() + '\nReview Round ID is required for completion.\n'
         self.assertTrue(any('retired machinery' in error for error in VALIDATOR.validate_prompt(text)))
 
+    def test_worker_knowledge_delivery_cannot_be_removed_from_main(self):
+        text = VALIDATOR.PROMPT.read_text()
+        delivery = (
+            "In each Worker assignment, direct it to apply the assigned Primary "
+            "Professional Skill and selected Layer 3"
+        )
+        self.assertIn(delivery, text)
+        self.assertTrue(any(
+            "Worker assignment" in error
+            for error in VALIDATOR.validate_prompt(text.replace(delivery, ""))
+        ))
+
+    def test_assignment_content_reuse_host_loading_and_return_are_required(self):
+        text = VALIDATOR.PROMPT.read_text()
+        for guidance in (
+            "reuse supplied content or load missing content from the Host-selected "
+            "Professional entrypoint and its Layer 3 Delivery when decision-relevant",
+            "Return unavailable assets or selection-changing source evidence to Main",
+        ):
+            with self.subTest(guidance=guidance):
+                self.assertIn(guidance, text)
+                self.assertTrue(any(
+                    guidance in error
+                    for error in VALIDATOR.validate_prompt(text.replace(guidance, ""))
+                ))
+
 
 if __name__ == '__main__':
     unittest.main()
