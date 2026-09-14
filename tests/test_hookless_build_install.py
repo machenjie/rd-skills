@@ -277,7 +277,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
             build_manifest["runtime_asset_bindings"][professional],
         )
 
-    def test_professional_local_runtime_bundle_has_inline_identity_and_complete_closure(self) -> None:
+    def test_professional_local_runtime_bundle_has_manifest_identity_and_complete_closure(self) -> None:
         root = ROOT / "dist/universal/skills/recommended"
         manifest = json.loads(
             (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
@@ -289,10 +289,15 @@ class HooklessBuildInstallTests(unittest.TestCase):
         self.assertFalse(
             (professional_root / "references/runtime/identity.json").exists()
         )
+        skill_text = (professional_root / "SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("Runtime:", skill_text)
+        self.assertIn("Layer 3 selector: `references/runtime/selector.json`.", skill_text)
         self.assertIn(
-            f"Runtime: `{manifest['source_version']}/{runtime_asset_build_identity(full_digest)}`.",
-            (professional_root / "SKILL.md").read_text(encoding="utf-8"),
+            f"Reference indexes: `references/runtime/reference-records/{professional}.json`",
+            skill_text,
         )
+        self.assertEqual("changeforge.runtime-inline-identity/v4", bundle[2]["inline_identity_contract"])
+        self.assertEqual(4, bundle[2]["inline_identity_version"])
         self.assertEqual(
             [],
             runtime_asset_bundle_metadata_errors(
@@ -593,7 +598,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 ]
                 self.assertEqual(expected, headings)
                 self.assertFalse(forbidden & set(headings))
+                self.assertFalse(text.startswith("<!-- Build:"))
                 for forbidden_control in (
+                    "## JIT Loading",
                     "## JIT Reference Delivery",
                     "Current-Professional JIT",
                     "engineering-control-plane/references/selectors/",
@@ -627,10 +634,11 @@ class HooklessBuildInstallTests(unittest.TestCase):
         self.assertTrue(selector["selection"])
         self.assertNotIn("build", selector)
         self.assertEqual("reference-records/{owner_skill}.json", selector["reference_records"])
+        self.assertEqual({"reference_records"}, set(partition))
+        self.assertTrue(all("owner_skill" not in record for record in partition["reference_records"]))
         self.assertTrue(
             any(
-                record.get("owner_skill") == "transaction-consistency"
-                and record.get("path")
+                record.get("path")
                 == "references/layer3/transaction-consistency/references/evidence-patterns.md"
                 and record.get("required_output")
                 for record in partition["reference_records"]
@@ -717,6 +725,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
             *BUILD._load_items("domain", registries["domain"]),
         ]
         forbidden = (
+            "## JIT Loading",
             "## JIT Reference Delivery",
             "Current-Professional JIT",
             "engineering-control-plane/references/selectors/",
@@ -749,15 +758,26 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         build_identity,
                     )
                     rendered = (skill_root / "SKILL.md").read_text(encoding="utf-8")
-                    self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
+                    self.assertEqual(1, rendered.count("## JIT Loading"))
+                    self.assertNotIn("## JIT Reference Delivery", rendered)
                     self.assertEqual(
                         1,
                         rendered.count("references/runtime/selector.json"),
                     )
-                    self.assertEqual(1, rendered.count(f"Runtime: `{runtime_version}/{build_identity}`."))
+                    self.assertNotIn("Runtime:", rendered)
+                    self.assertIn("Layer 3 selector: `references/runtime/selector.json`.", rendered)
+                    self.assertIn(
+                        f"Reference indexes: `references/runtime/reference-records/{item.name}.json`",
+                        rendered,
+                    )
+                    self.assertIn("references/runtime/reference-records/<selected-layer3>.json", rendered)
+                    self.assertIn("Unresolved References: read these indexes directly.", rendered)
                     self.assertNotIn("references/runtime/identity.json", rendered)
                     self.assertTrue(
                         (skill_root / "references/runtime/selector.json").is_file()
+                    )
+                    self.assertTrue(
+                        (skill_root / f"references/runtime/reference-records/{item.name}.json").is_file()
                     )
             for item in layer3_items:
                 with self.subTest(layer3=item.name):
