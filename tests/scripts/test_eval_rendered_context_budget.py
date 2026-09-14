@@ -437,6 +437,53 @@ def _reconstruct_global_dominance_relation(
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def test_worker_context_preserves_assigned_knowledge_and_consumption_rules(self) -> None:
+        captures = []
+        measure = EVAL._measure_context
+
+        def capture(components, **kwargs):
+            result = measure(components, **kwargs)
+            if components[0]["kind"] == "worker_profile" and any(
+                component["kind"] == "dispatch_capsule" for component in components
+            ):
+                captures.append((components, result))
+            return result
+
+        # Use real fixture compositions and built content. This proves static
+        # delivery, not live consumption, reload behavior, or a Skill tool call.
+        with mock.patch.object(EVAL, "_measure_context", side_effect=capture), mock.patch.object(
+            EVAL, "_evaluate_admissible_context_compositions", side_effect=StopIteration
+        ):
+            with self.assertRaises(StopIteration):
+                EVAL.evaluate()
+
+        covered = set()
+        for components, measurement in captures:
+            with self.subTest(host=measurement["host"], role=measurement["role"]):
+                profile_text = components[0]["_text"]
+                self.assertIn("Use Main's assigned Primary Professional Skill", profile_text)
+                self.assertIn("already in context without reloading", profile_text)
+                self.assertIn("Layer 3 may be empty", profile_text)
+                primary = [item for item in components if item["kind"] == "primary_skill"]
+                self.assertEqual(1, len(primary))
+                self.assertTrue(primary[0]["path"].endswith(
+                    f"/{measurement['primary_skill']}/SKILL.md"
+                ))
+                layer3 = [item for item in components if item["kind"] == "layer3"]
+                self.assertEqual(measurement["layer3_skills"], [
+                    Path(item["path"]).stem for item in layer3
+                ])
+                knowledge_paths = [item["path"] for item in [*primary, *layer3]]
+                self.assertEqual(len(knowledge_paths), len(set(knowledge_paths)))
+                covered.add((measurement["role"], bool(layer3)))
+        self.assertTrue({
+            ("analysis-agent", False),
+            ("analysis-agent", True),
+            ("task-agent", False),
+            ("task-agent", True),
+            ("review-agent", False),
+        } <= covered, covered)
+
     def test_metadata_only_dispatch_renders_without_business_mode(self) -> None:
         measurements = []
         measure = EVAL._measure_context
@@ -3845,6 +3892,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsules["review"],
         ]
+        # This nonempty Review assignment is independent of the Task witness.
+        # The Profile must consume it even when all its content is supplied here.
+        self.assertTrue(set(review_layer3).isdisjoint(task_layer3))
+        self.assertIn("Use Main's independent Review assignment", review_components[0]["_text"])
+        self.assertIn("Never copy/union Task Layer 3", review_components[0]["_text"])
+        self.assertIn("already in context without reloading", review_components[0]["_text"])
         self._assert_semantic_budget_witness(
             review_components,
             budget_class="review",

@@ -147,9 +147,32 @@ def _validate_profile_instruction_contract(*, role_name, error_label, readabilit
         if retired in folded:
             errors.append(f"{error_label}: retired process requirement {retired!r}")
     if role_name != "main-control-agent":
-        for term in ("Layer 3 Delivery", "capsule-named", "Core Runtime Asset Resolution", "Core Environment Risk Calibration"):
+        # Static consumption instructions apply to source and decoded Host output;
+        # they do not attest that a live Worker used a Skill or called a tool.
+        for term in (
+            "Use Main's assigned Primary Professional Skill",
+            "only decision-relevant capsule-named Layer 3/necessary References",
+            "Layer 3 Delivery",
+            "to guide engineering judgment",
+            "Layer 3 may be empty",
+            "already in context without reloading",
+            "otherwise load only missing assigned content through the Host-supported mechanism when decision-relevant",
+            "Model familiarity is not supplied context",
+            "Bounded source discovery may precede loading",
+            "No rerouting or catalog preload",
+            "return selection-changing source evidence to Main",
+            "Core Runtime Asset Resolution",
+            "Core Environment Risk Calibration",
+        ):
             if term.casefold() not in folded:
                 errors.append(f"{error_label}: missing professional delivery safeguard {term!r}")
+        if role_name == "review-agent":
+            for term in (
+                "Use Main's independent Review assignment",
+                "Never copy/union Task Layer 3",
+            ):
+                if term.casefold() not in folded:
+                    errors.append(f"{error_label}: missing independent Review safeguard {term!r}")
 
 
 def _validate_external_read_profile_contract(*, role_name, error_label, instructions, errors):
