@@ -128,8 +128,10 @@ remain available whenever their expertise is needed; they are not restricted to
 explicit assignments. Domain rules retain their trigger, boundary, changed-surface,
 and negative conditions. An exact Layer 3 set, including an empty set, skips
 only Layer 3 selection. The Professional root's existing Layer 3 Delivery supplies the
-physical Markdown path; the selector supplies only the subsequent owner-scoped
-Reference-record locator.
+physical Markdown path. Its Reference delivery paragraph separately lists the
+Primary owner index and the selected Layer 3 owner-index path template. The
+selector's `reference_records` field remains locator data, not the loading rules;
+the owner partitions contain those rules.
 
 Build hashes, contracts, provenance, internal selector IDs/kinds, repeated
 authorization lists, selection-owner/basis bookkeeping, and inline build IDs are
@@ -152,12 +154,15 @@ are omitted. Rich Registry and normalized authoring authority retain their field
 Main supplies directly readable Host paths for Primary `SKILL.md`, selected
 Layer 3 bodies, and necessary Professional/Layer 3 Reference bodies to Analysis,
 Task, and Review. Recipients reuse supplied content and read missing bodies.
-The loaded Primary `SKILL.md` starts Reference discovery: its JIT section says
-when to read the listed selector relative to the current Professional root,
-including when Layer 3 is already exact. It also explains reuse of exact References.
+The loaded Primary `SKILL.md` distinguishes the Layer 3 selector from direct
+Reference indexes: `references/runtime/reference-records/<professional>.json`
+and `references/runtime/reference-records/<selected-layer3>.json` for each selected
+Layer 3. These paths are relative to the current Professional root. Reference
+discovery reads those indexes directly, including when Layer 3 is already exact.
+Exact References reuse supplied bodies or their assigned Host paths.
 References omitted or unresolved do not mean exact `[]`: Main supplies the
-unresolved owner partition Host paths and assigns conditional discovery through
-the current Professional JIT selector. Recipients inspect only current Primary
+unresolved owner partition Host paths and assigns direct conditional reading.
+Recipients inspect only current Primary
 and selected Layer 3 records, match role/load/skip/output conditions and
 relationships, then safely join `record.path` verbatim to the supplied Professional
 Host root. Only an exact Reference list, including `[]`, skips this selection.

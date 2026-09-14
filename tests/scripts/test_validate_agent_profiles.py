@@ -62,6 +62,8 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                                         "Only exact References, including [], skip Reference selection",
                                         "Primary/selected Layer 3 owner partitions", "record.path verbatim"):
                         self.assertIn(instruction, rendered)
+                    self.assertNotIn("continue the current Professional JIT selector", rendered)
+                    self.assertIn("read current Primary/selected Layer 3 owner partitions directly", rendered)
 
     def test_analysis_executes_observations_without_edit_or_review_authority(self) -> None:
         profiles = {profile["name"]: profile for profile in BUILDER._load_agent_profiles()}

@@ -100,7 +100,7 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
         unresolved_owners.extend(layer3)
     if unresolved_owners:
         lines.append("References unresolved for: " + ", ".join(unresolved_owners) + ". Exact Layer 3 skips only Layer 3 selection.")
-        lines.append(f"Continue the current Professional JIT selector at {host_root / 'references/runtime/selector.json'}; read only these owner partitions:")
+        lines.append("Read these owner partitions directly for Reference loading rules:")
         lines.extend(f"- {host_root / 'references/runtime/reference-records' / (owner + '.json')}" for owner in unresolved_owners)
         lines.append("Match required_by, load_when, do_not_load_when and required_output; honor any context_admissibility relationships. Read each needed record.path verbatim under the Primary Professional Host root after safe relative-path validation. No catalog preload or inferred roots.")
     else:

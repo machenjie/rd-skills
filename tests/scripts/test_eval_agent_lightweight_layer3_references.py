@@ -40,6 +40,8 @@ class Layer3ReferenceTests(unittest.TestCase):
         self.assertIn('References unresolved', rendered)
         self.assertIn('references/runtime/reference-records/ai-code-review-refactor.json', rendered)
         self.assertIn('references/runtime/reference-records/code-review.json', rendered)
+        self.assertNotIn('references/runtime/selector.json', rendered)
+        self.assertIn('Read these owner partitions directly for Reference loading rules', rendered)
         step.update(professional_references=[], layer3_references=[])
         rendered = validate_and_render_fixture_capsule(step)
         self.assertIn('References exact: []', rendered)

@@ -1760,7 +1760,7 @@ def _compact_jit_reference_delivery_lines(
     runtime_version: str | None = None,
     build_identity: str | None = None,
 ) -> list[str]:
-    """Return the built-only selector anchor; authority stays in its JSON row."""
+    """Expose separate Layer 3 selection and direct Reference-index entrances."""
 
     if selector_name is None:
         return []
@@ -1778,8 +1778,12 @@ def _compact_jit_reference_delivery_lines(
         "",
         "JIT: `references/runtime/selector.json`; "
         f"Runtime: `{runtime_version}/{build_identity}`.",
+        "Layer 3 selection: use the selector above only when Layer 3 is unresolved.",
+        f"Reference indexes: `references/runtime/reference-records/{selector_name}.json` (this Professional); "
+        "`references/runtime/reference-records/<selected-layer3>.json` (each selected Layer 3).",
+        "Reference loading: when unresolved, read these owner indexes directly. "
+        "Paths are relative to this Professional root. Apply record conditions and read needed record.path under this root. "
         "For exact References, reuse supplied bodies or read assigned Host paths. "
-        "For unresolved References, read this selector relative to the current Professional root, even with exact Layer 3. "
         "Keep Main's route; do not preload catalogs.",
     ]
 

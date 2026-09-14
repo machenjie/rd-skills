@@ -856,9 +856,13 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         rendered.count("references/runtime/selector.json"),
                     )
                     jit = rendered.split("## JIT Reference Delivery", 1)[1].split("## Layer 3 Delivery", 1)[0]
+                    self.assertIn("Layer 3 selection: use the selector above only when Layer 3 is unresolved", jit)
+                    self.assertIn(f"references/runtime/reference-records/{item.name}.json", jit)
+                    self.assertIn("references/runtime/reference-records/<selected-layer3>.json", jit)
+                    self.assertIn("Reference loading: when unresolved, read these owner indexes directly", jit)
+                    self.assertIn("Paths are relative to this Professional root", jit)
                     self.assertIn("For exact References, reuse supplied bodies or read assigned Host paths", jit)
-                    self.assertIn("For unresolved References, read this selector relative to the current Professional root", jit)
-                    self.assertIn("even with exact Layer 3", jit)
+                    self.assertNotIn("read this selector", jit)
                     self.assertIn("Keep Main's route; do not preload catalogs", jit)
                     for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
                         self.assertIn(f"## {heading}", rendered)
