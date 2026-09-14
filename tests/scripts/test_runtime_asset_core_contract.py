@@ -102,14 +102,13 @@ def _canonical_json(value: dict) -> bytes:
 
 
 def _selector_asset(**extra: object) -> bytes:
-    return _canonical_json(
-        {
-            "build": BUILD_IDENTITY,
-            "contract": "changeforge.test-selector/v1",
-            "professional_skill": PROFESSIONAL,
-            **extra,
-        }
-    )
+    return _canonical_json({
+        "professional_skill": PROFESSIONAL,
+        "guidance": _load_validation().LAYER3_SELECTOR_AI_GUIDANCE,
+        "selection": [{"profiles": ["analysis-agent"], "rules": [],
+                       "additional_layer3": ["minimal-correct-implementation"]}],
+        "reference_records": "reference-records/{owner_skill}.json",
+    })
 
 
 class RuntimeAssetCoreContractTests(unittest.TestCase):
@@ -242,16 +241,12 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
             inline["professional_entrypoint_jit_line"],
         )
-        self.assertEqual("build", inline["selector_build_field"])
+        self.assertEqual("build", inline["reference_partition_build_field"])
         self.assertEqual(
             [
-                "selector-envelope",
-                "direct-selector",
-                "complete-selector",
-                "decision-shard",
                 "reference-record-partition",
             ],
-            inline["selector_assets"],
+            inline["inline_json_assets"],
         )
         self.assertEqual("single-existing-load-no-reread", inline["selector_read"])
         self.assertEqual("build", inline["selection_receipt_build_field"])

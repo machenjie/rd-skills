@@ -38,6 +38,96 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
             row["name"]: row for row in PROFESSIONAL["professional_skills"]
         }
 
+    def test_runtime_selector_files_contain_only_selection_content(self) -> None:
+        selectors, partitions = VALIDATION.layer3_selector_normalized_control_projections(self.authority)
+        forbidden = {"build", "sha256", "records_sha256", "contract", "authority_contract",
+                     "provenance", "source_authority", "runtime_key", "selector_id",
+                     "selector_kind", "owner_surfaces", "authorized_layer3", "domain_authorization"}
+
+        def check(value: object) -> None:
+            if isinstance(value, dict):
+                self.assertFalse(set(value) & forbidden, set(value) & forbidden)
+                for child in value.values():
+                    check(child)
+            elif isinstance(value, list):
+                for child in value:
+                    check(child)
+
+        with tempfile.TemporaryDirectory() as raw:
+            for professional in self.rows:
+                root = Path(raw) / professional
+                BUILD._write_professional_runtime_selector_closure(
+                    root, professional, selectors, partitions, "AAECAwQFBgcICQoLDA0ODw")
+                runtime = root / "references/runtime"
+                for path in [runtime / "selector.json", *sorted((runtime / "selectors").glob("*.json"))]:
+                    with self.subTest(professional=professional, file=path.name):
+                        check(json.loads(path.read_text(encoding="utf-8")))
+
+    def test_ai_selection_preserves_every_professional_profile_and_signal(self) -> None:
+        selectors, partitions = VALIDATION.layer3_selector_normalized_control_projections(self.authority)
+        build = "AAECAwQFBgcICQoLDA0ODw"
+        with tempfile.TemporaryDirectory() as raw:
+            for professional in self.rows:
+                root = Path(raw) / professional
+                BUILD._write_professional_runtime_selector_closure(root, professional, selectors, partitions, build)
+                complete = f"{professional}/complete.json"
+                source = selectors.get(complete, selectors[f"{professional}.json"])
+                path = root / "references/runtime" / ("selectors/complete.json" if complete in selectors else "selector.json")
+                view = json.loads(path.read_bytes())
+                self.assertEqual([], VALIDATION.layer3_selector_ai_document_errors(view))
+                self.assertEqual({row["profile"] for row in source["profile_authority"]},
+                                 {profile for group in view["selection"] for profile in group["profiles"]})
+                for row in source["profile_authority"]:
+                    with self.subTest(professional=professional, profile=row["profile"]):
+                        group, = [group for group in view["selection"] if row["profile"] in group["profiles"]]
+                        candidates = set(group["additional_layer3"]) | {name for rule in group["rules"] for name in rule["layer3"]}
+                        self.assertEqual(set(row["authorized_layer3"]), candidates)
+                        self.assertEqual(set(row["domain_authorization"]) & set(row["authorized_layer3"]),
+                                         candidates & set(self.authority["runtime_domains"]))
+                        self.assertEqual(len(row["selectors"]), len(group["rules"]))
+                        for before, after in zip(row["selectors"], group["rules"], strict=True):
+                            self.assertEqual(before["selectable_layer3"], after["layer3"])
+                            self.assertEqual(before["positive_signal_groups"], after["when"])
+                            self.assertEqual(before["nearest_negative_signals"], after["unless"])
+                        canonical = VALIDATION.layer3_selector_runtime_projection(
+                            self.authority, professional_skill=professional, profile=row["profile"],
+                            selection_owner="main-control-agent", exact_layer3=None)
+                        witnesses = [[]]
+                        for rule in group["rules"]:
+                            positive = list(dict.fromkeys(signals[0] for signals in rule["when"]))
+                            witnesses.append(positive)
+                            witnesses.extend(list(dict.fromkeys([*positive, negative])) for negative in rule["unless"])
+                            witnesses.extend(positive[:i] + positive[i + 1:] for i in range(len(positive)))
+                        for evidence in witnesses:
+                            normalized = {" ".join(signal.casefold().split()) for signal in evidence}
+                            selected = []
+                            for rule in group["rules"]:
+                                if any(" ".join(signal.casefold().split()) in normalized for signal in rule["unless"]):
+                                    continue
+                                if all(any(" ".join(signal.casefold().split()) in normalized for signal in signals) for signals in rule["when"]):
+                                    selected.extend(name for name in rule["layer3"] if name not in selected)
+                            receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
+                                canonical, evidence_signals=evidence, build_identity=build)
+                            self.assertEqual(receipt["selected_layer3"], selected)
+
+    def test_ai_selector_grammar_rejects_machine_metadata_and_malformed_candidates(self) -> None:
+        selectors, _ = VALIDATION.layer3_selector_normalized_control_projections(self.authority)
+        base = copy.deepcopy(selectors["repository-tooling-change-builder.json"])
+        base["reference_records_partition"]["path_template"] = "reference-records/{owner_skill}.json"
+        view = VALIDATION.layer3_selector_ai_projection(base)
+        for mutate in (
+            lambda doc: doc.update(build="AAECAwQFBgcICQoLDA0ODw"),
+            lambda doc: doc.update(reference_records={}),
+            lambda doc: doc["selection"][0]["profiles"].append("unknown-agent"),
+            lambda doc: doc["selection"][0]["rules"][0].update(when=[]),
+            lambda doc: doc["selection"][0]["rules"][0].update(unless=[]),
+            lambda doc: doc["selection"][0]["rules"][0].update(layer3=["../escape"]),
+            lambda doc: doc["selection"].append(copy.deepcopy(doc["selection"][0])),
+        ):
+            tampered = copy.deepcopy(view)
+            mutate(tampered)
+            self.assertTrue(VALIDATION.layer3_selector_ai_document_errors(tampered), tampered)
+
     def test_role_filtered_reference_rows_derive_from_registry_authority(self) -> None:
         projections = VALIDATION.layer3_selector_control_projections(self.authority)
         layer3_rows = {
@@ -428,26 +518,12 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
 
         runtime_envelope, runtime_decision = render(selectors)
         runtime_binding = runtime_envelope["decisions"][0]
-        self.assertEqual(build_identity, runtime_envelope["build"])
-        self.assertEqual(
-            {
-                "decision_id",
-                "scenario_id",
-                "selector_registry",
-            },
-            set(runtime_binding["provenance"]),
-        )
-        self.assertNotIn("release_scenario", runtime_binding["provenance"])
-        self.assertEqual(
-            source_provenance["selector_registry"],
-            runtime_binding["provenance"]["selector_registry"],
-        )
-        resolved = VALIDATION.layer3_selector_resolve_control_projection(
-            runtime_envelope,
-            {runtime_binding["path"]: runtime_decision},
-            runtime_key=runtime_binding["runtime_key"],
-        )
-        self.assertEqual("exact", resolved["selection_kind"])
+        self.assertEqual({"professional_skill", "decisions", "complete"}, set(runtime_envelope))
+        self.assertEqual({"when", "profile", "path"}, set(runtime_binding))
+        self.assertEqual(source_envelope["decisions"][0]["runtime_key"]["trigger"], runtime_binding["when"])
+        self.assertEqual(["failure-diagnosis"], runtime_decision["selected_layer3"])
+        self.assertEqual([], VALIDATION.layer3_selector_ai_document_errors(runtime_envelope))
+        self.assertEqual([], VALIDATION.layer3_selector_ai_document_errors(runtime_decision))
 
         for label, mutate in (
             (
@@ -490,17 +566,8 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 runtime_key=source_with_runtime_shape["decisions"][0]["runtime_key"],
             )
         runtime_with_source_shape = copy.deepcopy(runtime_envelope)
-        runtime_with_source_shape["decisions"][0]["provenance"][
-            "release_scenario"
-        ] = copy.deepcopy(source_provenance["release_scenario"])
-        with self.assertRaisesRegex(
-            VALIDATION.ValidationProblem, "malformed decision"
-        ):
-            VALIDATION.layer3_selector_resolve_control_projection(
-                runtime_with_source_shape,
-                {runtime_binding["path"]: runtime_decision},
-                runtime_key=runtime_binding["runtime_key"],
-            )
+        runtime_with_source_shape["decisions"][0]["provenance"] = source_provenance
+        self.assertTrue(VALIDATION.layer3_selector_ai_document_errors(runtime_with_source_shape))
 
     def test_s3b_reference_partitions_are_owner_scoped_and_tri_state(self) -> None:
         selectors, partitions = (

@@ -3813,8 +3813,8 @@ def validate_core_contracts(
             "build_identity_format",
             "professional_binding",
             "professional_entrypoint_jit_line",
-            "selector_build_field",
-            "selector_assets",
+            "reference_partition_build_field",
+            "inline_json_assets",
             "selector_read",
             "selection_receipt_build_field",
             "selection_receipt_hash_domain",
@@ -3840,13 +3840,9 @@ def validate_core_contracts(
                 or inline_identity["professional_binding"] != "frontmatter-name"
                 or inline_identity["professional_entrypoint_jit_line"]
                 != RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE
-                or inline_identity["selector_build_field"] != "build"
-                or inline_identity["selector_assets"]
+                or inline_identity["reference_partition_build_field"] != "build"
+                or inline_identity["inline_json_assets"]
                 != [
-                    "selector-envelope",
-                    "direct-selector",
-                    "complete-selector",
-                    "decision-shard",
                     "reference-record-partition",
                 ]
                 or inline_identity["selector_read"]
@@ -3941,7 +3937,7 @@ def validate_core_contracts(
             "authoritative-build-inputs-and-source-version",
             "full-sha256-and-runtime-version",
             "sha256-prefix-128-comparator",
-            "professional-selector-receipt-layer3-inline-bindings",
+            "professional-receipt-layer3-inline-bindings-and-ai-selectors",
             "integrity-inventory-and-semantic-hash",
             "root-manifest-integrity-exact-byte-binding",
         ]
@@ -4023,7 +4019,7 @@ def validate_core_contracts(
                 "professional-frontmatter-name",
                 "professional-jit-runtime-version-build",
                 "base64url-nopad-22-build-identity",
-                "selector-or-partition-build-on-existing-read",
+                "reference-partition-build-on-existing-read",
                 "selection-receipt-build",
                 "layer3-first-line-build",
                 "profile",
@@ -4062,7 +4058,7 @@ def validate_core_contracts(
                 "full-digest-format",
                 "prefix-128-derivation",
                 "professional-jit-version-build",
-                "selector-partition-build",
+                "selector-ai-grammar-and-manifest-bytes", "reference-partition-build",
                 "selection-receipt-build",
                 "layer3-first-line-build",
                 "integrity-semantics",
@@ -8744,10 +8740,23 @@ def runtime_asset_bundle_metadata_errors(
             errors.append(selector_error)
             continue
         assert selector is not None
+        if not path.startswith("references/runtime/reference-records/"):
+            grammar_errors = layer3_selector_ai_document_errors(selector)
+            errors.extend(f"Runtime selector asset {path}: {error}" for error in grammar_errors)
+            if selector.get("professional_skill") != expected_professional_skill:
+                errors.append(f"Runtime selector asset {path} Professional mismatch")
+            if not grammar_errors:
+                candidates = set(selector.get("selected_layer3", []))
+                for group in selector.get("selection", []):
+                    candidates.update(group["additional_layer3"])
+                    for rule in group["rules"]:
+                        candidates.update(rule["layer3"])
+                for candidate in sorted(candidates):
+                    if f"references/layer3/{candidate}.md" not in delivery_assets:
+                        errors.append(f"Runtime selector asset {path} Layer 3 {candidate!r} has no delivery target")
+            continue
         if selector.get("build") != expected_build_identity:
             errors.append(f"Runtime selector asset {path} build mismatch")
-        if not path.startswith("references/runtime/reference-records/"):
-            continue
         partition_context = f"Runtime Reference partition {path}"
         if (
             set(selector) != RUNTIME_REFERENCE_PARTITION_FIELDS
@@ -10461,6 +10470,136 @@ def layer3_selector_runtime_decision_envelope(
             )
         }
     return runtime_envelope
+
+
+LAYER3_SELECTOR_AI_GUIDANCE = (
+    "Use only the current Profile's Layer 3 needed for the task. Each when group "
+    "needs a match; any unless match excludes that rule. additional_layer3 is also "
+    "authorized when the task needs its expertise. An assigned exact set, including [], "
+    "skips selection. Read Reference records only for this Professional and selected Layer 3."
+)
+
+
+def layer3_selector_ai_projection(document: dict[str, Any]) -> dict[str, Any]:
+    """Project source-validated authority to the bytes an AI needs to select.
+
+    Build identity, source provenance, and byte integrity belong to the existing
+    build/integrity manifests. This view never asks its reader to load those files.
+    """
+    professional = document["professional_skill"]
+    contract = document.get("contract")
+    if contract == LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT:
+        return {
+            "professional_skill": professional,
+            "decisions": [
+                {
+                    "when": row["runtime_key"]["trigger"],
+                    "profile": row["runtime_key"]["start_profile"],
+                    "path": row["path"],
+                }
+                for row in document["decisions"]
+            ],
+            "complete": {"path": document["complete"]["path"]},
+        }
+    if contract == LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT:
+        return {
+            "professional_skill": professional,
+            "profile": document["profile"],
+            "selected_layer3": copy.deepcopy(document["selected_layer3"]),
+            "reference_records": document["projection"]["reference_records_partition"]["path_template"],
+        }
+    if contract != LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT:
+        raise ValidationProblem("AI selector projection requires normalized source authority")
+    groups: list[dict[str, Any]] = []
+    for row in document["profile_authority"]:
+        rules = [{"layer3": copy.deepcopy(rule["selectable_layer3"]),
+                  "when": copy.deepcopy(rule["positive_signal_groups"]),
+                  "unless": copy.deepcopy(rule["nearest_negative_signals"])}
+                 for rule in row["selectors"]]
+        covered = {name for rule in rules for name in rule["layer3"]}
+        group = {"rules": rules,
+                 "additional_layer3": [name for name in row["authorized_layer3"] if name not in covered]}
+        previous = next((entry for entry in groups
+                         if {key: value for key, value in entry.items() if key != "profiles"} == group), None)
+        if previous is None:
+            groups.append({"profiles": [row["profile"]], **group})
+        else:
+            previous["profiles"].append(row["profile"])
+    return {
+        "professional_skill": professional,
+        "guidance": LAYER3_SELECTOR_AI_GUIDANCE,
+        "selection": groups,
+        "reference_records": document["reference_records_partition"]["path_template"],
+    }
+
+
+def layer3_selector_ai_document_errors(document: object) -> list[str]:
+    """Validate the closed AI file grammar; source parity is checked by Build.
+
+    This schema check also runs at the package boundary without source registries.
+    The existing integrity manifest binds its exact bytes and build identity.
+    """
+    def names(value: object, *, empty: bool = False) -> bool:
+        return (isinstance(value, list) and (empty or bool(value))
+                and all(isinstance(item, str) and re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", item) for item in value)
+                and len(value) == len(set(value)))
+
+    def signals(value: object) -> bool:
+        return isinstance(value, list) and bool(value) and all(isinstance(item, str) and item.strip() for item in value)
+
+    def path(value: object) -> bool:
+        return isinstance(value, str) and re.fullmatch(r"selectors/[a-z0-9]+(?:-[a-z0-9]+)*\.json", value) is not None
+
+    if not isinstance(document, dict) or not names([document.get("professional_skill")]):
+        return ["AI selector Professional binding is malformed"]
+    valid = False
+    if "selection" in document:
+        valid = set(document) == {"professional_skill", "guidance", "selection", "reference_records"}
+        valid = valid and document.get("guidance") == LAYER3_SELECTOR_AI_GUIDANCE
+        groups = document.get("selection")
+        valid = valid and isinstance(groups, list) and bool(groups)
+        profiles: list[str] = []
+        for group in groups if isinstance(groups, list) else []:
+            if not isinstance(group, dict) or set(group) != {"profiles", "rules", "additional_layer3"}:
+                return ["AI selector Profile group is malformed"]
+            if not names(group["profiles"]) or not set(group["profiles"]) <= {"analysis-agent", "task-agent", "review-agent"}:
+                return ["AI selector Profile is malformed"]
+            profiles.extend(group["profiles"])
+            if not names(group["additional_layer3"], empty=True) or not isinstance(group["rules"], list):
+                return ["AI selector Layer 3 candidates are malformed"]
+            covered: set[str] = set()
+            for rule in group["rules"]:
+                if (not isinstance(rule, dict) or set(rule) != {"layer3", "when", "unless"}
+                    or not names(rule["layer3"]) or not isinstance(rule["when"], list)
+                    or not rule["when"] or not all(signals(items) for items in rule["when"])
+                    or not signals(rule["unless"])):
+                    return ["AI selector rule is malformed"]
+                covered.update(rule["layer3"])
+            if len({_canonical_selector_document_bytes(rule) for rule in group["rules"]}) != len(group["rules"]):
+                return ["AI selector repeats a rule"]
+            if covered & set(group["additional_layer3"]):
+                return ["AI selector repeats authorized Layer 3"]
+        valid = valid and len(profiles) == len(set(profiles))
+    elif "decisions" in document:
+        valid = set(document) == {"professional_skill", "decisions", "complete"}
+        complete = document.get("complete")
+        valid = valid and isinstance(complete, dict) and complete == {"path": "selectors/complete.json"}
+        decisions = document.get("decisions")
+        valid = valid and isinstance(decisions, list) and bool(decisions)
+        for row in decisions if isinstance(decisions, list) else []:
+            if (not isinstance(row, dict) or set(row) != {"when", "profile", "path"}
+                or not isinstance(row["when"], str) or not row["when"].strip()
+                or row["profile"] not in ("analysis-agent", "task-agent", "review-agent")
+                or not names([row["profile"]]) or not path(row["path"])):
+                return ["AI selector decision is malformed"]
+        valid = valid and len({row["path"] for row in decisions}) == len(decisions)
+    else:
+        valid = set(document) == {"professional_skill", "profile", "selected_layer3", "reference_records"}
+        valid = valid and names([document.get("profile")]) and names(document.get("selected_layer3"))
+        valid = valid and document["profile"] in {"analysis-agent", "task-agent", "review-agent"}
+    if "reference_records" in document:
+        valid = valid and isinstance(document["reference_records"], str) and document["reference_records"] in {"reference-records/{owner_skill}.json", "../reference-records/{owner_skill}.json"}
+    return [] if valid else ["AI selector fields, bindings, or fixed paths are malformed"]
 
 
 def layer3_selector_expand_runtime_projection(
