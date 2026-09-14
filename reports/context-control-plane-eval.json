@@ -19,11 +19,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 1829,
+        "tokens": 1823,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2671,
-        "hard_margin_tokens": 3171,
+        "soft_margin_tokens": 2677,
+        "hard_margin_tokens": 3177,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -34,11 +34,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2751,
+        "tokens": 2743,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 249,
-        "hard_margin_tokens": 449,
+        "soft_margin_tokens": 257,
+        "hard_margin_tokens": 457,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -49,11 +49,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "analyzed_task": {
-        "tokens": 936,
+        "tokens": 934,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 5064,
-        "hard_margin_tokens": 5564,
+        "soft_margin_tokens": 5066,
+        "hard_margin_tokens": 5566,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -64,11 +64,11 @@
         "primary_skill": "repository-tooling-change-builder"
       },
       "review": {
-        "tokens": 751,
+        "tokens": 749,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 2949,
-        "hard_margin_tokens": 3249,
+        "soft_margin_tokens": 2951,
+        "hard_margin_tokens": 3251,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,

@@ -8,7 +8,7 @@
   "baseline_comparison": "not-numerically-comparable",
   "evidence_scope": "deterministic-fixtures",
   "content_audit_summary": {
-    "skill_detector_fingerprint": "f5f8db5dcfa4e9542d1a2e4260447bed372f148db772f7d2a4deaabfb23d9609",
+    "skill_detector_fingerprint": "92df7d3d734e13d92f05b32cebedadf16b349e5c9fb78051c50057de04a89a83",
     "audit_gate_status": {
       "selected_gate": "authoring",
       "authoring": "pass",
