@@ -462,14 +462,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             with self.subTest(host=measurement["host"], role=measurement["role"]):
                 profile_text = components[0]["_text"]
                 self.assertIn("Apply Main's assigned Primary Professional Skill", profile_text)
-                self.assertIn("Reuse content; load missing via Host", profile_text)
+                self.assertIn("Reuse supplied content; load missing via Host", profile_text)
                 self.assertIn("possibly empty", profile_text)
                 assignment = next(
                     item["_text"] for item in components if item["kind"] == "dispatch_capsule"
                 )
-                self.assertIn("Reuse content or load this entrypoint", assignment)
-                self.assertIn("this entrypoint/Layer 3 Delivery", assignment)
-                self.assertIn("return unavailable assets/new evidence to Main", assignment)
+                self.assertIn("Reuse content; load missing here", assignment)
+                self.assertIn("## Layer 3 Delivery", assignment)
+                self.assertIn("return gaps to Main", assignment)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
                 self.assertIn(
@@ -3913,7 +3913,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertTrue(set(review_layer3).isdisjoint(task_layer3))
         self.assertIn("Use Main's independent Review assignment", review_components[0]["_text"])
         self.assertIn("Never copy/union Task Layer 3", review_components[0]["_text"])
-        self.assertIn("Reuse content; load missing via Host", review_components[0]["_text"])
+        self.assertIn("Reuse supplied content; load missing via Host", review_components[0]["_text"])
         self._assert_semantic_budget_witness(
             review_components,
             budget_class="review",

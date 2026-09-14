@@ -151,11 +151,10 @@ def _validate_profile_instruction_contract(*, role_name, error_label, readabilit
         # they do not attest that a live Worker used a Skill or called a tool.
         for term in (
             "Apply Main's assigned Primary Professional Skill",
-            "only capsule-named Layer 3/needed References",
+            "only assigned Layer 3/needed References",
             "when relevant",
             "possibly empty",
-            "Reuse content; load missing via Host",
-            "Familiarity is not context",
+            "Reuse supplied content; load missing via Host",
             "bounded discovery may precede loading",
             "No rerouting/catalog preload",
             "Return selection-changing source evidence to Main",

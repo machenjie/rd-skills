@@ -62,8 +62,7 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     # runtime path discovery. Keep its locator in the measured assignment text.
     lines = [
         goal, "", f"Primary Professional Skill: dist/universal/skills/recommended/{primary}/SKILL.md",
-        "Reuse content or load this entrypoint/Layer 3 Delivery; "
-        "return unavailable assets/new evidence to Main.",
+        "Reuse content; load missing here; return gaps to Main.",
     ]
     if step.get("constraints"):
         lines.extend(["", "Constraints:", *[f"- {item}" for item in step["constraints"]]])

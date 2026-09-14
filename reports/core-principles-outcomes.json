@@ -1,5 +1,5 @@
 {
-  "authoring_principles_status": "fail",
+  "authoring_principles_status": "pass",
   "authorities": [
     {
       "consumer_results": [
@@ -207,11 +207,11 @@
           "outcomes": [
             {
               "id": "professionalism-authoring-valid",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professional-review-cost-fixtures-valid",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "readability-review-current",
@@ -231,7 +231,7 @@
             }
           ],
           "producer": "validate-professionalism-regression",
-          "producer_status": "fail"
+          "producer_status": "pass"
         }
       ],
       "id": "final-goal-authority",
@@ -525,11 +525,11 @@
   "input_tree": {
     "post": {
       "file_count": 7196,
-      "sha256": "9f123a2c754fec3b241f87bbf67b0b437c937e6426aacd5e501352a414440bed"
+      "sha256": "3fd5a803b97099da6c3182c4e6b96378b3ff3019ba92618cab52dd6e6a1a0b97"
     },
     "pre": {
       "file_count": 7196,
-      "sha256": "9f123a2c754fec3b241f87bbf67b0b437c937e6426aacd5e501352a414440bed"
+      "sha256": "3fd5a803b97099da6c3182c4e6b96378b3ff3019ba92618cab52dd6e6a1a0b97"
     },
     "unchanged": true
   },
@@ -2766,7 +2766,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -2860,7 +2860,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -2880,7 +2880,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -2895,7 +2895,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -2915,7 +2915,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3049,7 +3049,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3319,7 +3319,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3458,7 +3458,7 @@
           "pointer": "/exit_code",
           "resolution_status": "resolved",
           "source": "process",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3628,7 +3628,7 @@
   ],
   "principles": [
     {
-      "authoring_status": "fail",
+      "authoring_status": "pass",
       "formal_release_status": "blocked",
       "id": "ai-first",
       "name": "AI First",
@@ -3664,7 +3664,7 @@
           "content-audit-formal-release-current"
         ]
       },
-      "status": "fail"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -3949,7 +3949,7 @@
       "status": "pass"
     },
     {
-      "authoring_status": "fail",
+      "authoring_status": "pass",
       "formal_release_status": "blocked",
       "id": "final-goal",
       "name": "Final Goal",
@@ -3974,10 +3974,10 @@
           "professionalism-formal-release-ready"
         ]
       },
-      "status": "fail"
+      "status": "partial"
     }
   ],
-  "principles_status": "fail",
+  "principles_status": "partial",
   "producers": [
     {
       "argv": [
@@ -4586,22 +4586,19 @@
         "eval-professional-samples",
         "eval-pressure-behavior"
       ],
-      "exit_code": 1,
-      "failure_reason_codes": [
-        "process-exit-nonzero",
-        "report-not-refreshed"
-      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
       "id": "validate-professionalism-regression",
       "release_reports": [],
       "reports": [
         {
-          "fresh": false,
+          "fresh": true,
           "json_object": true,
           "path": "reports/professionalism-regression-report.json"
         }
       ],
       "source_unchanged": true,
-      "status": "fail",
+      "status": "pass",
       "timed_out": false,
       "timeout_seconds": 3600
     }

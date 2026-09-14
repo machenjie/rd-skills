@@ -399,13 +399,13 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         # Each mutation removes or reverses one instruction. These are static
         # contract checks, not a simulated Worker or evidence of Host invocation.
         mutations = (
-            ("only capsule-named Layer 3/needed References",
+            ("only assigned Layer 3/needed References",
              "any related Layer 3/References"),
             ("when relevant", "for an assignment log"),
             ("possibly empty", "Layer 3 must never be empty"),
-            ("Reuse content; load missing via Host", "reload context or load missing content"),
+            ("Reuse supplied content; load missing via Host", "reload context or load missing content"),
             ("load missing via Host", "load all through model familiarity"),
-            ("Familiarity is not context", "familiarity supplies context"),
+            ("supplied content", "model familiarity"),
             ("bounded discovery may precede loading", "Bounded source discovery requires prior loading"),
             ("No rerouting/catalog preload", "Reroute and preload the catalog"),
             ("Return selection-changing source evidence to Main", "adjust selection from source evidence"),
