@@ -110,6 +110,38 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                                 canonical, evidence_signals=evidence, build_identity=build)
                             self.assertEqual(receipt["selected_layer3"], selected)
 
+    def test_runtime_reference_partitions_keep_only_ai_decisions(self) -> None:
+        _selectors, partitions = VALIDATION.layer3_selector_normalized_control_projections(self.authority)
+        fields = {'path', 'type', 'load_when', 'do_not_load_when', 'required_by', 'required_output'}
+        relationships = {'conflicts_with', 'sequenced_after', 'must_co_trigger_with'}
+        for key, source in partitions.items():
+            professional, owner_file = key.split('/')
+            view = BUILD._project_runtime_reference_partition(source, professional, 'AAECAwQFBgcICQoLDA0ODw')
+            self.assertEqual({'reference_records'}, set(view))
+            for before, after in zip(source['reference_records'], view['reference_records'], strict=True):
+                self.assertTrue(fields <= set(after) <= fields | {'context_admissibility'})
+                for field in fields - {'path'}:
+                    self.assertEqual(before[field], after[field])
+                self.assertEqual(BUILD._project_runtime_reference_record_path(before, professional), after['path'])
+                expected = {k: v for k, v in (before.get('context_admissibility') or {}).items()
+                            if k in relationships and v}
+                expected = copy.deepcopy(expected)
+                for kind, values in expected.items():
+                    for index, value in enumerate(values):
+                        peer = value['reference'] if kind == 'sequenced_after' else value
+                        owner = before['owner_skill'] if peer.startswith('references/') else peer.split('/')[0]
+                        local = peer if peer.startswith('references/') else peer.split('/', 1)[1]
+                        path = local if owner == professional else f'references/layer3/{owner}/{local}'
+                        if kind == 'sequenced_after':
+                            value['reference'] = path
+                        else:
+                            values[index] = path
+                self.assertEqual(expected, after.get('context_admissibility', {}))
+                self.assertEqual([], VALIDATION.runtime_reference_record_errors(
+                    after, expected_professional_skill=professional, context=key))
+        self.assertTrue(any(record.get('context_admissibility') for source in partitions.values()
+                            for record in source['reference_records']))
+
     def test_ai_selector_grammar_rejects_machine_metadata_and_malformed_candidates(self) -> None:
         selectors, _ = VALIDATION.layer3_selector_normalized_control_projections(self.authority)
         base = copy.deepcopy(selectors["repository-tooling-change-builder.json"])
@@ -518,7 +550,9 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
 
         runtime_envelope, runtime_decision = render(selectors)
         runtime_binding = runtime_envelope["decisions"][0]
-        self.assertEqual({"professional_skill", "decisions", "complete"}, set(runtime_envelope))
+        self.assertEqual({"professional_skill", "guidance", "reference_records", "decisions", "complete"}, set(runtime_envelope))
+        self.assertEqual("reference-records/{owner_skill}.json", runtime_envelope["reference_records"])
+        self.assertEqual(VALIDATION.LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE, runtime_envelope["guidance"])
         self.assertEqual({"when", "profile", "path"}, set(runtime_binding))
         self.assertEqual(source_envelope["decisions"][0]["runtime_key"]["trigger"], runtime_binding["when"])
         self.assertEqual(["failure-diagnosis"], runtime_decision["selected_layer3"])
@@ -821,6 +855,11 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         1,
                         rendered.count("references/runtime/selector.json"),
                     )
+                    jit = rendered.split("## JIT Reference Delivery", 1)[1].split("## Layer 3 Delivery", 1)[0]
+                    self.assertIn("For exact References, reuse supplied bodies or read assigned Host paths", jit)
+                    self.assertIn("For unresolved References, read this selector relative to the current Professional root", jit)
+                    self.assertIn("even with exact Layer 3", jit)
+                    self.assertIn("Keep Main's route; do not preload catalogs", jit)
                     for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
                         self.assertIn(f"## {heading}", rendered)
                     self.assertEqual(

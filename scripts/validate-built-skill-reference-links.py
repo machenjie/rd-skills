@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import re
 import sys
@@ -656,7 +657,7 @@ def _validate_compiled_layer3_entrypoints(
             f"{_display_path(manifest_path)}: compiled Layer 3 mapping contains "
             "non-product Foundation Skills"
         )
-    source_projections = canonical_build._selector_projection_assets()[0] if compiled_union else {}
+    source_projections, source_partitions = canonical_build._selector_projection_assets() if compiled_union else ({}, {})
     for name in professional_names:
         expected_raw = compiled.get(name)
         if not isinstance(expected_raw, list) or not all(
@@ -783,6 +784,7 @@ def _validate_compiled_layer3_entrypoints(
                 closure_layout="runtime",
                 selector=selector,
                 selector_checked=True,
+                source_partitions=source_partitions,
             )
 
 
@@ -799,6 +801,7 @@ def _validate_compiled_layer3_projection(
     closure_layout: str,
     selector: dict[str, object] | None = None,
     selector_checked: bool = False,
+    source_partitions: dict[str, dict[str, object]] | None = None,
 ) -> None:
     """Validate the exact ai-consumption-v1 section projection."""
 
@@ -886,6 +889,7 @@ def _validate_compiled_layer3_projection(
         physical_root=physical_root,
         closure_layout=closure_layout,
         selector=selector,
+        source_partitions=source_partitions,
     )
 
 
@@ -1228,6 +1232,7 @@ def _validate_selector_reference_reachability(
     physical_root: Path,
     closure_layout: str,
     selector: dict[str, object] | None = None,
+    source_partitions: dict[str, dict[str, object]] | None = None,
 ) -> bool:
     try:
         spec = _selector_layout_spec(
@@ -1304,6 +1309,9 @@ def _validate_selector_reference_reachability(
         )
         return False
     partitions: dict[str, dict[str, object]] = {}
+    runtime_records: dict[str, dict[str, object]] = {}
+    if closure_layout == "runtime" and source_partitions is None:
+        _projections, source_partitions = canonical_build._selector_projection_assets()
     for owner in (professional, candidate):
         if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", owner) is None:
             errors.append(
@@ -1328,6 +1336,27 @@ def _validate_selector_reference_reachability(
                 f"Reference partition: {exc}"
             )
             return False
+        if closure_layout == "runtime":
+            # Compare the compact AI bytes to rich authority before reusing the
+            # existing role/owner expansion. Runtime never loads that authority.
+            try:
+                assert source_partitions is not None
+                source_partition = copy.deepcopy(source_partitions[f"{professional}/{owner}.json"])
+                expected = canonical_build._project_runtime_reference_partition(
+                    source_partition, professional, selector["build"])
+                if partition != expected:
+                    raise ValidationProblem("Runtime Reference partition differs from source authority")
+                runtime_records.update({record["path"]: record for record in expected["reference_records"]})
+                source_partition["build"] = selector["build"]
+                for record in source_partition["reference_records"]:
+                    record["path"] = canonical_build._project_runtime_reference_record_path(record, professional)
+                source_partition["records_sha256"] = hashlib.sha256(
+                    (json.dumps(source_partition["reference_records"], ensure_ascii=False,
+                                sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")).hexdigest()
+                partition = source_partition
+            except (KeyError, ValueError, ValidationProblem) as exc:
+                errors.append(f"{_display_path(partition_path)}: {exc}")
+                return False
         if (
             not isinstance(partition, dict)
             or partition.get("professional_skill") != professional
@@ -1411,7 +1440,7 @@ def _validate_selector_reference_reachability(
                 try:
                     runtime_reference_record_target(
                         professional_root,
-                        record,
+                        runtime_records[record["path"]],
                         expected_professional_skill=professional,
                         context=(
                             f"{_display_path(selector_path)}: {candidate} "

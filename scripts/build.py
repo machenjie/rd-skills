@@ -1238,22 +1238,37 @@ def _project_runtime_reference_partition(
         raise BuildError(
             f"{professional}: Runtime Reference partition records are malformed"
         )
+    projected_records = []
     for record in records:
         projected = _project_runtime_reference_record_path(record, professional)
         assert isinstance(record, dict)
-        record["path"] = projected
-    records_bytes = (
-        json.dumps(
-            records,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        + "\n"
-    ).encode("utf-8")
-    partition["records_sha256"] = hashlib.sha256(records_bytes).hexdigest()
-    partition["build"] = build_identity
-    return partition
+        view = {field: record[field] for field in (
+            "type", "load_when", "do_not_load_when", "required_by", "required_output")}
+        view["path"] = projected
+        relationships = {key: value for key, value in
+                         (record.get("context_admissibility") or {}).items()
+                         if key in {"conflicts_with", "sequenced_after", "must_co_trigger_with"} and value}
+        if relationships:
+            for field, values in relationships.items():
+                for index, value in enumerate(values):
+                    path = value["reference"] if field == "sequenced_after" else value
+                    parts = PurePosixPath(path).parts
+                    peer_owner = record["owner_skill"] if parts[0] == "references" else parts[0]
+                    source_path = path if parts[0] == "references" else PurePosixPath(*parts[1:]).as_posix()
+                    peer = _project_runtime_reference_record_path({
+                        "owner_skill": peer_owner,
+                        "owner_layer": "professional" if peer_owner == professional else "foundation",
+                        "path": source_path,
+                    }, professional)
+                    if field == "sequenced_after":
+                        value["reference"] = peer
+                    else:
+                        values[index] = peer
+            view["context_admissibility"] = relationships
+        projected_records.append(view)
+    # Source ownership/contracts remain in the normalized authoring projection;
+    # the existing integrity manifest binds this AI view's bytes and build.
+    return {"reference_records": projected_records}
 
 
 def _write_professional_runtime_selector_closure(
@@ -1763,6 +1778,9 @@ def _compact_jit_reference_delivery_lines(
         "",
         "JIT: `references/runtime/selector.json`; "
         f"Runtime: `{runtime_version}/{build_identity}`.",
+        "For exact References, reuse supplied bodies or read assigned Host paths. "
+        "For unresolved References, read this selector relative to the current Professional root, even with exact Layer 3. "
+        "Keep Main's route; do not preload catalogs.",
     ]
 
 

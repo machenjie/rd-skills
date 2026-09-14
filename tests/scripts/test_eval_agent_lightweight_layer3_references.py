@@ -19,6 +19,32 @@ class Layer3ReferenceTests(unittest.TestCase):
     def test_selected_current_reference_is_rendered(self):
         self.assertIn('finding-taxonomy.md', validate_and_render_fixture_capsule(self.step()))
 
+    def test_both_reference_owners_have_direct_host_paths(self):
+        step = dict(profile='task-agent', primary_skill='repository-tooling-change-builder',
+                    goal='Repair the generator.', layer3_skills=[], layer3_references=[],
+                    professional_references=['references/generator-and-plugin-contracts.md'])
+        rendered = validate_and_render_fixture_capsule(step)
+        host_root = ROOT / 'dist/universal/skills/recommended/repository-tooling-change-builder'
+        self.assertIn(str(host_root / 'SKILL.md'), rendered)
+        self.assertIn(str(host_root / step['professional_references'][0]), rendered)
+        nested = self.step()
+        host_root = ROOT / 'dist/universal/skills/recommended/ai-code-review-refactor'
+        rendered = validate_and_render_fixture_capsule(nested)
+        self.assertIn(str(host_root / 'references/layer3/code-review.md'), rendered)
+        self.assertIn(str(host_root / nested['layer3_references'][0]), rendered)
+
+    def test_exact_layer3_does_not_imply_exact_references(self):
+        step = self.step()
+        del step['layer3_references']
+        rendered = validate_and_render_fixture_capsule(step)
+        self.assertIn('References unresolved', rendered)
+        self.assertIn('references/runtime/reference-records/ai-code-review-refactor.json', rendered)
+        self.assertIn('references/runtime/reference-records/code-review.json', rendered)
+        step.update(professional_references=[], layer3_references=[])
+        rendered = validate_and_render_fixture_capsule(step)
+        self.assertIn('References exact: []', rendered)
+        self.assertNotIn('References unresolved', rendered)
+
     def test_owner_must_be_selected(self):
         step = self.step(); step['layer3_skills'] = []
         with self.assertRaises(FixtureCapsuleError):
@@ -28,6 +54,15 @@ class Layer3ReferenceTests(unittest.TestCase):
         step = self.step(); step['layer3_references'] = ['references/layer3/code-review/references/missing.md']
         with self.assertRaises(FixtureCapsuleError):
             validate_and_render_fixture_capsule(step)
+
+    def test_reference_lists_reject_unknown_duplicate_and_malformed_values(self):
+        for field in ('professional_references', 'layer3_references'):
+            for value in ('references/checklist.md', {}, [None], ['references/missing.md'],
+                          ['references/checklist.md', 'references/checklist.md']):
+                step = self.step()
+                step[field] = value
+                with self.subTest(field=field, value=value), self.assertRaises(FixtureCapsuleError):
+                    validate_and_render_fixture_capsule(step)
 
     def test_role_authorization_is_itemwise(self):
         step = dict(profile='review-agent', primary_skill='architecture-impact-reviewer',

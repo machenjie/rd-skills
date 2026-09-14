@@ -126,8 +126,8 @@ match; a matching `unless` excludes that rule. The union of rule candidates and
 `additional_layer3` is exactly that Profile's authorized set. Additional items
 remain available whenever their expertise is needed; they are not restricted to
 explicit assignments. Domain rules retain their trigger, boundary, changed-surface,
-and negative conditions. An assigned exact set, including an empty set, still
-skips selection. The Professional root's existing Layer 3 Delivery supplies the
+and negative conditions. An exact Layer 3 set, including an empty set, skips
+only Layer 3 selection. The Professional root's existing Layer 3 Delivery supplies the
 physical Markdown path; the selector supplies only the subsequent owner-scoped
 Reference-record locator.
 
@@ -136,8 +136,33 @@ authorization lists, selection-owner/basis bookkeeping, and inline build IDs are
 excluded from these AI files. The existing integrity manifest binds their bytes,
 size, Professional, and build at the build/package/install/doctor boundary; it
 remains forbidden as an AI read. Professional entrypoints, logical selection
-receipts, Layer 3 markers, and Reference partitions retain their existing build
-bindings. A selector by itself no longer proves inline build identity.
+receipts and Layer 3 markers retain their build bindings. Inline identity v3
+leaves selector and Reference-partition byte/build verification to that manifest.
+An AI JSON file by itself does not prove inline build identity.
+
+Runtime `reference-records/<owner-skill>.json` contains only `reference_records`.
+Each record retains its Professional-root-relative `path`, `type`, `load_when`,
+`do_not_load_when`, `required_by`, and `required_output`. Non-empty
+`conflicts_with`, `sequenced_after`, and `must_co_trigger_with` relationships
+remain under optional `context_admissibility`; their Reference paths use the same
+Professional root. Owner/layer repetitions, hashes/build/contracts, null context,
+empty relationships, filename-derived decision problems, and derived residency
+are omitted. Rich Registry and normalized authoring authority retain their fields.
+
+Main supplies directly readable Host paths for Primary `SKILL.md`, selected
+Layer 3 bodies, and necessary Professional/Layer 3 Reference bodies to Analysis,
+Task, and Review. Recipients reuse supplied content and read missing bodies.
+The loaded Primary `SKILL.md` starts Reference discovery: its JIT section says
+when to read the listed selector relative to the current Professional root,
+including when Layer 3 is already exact. It also explains reuse of exact References.
+References omitted or unresolved do not mean exact `[]`: Main supplies the
+unresolved owner partition Host paths and assigns conditional discovery through
+the current Professional JIT selector. Recipients inspect only current Primary
+and selected Layer 3 records, match role/load/skip/output conditions and
+relationships, then safely join `record.path` verbatim to the supplied Professional
+Host root. Only an exact Reference list, including `[]`, skips this selection.
+The fixture capsule renderer exercises these assignments for evaluation; it is
+not a live Host dispatch engine.
 
 `test_built_professional_root_projection.py` checks actual generated files for
 all 25 Professionals and every Profile, including exact authorization sets,

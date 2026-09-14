@@ -754,6 +754,19 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            source_partition = copy.deepcopy(partition_document)
+            source_partition["reference_records"][0]["path"] = "references/checklist.md"
+            source_partitions = {
+                "sample-professional/sample-foundation.json": source_partition,
+                "sample-professional/sample-professional.json": json.loads(professional_partition.read_text()),
+            }
+            build_identity = "AAECAwQFBgcICQoLDA0ODw"
+            for owner in ("sample-professional", "sample-foundation"):
+                view = VALIDATOR.canonical_build._project_runtime_reference_partition(
+                    source_partitions[f"sample-professional/{owner}.json"], "sample-professional", build_identity)
+                (partition.parent / f"{owner}.json").write_text(json.dumps(view), encoding="utf-8")
+            selector_document = json.loads(selector.read_text(encoding="utf-8"))
+            selector_document["build"] = build_identity
             errors: list[str] = []
             VALIDATOR._validate_compiled_layer3_projection(
                 path,
@@ -767,8 +780,9 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 closure_layout="runtime",
                 # This unit fixture tests the compiled Markdown/Reference
                 # consumer with an already validated authority projection.
-                selector=json.loads(selector.read_text(encoding="utf-8")),
+                selector=selector_document,
                 selector_checked=True,
+                source_partitions=source_partitions,
             )
             self.assertEqual([], errors)
 

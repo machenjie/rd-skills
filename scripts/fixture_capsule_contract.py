@@ -51,7 +51,13 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     if any(role not in rows[name]["role_support"] for name in layer3):
         raise FixtureCapsuleError("Layer 3 selection is not authorized for this Profile")
     root = Path(__file__).resolve().parents[1]
-    for path in step.get("professional_references", []):
+    for field in ("professional_references", "layer3_references"):
+        values = step.get(field)
+        if values is not None and (not isinstance(values, list)
+                or not all(isinstance(value, str) for value in values)
+                or len(values) != len(set(values))):
+            raise FixtureCapsuleError(f"{field} must be unresolved or an ordered unique list")
+    for path in step.get("professional_references") or []:
         entry = next((item for item in rows[primary].get("reference_index", []) if item["path"] == path), None)
         if not entry or role not in entry["required_by"] or not (root / rows[primary]["path"] / path).is_file():
             raise FixtureCapsuleError("Professional Reference must be current and authorized for this Profile")
@@ -60,9 +66,10 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
         raise FixtureCapsuleError("assignment needs a concrete goal")
     # All evaluator Hosts use this canonical built knowledge root; this is not
     # runtime path discovery. Keep its locator in the measured assignment text.
+    host_root = root / "dist/universal/skills/recommended" / primary
     lines = [
-        goal, "", f"Primary Professional Skill: dist/universal/skills/recommended/{primary}/SKILL.md",
-        "Reuse content; load missing here; return gaps to Main.",
+        goal, "", f"Primary Professional Skill: {host_root / 'SKILL.md'}",
+        "Reuse supplied content; read missing content at the supplied Host paths. Return unavailable assets or selection-changing evidence to Main; no rerouting.",
     ]
     if step.get("constraints"):
         lines.extend(["", "Constraints:", *[f"- {item}" for item in step["constraints"]]])
@@ -73,8 +80,12 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     if step.get("brief"):
         lines.extend(["", step["brief"]])
     lines.extend(["", "## Layer 3 Delivery"])
-    lines.extend(f"- {name}" for name in layer3)
-    for path in step.get("layer3_references", []):
+    lines.append("Layer 3 exact: " + (", ".join(layer3) if layer3 else "[]"))
+    lines.extend(f"- {name}: {host_root / 'references/layer3' / (name + '.md')}" for name in layer3)
+    lines.extend(["", "## Reference Delivery"])
+    for path in step.get("professional_references") or []:
+        lines.append(f"- {host_root / path}")
+    for path in step.get("layer3_references") or []:
         runtime_layer3_reference_path(path)
         if PurePosixPath(path).parts[2] not in layer3:
             raise FixtureCapsuleError("nested Reference owner was not selected")
@@ -83,5 +94,15 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
         entry = next((item for item in rows[owner].get("reference_index", []) if item["path"] == local), None)
         if not entry or role not in entry["required_by"] or not (root / rows[owner]["path"] / local).is_file():
             raise FixtureCapsuleError("nested Reference must be current and authorized for this Profile")
-        lines.append(f"- {path}")
+        lines.append(f"- {host_root / path}")
+    unresolved_owners = ([primary] if step.get("professional_references") is None else [])
+    if step.get("layer3_references") is None:
+        unresolved_owners.extend(layer3)
+    if unresolved_owners:
+        lines.append("References unresolved for: " + ", ".join(unresolved_owners) + ". Exact Layer 3 skips only Layer 3 selection.")
+        lines.append(f"Continue the current Professional JIT selector at {host_root / 'references/runtime/selector.json'}; read only these owner partitions:")
+        lines.extend(f"- {host_root / 'references/runtime/reference-records' / (owner + '.json')}" for owner in unresolved_owners)
+        lines.append("Match required_by, load_when, do_not_load_when and required_output; honor any context_admissibility relationships. Read each needed record.path verbatim under the Primary Professional Host root after safe relative-path validation. No catalog preload or inferred roots.")
+    else:
+        lines.append("References exact: " + ("as listed above" if step.get("professional_references") or step.get("layer3_references") else "[]") + "; skip Reference selection.")
     return "\n".join(lines).rstrip() + "\n"

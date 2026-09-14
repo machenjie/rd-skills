@@ -47,6 +47,7 @@ from validation_utils import (
     report_output_paths,
     runtime_asset_build_identity,
     runtime_reference_record_target,
+    runtime_reference_partition_errors,
 )
 from fixture_capsule_contract import FixtureCapsuleError, runtime_layer3_reference_path, validate_and_render_fixture_capsule
 ROOT = Path(__file__).resolve().parents[1]
@@ -590,12 +591,9 @@ def _runtime_reference_partition(
         raise ValueError(
             f"{primary}: Runtime Reference partition for {owner!r} is unreadable"
         ) from exc
-    if (
-        not isinstance(partition, dict)
-        or partition.get("professional_skill") != primary
-        or partition.get("owner_skill") != owner
-        or not isinstance(partition.get("reference_records"), list)
-    ):
+    if runtime_reference_partition_errors(
+        partition, expected_professional_skill=primary,
+        expected_owner_skill=owner, context=f"{primary}:{owner}"):
         raise ValueError(
             f"{primary}: Runtime Reference partition for {owner!r} is malformed"
         )
@@ -682,7 +680,6 @@ def _runtime_reference_target_for_authoring_entry(
         record
         for record in partition["reference_records"]
         if isinstance(record, dict)
-        and record.get("owner_skill") == owner
         and all(record.get(field) == entry.get(field) for field in semantic_fields)
     ]
     if len(matches) != 1:

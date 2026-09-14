@@ -43,7 +43,7 @@ BUILD_IDENTITY = base64.urlsafe_b64encode(
 ).decode("ascii").rstrip("=")
 PROFESSIONAL = "engineering-change-analysis"
 RECEIPT_PROFESSIONAL = "repository-tooling-change-builder"
-INLINE_CONTRACT = "changeforge.runtime-inline-identity/v2"
+INLINE_CONTRACT = "changeforge.runtime-inline-identity/v3"
 JIT_LINE = (
     "JIT: `references/runtime/selector.json`; "
     f"Runtime: `{SOURCE_VERSION}/{BUILD_IDENTITY}`."
@@ -123,16 +123,12 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         *, owner_skill: str, owner_layer: str, path: str
     ) -> dict[str, object]:
         return {
-            "owner_skill": owner_skill,
-            "owner_layer": owner_layer,
             "path": path,
             "type": "targeted",
             "load_when": "the bounded behavior needs this exact Reference",
             "do_not_load_when": "the bounded behavior does not need this Reference",
             "required_by": ["task-agent"],
             "required_output": ["boundary-decision"],
-            "context_admissibility": None,
-            "residency": "singleton",
         }
 
     def _valid_bundle(self):
@@ -143,23 +139,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
                 path="references/analysis-evidence.md",
             )
         ]
-        reference_partition = {
-            "authority_contract": "changeforge.layer3-selector-authority/v1",
-            "build": BUILD_IDENTITY,
-            "contract": "changeforge.layer3-selector-reference-records-partition/v1",
-            "owner_skill": PROFESSIONAL,
-            "professional_skill": PROFESSIONAL,
-            "records_sha256": hashlib.sha256(
-                json.dumps(
-                    reference_records,
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
-                + b"\n"
-            ).hexdigest(),
-            "reference_records": reference_records,
-        }
+        reference_partition = {"reference_records": reference_records}
         assets = {
             "SKILL.md": (
                 f"---\nname: {PROFESSIONAL}\n---\n\n# Professional\n\n{JIT_LINE}\n"
@@ -207,7 +187,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             "build_identity_algorithm": "sha256-prefix-128-base64url-nopad",
             "build_identity": BUILD_IDENTITY,
             "inline_identity_contract": INLINE_CONTRACT,
-            "inline_identity_version": 2,
+            "inline_identity_version": 3,
             "integrity_manifest_path": "references/runtime/integrity-manifest.json",
             "integrity_manifest_full_bytes_sha256": hashlib.sha256(
                 manifest_bytes
@@ -241,13 +221,8 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
             inline["professional_entrypoint_jit_line"],
         )
-        self.assertEqual("build", inline["reference_partition_build_field"])
-        self.assertEqual(
-            [
-                "reference-record-partition",
-            ],
-            inline["inline_json_assets"],
-        )
+        self.assertNotIn("reference_partition_build_field", inline)
+        self.assertEqual([], inline["inline_json_assets"])
         self.assertEqual("single-existing-load-no-reread", inline["selector_read"])
         self.assertEqual("build", inline["selection_receipt_build_field"])
         self.assertEqual(
@@ -326,6 +301,34 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
     def test_non_runtime_verifier_accepts_inline_bundle(self) -> None:
         self.assertEqual([], self._verify(*self._valid_bundle()))
 
+    def test_compact_reference_grammar_rejects_unknown_unsafe_and_malformed_data(self) -> None:
+        valid = self._reference_record(owner_skill=PROFESSIONAL, owner_layer="professional",
+                                       path="references/analysis-evidence.md")
+        for mutate in (
+            lambda row: row.update(owner_skill=PROFESSIONAL),
+            lambda row: row.update(residency="singleton"),
+            lambda row: row.update(type={}),
+            lambda row: row.update(type="index"),
+            lambda row: row.update(required_by=["main-control-agent"]),
+            lambda row: row.update(required_output=[]),
+            lambda row: row.update(load_when=""),
+            lambda row: row.update(context_admissibility=None),
+            lambda row: row.update(context_admissibility={"conflicts_with": []}),
+            lambda row: row.update(context_admissibility={"decision_problem": "derived"}),
+            lambda row: row.update(context_admissibility={"conflicts_with": ["../escape.md"]}),
+            lambda row: row.update(context_admissibility={"sequenced_after": ["references/peer.md"]}),
+        ):
+            row = copy.deepcopy(valid)
+            mutate(row)
+            self.assertTrue(self.validation.runtime_reference_record_errors(
+                row, expected_professional_skill=PROFESSIONAL, context="negative control"), row)
+        for partition, owner in (({"reference_records": [valid], "build": BUILD_IDENTITY}, PROFESSIONAL),
+                                 ({"reference_records": [valid, valid]}, PROFESSIONAL),
+                                 ({"reference_records": [valid]}, "foreign-owner")):
+            self.assertTrue(self.validation.runtime_reference_partition_errors(
+                partition, expected_professional_skill=PROFESSIONAL,
+                expected_owner_skill=owner, context="negative partition"))
+
     def test_non_runtime_verifier_rejects_unreadable_reference_record_path(self) -> None:
         manifest, assets, root = self._valid_bundle()
         mutated = copy.deepcopy(assets)
@@ -334,15 +337,6 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         )
         partition = json.loads(mutated[partition_path])
         partition["reference_records"][0]["path"] = "references/missing.md"
-        partition["records_sha256"] = hashlib.sha256(
-            json.dumps(
-                partition["reference_records"],
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            ).encode("utf-8")
-            + b"\n"
-        ).hexdigest()
         mutated[partition_path] = _canonical_json(partition)
         rebound = json.loads(manifest)
         rebound["assets"] = [
@@ -377,6 +371,8 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             owner_layer="foundation",
             path="references/checklist.md",
         )
+        professional.update(owner_skill=PROFESSIONAL, owner_layer="professional")
+        layer3.update(owner_skill="minimal-correct-implementation", owner_layer="foundation")
         self.assertEqual(
             "references/analysis-evidence.md",
             self.build._project_runtime_reference_record_path(
@@ -635,8 +631,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         self.assertEqual([], runtime["runtime_roles"]["digest_operations"])
         self.assertEqual("fail-closed-no-utility-no-reroute", runtime["failure"])
         self.assertEqual(
-            "professional-entrypoint-and-logical-selection-receipt-and-layer3-"
-            "binding-required-selector-skipped",
+            "exact-layer3-skips-layer3-selection-only-exact-references-skips-reference-selection",
             runtime["exact_set_bypass"],
         )
 

@@ -1854,32 +1854,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             fallback.parent.mkdir(parents=True, exist_ok=True)
             fallback.write_text("must not be used\n", encoding="utf-8")
             record = {
-                "context_admissibility": {
-                    "decision_problem": "test",
-                    "load_when": "test",
-                    "do_not_load_when": "not test",
-                    "required_output": "proof",
-                },
-                "do_not_load_when": "not test",
-                "load_when": "test",
-                "owner_layer": "foundation",
-                "owner_skill": "owner",
-                "path": record_path,
-                "required_by": ["primary"],
-                "required_output": "proof",
-                "residency": "targeted",
-                "type": "checklist",
+                "do_not_load_when": "not test", "load_when": "test",
+                "path": record_path, "required_by": ["task-agent"],
+                "required_output": ["boundary-decision"], "type": "targeted",
             }
             (partition_root / "owner.json").write_text(
-                json.dumps(
-                    {
-                        "professional_skill": "primary",
-                        "owner_skill": "owner",
-                        "reference_records": [record],
-                    }
-                ),
-                encoding="utf-8",
-            )
+                json.dumps({"reference_records": [record]}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "missing regular file"):
                 EVAL._runtime_reference_record_and_target(
                     professional_root,

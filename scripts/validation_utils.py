@@ -3338,8 +3338,8 @@ def behavior_eval_authority(data: object) -> dict[str, Any]:
     return copy.deepcopy(data["behavior_eval_contract"])
 
 
-RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT = "changeforge.runtime-inline-identity/v2"
-RUNTIME_ASSET_INLINE_IDENTITY_VERSION = 2
+RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT = "changeforge.runtime-inline-identity/v3"
+RUNTIME_ASSET_INLINE_IDENTITY_VERSION = 3
 RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT = (
     "changeforge.runtime-integrity-manifest/v1"
 )
@@ -3360,26 +3360,14 @@ RUNTIME_ASSET_INTEGRITY_MANIFEST_FIELDS = {
 }
 RUNTIME_ASSET_INTEGRITY_ROW_FIELDS = {"path", "kind", "sha256", "size"}
 RUNTIME_REFERENCE_RECORD_FIELDS = {
-    "owner_skill",
-    "owner_layer",
     "path",
     "type",
     "load_when",
     "do_not_load_when",
     "required_by",
     "required_output",
-    "context_admissibility",
-    "residency",
 }
-RUNTIME_REFERENCE_PARTITION_FIELDS = {
-    "contract",
-    "authority_contract",
-    "professional_skill",
-    "owner_skill",
-    "records_sha256",
-    "reference_records",
-    "build",
-}
+RUNTIME_REFERENCE_PARTITION_FIELDS = {"reference_records"}
 RUNTIME_ASSET_ROOT_BINDING_FIELDS = {
     "professional_skill",
     "runtime_version",
@@ -3813,7 +3801,6 @@ def validate_core_contracts(
             "build_identity_format",
             "professional_binding",
             "professional_entrypoint_jit_line",
-            "reference_partition_build_field",
             "inline_json_assets",
             "selector_read",
             "selection_receipt_build_field",
@@ -3840,11 +3827,8 @@ def validate_core_contracts(
                 or inline_identity["professional_binding"] != "frontmatter-name"
                 or inline_identity["professional_entrypoint_jit_line"]
                 != RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE
-                or inline_identity["reference_partition_build_field"] != "build"
                 or inline_identity["inline_json_assets"]
-                != [
-                    "reference-record-partition",
-                ]
+                != []
                 or inline_identity["selector_read"]
                 != "single-existing-load-no-reread"
                 or inline_identity["selection_receipt_build_field"] != "build"
@@ -4019,7 +4003,6 @@ def validate_core_contracts(
                 "professional-frontmatter-name",
                 "professional-jit-runtime-version-build",
                 "base64url-nopad-22-build-identity",
-                "reference-partition-build-on-existing-read",
                 "selection-receipt-build",
                 "layer3-first-line-build",
                 "profile",
@@ -4058,7 +4041,7 @@ def validate_core_contracts(
                 "full-digest-format",
                 "prefix-128-derivation",
                 "professional-jit-version-build",
-                "selector-ai-grammar-and-manifest-bytes", "reference-partition-build",
+                "selector-ai-grammar-and-manifest-bytes", "reference-partition-ai-grammar-and-manifest-bytes",
                 "selection-receipt-build",
                 "layer3-first-line-build",
                 "integrity-semantics",
@@ -4071,8 +4054,7 @@ def validate_core_contracts(
             errors.append("Runtime byte integrity must have one non-Runtime verifier owner")
         if (
             runtime_assets["exact_set_bypass"]
-            != "professional-entrypoint-and-logical-selection-receipt-and-layer3-"
-            "binding-required-selector-skipped"
+            != "exact-layer3-skips-layer3-selection-only-exact-references-skips-reference-selection"
             or runtime_assets["mixed_install"]
             != "one-host-selected-professional-root-never-cross-root-compose"
         ):
@@ -8400,6 +8382,7 @@ def runtime_reference_record_errors(
     *,
     expected_professional_skill: str,
     context: str,
+    expected_owner_skill: str | None = None,
 ) -> list[str]:
     """Validate one Build-projected Runtime Reference record.
 
@@ -8409,27 +8392,23 @@ def runtime_reference_record_errors(
     source path.
     """
 
-    if not isinstance(record, dict) or set(record) != RUNTIME_REFERENCE_RECORD_FIELDS:
+    if (not isinstance(record, dict)
+        or not RUNTIME_REFERENCE_RECORD_FIELDS <= set(record)
+        <= RUNTIME_REFERENCE_RECORD_FIELDS | {"context_admissibility"}):
         return [
             f"{context} must contain exactly {sorted(RUNTIME_REFERENCE_RECORD_FIELDS)}"
         ]
-    owner = record.get("owner_skill")
-    layer = record.get("owner_layer")
     path = record.get("path")
-    if not isinstance(owner, str) or NAME_RE.fullmatch(owner) is None:
-        return [f"{context}.owner_skill must be one safe Skill id"]
-    if layer not in {"professional", "foundation", "domain"}:
-        return [f"{context}.owner_layer is invalid"]
     if not _runtime_asset_safe_path(path):
         return [f"{context}.path must be one safe normalized relative path"]
     assert isinstance(path, str)
     parts = PurePosixPath(path).parts
-    if layer == "professional":
+    if len(parts) == 2:
+        owner = expected_professional_skill
         expected_shape = (
             len(parts) == 2
             and parts[0] == "references"
             and _RUNTIME_REFERENCE_FILE_RE.fullmatch(parts[1]) is not None
-            and owner == expected_professional_skill
         )
         if not expected_shape:
             return [
@@ -8437,10 +8416,11 @@ def runtime_reference_record_errors(
                 "references/<file>.md"
             ]
     else:
+        owner = parts[2] if len(parts) >= 3 else ""
         expected_shape = (
             len(parts) == 5
             and parts[:2] == ("references", "layer3")
-            and parts[2] == owner
+            and NAME_RE.fullmatch(owner) is not None
             and parts[3] == "references"
             and _RUNTIME_REFERENCE_FILE_RE.fullmatch(parts[4]) is not None
         )
@@ -8449,7 +8429,77 @@ def runtime_reference_record_errors(
                 f"{context}.path must be exact compiled Layer 3 Runtime form "
                 "references/layer3/<owner-skill>/references/<file>.md"
             ]
+    if expected_owner_skill is not None and owner != expected_owner_skill:
+        return [f"{context}.path does not belong to its owner partition"]
+    if not isinstance(record["type"], str) or record["type"] not in REFERENCE_CONTRACT_TYPES - {"index"}:
+        return [f"{context}.type is invalid"]
+    for field in ("load_when", "do_not_load_when"):
+        if not isinstance(record[field], str) or not record[field].strip():
+            return [f"{context}.{field} must be non-empty text"]
+    for field, allowed in (("required_by", {"analysis-agent", "task-agent", "review-agent"}),
+                           ("required_output", REFERENCE_OUTPUTS_BY_TYPE[record["type"]])):
+        values = record[field]
+        if (not isinstance(values, list) or not values
+            or not all(isinstance(value, str) and value in allowed for value in values)
+            or len(values) != len(set(values))):
+            return [f"{context}.{field} is invalid"]
+    if not REFERENCE_MINIMUM_OUTPUTS_BY_TYPE[record["type"]] <= set(record["required_output"]):
+        return [f"{context}.required_output omits required outputs"]
+    if "context_admissibility" in record:
+        relations = record["context_admissibility"]
+        if (not isinstance(relations, dict) or not relations
+            or not set(relations) <= {"conflicts_with", "sequenced_after", "must_co_trigger_with"}):
+            return [f"{context}.context_admissibility is malformed"]
+        for field, values in relations.items():
+            if not isinstance(values, list) or not values:
+                return [f"{context}.context_admissibility.{field} must be non-empty"]
+            for value in values:
+                peer = value.get("reference") if isinstance(value, dict) and field == "sequenced_after" else value
+                peer_record = {key: record[key] for key in RUNTIME_REFERENCE_RECORD_FIELDS}
+                peer_record["path"] = peer
+                if runtime_reference_record_errors(peer_record,
+                        expected_professional_skill=expected_professional_skill, context=context):
+                    return [f"{context}.context_admissibility.{field} has an unsafe Reference path"]
+                if field == "sequenced_after" and (not isinstance(value, dict)
+                    or set(value) != {"reference", "required_output", "carried_by"}
+                    or not isinstance(value["required_output"], str)
+                    or value["required_output"] not in REFERENCE_OUTPUT_TYPES
+                    or not isinstance(value["carried_by"], dict) or not value["carried_by"]):
+                    return [f"{context}.context_admissibility.sequenced_after is malformed"]
+                if field == "sequenced_after":
+                    for role, carriers in value["carried_by"].items():
+                        if (role not in {"task-agent", "review-agent"}
+                            or not isinstance(carriers, dict) or set(carriers) != {"engineering-brief"}
+                            or not isinstance(carriers["engineering-brief"], list)
+                            or not carriers["engineering-brief"]
+                            or any(_reference_context_carrier_field_error(item) for item in carriers["engineering-brief"])):
+                            return [f"{context}.context_admissibility has malformed carriers"]
+            if len({_canonical_selector_document_bytes(value) for value in values}) != len(values):
+                return [f"{context}.context_admissibility.{field} repeats a relation"]
     return []
+
+
+def runtime_reference_partition_errors(
+    partition: object, *, expected_professional_skill: str,
+    expected_owner_skill: str, context: str,
+) -> list[str]:
+    """Check the AI grammar and owner binding shared by delivery consumers."""
+    if (not isinstance(partition, dict) or set(partition) != RUNTIME_REFERENCE_PARTITION_FIELDS
+        or not isinstance(partition.get("reference_records"), list)
+        or NAME_RE.fullmatch(expected_owner_skill) is None):
+        return [f"{context} fields or owner binding are malformed"]
+    errors = []
+    paths = []
+    for index, record in enumerate(partition["reference_records"]):
+        record_errors = runtime_reference_record_errors(
+            record, expected_professional_skill=expected_professional_skill,
+            expected_owner_skill=expected_owner_skill, context=f"{context}.reference_records[{index}]")
+        errors.extend(record_errors)
+        if not record_errors:
+            paths.append(record["path"])
+    if len(paths) != len(set(paths)):
+        errors.append(f"{context} has duplicate Reference paths")
+    return errors
 
 
 def runtime_reference_record_target(
@@ -8538,32 +8588,13 @@ def runtime_reference_record_tree_errors(
             errors.append(parse_error)
             continue
         assert partition is not None
-        if (
-            set(partition) != RUNTIME_REFERENCE_PARTITION_FIELDS
-            or partition.get("contract") != LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT
-            or partition.get("professional_skill") != expected_professional_skill
-            or partition.get("owner_skill") != partition_path.stem
-            or not isinstance(partition.get("build"), str)
-        ):
-            errors.append(f"{context} fields or bindings are malformed")
+        partition_errors = runtime_reference_partition_errors(
+            partition, expected_professional_skill=expected_professional_skill,
+            expected_owner_skill=partition_path.stem, context=context)
+        if partition_errors:
+            errors.extend(partition_errors)
             continue
-        records = partition.get("reference_records")
-        if not isinstance(records, list):
-            errors.append(f"{context}.reference_records must be a list")
-            continue
-        canonical_records = (
-            json.dumps(
-                records,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-            + "\n"
-        ).encode("utf-8")
-        if partition.get("records_sha256") != hashlib.sha256(
-            canonical_records
-        ).hexdigest():
-            errors.append(f"{context}.records_sha256 is stale")
+        records = partition["reference_records"]
         for index, record in enumerate(records):
             record_context = f"{context}.reference_records[{index}]"
             try:
@@ -8755,37 +8786,17 @@ def runtime_asset_bundle_metadata_errors(
                     if f"references/layer3/{candidate}.md" not in delivery_assets:
                         errors.append(f"Runtime selector asset {path} Layer 3 {candidate!r} has no delivery target")
             continue
-        if selector.get("build") != expected_build_identity:
-            errors.append(f"Runtime selector asset {path} build mismatch")
         partition_context = f"Runtime Reference partition {path}"
-        if (
-            set(selector) != RUNTIME_REFERENCE_PARTITION_FIELDS
-            or selector.get("contract")
-            != LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT
-            or selector.get("professional_skill") != expected_professional_skill
-            or selector.get("owner_skill") != PurePosixPath(path).stem
-            or not isinstance(selector.get("authority_contract"), str)
-            or not selector["authority_contract"]
-        ):
-            errors.append(f"{partition_context} fields or bindings are malformed")
+        owner = PurePosixPath(path).stem
+        partition_errors = runtime_reference_partition_errors(
+            selector, expected_professional_skill=expected_professional_skill,
+            expected_owner_skill=owner, context=partition_context)
+        if partition_errors:
+            errors.extend(partition_errors)
             continue
-        records = selector.get("reference_records")
-        if not isinstance(records, list):
-            errors.append(f"{partition_context}.reference_records must be a list")
-            continue
-        canonical_records = (
-            json.dumps(
-                records,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-            + "\n"
-        ).encode("utf-8")
-        if selector.get("records_sha256") != hashlib.sha256(
-            canonical_records
-        ).hexdigest():
-            errors.append(f"{partition_context}.records_sha256 is stale")
+        if owner != expected_professional_skill and f"references/layer3/{owner}.md" not in delivery_assets:
+            errors.append(f"{partition_context} has no selected Professional Layer 3 owner")
+        records = selector["reference_records"]
         for record_index, record in enumerate(records):
             record_context = (
                 f"{partition_context}.reference_records[{record_index}]"
@@ -8804,6 +8815,11 @@ def runtime_asset_bundle_metadata_errors(
                     f"{record_context}.path has no exact delivery target "
                     f"{record['path']!r}"
                 )
+            for field, relations in record.get("context_admissibility", {}).items():
+                for relation in relations:
+                    peer = relation["reference"] if field == "sequenced_after" else relation
+                    if peer not in delivery_assets:
+                        errors.append(f"{record_context} relation has no exact delivery target {peer!r}")
 
     expected_layer3_marker = RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE.replace(
         "<B>", expected_build_identity
@@ -10472,12 +10488,18 @@ def layer3_selector_runtime_decision_envelope(
     return runtime_envelope
 
 
+LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE = (
+    "Exact Layer 3 skips only Layer 3 selection. Only exact References, including [], skip Reference selection. "
+    "For unresolved References read this Professional and selected Layer 3 owner partitions; "
+    "match required_by, load_when, do_not_load_when, required_output and context_admissibility. "
+    "Reuse supplied bodies or read needed record.path verbatim under the Host-selected Professional root "
+    "after safe relative-path validation. Deliver each needed body with its directly readable Host path."
+)
 LAYER3_SELECTOR_AI_GUIDANCE = (
     "Use only the current Profile's Layer 3 needed for the task. Each when group "
     "needs a match; any unless match excludes that rule. additional_layer3 is also "
-    "authorized when the task needs its expertise. An assigned exact set, including [], "
-    "skips selection. Read Reference records only for this Professional and selected Layer 3."
-)
+    "authorized when the task needs its expertise. "
+) + LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE
 
 
 def layer3_selector_ai_projection(document: dict[str, Any]) -> dict[str, Any]:
@@ -10491,6 +10513,8 @@ def layer3_selector_ai_projection(document: dict[str, Any]) -> dict[str, Any]:
     if contract == LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT:
         return {
             "professional_skill": professional,
+            "guidance": LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE,
+            "reference_records": "reference-records/{owner_skill}.json",
             "decisions": [
                 {
                     "when": row["runtime_key"]["trigger"],
@@ -10504,6 +10528,7 @@ def layer3_selector_ai_projection(document: dict[str, Any]) -> dict[str, Any]:
     if contract == LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT:
         return {
             "professional_skill": professional,
+            "guidance": LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE,
             "profile": document["profile"],
             "selected_layer3": copy.deepcopy(document["selected_layer3"]),
             "reference_records": document["projection"]["reference_records_partition"]["path_template"],
@@ -10581,7 +10606,8 @@ def layer3_selector_ai_document_errors(document: object) -> list[str]:
                 return ["AI selector repeats authorized Layer 3"]
         valid = valid and len(profiles) == len(set(profiles))
     elif "decisions" in document:
-        valid = set(document) == {"professional_skill", "decisions", "complete"}
+        valid = set(document) == {"professional_skill", "guidance", "reference_records", "decisions", "complete"}
+        valid = valid and document.get("guidance") == LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE
         complete = document.get("complete")
         valid = valid and isinstance(complete, dict) and complete == {"path": "selectors/complete.json"}
         decisions = document.get("decisions")
@@ -10594,7 +10620,8 @@ def layer3_selector_ai_document_errors(document: object) -> list[str]:
                 return ["AI selector decision is malformed"]
         valid = valid and len({row["path"] for row in decisions}) == len(decisions)
     else:
-        valid = set(document) == {"professional_skill", "profile", "selected_layer3", "reference_records"}
+        valid = set(document) == {"professional_skill", "guidance", "profile", "selected_layer3", "reference_records"}
+        valid = valid and document.get("guidance") == LAYER3_SELECTOR_AI_REFERENCE_GUIDANCE
         valid = valid and names([document.get("profile")]) and names(document.get("selected_layer3"))
         valid = valid and document["profile"] in {"analysis-agent", "task-agent", "review-agent"}
     if "reference_records" in document:
