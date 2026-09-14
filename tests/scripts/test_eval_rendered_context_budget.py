@@ -467,14 +467,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 assignment = next(
                     item["_text"] for item in components if item["kind"] == "dispatch_capsule"
                 )
-                self.assertIn(
-                    f"Primary Professional Skill: {measurement['primary_skill']}", assignment
-                )
-                self.assertIn("Use content or load missing", assignment)
-                self.assertIn("Host entrypoint/Layer 3 Delivery", assignment)
+                self.assertIn("Reuse content or load this entrypoint", assignment)
+                self.assertIn("this entrypoint/Layer 3 Delivery", assignment)
                 self.assertIn("return unavailable assets/new evidence to Main", assignment)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
+                self.assertIn(
+                    f"Primary Professional Skill: {primary[0]['path']}",
+                    assignment,
+                )
                 self.assertTrue(primary[0]["path"].endswith(
                     f"/{measurement['primary_skill']}/SKILL.md"
                 ))
@@ -482,6 +483,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 self.assertEqual(measurement["layer3_skills"], [
                     Path(item["path"]).stem for item in layer3
                 ])
+                professional_root = EVAL.ROOT / Path(primary[0]["path"]).parent
+                self.assertTrue((professional_root / "SKILL.md").is_file())
+                for item in layer3:
+                    asset = EVAL.ROOT / item["path"]
+                    self.assertTrue(asset.is_file())
+                    self.assertTrue(asset.is_relative_to(professional_root))
                 knowledge_paths = [item["path"] for item in [*primary, *layer3]]
                 self.assertEqual(len(knowledge_paths), len(set(knowledge_paths)))
                 covered.add((measurement["role"], bool(layer3)))

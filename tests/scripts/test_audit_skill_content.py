@@ -2355,11 +2355,12 @@ Return security authority decisions to the service that owns the protected resou
             "Level, or Level Basis."
         )
         replacement = (
-            "Main owns selection. Each Analysis, Task, and Review assignment directs use "
-            "of its Primary Professional Skill and decision-relevant Layer 3/necessary "
-            "References. Include content reuse or missing-content loading from the "
-            "Host-selected Professional entrypoint and its Layer 3 Delivery; return "
-            "unavailable assets to Main. Bounded source discovery may precede loading."
+            "Main owns selection. Each Analysis, Task, and Review assignment carries the "
+            "Host-resolved Primary Professional Skill entrypoint and decision-relevant "
+            "Layer 3/necessary References. Reuse supplied content; load only missing "
+            "content from that root through its Layer 3 Delivery. Never guess roots or "
+            "infer Worker discovery from Main discovery. Return unavailable assets to "
+            "Main before affected judgment. Bounded source discovery may precede loading."
         )
 
         def mechanism_candidates(sentence: str) -> list[tuple[str, str]]:

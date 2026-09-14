@@ -60,12 +60,21 @@ class ControlPromptTests(unittest.TestCase):
             for error in VALIDATOR.validate_prompt(text.replace(delivery, ""))
         ))
 
+    def test_worker_assignment_cannot_omit_resolved_primary_locator(self):
+        text = VALIDATOR.PROMPT.read_text()
+        locator = "carry the Host-resolved entrypoint in the Primary Professional Skill field"
+        self.assertTrue(any(
+            "Host-resolved entrypoint" in error
+            for error in VALIDATOR.validate_prompt(text.replace(locator, "name the Primary Professional Skill"))
+        ))
+
     def test_assignment_content_reuse_host_loading_and_return_are_required(self):
         text = VALIDATOR.PROMPT.read_text()
         for guidance in (
-            "reuse supplied content or load missing content from the Host-selected "
-            "Professional entrypoint and its Layer 3 Delivery when decision-relevant",
-            "Return unavailable assets or selection-changing source evidence to Main",
+            "Reuse supplied content or load missing content from that Professional root "
+            "and its Layer 3 Delivery when decision-relevant",
+            "Return unavailable assets or selection-changing source evidence to Main before affected judgment",
+            "Never guess roots or infer Worker asset visibility from Main discovery",
         ):
             with self.subTest(guidance=guidance):
                 self.assertIn(guidance, text)
