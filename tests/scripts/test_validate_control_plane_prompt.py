@@ -62,9 +62,10 @@ class ControlPromptTests(unittest.TestCase):
 
     def test_worker_assignment_cannot_omit_resolved_primary_locator(self):
         text = VALIDATOR.PROMPT.read_text()
-        locator = "carry the Host-resolved SKILL.md entrypoint in the Primary Professional Skill field"
+        locator = "Each assignment carries directly readable Host-resolved paths for Primary SKILL.md, selected Layer 3 bodies, and necessary Professional/Layer 3 Reference bodies"
+        self.assertIn(locator, text)
         self.assertTrue(any(
-            "Host-resolved SKILL.md entrypoint" in error
+            "Host-resolved paths" in error
             for error in VALIDATOR.validate_prompt(text.replace(locator, "name the Primary Professional Skill"))
         ))
 
@@ -84,8 +85,7 @@ class ControlPromptTests(unittest.TestCase):
     def test_assignment_content_reuse_host_loading_and_return_are_required(self):
         text = VALIDATOR.PROMPT.read_text()
         for guidance in (
-            "Reuse supplied content or load missing content from that Professional root "
-            "and its Layer 3 Delivery when decision-relevant",
+            "Reuse supplied content; read missing bodies at those paths when relevant",
             "Return unavailable assets or selection-changing source evidence to Main before affected judgment",
             "Never guess roots or infer Worker asset visibility from Main discovery",
             "Project Skill names or calls do not replace the assigned Primary; reuse equivalent supplied content",
@@ -96,6 +96,19 @@ class ControlPromptTests(unittest.TestCase):
                     guidance in error
                     for error in VALIDATOR.validate_prompt(text.replace(guidance, ""))
                 ))
+
+    def test_reference_delivery_requires_direct_owner_loading_and_exact_state(self):
+        text = VALIDATOR.PROMPT.read_text()
+        for guidance in (
+            "For unresolved References, carry owner partition Host paths and assign conditional reading",
+            "Only exact References, including [], skip Reference selection",
+            "read current Primary/selected Layer 3 owner partitions directly at their Host paths",
+            "match required_by/load_when/do_not_load_when/required_output and context_admissibility",
+            "Read needed record.path verbatim under that Professional Host root after safe relative-path validation",
+        ):
+            with self.subTest(guidance=guidance):
+                self.assertIn(guidance, text)
+                self.assertTrue(any(guidance in error for error in VALIDATOR.validate_prompt(text.replace(guidance, ""))))
 
 
 if __name__ == '__main__':
