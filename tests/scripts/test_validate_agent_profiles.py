@@ -263,6 +263,14 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             )
         self.assertEqual([], errors)
 
+    def test_source_instructions_pass_readability_gate(self) -> None:
+        errors: list[str] = []
+        for profile in BUILDER._load_agent_profiles():
+            VALIDATOR.validate_ai_readability(
+                profile["instructions"], profile["name"], errors
+            )
+        self.assertEqual([], errors)
+
 
     def test_host_matrix_declares_tools_and_enforcement_without_runtime_state(self) -> None:
         enforcement = json.loads(
@@ -359,13 +367,75 @@ class AgentProfileReadabilityTests(unittest.TestCase):
     def test_decoded_built_instructions_accept_current_profiles(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {profile["name"]: profile for profile in source["profiles"]}
-        exact_rule = profiles["task-agent"]["instructions"].splitlines()[0]
-        for platform in ("codex", "claude", "copilot"):
-            with self.subTest(platform=platform):
-                result, output = self._mutated_built_result(
-                    platform, "task-agent", exact_rule, exact_rule
+        for role in ("analysis-agent", "task-agent", "review-agent"):
+            exact_rule = profiles[role]["instructions"].splitlines()[0]
+            for platform in ("codex", "claude", "copilot"):
+                with self.subTest(role=role, platform=platform):
+                    result, output = self._mutated_built_result(
+                        platform, role, exact_rule, exact_rule
+                    )
+                    self.assertEqual(0, result, output)
+
+    def test_worker_primary_consumption_cannot_be_removed(self) -> None:
+        consumption = "Apply Main's assigned Primary Professional Skill"
+        for role in ("analysis-agent", "task-agent", "review-agent"):
+            with self.subTest(role=role):
+                result, output = self._mutated_source_result(
+                    role, consumption, "Observe the assignment"
                 )
-                self.assertEqual(0, result, output)
+                self.assertEqual(1, result, output)
+                self.assertIn("professional delivery safeguard", output)
+                self.assertIn(consumption, output)
+            for platform in ("codex", "claude", "copilot"):
+                with self.subTest(role=role, platform=platform):
+                    result, output = self._mutated_built_result(
+                        platform, role, consumption, "Observe the assignment"
+                    )
+                    self.assertEqual(1, result, output)
+                    self.assertIn("professional delivery safeguard", output)
+                    self.assertIn(consumption, output)
+
+    def test_worker_consumption_preserves_conditional_loading_and_routing(self) -> None:
+        # Each mutation removes or reverses one instruction. These are static
+        # contract checks, not a simulated Worker or evidence of Host invocation.
+        mutations = (
+            ("only assigned Layer 3/needed References",
+             "any related Layer 3/References"),
+            ("when relevant", "for an assignment log"),
+            ("possibly empty", "Layer 3 must never be empty"),
+            ("Reuse supplied content; load missing via Host", "reload context or load missing content"),
+            ("load missing via Host", "load all through model familiarity"),
+            ("supplied content", "model familiarity"),
+            ("bounded discovery may precede loading", "Bounded source discovery requires prior loading"),
+            ("No rerouting/catalog preload", "Reroute and preload the catalog"),
+            ("Return selection-changing source evidence to Main", "adjust selection from source evidence"),
+        )
+        for role in ("analysis-agent", "task-agent", "review-agent"):
+            for old, new in mutations:
+                with self.subTest(role=role, safeguard=old):
+                    result, output = self._mutated_source_result(role, old, new)
+                    self.assertEqual(1, result, output)
+                    self.assertIn("professional delivery safeguard", output)
+                    self.assertIn(old, output)
+
+    def test_review_consumes_its_independent_assignment(self) -> None:
+        for old, new in (
+            ("Use Main's independent Review assignment", "Reuse the Task assignment"),
+            ("Never copy/union Task Layer 3", "copy/union Task Layer 3"),
+        ):
+            with self.subTest(safeguard=old):
+                result, output = self._mutated_source_result("review-agent", old, new)
+                self.assertEqual(1, result, output)
+                self.assertIn("independent Review safeguard", output)
+                self.assertIn(old, output)
+            for platform in ("codex", "claude", "copilot"):
+                with self.subTest(platform=platform, safeguard=old):
+                    result, output = self._mutated_built_result(
+                        platform, "review-agent", old, new
+                    )
+                    self.assertEqual(1, result, output)
+                    self.assertIn("independent Review safeguard", output)
+                    self.assertIn(old, output)
 
     def test_task_tool_boundary_survives_instruction_deduplication(self) -> None:
         profiles = {row["name"]: row for row in BUILDER._load_agent_profiles()}

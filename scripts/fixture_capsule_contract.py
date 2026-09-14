@@ -58,7 +58,12 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
     goal = step.get("goal")
     if not isinstance(goal, str) or not goal.strip():
         raise FixtureCapsuleError("assignment needs a concrete goal")
-    lines = [goal, "", f"Primary Professional: {primary}"]
+    # All evaluator Hosts use this canonical built knowledge root; this is not
+    # runtime path discovery. Keep its locator in the measured assignment text.
+    lines = [
+        goal, "", f"Primary Professional Skill: dist/universal/skills/recommended/{primary}/SKILL.md",
+        "Reuse content; load missing here; return gaps to Main.",
+    ]
     if step.get("constraints"):
         lines.extend(["", "Constraints:", *[f"- {item}" for item in step["constraints"]]])
     if step.get("write_scope"):

@@ -48,6 +48,55 @@ class ControlPromptTests(unittest.TestCase):
         text = VALIDATOR.PROMPT.read_text() + '\nReview Round ID is required for completion.\n'
         self.assertTrue(any('retired machinery' in error for error in VALIDATOR.validate_prompt(text)))
 
+    def test_worker_knowledge_delivery_cannot_be_removed_from_main(self):
+        text = VALIDATOR.PROMPT.read_text()
+        delivery = (
+            "In each analysis-agent, task-agent, or review-agent assignment, direct it "
+            "to apply the assigned Primary Professional Skill and selected Layer 3"
+        )
+        self.assertIn(delivery, text)
+        for role in ("analysis-agent", "task-agent", "review-agent"):
+            with self.subTest(role=role):
+                names_only = text.replace(delivery, delivery.replace(role, "generic agent"))
+                self.assertTrue(any(delivery in error for error in VALIDATOR.validate_prompt(names_only)))
+
+    def test_worker_assignment_cannot_omit_resolved_primary_locator(self):
+        text = VALIDATOR.PROMPT.read_text()
+        locator = "carry the Host-resolved SKILL.md entrypoint in the Primary Professional Skill field"
+        self.assertTrue(any(
+            "Host-resolved SKILL.md entrypoint" in error
+            for error in VALIDATOR.validate_prompt(text.replace(locator, "name the Primary Professional Skill"))
+        ))
+
+    def test_analysis_and_review_branches_cannot_fall_back_to_names_only(self):
+        text = VALIDATOR.PROMPT.read_text()
+        for dispatch in (
+            "A source-backed question or explicit diagnosis goes to analysis-agent with its Host-resolved Primary Professional Skill locator",
+            "Send a concrete unresolved question to analysis-agent with that assignment's Host-resolved Primary Professional Skill locator",
+            "provide the reviewer with its independently selected Review Primary Professional Skill locator and Layer 3",
+        ):
+            with self.subTest(dispatch=dispatch):
+                self.assertTrue(any(
+                    dispatch in error
+                    for error in VALIDATOR.validate_prompt(text.replace(dispatch, dispatch.replace("locator", "name")))
+                ))
+
+    def test_assignment_content_reuse_host_loading_and_return_are_required(self):
+        text = VALIDATOR.PROMPT.read_text()
+        for guidance in (
+            "Reuse supplied content or load missing content from that Professional root "
+            "and its Layer 3 Delivery when decision-relevant",
+            "Return unavailable assets or selection-changing source evidence to Main before affected judgment",
+            "Never guess roots or infer Worker asset visibility from Main discovery",
+            "Project Skill names or calls do not replace the assigned Primary; reuse equivalent supplied content",
+        ):
+            with self.subTest(guidance=guidance):
+                self.assertIn(guidance, text)
+                self.assertTrue(any(
+                    guidance in error
+                    for error in VALIDATOR.validate_prompt(text.replace(guidance, ""))
+                ))
+
 
 if __name__ == '__main__':
     unittest.main()
