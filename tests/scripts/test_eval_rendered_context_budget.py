@@ -1674,11 +1674,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         assert runtime_manifest is not None
         manifests = {EVAL.RUNTIME_NAME: runtime_manifest}
 
-        def selector_reference_id(
+        def owner_reference_id(
             profile: str,
             primary: str,
             owner: str,
-            decision_problem: str,
+            reference_stem: str,
         ) -> str:
             partition = json.loads(
                 (
@@ -1689,14 +1689,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     / f"{owner}.json"
                 ).read_text(encoding="utf-8")
             )
+            self.assertEqual({"reference_records"}, set(partition))
             records = {
                 json.dumps(record, sort_keys=True, separators=(",", ":"))
                 for record in partition["reference_records"]
-                if record.get("owner_skill") == owner
-                and (record.get("context_admissibility") or {}).get(
-                    "decision_problem"
-                )
-                == decision_problem
+                if Path(record["path"]).stem == reference_stem
             }
             self.assertEqual(1, len(records))
             record = json.loads(records.pop())
@@ -1715,7 +1712,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertIn("references/layer3", recommended.as_posix())
 
         payment_references = {
-            profile: selector_reference_id(
+            profile: owner_reference_id(
                 profile,
                 "engineering-change-analysis",
                 "payment-trading-extension",
@@ -1762,7 +1759,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertIn("references/layer3/transaction-consistency", recommended_nested.as_posix())
 
         domain_ids = {
-            profile: selector_reference_id(
+            profile: owner_reference_id(
                 profile,
                 "data-middleware-change-builder",
                 "bigdata-product-extension",
