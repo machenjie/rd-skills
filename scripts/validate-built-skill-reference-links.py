@@ -856,7 +856,7 @@ def _validate_compiled_layer3_projection(
             "the source Targeted References table"
         )
     for forbidden in (
-        "## JIT Reference Delivery",
+        "## JIT Loading",
         "Current-Professional JIT",
         "engineering-control-plane/references/selectors/",
         "never select/reroute/preload",
@@ -1553,12 +1553,12 @@ def _validate_rendered_professional_body(
         )
     selector_path = "references/runtime/selector.json"
     if (
-        body.count("## JIT Reference Delivery") != 1
+        body.count("## JIT Loading") != 1
         or body.count(selector_path) != 1
     ):
         errors.append(
             f"{_display_path(skill_file)}: rendered root must contain exactly one "
-            "Professional JIT Reference Delivery and selector path"
+            "Professional JIT Loading and selector path"
         )
 
 

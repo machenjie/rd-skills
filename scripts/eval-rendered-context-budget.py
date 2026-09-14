@@ -24,8 +24,6 @@ from validation_utils import (
     COMPILED_LAYER3_FORMAT,
     CONTEXT_BUDGET_MODEL,
     CORE_CONTRACTS,
-    RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE,
-    RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE,
     ValidationProblem,
     authoritative_build_input_snapshot,
     behavior_eval_authority,
@@ -49,7 +47,7 @@ from validation_utils import (
     runtime_reference_record_target,
     runtime_reference_partition_errors,
 )
-from fixture_capsule_contract import FixtureCapsuleError, runtime_layer3_reference_path, validate_and_render_fixture_capsule
+from fixture_capsule_contract import FIXTURE_HOST_SKILLS_ROOT, FixtureCapsuleError, runtime_layer3_reference_path, validate_and_render_fixture_capsule
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -204,6 +202,7 @@ MODE_REFERENCES = {
 
 
 LIMITATIONS = (
+    "Assignment paths use the fixed simulated Host installation /rd-skills-fixture/skills; each Professional-relative asset is read and validated from the actual subject dist/universal/skills/recommended tree. Counts do not measure a real Host's path lengths or dispatch bytes.",
     "Counts cover deterministic rendered rd-skills instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.",
     "Counts exclude host system prompts, tool schemas, user conversation history, repository reads, diffs, command output, and other dynamic evidence.",
     "Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.",
@@ -1277,7 +1276,7 @@ def _capsule_envelopes(cases):
         for index, step in enumerate(case["steps"]):
             if step.get("action") != "dispatch": continue
             rendered = validate_and_render_fixture_capsule(
-                step, professional_root=DIST_SKILLS / RUNTIME_NAME / step["primary_skill"])
+                step, professional_root=FIXTURE_HOST_SKILLS_ROOT / step["primary_skill"])
             kind = _budget_class(step, "", [])
             component = _component("dispatch_assignment", f"fixture:{case['id']}:{index}", rendered)
             if kind not in envelopes or component["tokens"] > envelopes[kind]["tokens"]:
@@ -2816,7 +2815,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             role = str(raw_step.get("profile"))
             primary = str(raw_step.get("primary_skill") or "")
             canonical_capsule = validate_and_render_fixture_capsule(
-                raw_step, professional_root=DIST_SKILLS / RUNTIME_NAME / primary)
+                raw_step, professional_root=FIXTURE_HOST_SKILLS_ROOT / primary)
             layer3 = raw_step.get("layer3_skills", [])
             if not isinstance(layer3, list):
                 errors.append(f"{case_id}: dispatch step {index} layer3_skills must be a list")
@@ -3060,6 +3059,12 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         "schema_version": 2,
         "status": "pass" if not errors else "fail",
         "evidence_scope": "deterministic-rendered-artifacts",
+        "assignment_host": {
+            "scope": "simulated-installed-host",
+            "skills_root": str(FIXTURE_HOST_SKILLS_ROOT),
+            "source_skills_root": "dist/universal/skills/recommended",
+            "mapping": "same Primary and verbatim Professional-relative path",
+        },
         "compiled_layer3_format": COMPILED_LAYER3_FORMAT,
         "tokenizer": "o200k_base",
         "limitations": list(LIMITATIONS),

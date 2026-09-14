@@ -849,21 +849,27 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     BUILD._write_compact_professional_projection(root, item)
                     BUILD._append_layer3_entrypoint(root)
                     rendered = (root / "SKILL.md").read_text(encoding="utf-8")
+                    BUILD._copy_skill_tree(item.path, root)
+                    BUILD._write_compact_professional_projection(root, item, runtime_version="9.9.9", build_identity="_____________________w")
+                    BUILD._append_layer3_entrypoint(root)
+                    self.assertEqual(rendered, (root / "SKILL.md").read_text(encoding="utf-8"))
                     self.assertNotIn("## Targeted References", rendered)
-                    self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
+                    self.assertEqual(1, rendered.count("## JIT Loading"))
                     self.assertEqual(
                         1,
                         rendered.count("references/runtime/selector.json"),
                     )
-                    jit = rendered.split("## JIT Reference Delivery", 1)[1].split("## Layer 3 Delivery", 1)[0]
-                    self.assertIn("Layer 3 selection: use the selector above only when Layer 3 is unresolved", jit)
+                    jit = rendered.split("## JIT Loading", 1)[1].split("## Layer 3 Delivery", 1)[0]
+                    self.assertNotIn("Runtime:", jit)
+                    self.assertIn("Layer 3 selector: `references/runtime/selector.json`", jit)
+                    self.assertIn("Layer 3 selection: use the selector only when unresolved", jit)
                     self.assertIn(f"references/runtime/reference-records/{item.name}.json", jit)
                     self.assertIn("references/runtime/reference-records/<selected-layer3>.json", jit)
-                    self.assertIn("Reference loading: when unresolved, read these owner indexes directly", jit)
+                    self.assertIn("Unresolved References: read these indexes directly", jit)
                     self.assertIn("Paths are relative to this Professional root", jit)
-                    self.assertIn("For exact References, reuse supplied bodies or read assigned Host paths", jit)
+                    self.assertIn("Exact References: reuse bodies or read assigned Host paths", jit)
                     self.assertNotIn("read this selector", jit)
-                    self.assertIn("Keep Main's route; do not preload catalogs", jit)
+                    self.assertIn("Keep Main's route; no catalog preload", jit)
                     for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
                         self.assertIn(f"## {heading}", rendered)
                     self.assertEqual(
@@ -898,7 +904,7 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     rendered = (root / "SKILL.md").read_text(encoding="utf-8")
                     self.assertNotIn("## Targeted References", rendered)
                     for forbidden in (
-                        "## JIT Reference Delivery",
+                        "## JIT Loading",
                         "Current-Professional JIT",
                         "engineering-control-plane/references/selectors/",
                         "never select/reroute/preload",
@@ -922,9 +928,11 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
         for item in items:
             with self.subTest(skill=item.name):
                 rendered = BUILD._render_layer3_reference(item)
+                self.assertEqual(rendered, BUILD._render_layer3_reference(item, "_____________________w"))
+                self.assertNotIn("Build:", rendered)
                 self.assertNotIn("## Targeted References", rendered)
                 for forbidden in (
-                    "## JIT Reference Delivery",
+                    "## JIT Loading",
                     "Current-Professional JIT",
                     "engineering-control-plane/references/selectors/",
                     "never select/reroute/preload",

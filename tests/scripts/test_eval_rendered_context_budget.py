@@ -437,6 +437,41 @@ def _reconstruct_global_dominance_relation(
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def test_simulated_host_is_checkout_stable_and_reads_actual_subject_assets(self) -> None:
+        def evaluate():
+            with mock.patch.object(EVAL, '_evaluate_admissible_context_compositions', return_value={'errors': []}), mock.patch.object(
+                EVAL, '_budget_governance_report', return_value={'conformance_failures': []}
+            ):
+                return EVAL.evaluate()
+
+        first = evaluate()
+        with tempfile.TemporaryDirectory() as temporary:
+            second_root = Path(temporary) / 'another-long-checkout-location' / 'subject'
+            for relative in ('src', 'dist', 'evals/agent-light-trajectories'):
+                shutil.copytree(ROOT / relative, second_root / relative)
+            lightweight = second_root / 'reports/hookless-control-plane-eval.json'
+            lightweight.parent.mkdir(parents=True)
+            shutil.copy2(EVAL.LIGHTWEIGHT_REPORT, lightweight)
+            fixtures = second_root / 'evals/agent-light-trajectories/cases.yaml'
+            with EVAL._subject_configuration(second_root, fixtures, lightweight):
+                second = evaluate()
+                self.assertEqual(first['component_catalog'], second['component_catalog'])
+                self.assertEqual(first['cases'], second['cases'])
+                self.assertEqual('simulated-installed-host', second['assignment_host']['scope'])
+                # The simulated locator cannot mask missing or escaped actual bodies.
+                missing = second_root / 'dist/universal/skills/recommended/delivery-release-gate/references/layer3/release-rollback/references/evidence-patterns.md'
+                missing.unlink()
+                rejected = evaluate()
+                self.assertEqual('fail', rejected['status'])
+                self.assertTrue(any('evidence-patterns.md.path is a missing regular file' in error for error in rejected['errors']), rejected['errors'])
+                document = json.loads(fixtures.read_text())
+                case = next(row for row in document['cases'] if row['id'] == 'release-rollback')
+                case['steps'][0]['layer3_references'] = ['../outside.md']
+                fixtures.write_text(json.dumps(document))
+                rejected = evaluate()
+                self.assertEqual('fail', rejected['status'])
+                self.assertTrue(any('exact nested Layer 3 Reference' in error for error in rejected['errors']))
+
     def test_evaluator_preserves_reference_tristate_and_accounts_for_owner_indexes(self) -> None:
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         case = next(case for case in document["cases"] if case["id"] == "data-migration")
@@ -513,13 +548,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 assignment = next(
                     item["_text"] for item in components if item["kind"] == "dispatch_capsule"
                 )
-                self.assertIn("Reuse supplied content; read missing content at the supplied Host paths", assignment)
-                self.assertIn("## Layer 3 Delivery", assignment)
-                self.assertIn("Return unavailable assets or selection-changing evidence to Main", assignment)
+                self.assertIn("Layer 3 exact:", assignment)
+                self.assertIn("Return selection-changing source evidence to Main", profile_text)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
                 self.assertIn(
-                    f"Primary Professional Skill: {EVAL.ROOT / primary[0]['path']}",
+                    f"Primary Professional Skill: {EVAL.FIXTURE_HOST_SKILLS_ROOT / measurement['primary_skill'] / 'SKILL.md'}",
                     assignment,
                 )
                 self.assertTrue(primary[0]["path"].endswith(
@@ -535,6 +569,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     asset = EVAL.ROOT / item["path"]
                     self.assertTrue(asset.is_file())
                     self.assertTrue(asset.is_relative_to(professional_root))
+                for item in components:
+                    if item['kind'] in {'primary_skill', 'layer3', 'targeted_reference', 'layer3_reference', 'reference_index'}:
+                        asset = EVAL.ROOT / item['path']
+                        relative = asset.relative_to(professional_root)
+                        self.assertTrue(asset.is_file())
+                        self.assertIn(str(EVAL.FIXTURE_HOST_SKILLS_ROOT / measurement['primary_skill'] / relative), assignment)
                 knowledge_paths = [item["path"] for item in [*primary, *layer3]]
                 self.assertEqual(len(knowledge_paths), len(set(knowledge_paths)))
                 covered.add((measurement["role"], bool(layer3)))
@@ -960,6 +1000,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         for tokens, expected in (
             (limits["soft_target"], (True, True, None)),
             (limits["soft_target"] + 1, (False, True, "growth-advisory")),
+            (limits["hard_ceiling"], (False, True, "growth-advisory")),
             (limits["hard_ceiling"] + 1, (False, False, "hard-ceiling-exceeded")),
         ):
             with self.subTest(tokens=tokens), mock.patch.object(

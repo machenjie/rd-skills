@@ -1521,8 +1521,6 @@ def _render_layer3_reference(
     body = _rewrite_layer3_links(body, item.name)
     return "\n".join(
         [
-            f"<!-- Build: {build_identity} -->",
-            "",
             f"<!-- Layer: {item.layer}; source: {item.path.relative_to(ROOT)} -->",
             "",
             body,
@@ -1764,27 +1762,17 @@ def _compact_jit_reference_delivery_lines(
 
     if selector_name is None:
         return []
-    if runtime_version is None or build_identity is None:
-        snapshot = authoritative_build_input_snapshot(ROOT)
-        runtime_version = _source_version()
-        build_identity = _runtime_build_identity(snapshot)
-    try:
-        runtime_asset_build_identity_bytes(build_identity)
-    except ValueError as exc:
-        raise BuildError("Professional Runtime build marker is malformed") from exc
     return [
         "",
-        "## JIT Reference Delivery",
+        "## JIT Loading",
         "",
-        "JIT: `references/runtime/selector.json`; "
-        f"Runtime: `{runtime_version}/{build_identity}`.",
-        "Layer 3 selection: use the selector above only when Layer 3 is unresolved.",
-        f"Reference indexes: `references/runtime/reference-records/{selector_name}.json` (this Professional); "
-        "`references/runtime/reference-records/<selected-layer3>.json` (each selected Layer 3).",
-        "Reference loading: when unresolved, read these owner indexes directly. "
-        "Paths are relative to this Professional root. Apply record conditions and read needed record.path under this root. "
-        "For exact References, reuse supplied bodies or read assigned Host paths. "
-        "Keep Main's route; do not preload catalogs.",
+        "Layer 3 selector: `references/runtime/selector.json`.",
+        "Layer 3 selection: use the selector only when unresolved.",
+        f"Reference indexes: `references/runtime/reference-records/{selector_name}.json`; "
+        "`references/runtime/reference-records/<selected-layer3>.json` for each selected Layer 3.",
+        "Unresolved References: read these indexes directly. Paths are relative to this Professional root; "
+        "apply record conditions and read needed record.path here. "
+        "Exact References: reuse bodies or read assigned Host paths. Keep Main's route; no catalog preload.",
     ]
 
 

@@ -43,14 +43,8 @@ BUILD_IDENTITY = base64.urlsafe_b64encode(
 ).decode("ascii").rstrip("=")
 PROFESSIONAL = "engineering-change-analysis"
 RECEIPT_PROFESSIONAL = "repository-tooling-change-builder"
-INLINE_CONTRACT = "changeforge.runtime-inline-identity/v3"
-JIT_LINE = (
-    "JIT: `references/runtime/selector.json`; "
-    f"Runtime: `{SOURCE_VERSION}/{BUILD_IDENTITY}`."
-)
-LAYER3_MARKER = (
-    f"<!-- Build: {BUILD_IDENTITY} -->"
-)
+INLINE_CONTRACT = "changeforge.runtime-inline-identity/v4"
+JIT_LINE = "Layer 3 selector: `references/runtime/selector.json`."
 
 
 def _load_validation():
@@ -155,7 +149,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
                 _canonical_json(reference_partition)
             ),
             "references/layer3/minimal-correct-implementation.md": (
-                f"{LAYER3_MARKER}\n\n# minimal-correct-implementation\n"
+                "# minimal-correct-implementation\n"
             ).encode(),
             "references/analysis-evidence.md": b"# Targeted Reference\n",
         }
@@ -187,7 +181,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             "build_identity_algorithm": "sha256-prefix-128-base64url-nopad",
             "build_identity": BUILD_IDENTITY,
             "inline_identity_contract": INLINE_CONTRACT,
-            "inline_identity_version": 3,
+            "inline_identity_version": 4,
             "integrity_manifest_path": "references/runtime/integrity-manifest.json",
             "integrity_manifest_full_bytes_sha256": hashlib.sha256(
                 manifest_bytes
@@ -218,7 +212,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         self.assertEqual("base64url-nopad-22", inline["build_identity_format"])
         self.assertEqual("frontmatter-name", inline["professional_binding"])
         self.assertEqual(
-            "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+            "Layer 3 selector: `references/runtime/selector.json`.",
             inline["professional_entrypoint_jit_line"],
         )
         self.assertNotIn("reference_partition_build_field", inline)
@@ -229,13 +223,11 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
             "canonical-semantic-domain-includes-build",
             inline["selection_receipt_hash_domain"],
         )
+        self.assertEqual([], inline["ai_build_markers"])
+        self.assertNotIn("layer3_first_line", inline)
+        self.assertNotIn("layer3_marker_mode", inline)
         self.assertEqual(
-            "<!-- Build: <B> -->",
-            inline["layer3_first_line"],
-        )
-        self.assertEqual("replace-existing-generated-marker", inline["layer3_marker_mode"])
-        self.assertEqual(
-            "host-root-plus-receipt-plus-fixed-path",
+            "host-root-plus-fixed-path",
             inline["layer3_professional_binding"],
         )
 
@@ -300,6 +292,25 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
 
     def test_non_runtime_verifier_accepts_inline_bundle(self) -> None:
         self.assertEqual([], self._verify(*self._valid_bundle()))
+
+    def test_identity_changes_only_manifest_metadata_not_delivery_bytes(self) -> None:
+        _manifest, assets, _root = self._valid_bundle()
+        bindings, manifests = [], []
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / PROFESSIONAL
+            for relative, content in assets.items():
+                path = destination / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            for version, digest in ((SOURCE_VERSION, AUTHORITATIVE_SHA256), ('0.2.0', 'f' * 64)):
+                with mock.patch.object(self.build, '_source_version', return_value=version):
+                    bindings.append(self.build._write_and_validate_runtime_bundle_metadata(
+                        destination, PROFESSIONAL, {'sha256': digest}))
+                manifests.append((destination / 'references/runtime/integrity-manifest.json').read_bytes())
+                self.assertEqual(assets, {relative: (destination / relative).read_bytes() for relative in assets})
+        self.assertNotEqual(bindings[0]['build_identity'], bindings[1]['build_identity'])
+        self.assertNotEqual(bindings[0]['runtime_version'], bindings[1]['runtime_version'])
+        self.assertNotEqual(manifests[0], manifests[1])
 
     def test_compact_reference_grammar_rejects_unknown_unsafe_and_malformed_data(self) -> None:
         valid = self._reference_record(owner_skill=PROFESSIONAL, owner_layer="professional",
@@ -495,7 +506,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
                     context="symlink",
                 )
 
-    def test_non_runtime_verifier_rejects_missing_or_mismatched_inline_markers(self) -> None:
+    def test_non_runtime_verifier_rejects_missing_assets_and_retired_ai_markers(self) -> None:
         manifest, assets, root = self._valid_bundle()
         mutations: list[tuple[bytes, dict[str, bytes], dict[str, object]]] = []
 
@@ -540,11 +551,13 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         malformed_selector["references/runtime/selectors/change-kind.json"] = b"{\n"
         mutations.append(rebind(malformed_selector))
 
-        missing_layer3_marker = copy.deepcopy(assets)
-        missing_layer3_marker[
-            "references/layer3/minimal-correct-implementation.md"
-        ] = b"# minimal-correct-implementation\n"
-        mutations.append(rebind(missing_layer3_marker))
+        missing_layer3 = copy.deepcopy(assets)
+        del missing_layer3["references/layer3/minimal-correct-implementation.md"]
+        mutations.append((manifest, missing_layer3, root))
+
+        old_professional_marker = copy.deepcopy(assets)
+        old_professional_marker["SKILL.md"] += f"JIT: `references/runtime/selector.json`; Runtime: `{SOURCE_VERSION}/{BUILD_IDENTITY}`.\n".encode()
+        mutations.append(rebind(old_professional_marker))
 
         stale_layer3_marker = copy.deepcopy(assets)
         stale_layer3_marker[
@@ -619,7 +632,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
         self.assertEqual(
             [
                 "professional-entrypoint",
-                "logical-selection-receipt",
+                "main-assignment",
                 "current-fixed-assets",
             ],
             runtime["runtime_inline_verification"]["inputs"],
@@ -647,7 +660,7 @@ class RuntimeAssetCoreContractTests(unittest.TestCase):
                 "professional-entrypoint",
                 "selector-or-reference-partition",
                 "logical-selection-receipt",
-                "targeted-reference-layer3-marker",
+                "layer3-body",
             ],
             projection["inline_accounted_components"],
         )

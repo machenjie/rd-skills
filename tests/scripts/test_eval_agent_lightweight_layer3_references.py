@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from fixture_capsule_contract import FixtureCapsuleError, validate_and_render_fixture_capsule
+from fixture_capsule_contract import FIXTURE_HOST_SKILLS_ROOT, FixtureCapsuleError, validate_and_render_fixture_capsule
 
 
 class Layer3ReferenceTests(unittest.TestCase):
@@ -24,11 +24,11 @@ class Layer3ReferenceTests(unittest.TestCase):
                     goal='Repair the generator.', layer3_skills=[], layer3_references=[],
                     professional_references=['references/generator-and-plugin-contracts.md'])
         rendered = validate_and_render_fixture_capsule(step)
-        host_root = ROOT / 'dist/universal/skills/recommended/repository-tooling-change-builder'
+        host_root = FIXTURE_HOST_SKILLS_ROOT / 'repository-tooling-change-builder'
         self.assertIn(str(host_root / 'SKILL.md'), rendered)
         self.assertIn(str(host_root / step['professional_references'][0]), rendered)
         nested = self.step()
-        host_root = ROOT / 'dist/universal/skills/recommended/ai-code-review-refactor'
+        host_root = FIXTURE_HOST_SKILLS_ROOT / 'ai-code-review-refactor'
         rendered = validate_and_render_fixture_capsule(nested)
         self.assertIn(str(host_root / 'references/layer3/code-review.md'), rendered)
         self.assertIn(str(host_root / nested['layer3_references'][0]), rendered)
@@ -46,6 +46,17 @@ class Layer3ReferenceTests(unittest.TestCase):
         rendered = validate_and_render_fixture_capsule(step)
         self.assertIn('References exact: []', rendered)
         self.assertNotIn('References unresolved', rendered)
+
+    def test_explicit_host_root_remains_verbatim_and_unsafe_roots_fail(self):
+        step = self.step()
+        actual = Path('/actual-host/installed/ai-code-review-refactor')
+        rendered = validate_and_render_fixture_capsule(step, professional_root=actual)
+        self.assertIn(str(actual / 'SKILL.md'), rendered)
+        self.assertNotIn(str(FIXTURE_HOST_SKILLS_ROOT), rendered)
+        for unsafe in (Path('relative/ai-code-review-refactor'),
+                       Path('/host/../ai-code-review-refactor'), Path('/host/wrong-primary')):
+            with self.subTest(root=unsafe), self.assertRaises(FixtureCapsuleError):
+                validate_and_render_fixture_capsule(step, professional_root=unsafe)
 
     def test_owner_must_be_selected(self):
         step = self.step(); step['layer3_skills'] = []

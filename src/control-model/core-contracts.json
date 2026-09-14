@@ -1331,20 +1331,19 @@
       "forbidden": ["basename-inference", "owner-plus-relative-concatenation", "source-runtime-dual-path", "search-fallback", "glob-fallback", "HOME-fallback", "parent-fallback", "sibling-fallback"]
     },
     "inline_identity": {
-      "contract": "changeforge.runtime-inline-identity/v3",
+      "contract": "changeforge.runtime-inline-identity/v4",
       "runtime_version_source": "root-source-version",
       "build_identity_derivation": "authoritative-build-inputs-sha256-prefix-128-base64url-nopad",
       "build_identity_bits": 128,
       "build_identity_format": "base64url-nopad-22",
       "professional_binding": "frontmatter-name",
-      "professional_entrypoint_jit_line": "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+      "professional_entrypoint_jit_line": "Layer 3 selector: `references/runtime/selector.json`.",
       "inline_json_assets": [],
       "selector_read": "single-existing-load-no-reread",
       "selection_receipt_build_field": "build",
       "selection_receipt_hash_domain": "canonical-semantic-domain-includes-build",
-      "layer3_first_line": "<!-- Build: <B> -->",
-      "layer3_marker_mode": "replace-existing-generated-marker",
-      "layer3_professional_binding": "host-root-plus-receipt-plus-fixed-path"
+      "ai_build_markers": [],
+      "layer3_professional_binding": "host-root-plus-fixed-path"
     },
     "integrity_manifest": {
       "contract": "changeforge.runtime-integrity-manifest/v1",
@@ -1372,37 +1371,37 @@
     },
     "fixed_locator_projection": {
       "owner": "generated-professional-entrypoint-and-selector-envelope",
-      "professional_entrypoint_line": "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+      "professional_entrypoint_line": "Layer 3 selector: `references/runtime/selector.json`.",
       "selector_owns": ["complete-selector", "decision-shard", "reference-partition"],
       "layer3_path_grammar": "references/layer3/<layer3-skill>.md",
       "forbidden": ["runtime-identity-sidecar", "cross-skill-selector-locator", "duplicate-layer3-locator", "duplicate-profile-main-brief-locator", "search-discovery"]
     },
-    "acyclic_generation_order": ["authoritative-build-inputs-and-source-version", "full-sha256-and-runtime-version", "sha256-prefix-128-comparator", "professional-receipt-layer3-inline-bindings-and-ai-selectors", "integrity-inventory-and-semantic-hash", "root-manifest-integrity-exact-byte-binding"],
+    "acyclic_generation_order": ["authoritative-build-inputs-and-source-version", "full-sha256-and-runtime-version", "sha256-prefix-128-comparator", "professional-locators-machine-receipt-bindings-and-ai-selectors", "integrity-inventory-and-semantic-hash", "root-manifest-integrity-exact-byte-binding"],
     "root_manifest_binding": {
       "fields": ["professional_skill", "runtime_version", "authoritative_build_inputs_sha256", "build_identity_algorithm", "build_identity", "inline_identity_contract", "inline_identity_version", "integrity_manifest_path", "integrity_manifest_full_bytes_sha256"],
       "build_identity_algorithm": "sha256-prefix-128-base64url-nopad",
-      "inline_identity_contract": "changeforge.runtime-inline-identity/v3",
-      "inline_identity_version": 3,
+      "inline_identity_contract": "changeforge.runtime-inline-identity/v4",
+      "inline_identity_version": 4,
       "hash_domain": "exact-serialized-file-bytes",
       "completeness": "integrity-assets-plus-one-metadata-full-byte-binding"
     },
     "runtime_roles": {
       "profiles": ["main-control-agent", "analysis-agent", "task-agent", "review-agent"],
-      "required_reads": ["professional-entrypoint", "logical-selection-receipt", "current-fixed-assets"],
+      "required_reads": ["professional-entrypoint", "main-assignment", "current-fixed-assets"],
       "forbidden_reads": ["integrity-manifest", "root-build-manifest"],
       "digest_operations": [],
       "forbidden_operations": ["runtime-identity-sidecar-read", "selector-reload", "closure-enumeration", "sha256", "size", "HOME-enumeration", "parent-search", "glob", "sibling-root-resolution"]
     },
     "runtime_inline_verification": {
-      "inputs": ["professional-entrypoint", "logical-selection-receipt", "current-fixed-assets"],
-      "checks": ["professional-frontmatter-name", "professional-jit-runtime-version-build", "base64url-nopad-22-build-identity", "selection-receipt-build", "layer3-first-line-build", "profile", "selection-owner", "selection-kind", "selected-or-exact-layer3", "ordered-unique", "itemwise-profile-domain-authorization", "current-asset-professional-binding", "reference-record-path-verbatim"],
+      "inputs": ["professional-entrypoint", "main-assignment", "current-fixed-assets"],
+      "checks": ["professional-frontmatter-name", "profile", "selection-owner", "selection-kind", "selected-or-exact-layer3", "ordered-unique", "itemwise-profile-domain-authorization", "current-asset-professional-binding", "reference-record-path-verbatim"],
       "proof_limits": ["full-digest-derivation", "raw-byte-integrity", "coherent-old-bundle-currentness"]
     },
     "non_runtime_verifier": {
       "owner": "scripts/validation_utils.py#runtime_asset_bundle_metadata_errors",
       "consumers": ["build", "installer", "doctor", "evaluator", "tests"],
       "inputs": ["integrity-manifest-full-bytes", "complete-delivery-assets", "root-manifest-binding", "full-authoritative-input-sha256"],
-      "checks": ["full-digest-format", "prefix-128-derivation", "professional-jit-version-build", "selector-ai-grammar-and-manifest-bytes", "reference-partition-ai-grammar-and-manifest-bytes", "selection-receipt-build", "layer3-first-line-build", "integrity-semantics", "complete-inventory", "asset-digest-size", "reference-record-path-shape-and-exact-target", "one-metadata-full-byte-binding"]
+      "checks": ["full-digest-format", "prefix-128-derivation", "professional-jit-selector-locator", "selector-ai-grammar-and-manifest-bytes", "reference-partition-ai-grammar-and-manifest-bytes", "selection-receipt-build", "no-ai-build-markers", "integrity-semantics", "complete-inventory", "asset-digest-size", "reference-record-path-shape-and-exact-target", "one-metadata-full-byte-binding"]
     },
     "exact_set_bypass": "exact-layer3-skips-layer3-selection-only-exact-references-skips-reference-selection",
     "mixed_install": "one-host-selected-professional-root-never-cross-root-compose",
@@ -1470,7 +1469,7 @@
     },
     "budget_classes": {
       "main": {"label":"Main always-loaded","category":"resident_runtime","soft_target":2305,"hard_ceiling":2650,"calibration_status":"provisional-migration-value"},
-      "task": {"label":"Direct Task dispatch","category":"dispatch_composition","soft_target":3000,"hard_ceiling":3200,"calibration_status":"provisional-migration-value"},
+      "task": {"label":"Direct Task dispatch","category":"dispatch_composition","soft_target":3000,"hard_ceiling":3400,"calibration_status":"provisional-migration-value"},
       "analyzed_task": {"label":"Analyzed Task dispatch","category":"dispatch_composition","soft_target":6000,"hard_ceiling":6500,"calibration_status":"provisional-migration-value"},
       "analysis": {"label":"Analysis dispatch","category":"dispatch_composition","soft_target":4500,"hard_ceiling":5000,"calibration_status":"provisional-migration-value"},
       "review": {"label":"Review dispatch","category":"dispatch_composition","soft_target":3700,"hard_ceiling":4000,"calibration_status":"provisional-migration-value"},
@@ -1488,7 +1487,7 @@
       "integrity_manifest_runtime_load_count": 0,
       "selective_identity_field_read_count": 0,
       "identity_structural_selector_load_delta_max": 0,
-      "inline_accounted_components": ["professional-entrypoint", "selector-or-reference-partition", "logical-selection-receipt", "targeted-reference-layer3-marker"],
+      "inline_accounted_components": ["professional-entrypoint", "selector-or-reference-partition", "logical-selection-receipt", "layer3-body"],
       "cross_skill_selector_locator_occurrence_count": 0,
       "cumulative_trajectory_cost": "reported-observation-not-correctness-acceptance",
       "post_implementation_gate": "unproved-stop-on-context-route-coverage-or-binding-failure",

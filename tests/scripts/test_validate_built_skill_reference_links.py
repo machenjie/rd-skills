@@ -128,10 +128,9 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         skill_root.mkdir(parents=True)
         fixed_lines = [
             "# Sample Professional",
-            "## JIT Reference Delivery",
+            "## JIT Loading",
             "",
-            "JIT: `references/runtime/selector.json`; Runtime: "
-            "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.",
+            "Layer 3 selector: `references/runtime/selector.json`.",
             "## Layer 3 Delivery",
             "",
             "No Foundation or Domain Layer 3 items are assigned to this Skill.",
@@ -201,9 +200,8 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 skill = profile_root / "sample-professional/SKILL.md"
                 text = skill.read_text(encoding="utf-8")
                 block = (
-                    "## JIT Reference Delivery\n\n"
-                    "JIT: `references/runtime/selector.json`; Runtime: "
-                    "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.\n"
+                    "## JIT Loading\n\n"
+                    "Layer 3 selector: `references/runtime/selector.json`.\n"
                 )
                 self.assertEqual(1, text.count(block))
                 skill.write_text(
@@ -218,7 +216,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 )
                 self.assertTrue(
                     any(
-                        "exactly one Professional JIT Reference Delivery and selector path"
+                        "exactly one Professional JIT Loading and selector path"
                         in error
                         for error in errors
                     ),
@@ -788,7 +786,7 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
 
     def test_rejects_layer3_jit_and_control_policy(self) -> None:
         forbidden = (
-            "## JIT Reference Delivery",
+            "## JIT Loading",
             "Current-Professional JIT",
             "engineering-control-plane/references/selectors/sample.json",
             "never select/reroute/preload",

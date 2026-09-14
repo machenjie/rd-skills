@@ -12,6 +12,10 @@ from typing import Any
 
 from validation_utils import load_yaml_file, professional_routing_authority
 
+# A versioned simulated installation input, not a discovered real Host path.
+# Evaluators map this root to their actual built Professional root when reading.
+FIXTURE_HOST_SKILLS_ROOT = Path("/rd-skills-fixture/skills")
+
 
 class FixtureCapsuleError(ValueError):
     pass
@@ -66,15 +70,13 @@ def validate_and_render_fixture_capsule(
     goal = step.get("goal")
     if not isinstance(goal, str) or not goal.strip():
         raise FixtureCapsuleError("assignment needs a concrete goal")
-    # All evaluator Hosts use this canonical built knowledge root; this is not
-    # runtime path discovery. Keep its locator in the measured assignment text.
-    host_root = professional_root if professional_root is not None else root / "dist/universal/skills/recommended" / primary
-    if not isinstance(host_root, Path) or not host_root.is_absolute() or host_root.name != primary:
+    # A caller can supply its actual Host root. The evaluator default is a fixed
+    # simulated installation, independent of temporary checkout locations.
+    host_root = professional_root if professional_root is not None else FIXTURE_HOST_SKILLS_ROOT / primary
+    if (not isinstance(host_root, Path) or not host_root.is_absolute()
+            or ".." in host_root.parts or host_root.name != primary):
         raise FixtureCapsuleError("Host Professional root must be an absolute path for the assigned Primary")
-    lines = [
-        goal, "", f"Primary Professional Skill: {host_root / 'SKILL.md'}",
-        "Reuse supplied content; read missing content at the supplied Host paths. Return unavailable assets or selection-changing evidence to Main; no rerouting.",
-    ]
+    lines = [goal, "", f"Primary Professional Skill: {host_root / 'SKILL.md'}"]
     if step.get("constraints"):
         lines.extend(["", "Constraints:", *[f"- {item}" for item in step["constraints"]]])
     if step.get("write_scope"):
@@ -83,9 +85,8 @@ def validate_and_render_fixture_capsule(
         lines.extend(["", f"Validation: {step['validation']}"])
     if step.get("brief"):
         lines.extend(["", step["brief"]])
-    lines.extend(["", "## Layer 3 Delivery"])
-    lines.append("Layer 3 exact: " + (", ".join(layer3) if layer3 else "[]"))
-    lines.extend(f"- {name}: {host_root / 'references/layer3' / (name + '.md')}" for name in layer3)
+    lines.extend(["", "Layer 3 exact:" + ("" if layer3 else " []")])
+    lines.extend(f"- {host_root / 'references/layer3' / (name + '.md')}" for name in layer3)
     lines.extend(["", "## Reference Delivery"])
     for path in step.get("professional_references") or []:
         lines.append(f"- {host_root / path}")

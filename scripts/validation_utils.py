@@ -3338,8 +3338,8 @@ def behavior_eval_authority(data: object) -> dict[str, Any]:
     return copy.deepcopy(data["behavior_eval_contract"])
 
 
-RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT = "changeforge.runtime-inline-identity/v3"
-RUNTIME_ASSET_INLINE_IDENTITY_VERSION = 3
+RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT = "changeforge.runtime-inline-identity/v4"
+RUNTIME_ASSET_INLINE_IDENTITY_VERSION = 4
 RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT = (
     "changeforge.runtime-integrity-manifest/v1"
 )
@@ -3397,10 +3397,7 @@ RUNTIME_ASSET_FIXED_PATHS = {
 }
 RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM = "sha256-prefix-128-base64url-nopad"
 RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE = (
-    "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`."
-)
-RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE = (
-    "<!-- Build: <B> -->"
+    "Layer 3 selector: `references/runtime/selector.json`."
 )
 
 
@@ -3805,8 +3802,7 @@ def validate_core_contracts(
             "selector_read",
             "selection_receipt_build_field",
             "selection_receipt_hash_domain",
-            "layer3_first_line",
-            "layer3_marker_mode",
+            "ai_build_markers",
             "layer3_professional_binding",
         }
         if exact_keys(
@@ -3834,12 +3830,9 @@ def validate_core_contracts(
                 or inline_identity["selection_receipt_build_field"] != "build"
                 or inline_identity["selection_receipt_hash_domain"]
                 != "canonical-semantic-domain-includes-build"
-                or inline_identity["layer3_first_line"]
-                != RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE
-                or inline_identity["layer3_marker_mode"]
-                != "replace-existing-generated-marker"
+                or inline_identity["ai_build_markers"] != []
                 or inline_identity["layer3_professional_binding"]
-                != "host-root-plus-receipt-plus-fixed-path"
+                != "host-root-plus-fixed-path"
             ):
                 errors.append("Runtime inline identity contract is invalid")
 
@@ -3921,7 +3914,7 @@ def validate_core_contracts(
             "authoritative-build-inputs-and-source-version",
             "full-sha256-and-runtime-version",
             "sha256-prefix-128-comparator",
-            "professional-receipt-layer3-inline-bindings-and-ai-selectors",
+            "professional-locators-machine-receipt-bindings-and-ai-selectors",
             "integrity-inventory-and-semantic-hash",
             "root-manifest-integrity-exact-byte-binding",
         ]
@@ -3969,7 +3962,7 @@ def validate_core_contracts(
             or runtime_roles.get("required_reads")
             != [
                 "professional-entrypoint",
-                "logical-selection-receipt",
+                "main-assignment",
                 "current-fixed-assets",
             ]
             or runtime_roles.get("forbidden_reads")
@@ -3988,23 +3981,19 @@ def validate_core_contracts(
                 )
             )
         ):
-            errors.append("Runtime roles must use compact inline verification only")
+            errors.append("Runtime roles must use assignment and fixed-asset verification only")
         inline = runtime_assets["runtime_inline_verification"]
         if (
             not isinstance(inline, dict)
             or inline.get("inputs")
             != [
                 "professional-entrypoint",
-                "logical-selection-receipt",
+                "main-assignment",
                 "current-fixed-assets",
             ]
             or inline.get("checks")
             != [
                 "professional-frontmatter-name",
-                "professional-jit-runtime-version-build",
-                "base64url-nopad-22-build-identity",
-                "selection-receipt-build",
-                "layer3-first-line-build",
                 "profile",
                 "selection-owner",
                 "selection-kind",
@@ -4040,10 +4029,10 @@ def validate_core_contracts(
             != [
                 "full-digest-format",
                 "prefix-128-derivation",
-                "professional-jit-version-build",
+                "professional-jit-selector-locator",
                 "selector-ai-grammar-and-manifest-bytes", "reference-partition-ai-grammar-and-manifest-bytes",
                 "selection-receipt-build",
-                "layer3-first-line-build",
+                "no-ai-build-markers",
                 "integrity-semantics",
                 "complete-inventory",
                 "asset-digest-size",
@@ -4279,7 +4268,7 @@ def validate_core_contracts(
                 "professional-entrypoint",
                 "selector-or-reference-partition",
                 "logical-selection-receipt",
-                "targeted-reference-layer3-marker",
+                "layer3-body",
             ],
             "cross_skill_selector_locator_occurrence_count": 0,
             "cumulative_trajectory_cost": (
@@ -8733,10 +8722,7 @@ def runtime_asset_bundle_metadata_errors(
         errors.append("Runtime integrity manifest inventory is incomplete or has extra assets")
 
     professional_bytes = delivery_assets.get("SKILL.md")
-    expected_jit_line = (
-        "JIT: `references/runtime/selector.json`; Runtime: "
-        f"`{expected_source_version}/{expected_build_identity}`."
-    )
+    expected_jit_line = RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE
     if not isinstance(professional_bytes, bytes):
         errors.append("Runtime Professional entrypoint is missing")
     else:
@@ -8746,7 +8732,9 @@ def runtime_asset_bundle_metadata_errors(
             errors.append("Runtime Professional entrypoint is not UTF-8")
         else:
             if professional_text.count(expected_jit_line) != 1:
-                errors.append("Runtime Professional JIT version/build marker is missing or duplicated")
+                errors.append("Runtime Professional Layer 3 selector locator is missing or duplicated")
+            if re.search(r"^JIT:.*Runtime:", professional_text, re.MULTILINE):
+                errors.append("Runtime Professional entrypoint retains an AI build marker")
             if "references/runtime/identity.json" in professional_text:
                 errors.append("Runtime Professional entrypoint retains identity sidecar lookup")
             frontmatter = professional_text.split("---", 2)
@@ -8821,9 +8809,6 @@ def runtime_asset_bundle_metadata_errors(
                     if peer not in delivery_assets:
                         errors.append(f"{record_context} relation has no exact delivery target {peer!r}")
 
-    expected_layer3_marker = RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE.replace(
-        "<B>", expected_build_identity
-    )
     for path, payload in sorted(delivery_assets.items()):
         candidate = PurePosixPath(path)
         if (
@@ -8834,11 +8819,12 @@ def runtime_asset_bundle_metadata_errors(
         ):
             continue
         try:
-            first_line = payload.decode("utf-8").splitlines()[0]
-        except (UnicodeDecodeError, IndexError):
-            first_line = ""
-        if first_line != expected_layer3_marker:
-            errors.append(f"Runtime Layer 3 asset {path} build marker mismatch")
+            text = payload.decode("utf-8")
+        except UnicodeDecodeError:
+            errors.append(f"Runtime Layer 3 asset {path} is not UTF-8")
+            continue
+        if re.search(r"<!--[^>]*\bBuild:", text):
+            errors.append(f"Runtime Layer 3 asset {path} retains an AI build marker")
 
     if not isinstance(root_binding, dict) or set(root_binding) != RUNTIME_ASSET_ROOT_BINDING_FIELDS:
         errors.append("root Runtime metadata binding fields are not exact")
