@@ -437,6 +437,52 @@ def _reconstruct_global_dominance_relation(
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def test_evaluator_preserves_reference_tristate_and_accounts_for_owner_indexes(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = next(case for case in document["cases"] if case["id"] == "data-migration")
+        original = copy.deepcopy(case["steps"][0])
+        named = (['references/checklist.md'], original['layer3_references'])
+        states = [(None, None), ([], []), named, (None, named[1]),
+                  (named[0], None), ([], None), (None, [])]
+        steps = []
+        for professional, layer3 in states:
+            step = copy.deepcopy(original)
+            step.update(professional_references=professional, layer3_references=layer3)
+            steps.append(step)
+        missing = copy.deepcopy(original)
+        missing.pop('professional_references'); missing.pop('layer3_references')
+        steps.append(missing)
+        case['steps'] = steps
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = Path(temporary) / 'references.json'
+            fixture.write_text(json.dumps(document), encoding='utf-8')
+            # The real dispatch reader, file resolution, measurements, report and
+            # aggregate run; unrelated exhaustive dominance and budget policy do not.
+            with mock.patch.object(EVAL, 'FIXTURES', fixture), mock.patch.object(
+                EVAL, '_evaluate_admissible_context_compositions', return_value={'errors': []}
+            ), mock.patch.object(EVAL, '_budget_governance_report', return_value={'conformance_failures': []}):
+                report = EVAL.evaluate()
+        measured = next(case for case in report['cases'] if case['id'] == 'data-migration')['measurements']
+        catalog = {item['id']: item for item in report['component_catalog']}
+        self.assertEqual(len(steps) * len(EVAL.HOST_PROFILE_ROOTS), len(measured))
+        for measurement in measured:
+            step = steps[measurement['step']]
+            expected_owners = ([step['primary_skill']] if step.get('professional_references') is None else [])
+            if step.get('layer3_references') is None:
+                expected_owners.extend(step['layer3_skills'])
+            components = [catalog[component_id] for component_id in measurement['component_ids']]
+            indexes = [item for item in components if item['kind'] == 'reference_index']
+            self.assertEqual(expected_owners, measurement['unresolved_reference_owners'])
+            self.assertEqual(expected_owners, [Path(item['path']).stem for item in indexes])
+            self.assertTrue(all(item['tokens'] > 0 for item in indexes))
+            self.assertEqual(step.get('professional_references'), measurement['professional_references'])
+            self.assertEqual(step.get('layer3_references'), measurement['layer3_references'])
+            self.assertEqual(not expected_owners, measurement['reference_selection_complete'])
+            bodies = [item for item in components if item['kind'] in {'targeted_reference', 'layer3_reference'}]
+            self.assertEqual(len(step.get('professional_references') or []) + len(step.get('layer3_references') or []), len(bodies))
+        self.assertEqual('fail', report['status'])
+        self.assertTrue(any('Reference body selection remains unresolved' in error for error in report['errors']))
+
     def test_worker_context_preserves_assigned_knowledge_and_consumption_rules(self) -> None:
         captures = []
         measure = EVAL._measure_context
@@ -467,13 +513,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 assignment = next(
                     item["_text"] for item in components if item["kind"] == "dispatch_capsule"
                 )
-                self.assertIn("Reuse content; load missing here", assignment)
+                self.assertIn("Reuse supplied content; read missing content at the supplied Host paths", assignment)
                 self.assertIn("## Layer 3 Delivery", assignment)
-                self.assertIn("return gaps to Main", assignment)
+                self.assertIn("Return unavailable assets or selection-changing evidence to Main", assignment)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
                 self.assertIn(
-                    f"Primary Professional Skill: {primary[0]['path']}",
+                    f"Primary Professional Skill: {EVAL.ROOT / primary[0]['path']}",
                     assignment,
                 )
                 self.assertTrue(primary[0]["path"].endswith(

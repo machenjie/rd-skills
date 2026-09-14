@@ -167,7 +167,11 @@ and selected Layer 3 records, match role/load/skip/output conditions and
 relationships, then safely join `record.path` verbatim to the supplied Professional
 Host root. Only an exact Reference list, including `[]`, skips this selection.
 The fixture capsule renderer exercises these assignments for evaluation; it is
-not a live Host dispatch engine.
+not a live Host dispatch engine. The context evaluator supplies its actual
+Professional Host root to that renderer. Omitted or null Reference lists retain
+their unresolved state and count the corresponding owner-index files. Exact
+lists count only their named bodies. An unresolved body selection produces an
+incomplete-context error; index tokens cannot certify the later body budget.
 
 `test_built_professional_root_projection.py` checks actual generated files for
 all 25 Professionals and every Profile, including exact authorization sets,

@@ -209,7 +209,7 @@ LIMITATIONS = (
     "Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.",
     "Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.",
     "Duplicate-token measurement detects exact normalized Markdown rule blocks, not semantic paraphrases.",
-    "Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded.",
+    "Reference body counts include only explicitly named fixture files. Unresolved selections count only current Primary/selected Layer 3 owner indexes and remain incomplete until body selection is supplied; catalogs and recursively linked files are never loaded.",
 )
 
 
@@ -716,6 +716,8 @@ def _layer3_reference_registry_errors(
     if "utility_capsule" in step:
         return []
     raw = step.get("layer3_references")
+    if raw is None:
+        return []
     if not isinstance(raw, list):
         return [f"{case_id}: dispatch step {index} layer3_references must be a list"]
     errors: list[str] = []
@@ -1274,7 +1276,8 @@ def _capsule_envelopes(cases):
     for _, case in cases:
         for index, step in enumerate(case["steps"]):
             if step.get("action") != "dispatch": continue
-            rendered = validate_and_render_fixture_capsule(step)
+            rendered = validate_and_render_fixture_capsule(
+                step, professional_root=DIST_SKILLS / RUNTIME_NAME / step["primary_skill"])
             kind = _budget_class(step, "", [])
             component = _component("dispatch_assignment", f"fixture:{case['id']}:{index}", rendered)
             if kind not in envelopes or component["tokens"] > envelopes[kind]["tokens"]:
@@ -2810,9 +2813,10 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             errors.extend(step_errors)
             if step_errors:
                 continue
-            canonical_capsule = validate_and_render_fixture_capsule(raw_step)
             role = str(raw_step.get("profile"))
             primary = str(raw_step.get("primary_skill") or "")
+            canonical_capsule = validate_and_render_fixture_capsule(
+                raw_step, professional_root=DIST_SKILLS / RUNTIME_NAME / primary)
             layer3 = raw_step.get("layer3_skills", [])
             if not isinstance(layer3, list):
                 errors.append(f"{case_id}: dispatch step {index} layer3_skills must be a list")
@@ -2820,12 +2824,19 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             layer3_references = raw_step.get("layer3_references")
             if "utility_capsule" in raw_step:
                 layer3_references = []
-            elif not isinstance(layer3_references, list):
+            elif layer3_references is not None and not isinstance(layer3_references, list):
                 errors.append(
                     f"{case_id}: dispatch step {index} layer3_references must be a list"
                 )
                 continue
-            references = raw_step["professional_references"]
+            references = raw_step.get("professional_references")
+            unresolved_owners = [primary] if references is None else []
+            if layer3_references is None:
+                unresolved_owners.extend(layer3)
+            if unresolved_owners:
+                errors.append(
+                    f"{case_id}: dispatch step {index}: Reference body selection remains unresolved "
+                    f"for {', '.join(unresolved_owners)}; owner-index context is incomplete")
             budget_class = _budget_class(
                 raw_step,
                 str(case.get("kind") or ""),
@@ -2853,7 +2864,18 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                             continue
                         components.append(_file_component("primary_skill", primary_path))
                         reference_failed = False
-                        for reference in references:
+                        for owner in unresolved_owners:
+                            try:
+                                _runtime_reference_partition(primary_path.parent, primary, owner)
+                            except ValueError as exc:
+                                errors.append(f"{case_id}: dispatch step {index}: {exc}")
+                                reference_failed = True
+                                break
+                            components.append(_file_component("reference_index",
+                                primary_path.parent / "references/runtime/reference-records" / f"{owner}.json"))
+                        if reference_failed:
+                            continue
+                        for reference in references or []:
                             try:
                                 _record, reference_path = (
                                     _runtime_reference_record_and_target(
@@ -2903,7 +2925,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                         if layer3_failed:
                             continue
                         layer3_reference_failed = False
-                        for record_path in layer3_references:
+                        for record_path in layer3_references or []:
                             try:
                                 _record, nested_path = (
                                     _runtime_reference_record_and_target(
@@ -2950,14 +2972,14 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                             "mode": raw_step.get("mode"),
                             "primary_skill": primary or None,
                             "layer3_skills": [str(item) for item in layer3],
-                            "layer3_references": [
-                                str(item) for item in layer3_references
-                            ],
-                            "loaded_layer3_reference_count": len(layer3_references),
+                            "layer3_references": layer3_references,
+                            "loaded_layer3_reference_count": len(layer3_references or []),
                             "loaded_layer3_reference_logical_ids": [
-                                str(item) for item in layer3_references
+                                str(item) for item in layer3_references or []
                             ],
-                            "professional_references": list(references),
+                            "professional_references": references,
+                            "unresolved_reference_owners": unresolved_owners,
+                            "reference_selection_complete": not unresolved_owners,
                             "canonical_capsule_tokens": count_o200k_base_tokens(
                                 canonical_capsule
                             ),
@@ -2994,7 +3016,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         for _fixture_group, case in cases
         for step in case.get("steps", [])
         if isinstance(step, dict) and step.get("action") == "dispatch"
-        for logical_id in step.get("layer3_references", [])
+        for logical_id in step.get("layer3_references") or []
     ]
     max_by_class: dict[str, dict[str, Any] | None] = {}
     for budget_class in ("analysis", "task", "analyzed_task", "review", "utility"):

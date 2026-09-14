@@ -35,7 +35,9 @@ def runtime_layer3_reference_path(value: object, label: str = "layer3_reference"
     return value
 
 
-def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
+def validate_and_render_fixture_capsule(
+    step: dict[str, Any], *, professional_root: Path | None = None,
+) -> str:
     """Check the real role/expertise boundary and render only needed instructions."""
     role = step.get("profile")
     primary = step.get("primary_skill")
@@ -66,7 +68,9 @@ def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
         raise FixtureCapsuleError("assignment needs a concrete goal")
     # All evaluator Hosts use this canonical built knowledge root; this is not
     # runtime path discovery. Keep its locator in the measured assignment text.
-    host_root = root / "dist/universal/skills/recommended" / primary
+    host_root = professional_root if professional_root is not None else root / "dist/universal/skills/recommended" / primary
+    if not isinstance(host_root, Path) or not host_root.is_absolute() or host_root.name != primary:
+        raise FixtureCapsuleError("Host Professional root must be an absolute path for the assigned Primary")
     lines = [
         goal, "", f"Primary Professional Skill: {host_root / 'SKILL.md'}",
         "Reuse supplied content; read missing content at the supplied Host paths. Return unavailable assets or selection-changing evidence to Main; no rerouting.",
