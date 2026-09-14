@@ -24,6 +24,8 @@ from validation_utils import (
     ValidationProblem,
     collect_skill_root_source,
     fail_many,
+    layer3_selector_ai_projection,
+    layer3_selector_ai_document_errors,
     layer3_selector_expand_runtime_projection,
     layer3_selector_resolve_control_projection,
     load_yaml_file,
@@ -654,6 +656,7 @@ def _validate_compiled_layer3_entrypoints(
             f"{_display_path(manifest_path)}: compiled Layer 3 mapping contains "
             "non-product Foundation Skills"
         )
+    source_projections = canonical_build._selector_projection_assets()[0] if compiled_union else {}
     for name in professional_names:
         expected_raw = compiled.get(name)
         if not isinstance(expected_raw, list) or not all(
@@ -669,6 +672,10 @@ def _validate_compiled_layer3_entrypoints(
                 f"{_display_path(manifest_path)}: {name} compiled candidates contain duplicates"
             )
         skill_root = profile_root / name
+        selector = _load_complete_selector_projection(
+            skill_root / "references/runtime/selector.json", errors,
+            professional_root=skill_root, selector_root=skill_root / "references/runtime",
+            professional=name, closure_layout="runtime", source_projections=source_projections) if expected else None
         skill_file = skill_root / "SKILL.md"
         skill_text = skill_file.read_text(encoding="utf-8") if skill_file.is_file() else ""
         _validate_rendered_professional_body(skill_file, errors)
@@ -774,6 +781,8 @@ def _validate_compiled_layer3_entrypoints(
                 ),
                 physical_root=layer3_root / candidate,
                 closure_layout="runtime",
+                selector=selector,
+                selector_checked=True,
             )
 
 
@@ -788,6 +797,8 @@ def _validate_compiled_layer3_projection(
     partition_root: Path,
     physical_root: Path,
     closure_layout: str,
+    selector: dict[str, object] | None = None,
+    selector_checked: bool = False,
 ) -> None:
     """Validate the exact ai-consumption-v1 section projection."""
 
@@ -863,6 +874,8 @@ def _validate_compiled_layer3_projection(
             "Decision Boundary"
         )
     professional = professional_root.name
+    if selector_checked and selector is None:
+        return
     _validate_selector_reference_reachability(
         professional,
         candidate,
@@ -872,6 +885,7 @@ def _validate_compiled_layer3_projection(
         partition_root=partition_root,
         physical_root=physical_root,
         closure_layout=closure_layout,
+        selector=selector,
     )
 
 
@@ -973,6 +987,7 @@ def _load_complete_selector_projection(
     selector_root: Path,
     professional: str,
     closure_layout: str,
+    source_projections: dict[str, dict[str, object]] | None = None,
 ) -> dict[str, object] | None:
     try:
         spec = _selector_layout_spec(
@@ -1037,6 +1052,53 @@ def _load_complete_selector_projection(
             f"{_display_path(selector_path)}: selector Professional owner is invalid"
         )
         return None
+    if closure_layout == "runtime":
+        # The AI view carries only selection semantics. Replay the existing
+        # Registry projection here, at the non-Runtime validation boundary.
+        # Neither the AI nor its selector loads this source or a metadata sidecar.
+        try:
+            projections = source_projections
+            if projections is None:
+                projections, _partitions = canonical_build._selector_projection_assets()
+            source = copy.deepcopy(projections[f"{professional}.json"])
+            complete_key = f"{professional}/complete.json"
+            normalized = copy.deepcopy(projections.get(complete_key, source))
+            canonical_build._rewrite_runtime_reference_partition_path(
+                normalized, "../reference-records/{owner_skill}.json"
+                if complete_key in projections else "reference-records/{owner_skill}.json")
+            if complete_key in projections:
+                source["complete"]["path"] = "selectors/complete.json"
+                documents = [("selectors/complete.json", normalized, "selector complete path")]
+                for row in source["decisions"]:
+                    old_path = row["path"]
+                    row["path"] = "selectors/" + old_path.removeprefix(f"{professional}/")
+                    shard = copy.deepcopy(projections[old_path])
+                    canonical_build._rewrite_runtime_reference_partition_path(shard)
+                    documents.append((row["path"], shard, "selector decision path"))
+                # Validate the supplied locators before comparing to source;
+                # never let a supplied path drive lookup outside the fixed root.
+                supplied = [selector.get("complete"), *selector.get("decisions", [])]
+                if len(supplied) != len(documents):
+                    raise ValidationProblem("AI selector decision inventory differs from source")
+                for binding, (relative, expected, label) in zip(supplied, documents, strict=True):
+                    actual_path = _fixed_child_path(
+                        selector_root, binding.get("path") if isinstance(binding, dict) else None,
+                        errors, label=label, expected=relative)
+                    if actual_path is None:
+                        return None
+                    actual = json.loads(actual_path.read_text(encoding="utf-8"))
+                    if actual != layer3_selector_ai_projection(expected):
+                        raise ValidationProblem(f"{relative}: AI selector differs from source authority")
+            else:
+                source = normalized
+            if layer3_selector_ai_document_errors(selector) or selector != layer3_selector_ai_projection(source):
+                raise ValidationProblem("AI selector differs from source authority or fixed Reference partition path is invalid")
+            manifest = json.loads((professional_root / "references/runtime/integrity-manifest.json").read_text(encoding="utf-8"))
+            normalized["build"] = manifest["build_identity"]
+            return normalized
+        except (OSError, ValueError, KeyError, TypeError, ValidationProblem) as exc:
+            errors.append(f"{_display_path(selector_path)}: AI selector failed closed: {exc}")
+            return None
     contract = selector.get("contract")
     if contract == "changeforge.layer3-selector-normalized-control/v1":
         if "complete" in selector or "decisions" in selector:

@@ -624,11 +624,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 / "transaction-consistency.json"
             ).read_text(encoding="utf-8")
         )
-        self.assertEqual(
-            "changeforge.layer3-selector-normalized-control/v1",
-            selector["contract"],
-        )
-        self.assertNotIn("reference_records", selector)
+        self.assertTrue(selector["selection"])
+        self.assertNotIn("build", selector)
+        self.assertEqual("reference-records/{owner_skill}.json", selector["reference_records"])
         self.assertTrue(
             any(
                 record.get("owner_skill") == "transaction-consistency"

@@ -39,6 +39,7 @@ from validation_utils import (
     foundation_ownership_errors,
     foundation_registry_field_errors,
     layer3_selector_authority,
+    layer3_selector_ai_projection,
     layer3_selector_normalized_control_projections,
     layer3_selector_runtime_decision_envelope,
     load_yaml_file,
@@ -1281,7 +1282,7 @@ def _write_professional_runtime_selector_closure(
             selector, "reference-records/{owner_skill}.json"
         )
         _write_canonical_json(
-            runtime_root / "selector.json", selector, trailing_newline=True
+            runtime_root / "selector.json", layer3_selector_ai_projection(selector), trailing_newline=True
         )
         prefix = f"{professional}/"
         partitions = {
@@ -1351,7 +1352,7 @@ def _write_professional_runtime_selector_closure(
         _rewrite_runtime_reference_partition_path(shard)
         shard_bytes = _write_canonical_json(
             runtime_root / "selectors" / filename,
-            shard,
+            layer3_selector_ai_projection(shard),
             trailing_newline=True,
         )
         decision["path"] = f"selectors/{filename}"
@@ -1359,11 +1360,11 @@ def _write_professional_runtime_selector_closure(
 
     _write_canonical_json(
         runtime_root / "selectors" / "complete.json",
-        complete,
+        layer3_selector_ai_projection(complete),
         trailing_newline=True,
     )
     _write_canonical_json(
-        runtime_root / "selector.json", envelope, trailing_newline=True
+        runtime_root / "selector.json", layer3_selector_ai_projection(envelope), trailing_newline=True
     )
 
     prefix = f"{professional}/"

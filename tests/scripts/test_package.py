@@ -95,7 +95,12 @@ class PackageSafetyTests(unittest.TestCase):
                     selector.parent.mkdir(parents=True)
                     selector.write_text(
                         json.dumps(
-                            {"build": build_identity},
+                            {
+                                "professional_skill": name,
+                                "guidance": VALIDATION.LAYER3_SELECTOR_AI_GUIDANCE,
+                                "selection": [{"profiles": ["task-agent"], "rules": [], "additional_layer3": []}],
+                                "reference_records": "reference-records/{owner_skill}.json",
+                            },
                             sort_keys=True,
                             separators=(",", ":"),
                         )

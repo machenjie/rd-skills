@@ -336,6 +336,28 @@ class ProfessionalLocalSelectorClosureTests(unittest.TestCase):
         VALIDATOR._validate_compiled_layer3_entrypoints(built, errors)
         self.assertEqual([], errors)
 
+    def test_ai_selector_source_parity_rejects_semantic_tampering(self) -> None:
+        professional = "repository-tooling-change-builder"
+        with tempfile.TemporaryDirectory() as raw:
+            root = self._copy_runtime(raw) / professional
+            runtime = root / "references/runtime"
+            path = runtime / "selector.json"
+            original = json.loads(path.read_text(encoding="utf-8"))
+            for mutate in (
+                lambda doc: doc["selection"][0]["profiles"].append("review-agent"),
+                lambda doc: doc["selection"][0]["additional_layer3"].append("transaction-consistency"),
+                lambda doc: doc["selection"][0]["rules"][0]["when"].pop(),
+                lambda doc: doc["selection"][0]["rules"][0]["unless"].pop(),
+            ):
+                document = copy.deepcopy(original)
+                mutate(document)
+                path.write_text(json.dumps(document), encoding="utf-8")
+                errors = []
+                self.assertIsNone(VALIDATOR._load_complete_selector_projection(
+                    path, errors, professional_root=root, selector_root=runtime,
+                    professional=professional, closure_layout="runtime"))
+                self.assertTrue(any("source authority" in error for error in errors), errors)
+
     def test_control_decoy_cannot_rescue_invalid_professional_local_selector(self) -> None:
         professional = "backend-change-builder"
         for mutation in ("missing", "malformed", "wrong-owner"):
@@ -493,7 +515,7 @@ class ProfessionalLocalSelectorClosureTests(unittest.TestCase):
             partition_root = selector_root / "reference-records"
             selector_path = selector_root / "selector.json"
             selector = json.loads(selector_path.read_text(encoding="utf-8"))
-            selector["reference_records_partition"]["path_template"] = (
+            selector["reference_records"] = (
                 "../../decoy/{owner_skill}.json"
             )
             selector_path.write_text(
@@ -743,6 +765,10 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 partition_root=professional_root / "references/runtime/reference-records",
                 physical_root=path.parent / "sample-foundation",
                 closure_layout="runtime",
+                # This unit fixture tests the compiled Markdown/Reference
+                # consumer with an already validated authority projection.
+                selector=json.loads(selector.read_text(encoding="utf-8")),
+                selector_checked=True,
             )
             self.assertEqual([], errors)
 

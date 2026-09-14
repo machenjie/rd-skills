@@ -1545,7 +1545,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     path.write_bytes(raw_bytes)
                 if scenario == "missing-marker":
                     payload = json.loads(selector.read_text(encoding="utf-8"))
-                    payload.pop("build")
+                    payload.pop("professional_skill")
                     selector.write_text(json.dumps(payload), encoding="utf-8")
                 elif scenario == "malformed-marker":
                     payload = json.loads(selector.read_text(encoding="utf-8"))
@@ -1557,7 +1557,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     selector.write_text(json.dumps(payload), encoding="utf-8")
                 elif scenario == "noncanonical-alias":
                     payload = json.loads(selector.read_text(encoding="utf-8"))
-                    payload["build"] = payload["build"][:-1] + "B"
+                    payload["build"] = "AAECAwQFBgcICQoLDA0ODB"
                     selector.write_text(json.dumps(payload), encoding="utf-8")
                 elif scenario == "wrong-v2":
                     manifest = json.loads(build_manifest_path.read_text(encoding="utf-8"))
@@ -1703,7 +1703,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     if scenario == "legacy-v1-marker":
                         payload["build"] = "0" * 32
                     elif scenario == "noncanonical-alias":
-                        payload["build"] = payload["build"][:-1] + "B"
+                        payload["build"] = "AAECAwQFBgcICQoLDA0ODB"
                     else:
                         payload["build"] = "A" * 22
                     selector.write_text(

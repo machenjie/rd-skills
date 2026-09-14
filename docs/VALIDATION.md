@@ -116,6 +116,38 @@ source inventories, validates every compact projection and nested link, proves
 154 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
 temporary tree. No development build is created.
 
+### AI Selector Delivery
+
+The generated Professional-local `references/runtime/selector.json` and its
+optional decision/complete files contain only selection and loading content.
+Ordinary selectors identify the Professional, group identical Profile views,
+and provide `layer3`, `when`, and `unless` rules. Every `when` group needs a
+match; a matching `unless` excludes that rule. The union of rule candidates and
+`additional_layer3` is exactly that Profile's authorized set. Additional items
+remain available whenever their expertise is needed; they are not restricted to
+explicit assignments. Domain rules retain their trigger, boundary, changed-surface,
+and negative conditions. An assigned exact set, including an empty set, still
+skips selection. The Professional root's existing Layer 3 Delivery supplies the
+physical Markdown path; the selector supplies only the subsequent owner-scoped
+Reference-record locator.
+
+Build hashes, contracts, provenance, internal selector IDs/kinds, repeated
+authorization lists, selection-owner/basis bookkeeping, and inline build IDs are
+excluded from these AI files. The existing integrity manifest binds their bytes,
+size, Professional, and build at the build/package/install/doctor boundary; it
+remains forbidden as an AI read. Professional entrypoints, logical selection
+receipts, Layer 3 markers, and Reference partitions retain their existing build
+bindings. A selector by itself no longer proves inline build identity.
+
+`test_built_professional_root_projection.py` checks actual generated files for
+all 25 Professionals and every Profile, including exact authorization sets,
+positive/negative signal groups, Domain boundaries, and selection replay.
+`validate-built-skill-reference-links.py` compares the AI closure with the current
+source projection before using source authority to validate Reference reachability.
+Package validation rejects unknown AI fields, malformed rules, and absent Layer 3
+delivery targets; the existing manifest checks reject changed or missing bytes.
+These deterministic checks do not prove a live model's selection accuracy.
+
 ### Professional Independence Gate
 
 `python3 scripts/validate-skills.py` applies the Professional transplant test:
