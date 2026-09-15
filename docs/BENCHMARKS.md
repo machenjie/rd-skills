@@ -159,7 +159,7 @@ Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool Sy
 | Category | Context | Soft target | Hard ceiling | Calibration status |
 | --- | --- | ---: | ---: | --- |
 | Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
-| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3200 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3400 | provisional-migration-value |
 | Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
 | Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
 | Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |

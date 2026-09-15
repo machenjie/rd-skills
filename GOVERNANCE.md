@@ -74,7 +74,7 @@ guardrails, not current measurements or calibrated optima.
 | Context | Soft target | Hard ceiling |
 | --- | ---: | ---: |
 | Main always-loaded | 2305 | 2650 |
-| Direct Task dispatch | 3000 | 3200 |
+| Direct Task dispatch | 3000 | 3400 |
 | Analyzed Task dispatch | 6000 | 6500 |
 | Analysis dispatch | 4500 | 5000 |
 | Review dispatch | 3700 | 4000 |

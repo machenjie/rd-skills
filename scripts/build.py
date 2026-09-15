@@ -1238,22 +1238,37 @@ def _project_runtime_reference_partition(
         raise BuildError(
             f"{professional}: Runtime Reference partition records are malformed"
         )
+    projected_records = []
     for record in records:
         projected = _project_runtime_reference_record_path(record, professional)
         assert isinstance(record, dict)
-        record["path"] = projected
-    records_bytes = (
-        json.dumps(
-            records,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        + "\n"
-    ).encode("utf-8")
-    partition["records_sha256"] = hashlib.sha256(records_bytes).hexdigest()
-    partition["build"] = build_identity
-    return partition
+        view = {field: record[field] for field in (
+            "type", "load_when", "do_not_load_when", "required_by", "required_output")}
+        view["path"] = projected
+        relationships = {key: value for key, value in
+                         (record.get("context_admissibility") or {}).items()
+                         if key in {"conflicts_with", "sequenced_after", "must_co_trigger_with"} and value}
+        if relationships:
+            for field, values in relationships.items():
+                for index, value in enumerate(values):
+                    path = value["reference"] if field == "sequenced_after" else value
+                    parts = PurePosixPath(path).parts
+                    peer_owner = record["owner_skill"] if parts[0] == "references" else parts[0]
+                    source_path = path if parts[0] == "references" else PurePosixPath(*parts[1:]).as_posix()
+                    peer = _project_runtime_reference_record_path({
+                        "owner_skill": peer_owner,
+                        "owner_layer": "professional" if peer_owner == professional else "foundation",
+                        "path": source_path,
+                    }, professional)
+                    if field == "sequenced_after":
+                        value["reference"] = peer
+                    else:
+                        values[index] = peer
+            view["context_admissibility"] = relationships
+        projected_records.append(view)
+    # Source ownership/contracts remain in the normalized authoring projection;
+    # the existing integrity manifest binds this AI view's bytes and build.
+    return {"reference_records": projected_records}
 
 
 def _write_professional_runtime_selector_closure(
@@ -1506,8 +1521,6 @@ def _render_layer3_reference(
     body = _rewrite_layer3_links(body, item.name)
     return "\n".join(
         [
-            f"<!-- Build: {build_identity} -->",
-            "",
             f"<!-- Layer: {item.layer}; source: {item.path.relative_to(ROOT)} -->",
             "",
             body,
@@ -1745,24 +1758,21 @@ def _compact_jit_reference_delivery_lines(
     runtime_version: str | None = None,
     build_identity: str | None = None,
 ) -> list[str]:
-    """Return the built-only selector anchor; authority stays in its JSON row."""
+    """Expose separate Layer 3 selection and direct Reference-index entrances."""
 
     if selector_name is None:
         return []
-    if runtime_version is None or build_identity is None:
-        snapshot = authoritative_build_input_snapshot(ROOT)
-        runtime_version = _source_version()
-        build_identity = _runtime_build_identity(snapshot)
-    try:
-        runtime_asset_build_identity_bytes(build_identity)
-    except ValueError as exc:
-        raise BuildError("Professional Runtime build marker is malformed") from exc
     return [
         "",
-        "## JIT Reference Delivery",
+        "## JIT Loading",
         "",
-        "JIT: `references/runtime/selector.json`; "
-        f"Runtime: `{runtime_version}/{build_identity}`.",
+        "Layer 3 selector: `references/runtime/selector.json`.",
+        "Layer 3 selection: use the selector only when unresolved.",
+        f"Reference indexes: `references/runtime/reference-records/{selector_name}.json`; "
+        "`references/runtime/reference-records/<selected-layer3>.json` for each selected Layer 3.",
+        "Unresolved References: read these indexes directly. Paths are relative to this Professional root; "
+        "apply record conditions and read needed record.path here. "
+        "Exact References: reuse bodies or read assigned Host paths. Keep Main's route; no catalog preload.",
     ]
 
 

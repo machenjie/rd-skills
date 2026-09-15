@@ -520,7 +520,7 @@ Own one bounded decision.
             BUILD._write_compact_professional_projection(professional, professional_item)
             rendered_professional = professional_file.read_text(encoding="utf-8")
             self.assertEqual(
-                [*BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "JIT Reference Delivery"],
+                [*BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "JIT Loading"],
                 headings(rendered_professional),
             )
             for omitted in ("When To Use", "Do Not Use", "Required Inputs"):
@@ -547,7 +547,7 @@ Own one bounded decision.
                 headings(rendered_foundation),
             )
             for forbidden in (
-                "## JIT Reference Delivery",
+                "## JIT Loading",
                 "Current-Professional JIT",
                 "engineering-control-plane/references/selectors/",
                 "never select/reroute/preload",
@@ -1501,7 +1501,7 @@ Preserve this second paragraph because the complete role defines the decision bo
         self.assertNotIn("runtime matcher metadata sentinel", rendered)
         self.assertNotIn("## Targeted References", rendered)
         for forbidden in (
-            "## JIT Reference Delivery",
+            "## JIT Loading",
             "Current-Professional JIT",
             "engineering-control-plane/references/selectors/",
             "never select/reroute/preload",
@@ -1663,7 +1663,7 @@ Own the occurrence-render-body-sentinel boundary.
             self.assertNotIn(forbidden, rendered_with)
         self.assertIn("occurrence-render-body-sentinel", rendered_with)
         self.assertNotIn("## Targeted References", rendered_with)
-        self.assertNotIn("## JIT Reference Delivery", rendered_with)
+        self.assertNotIn("## JIT Loading", rendered_with)
         self.assertNotIn("Current-Professional JIT", rendered_with)
 
     def test_domain_layer3_projection_uses_domain_decision_sections(self) -> None:

@@ -437,6 +437,87 @@ def _reconstruct_global_dominance_relation(
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def test_simulated_host_is_checkout_stable_and_reads_actual_subject_assets(self) -> None:
+        def evaluate():
+            with mock.patch.object(EVAL, '_evaluate_admissible_context_compositions', return_value={'errors': []}), mock.patch.object(
+                EVAL, '_budget_governance_report', return_value={'conformance_failures': []}
+            ):
+                return EVAL.evaluate()
+
+        first = evaluate()
+        with tempfile.TemporaryDirectory() as temporary:
+            second_root = Path(temporary) / 'another-long-checkout-location' / 'subject'
+            for relative in ('src', 'dist', 'evals/agent-light-trajectories'):
+                shutil.copytree(ROOT / relative, second_root / relative)
+            lightweight = second_root / 'reports/hookless-control-plane-eval.json'
+            lightweight.parent.mkdir(parents=True)
+            shutil.copy2(EVAL.LIGHTWEIGHT_REPORT, lightweight)
+            fixtures = second_root / 'evals/agent-light-trajectories/cases.yaml'
+            with EVAL._subject_configuration(second_root, fixtures, lightweight):
+                second = evaluate()
+                self.assertEqual(first['component_catalog'], second['component_catalog'])
+                self.assertEqual(first['cases'], second['cases'])
+                self.assertEqual('simulated-installed-host', second['assignment_host']['scope'])
+                # The simulated locator cannot mask missing or escaped actual bodies.
+                missing = second_root / 'dist/universal/skills/recommended/delivery-release-gate/references/layer3/release-rollback/references/evidence-patterns.md'
+                missing.unlink()
+                rejected = evaluate()
+                self.assertEqual('fail', rejected['status'])
+                self.assertTrue(any('evidence-patterns.md.path is a missing regular file' in error for error in rejected['errors']), rejected['errors'])
+                document = json.loads(fixtures.read_text())
+                case = next(row for row in document['cases'] if row['id'] == 'release-rollback')
+                case['steps'][0]['layer3_references'] = ['../outside.md']
+                fixtures.write_text(json.dumps(document))
+                rejected = evaluate()
+                self.assertEqual('fail', rejected['status'])
+                self.assertTrue(any('exact nested Layer 3 Reference' in error for error in rejected['errors']))
+
+    def test_evaluator_preserves_reference_tristate_and_accounts_for_owner_indexes(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = next(case for case in document["cases"] if case["id"] == "data-migration")
+        original = copy.deepcopy(case["steps"][0])
+        named = (['references/checklist.md'], original['layer3_references'])
+        states = [(None, None), ([], []), named, (None, named[1]),
+                  (named[0], None), ([], None), (None, [])]
+        steps = []
+        for professional, layer3 in states:
+            step = copy.deepcopy(original)
+            step.update(professional_references=professional, layer3_references=layer3)
+            steps.append(step)
+        missing = copy.deepcopy(original)
+        missing.pop('professional_references'); missing.pop('layer3_references')
+        steps.append(missing)
+        case['steps'] = steps
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = Path(temporary) / 'references.json'
+            fixture.write_text(json.dumps(document), encoding='utf-8')
+            # The real dispatch reader, file resolution, measurements, report and
+            # aggregate run; unrelated exhaustive dominance and budget policy do not.
+            with mock.patch.object(EVAL, 'FIXTURES', fixture), mock.patch.object(
+                EVAL, '_evaluate_admissible_context_compositions', return_value={'errors': []}
+            ), mock.patch.object(EVAL, '_budget_governance_report', return_value={'conformance_failures': []}):
+                report = EVAL.evaluate()
+        measured = next(case for case in report['cases'] if case['id'] == 'data-migration')['measurements']
+        catalog = {item['id']: item for item in report['component_catalog']}
+        self.assertEqual(len(steps) * len(EVAL.HOST_PROFILE_ROOTS), len(measured))
+        for measurement in measured:
+            step = steps[measurement['step']]
+            expected_owners = ([step['primary_skill']] if step.get('professional_references') is None else [])
+            if step.get('layer3_references') is None:
+                expected_owners.extend(step['layer3_skills'])
+            components = [catalog[component_id] for component_id in measurement['component_ids']]
+            indexes = [item for item in components if item['kind'] == 'reference_index']
+            self.assertEqual(expected_owners, measurement['unresolved_reference_owners'])
+            self.assertEqual(expected_owners, [Path(item['path']).stem for item in indexes])
+            self.assertTrue(all(item['tokens'] > 0 for item in indexes))
+            self.assertEqual(step.get('professional_references'), measurement['professional_references'])
+            self.assertEqual(step.get('layer3_references'), measurement['layer3_references'])
+            self.assertEqual(not expected_owners, measurement['reference_selection_complete'])
+            bodies = [item for item in components if item['kind'] in {'targeted_reference', 'layer3_reference'}]
+            self.assertEqual(len(step.get('professional_references') or []) + len(step.get('layer3_references') or []), len(bodies))
+        self.assertEqual('fail', report['status'])
+        self.assertTrue(any('Reference body selection remains unresolved' in error for error in report['errors']))
+
     def test_worker_context_preserves_assigned_knowledge_and_consumption_rules(self) -> None:
         captures = []
         measure = EVAL._measure_context
@@ -467,13 +548,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 assignment = next(
                     item["_text"] for item in components if item["kind"] == "dispatch_capsule"
                 )
-                self.assertIn("Reuse content; load missing here", assignment)
-                self.assertIn("## Layer 3 Delivery", assignment)
-                self.assertIn("return gaps to Main", assignment)
+                self.assertIn("Layer 3 exact:", assignment)
+                self.assertIn("Return selection-changing source evidence to Main", profile_text)
                 primary = [item for item in components if item["kind"] == "primary_skill"]
                 self.assertEqual(1, len(primary))
                 self.assertIn(
-                    f"Primary Professional Skill: {primary[0]['path']}",
+                    f"Primary Professional Skill: {EVAL.FIXTURE_HOST_SKILLS_ROOT / measurement['primary_skill'] / 'SKILL.md'}",
                     assignment,
                 )
                 self.assertTrue(primary[0]["path"].endswith(
@@ -489,6 +569,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     asset = EVAL.ROOT / item["path"]
                     self.assertTrue(asset.is_file())
                     self.assertTrue(asset.is_relative_to(professional_root))
+                for item in components:
+                    if item['kind'] in {'primary_skill', 'layer3', 'targeted_reference', 'layer3_reference', 'reference_index'}:
+                        asset = EVAL.ROOT / item['path']
+                        relative = asset.relative_to(professional_root)
+                        self.assertTrue(asset.is_file())
+                        self.assertIn(str(EVAL.FIXTURE_HOST_SKILLS_ROOT / measurement['primary_skill'] / relative), assignment)
                 knowledge_paths = [item["path"] for item in [*primary, *layer3]]
                 self.assertEqual(len(knowledge_paths), len(set(knowledge_paths)))
                 covered.add((measurement["role"], bool(layer3)))
@@ -914,6 +1000,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         for tokens, expected in (
             (limits["soft_target"], (True, True, None)),
             (limits["soft_target"] + 1, (False, True, "growth-advisory")),
+            (limits["hard_ceiling"], (False, True, "growth-advisory")),
             (limits["hard_ceiling"] + 1, (False, False, "hard-ceiling-exceeded")),
         ):
             with self.subTest(tokens=tokens), mock.patch.object(
@@ -1587,11 +1674,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         assert runtime_manifest is not None
         manifests = {EVAL.RUNTIME_NAME: runtime_manifest}
 
-        def selector_reference_id(
+        def owner_reference_id(
             profile: str,
             primary: str,
             owner: str,
-            decision_problem: str,
+            reference_stem: str,
         ) -> str:
             partition = json.loads(
                 (
@@ -1602,14 +1689,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     / f"{owner}.json"
                 ).read_text(encoding="utf-8")
             )
+            self.assertEqual({"reference_records"}, set(partition))
             records = {
                 json.dumps(record, sort_keys=True, separators=(",", ":"))
                 for record in partition["reference_records"]
-                if record.get("owner_skill") == owner
-                and (record.get("context_admissibility") or {}).get(
-                    "decision_problem"
-                )
-                == decision_problem
+                if Path(record["path"]).stem == reference_stem
             }
             self.assertEqual(1, len(records))
             record = json.loads(records.pop())
@@ -1628,7 +1712,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertIn("references/layer3", recommended.as_posix())
 
         payment_references = {
-            profile: selector_reference_id(
+            profile: owner_reference_id(
                 profile,
                 "engineering-change-analysis",
                 "payment-trading-extension",
@@ -1675,7 +1759,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertIn("references/layer3/transaction-consistency", recommended_nested.as_posix())
 
         domain_ids = {
-            profile: selector_reference_id(
+            profile: owner_reference_id(
                 profile,
                 "data-middleware-change-builder",
                 "bigdata-product-extension",
@@ -1854,32 +1938,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             fallback.parent.mkdir(parents=True, exist_ok=True)
             fallback.write_text("must not be used\n", encoding="utf-8")
             record = {
-                "context_admissibility": {
-                    "decision_problem": "test",
-                    "load_when": "test",
-                    "do_not_load_when": "not test",
-                    "required_output": "proof",
-                },
-                "do_not_load_when": "not test",
-                "load_when": "test",
-                "owner_layer": "foundation",
-                "owner_skill": "owner",
-                "path": record_path,
-                "required_by": ["primary"],
-                "required_output": "proof",
-                "residency": "targeted",
-                "type": "checklist",
+                "do_not_load_when": "not test", "load_when": "test",
+                "path": record_path, "required_by": ["task-agent"],
+                "required_output": ["boundary-decision"], "type": "targeted",
             }
             (partition_root / "owner.json").write_text(
-                json.dumps(
-                    {
-                        "professional_skill": "primary",
-                        "owner_skill": "owner",
-                        "reference_records": [record],
-                    }
-                ),
-                encoding="utf-8",
-            )
+                json.dumps({"reference_records": [record]}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "missing regular file"):
                 EVAL._runtime_reference_record_and_target(
                     professional_root,

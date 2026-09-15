@@ -2355,10 +2355,17 @@ Return security authority decisions to the service that owns the protected resou
             "Level, or Level Basis."
         )
         replacement = (
-            "Main owns selection. Each Analysis, Task, and Review assignment carries the "
-            "Host-resolved Primary Professional Skill entrypoint and decision-relevant "
-            "Layer 3/necessary References. Reuse supplied content; load only missing "
-            "content from that root through its Layer 3 Delivery. Never guess roots or "
+            "Main owns selection. Each Analysis, Task, and Review assignment carries "
+            "directly readable Host-resolved paths for Primary SKILL.md, selected Layer 3 "
+            "bodies, and necessary Professional/Layer 3 Reference bodies. Reuse supplied "
+            "content; read missing bodies at those paths. For unresolved References, carry "
+            "the relevant owner partition Host paths and assign conditional discovery to "
+            "the recipient. Exact Layer 3 skips only Layer 3 selection. Only exact "
+            "References, including [], skip Reference selection. For unresolved References, "
+            "read current Primary/selected Layer 3 owner partitions directly at their Host "
+            "paths; match required_by/load_when/do_not_load_when/required_output and "
+            "context_admissibility. Read needed record.path verbatim under that Professional "
+            "Host root after safe relative-path validation. Never guess roots or "
             "infer Worker discovery from Main discovery. Return unavailable assets to "
             "Main before affected judgment. Bounded source discovery may precede loading."
         )

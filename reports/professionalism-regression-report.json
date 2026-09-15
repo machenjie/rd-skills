@@ -8,7 +8,7 @@
   "baseline_comparison": "not-numerically-comparable",
   "evidence_scope": "deterministic-fixtures",
   "content_audit_summary": {
-    "skill_detector_fingerprint": "92df7d3d734e13d92f05b32cebedadf16b349e5c9fb78051c50057de04a89a83",
+    "skill_detector_fingerprint": "a3ab71a6a37f8a903211161bb0aa8632eb3c3a1c32df36d8dce380d2860d03c3",
     "audit_gate_status": {
       "selected_gate": "authoring",
       "authoring": "pass",
@@ -56,7 +56,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "4f4925f40d6122c50ecfdc1100e7290e1c7ff58dae914cf2d216f577f2bd9418",
+    "source_fingerprint": "1b8928459a8ff251cc3168c0530248d1b8abdcd97ebb3f9c7f57f41b1e52a3f1",
     "source_fingerprint_document_count": 999,
     "contract": {
       "bullet_decision_max": 1,
@@ -67,12 +67,12 @@
       "schema_version": 2
     },
     "documents": 999,
-    "advisory_documents": 334,
-    "review_as_complex_sentences": 822,
+    "advisory_documents": 336,
+    "review_as_complex_sentences": 829,
     "tighten_sentences": 18,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 840,
+    "advisory_sentences": 847,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -85,11 +85,11 @@
         "tighten_sentences": 0
       },
       "agent-profile-instructions": {
-        "advisory_documents": 2,
+        "advisory_documents": 4,
         "compound_bullets": 0,
         "documents": 4,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 2,
+        "review_as_complex_sentences": 7,
         "tighten_sentences": 0
       },
       "control-prompt": {
@@ -105,7 +105,7 @@
         "compound_bullets": 0,
         "documents": 7,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 1,
+        "review_as_complex_sentences": 3,
         "tighten_sentences": 0
       },
       "control-skill-body": {
@@ -206,7 +206,7 @@
     "decision_item_limit": 15,
     "effective_preface_schema_version": 3,
     "strict_ready_basis": "reference-strict-v4",
-    "source_fingerprint": "3287ecaae78380ea8d76346ae6c11fd88d5bba2f36d5afcde87cb9b46de5985e",
+    "source_fingerprint": "e36a2d64d01deb9ebc48846c7d83e470dff2327a81836ebb558c38d5a5558bc9",
     "source_fingerprint_document_count": 972,
     "indexed_references": 611,
     "existing_indexed_references": 611,
@@ -272,7 +272,7 @@
     "source": "skill-content-audit.json#root_content",
     "readiness_scope": "agent-facing-root-content",
     "strict_ready_basis": "root-strict-v5",
-    "source_fingerprint": "32ddec0dc1adb9c2a646268b86d8323ffbd4b40eff676e617227e8b0fa4de12c",
+    "source_fingerprint": "b2c7317e6a57b97f217bca17d740503aac32927d20181d51244fd56314ed528d",
     "source_fingerprint_document_count": 379,
     "agent_facing_root_documents": 379,
     "foundation_compact_capabilities": 128,
@@ -331,7 +331,7 @@
     "schema_version": 10,
     "reference": {
       "scope": "reference-content",
-      "source_fingerprint": "3287ecaae78380ea8d76346ae6c11fd88d5bba2f36d5afcde87cb9b46de5985e",
+      "source_fingerprint": "e36a2d64d01deb9ebc48846c7d83e470dff2327a81836ebb558c38d5a5558bc9",
       "strict_ready_basis": "reference-strict-v4",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -339,7 +339,7 @@
     },
     "root": {
       "scope": "agent-facing-root-content",
-      "source_fingerprint": "32ddec0dc1adb9c2a646268b86d8323ffbd4b40eff676e617227e8b0fa4de12c",
+      "source_fingerprint": "b2c7317e6a57b97f217bca17d740503aac32927d20181d51244fd56314ed528d",
       "strict_ready_basis": "root-strict-v5",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -368,7 +368,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "22966f0ba1ebcd8146ee238e0c2bc79c03a064efd56dcfff8c7eb89d82f9a105",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "6d6af0fe1fdf6112d3d3f23c57e25ac41b535a87aeeec59260de04bc823fc420"
+          "readability_target_manifest": "676ae07a214186c64374f7cd84045eaee45ab865b5715f8c62c8bce50564ce83"
         },
         "attested_by": null,
         "attested_on": null,
@@ -387,7 +387,7 @@
         "panel_artifact_schema_version": null,
         "required_density_disposition_count": 26,
         "applied_density_disposition_count": 0,
-        "required_readability_disposition_count": 334,
+        "required_readability_disposition_count": 336,
         "applied_readability_disposition_count": 0,
         "required_actionability_disposition_count": 0,
         "applied_actionability_disposition_count": 0,
@@ -606,7 +606,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=334; review_as_complex_sentences=822; tighten_sentences=18",
+      "message": "advisory_documents=336; review_as_complex_sentences=829; tighten_sentences=18",
       "severity": "warning"
     }
   ],

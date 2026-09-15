@@ -128,10 +128,9 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         skill_root.mkdir(parents=True)
         fixed_lines = [
             "# Sample Professional",
-            "## JIT Reference Delivery",
+            "## JIT Loading",
             "",
-            "JIT: `references/runtime/selector.json`; Runtime: "
-            "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.",
+            "Layer 3 selector: `references/runtime/selector.json`.",
             "## Layer 3 Delivery",
             "",
             "No Foundation or Domain Layer 3 items are assigned to this Skill.",
@@ -201,9 +200,8 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 skill = profile_root / "sample-professional/SKILL.md"
                 text = skill.read_text(encoding="utf-8")
                 block = (
-                    "## JIT Reference Delivery\n\n"
-                    "JIT: `references/runtime/selector.json`; Runtime: "
-                    "`0.1.0/AAECAwQFBgcICQoLDA0ODw`.\n"
+                    "## JIT Loading\n\n"
+                    "Layer 3 selector: `references/runtime/selector.json`.\n"
                 )
                 self.assertEqual(1, text.count(block))
                 skill.write_text(
@@ -218,7 +216,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 )
                 self.assertTrue(
                     any(
-                        "exactly one Professional JIT Reference Delivery and selector path"
+                        "exactly one Professional JIT Loading and selector path"
                         in error
                         for error in errors
                     ),
@@ -754,6 +752,19 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            source_partition = copy.deepcopy(partition_document)
+            source_partition["reference_records"][0]["path"] = "references/checklist.md"
+            source_partitions = {
+                "sample-professional/sample-foundation.json": source_partition,
+                "sample-professional/sample-professional.json": json.loads(professional_partition.read_text()),
+            }
+            build_identity = "AAECAwQFBgcICQoLDA0ODw"
+            for owner in ("sample-professional", "sample-foundation"):
+                view = VALIDATOR.canonical_build._project_runtime_reference_partition(
+                    source_partitions[f"sample-professional/{owner}.json"], "sample-professional", build_identity)
+                (partition.parent / f"{owner}.json").write_text(json.dumps(view), encoding="utf-8")
+            selector_document = json.loads(selector.read_text(encoding="utf-8"))
+            selector_document["build"] = build_identity
             errors: list[str] = []
             VALIDATOR._validate_compiled_layer3_projection(
                 path,
@@ -767,14 +778,15 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 closure_layout="runtime",
                 # This unit fixture tests the compiled Markdown/Reference
                 # consumer with an already validated authority projection.
-                selector=json.loads(selector.read_text(encoding="utf-8")),
+                selector=selector_document,
                 selector_checked=True,
+                source_partitions=source_partitions,
             )
             self.assertEqual([], errors)
 
     def test_rejects_layer3_jit_and_control_policy(self) -> None:
         forbidden = (
-            "## JIT Reference Delivery",
+            "## JIT Loading",
             "Current-Professional JIT",
             "engineering-control-plane/references/selectors/sample.json",
             "never select/reroute/preload",

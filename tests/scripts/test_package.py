@@ -85,9 +85,8 @@ class PackageSafetyTests(unittest.TestCase):
                     f"name: {name}\n"
                     "---\n\n"
                     f"# {name}\n\n"
-                    "## JIT Reference Delivery\n\n"
-                    "JIT: `references/runtime/selector.json`; "
-                    f"Runtime: `{runtime_version}/{build_identity}`.\n",
+                    "## JIT Loading\n\n"
+                    "Layer 3 selector: `references/runtime/selector.json`.\n",
                     encoding="utf-8",
                 )
                 if name in names["professional"]:
@@ -112,12 +111,6 @@ class PackageSafetyTests(unittest.TestCase):
                     records.write_text(
                         json.dumps(
                             {
-                                "authority_contract": "changeforge.layer3-selector-authority/v1",
-                                "build": build_identity,
-                                "contract": "changeforge.layer3-selector-reference-records-partition/v1",
-                                "owner_skill": name,
-                                "professional_skill": name,
-                                "records_sha256": hashlib.sha256(b"[]\n").hexdigest(),
                                 "reference_records": [],
                             },
                             sort_keys=True,
@@ -242,27 +235,14 @@ class PackageSafetyTests(unittest.TestCase):
             )
             partition = json.loads(partition_path.read_text(encoding="utf-8"))
             record = {
-                "owner_skill": "engineering-change-analysis",
-                "owner_layer": "professional",
                 "path": "references/missing.md",
                 "type": "targeted",
                 "load_when": "analysis needs the exact evidence Reference",
                 "do_not_load_when": "analysis does not need this Reference",
                 "required_by": ["analysis-agent"],
                 "required_output": ["proof-limit"],
-                "context_admissibility": None,
-                "residency": "singleton",
             }
             partition["reference_records"] = [record]
-            partition["records_sha256"] = hashlib.sha256(
-                json.dumps(
-                    [record],
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
-                + b"\n"
-            ).hexdigest()
             partition_path.write_text(
                 json.dumps(partition, sort_keys=True, separators=(",", ":")) + "\n",
                 encoding="utf-8",

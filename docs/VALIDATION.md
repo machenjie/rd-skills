@@ -126,18 +126,61 @@ match; a matching `unless` excludes that rule. The union of rule candidates and
 `additional_layer3` is exactly that Profile's authorized set. Additional items
 remain available whenever their expertise is needed; they are not restricted to
 explicit assignments. Domain rules retain their trigger, boundary, changed-surface,
-and negative conditions. An assigned exact set, including an empty set, still
-skips selection. The Professional root's existing Layer 3 Delivery supplies the
-physical Markdown path; the selector supplies only the subsequent owner-scoped
-Reference-record locator.
+and negative conditions. An exact Layer 3 set, including an empty set, skips
+only Layer 3 selection. The Professional root's existing Layer 3 Delivery supplies the
+physical Markdown path. Its Reference delivery paragraph separately lists the
+Primary owner index and the selected Layer 3 owner-index path template. The
+selector's `reference_records` field remains locator data, not the loading rules;
+the owner partitions contain those rules.
 
 Build hashes, contracts, provenance, internal selector IDs/kinds, repeated
 authorization lists, selection-owner/basis bookkeeping, and inline build IDs are
 excluded from these AI files. The existing integrity manifest binds their bytes,
 size, Professional, and build at the build/package/install/doctor boundary; it
-remains forbidden as an AI read. Professional entrypoints, logical selection
-receipts, Layer 3 markers, and Reference partitions retain their existing build
-bindings. A selector by itself no longer proves inline build identity.
+remains forbidden as an AI read. Contract v4 also removes Runtime version/build
+text from Professional entrypoints and Build comments from Layer 3 bodies.
+These identifiers do not select or locate knowledge. Internal logical selection
+receipts retain their machine-verified build binding; existing root and integrity
+manifests retain version, full digest, and exact byte/size bindings. Tool verifiers
+enforce these bindings and reject missing, mixed, or changed assets. Profiles
+apply the assigned root, role, and path constraints; they do not compare hidden
+build identifiers or certify byte integrity.
+
+Runtime `reference-records/<owner-skill>.json` contains only `reference_records`.
+Each record retains its Professional-root-relative `path`, `type`, `load_when`,
+`do_not_load_when`, `required_by`, and `required_output`. Non-empty
+`conflicts_with`, `sequenced_after`, and `must_co_trigger_with` relationships
+remain under optional `context_admissibility`; their Reference paths use the same
+Professional root. Owner/layer repetitions, hashes/build/contracts, null context,
+empty relationships, filename-derived decision problems, and derived residency
+are omitted. Rich Registry and normalized authoring authority retain their fields.
+
+Main supplies directly readable Host paths for Primary `SKILL.md`, selected
+Layer 3 bodies, and necessary Professional/Layer 3 Reference bodies to Analysis,
+Task, and Review. Recipients reuse supplied content and read missing bodies.
+The loaded Primary `SKILL.md` distinguishes the Layer 3 selector from direct
+Reference indexes: `references/runtime/reference-records/<professional>.json`
+and `references/runtime/reference-records/<selected-layer3>.json` for each selected
+Layer 3. These paths are relative to the current Professional root. Reference
+discovery reads those indexes directly, including when Layer 3 is already exact.
+Exact References reuse supplied bodies or their assigned Host paths.
+References omitted or unresolved do not mean exact `[]`: Main supplies the
+unresolved owner partition Host paths and assigns direct conditional reading.
+Recipients inspect only current Primary
+and selected Layer 3 records, match role/load/skip/output conditions and
+relationships, then safely join `record.path` verbatim to the supplied Professional
+Host root. Only an exact Reference list, including `[]`, skips this selection.
+The fixture capsule renderer exercises these assignments for evaluation; it is
+not a live Host dispatch engine. Its versioned simulated installation root is
+`/rd-skills-fixture/skills`, independent of the checkout location. The evaluator
+maps each Primary and verbatim relative path to its actual
+`dist/universal/skills/recommended` subject files; existing owner, role, path,
+symlink, and existence checks still apply. The report exposes this mapping.
+An explicit renderer Host root is preserved for callers; simulated path lengths
+and hashes do not measure real Host dispatch bytes. Omitted or null Reference lists retain
+their unresolved state and count the corresponding owner-index files. Exact
+lists count only their named bodies. An unresolved body selection produces an
+incomplete-context error; index tokens cannot certify the later body budget.
 
 `test_built_professional_root_projection.py` checks actual generated files for
 all 25 Professionals and every Profile, including exact authorization sets,
@@ -505,6 +548,17 @@ selection, frontier construction, rejection, or exit. Conformance applies the
 Core-derived hard ceiling after complete context measurement and records soft
 growth advisories separately.
 
+Reference delivery now includes directly readable Host paths and independent
+owner-index instructions. After removing repeated assignment text and AI build
+markers, full calibration of the fixed simulated Host measured 669,854 valid
+candidates, including 118,514 Direct Task candidates. The Task maximum was
+3,389 tokens (component upper bound 3,395). Core's provisional Task hard ceiling
+therefore changes from 3,200 to a fixed 3,400 (+6.25%); the 3,000 soft target and
+all other budgets remain unchanged. This is a static fixture allowance, not a
+live Host measurement or an automatically expanding limit. Candidate selection,
+required bodies, and the conservative fixture envelope remain budget-independent;
+one token above the hard ceiling still fails Conformance.
+
 ## Rendered Context Budget Contract
 
 <!-- BEGIN CHANGEFORGE CONTEXT BUDGET PROJECTION: validation-rendered-context-budget -->
@@ -520,7 +574,7 @@ Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool Sy
 | Category | Context | Soft target | Hard ceiling | Calibration status |
 | --- | --- | ---: | ---: | --- |
 | Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
-| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3200 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3400 | provisional-migration-value |
 | Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
 | Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
 | Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |

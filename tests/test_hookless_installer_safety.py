@@ -1582,7 +1582,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                             f"runtime-{scenario}",
                         )
 
-    def test_coherent_v1_source_rejects_but_managed_v1_install_upgrades_to_v2(
+    def test_coherent_v1_source_rejects_but_managed_v1_install_upgrades_to_current_identity(
         self,
     ) -> None:
         professional = "engineering-change-analysis"
@@ -1662,7 +1662,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 self.assertEqual(0, self.upgrade_cli.main(), output.getvalue())
             upgraded = json.loads(install_manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(
-                "changeforge.runtime-inline-identity/v2",
+                "changeforge.runtime-inline-identity/v4",
                 upgraded["runtime_asset_bindings"][professional][
                     "inline_identity_contract"
                 ],

@@ -5,25 +5,25 @@
   "fixture_count": 30,
   "rendered_context_summary": {
     "max_main": {
-      "tokens": 2215,
+      "tokens": 2452,
       "soft_target": 2305,
       "hard_ceiling": 2650,
-      "soft_margin_tokens": 90,
-      "hard_margin_tokens": 435,
-      "within_soft_target": true,
+      "soft_margin_tokens": -147,
+      "hard_margin_tokens": 198,
+      "within_soft_target": false,
       "within_hard_ceiling": true,
-      "budget_signal": null,
+      "budget_signal": "growth-advisory",
       "calibration_status": "provisional-migration-value",
       "host": "copilot",
       "runtime": "recommended"
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 1823,
+        "tokens": 2021,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2677,
-        "hard_margin_tokens": 3177,
+        "soft_margin_tokens": 2479,
+        "hard_margin_tokens": 2979,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -34,11 +34,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2743,
+        "tokens": 2950,
         "soft_target": 3000,
-        "hard_ceiling": 3200,
-        "soft_margin_tokens": 257,
-        "hard_margin_tokens": 457,
+        "hard_ceiling": 3400,
+        "soft_margin_tokens": 50,
+        "hard_margin_tokens": 450,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -49,11 +49,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "analyzed_task": {
-        "tokens": 934,
+        "tokens": 1104,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 5066,
-        "hard_margin_tokens": 5566,
+        "soft_margin_tokens": 4896,
+        "hard_margin_tokens": 5396,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -64,11 +64,11 @@
         "primary_skill": "repository-tooling-change-builder"
       },
       "review": {
-        "tokens": 749,
+        "tokens": 919,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 2951,
-        "hard_margin_tokens": 3251,
+        "soft_margin_tokens": 2781,
+        "hard_margin_tokens": 3081,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -111,12 +111,13 @@
   "limitations": [
     "Deterministic traces test authored behavior and structural counts, not live Agent dispatch or wall-clock performance.",
     "Fixture tool outcomes are simulated; they do not prove Host startup, sandbox enforcement, real-host accuracy, production behavior, or installed user experience.",
+    "Assignment paths use the fixed simulated Host installation /rd-skills-fixture/skills; each Professional-relative asset is read and validated from the actual subject dist/universal/skills/recommended tree. Counts do not measure a real Host's path lengths or dispatch bytes.",
     "Counts cover deterministic rendered rd-skills instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.",
     "Counts exclude host system prompts, tool schemas, user conversation history, repository reads, diffs, command output, and other dynamic evidence.",
     "Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.",
     "Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.",
     "Duplicate-token measurement detects exact normalized Markdown rule blocks, not semantic paraphrases.",
-    "Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded."
+    "Reference body counts include only explicitly named fixture files. Unresolved selections count only current Primary/selected Layer 3 owner indexes and remain incomplete until body selection is supplied; catalogs and recursively linked files are never loaded."
   ],
   "errors": []
 }
