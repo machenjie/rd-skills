@@ -1,6 +1,6 @@
 ---
 name: backup-recovery
-description: "`analysis-agent`/`task-agent`/`review-agent`: use when protected state, restore objectives, dependency order, or recovery evidence changes; skip backup-job-only work with no recovery decision."
+description: "For `analysis-agent`, `task-agent`, or `review-agent`: protected-state restore objectives, dependency order, and recovery proof; skip backup-job edits without a recovery decision."
 ---
 
 # backup-recovery
@@ -44,6 +44,6 @@ Stop when the named restore could produce unsafe state without an owned recovery
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Recovery unit objectives capture consistency failure isolation or dependency order choices remain open | Root rules and current failure evidence select one bounded restore contract | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
-| [checklist](references/checklist.md) | decision-checklist | Recovery spans several authoritative derived key config queue identity retention or replay boundaries | No protected state restore semantic or recovery-readiness claim changes | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Artifact lineage restore objective dependency validation or exercise-freshness claims need current proof | Current scoped restore and reconciliation evidence closes the accepted recovery claim | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Recovery unit objectives capture consistency failure isolation or dependency order choices remain open | Root rules and current failure evidence select one bounded restore contract | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | Recovery spans several authoritative derived key config queue identity retention or replay boundaries | No protected state restore semantic or recovery-readiness claim changes | task-agent, review-agent, analysis-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Artifact lineage restore objective dependency validation or exercise-freshness claims need current proof | Current scoped restore and reconciliation evidence closes the accepted recovery claim | task-agent, review-agent, analysis-agent | evidence-record, proof-limit, residual-risk |

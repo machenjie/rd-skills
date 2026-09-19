@@ -32,7 +32,8 @@ As `task-agent`, distinguish reusable source/render work from a change bound to 
 
 ## Professional Decision Rules
 
-- Bind source owner, versions, and affected consumers; require target/state/backend/lock/writer evidence only where the current change depends on those mechanisms.
+- Bind source owner, versions, and affected consumers.
+- Require target/state/backend/lock/writer evidence only where the current change depends on those mechanisms.
 - Preserve existing identity and recovery from current evidence; reusable render work need not acquire a production target or state backend.
 - Compare proposal unknowns and destructive/privilege/network/secret/cost/dependency effects.
 
@@ -47,13 +48,15 @@ As `task-agent`, distinguish reusable source/render work from a change bound to 
 1. Inspect owner, versions, dependencies, and whether this is reusable source or target-bound work.
 2. Map replacement, destruction, privilege, network, secret, cost, drift, and dependency effects.
 3. Choose the smallest source change that preserves state identity and recovery.
-4. Validate reusable source with representative render/tests; bind target-specific non-mutating proposals to the actual target, applicable state, and versions.
-5. Record applicable unknowns, proof limits, recovery responsibility, residual risk, and release boundary.
-6. Keep production apply, deployment, release, and rollback approval outside this Skill's authority.
+4. Validate reusable source with representative render/tests.
+5. Bind target-specific non-mutating proposals to the actual target, applicable state, and versions.
+6. Record applicable unknowns, proof limits, recovery responsibility, residual risk, and release boundary.
+7. Keep production apply, deployment, release, and rollback approval outside this Skill's authority.
 
 ## Stop / Escalation Conditions
 
-- Stop while authority, applicable state/writer/recovery, or material effects remain unresolved; absent production targets do not block reusable source/render work.
+- Stop while authority, applicable state/writer/recovery, or material effects remain unresolved.
+- Absent production targets do not block reusable source/render work.
 
 ## Output Contract
 

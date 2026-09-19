@@ -1,6 +1,6 @@
 ---
 name: backend-change-builder
-description: "Use `task-agent` for bounded backend service, API, worker, native/firmware runtime, or repair changes, loading authorization, consistency, retry, contract, and rollout guidance only when triggered. Skip frontend-only and read-only work."
+description: "Use `task-agent` for bounded backend service, API, worker, and native/firmware runtime changes. Skip frontend-only and read-only work."
 ---
 
 # backend-change-builder

@@ -1,6 +1,6 @@
 ---
 name: message-queue-design
-description: "`analysis-agent`/`task-agent`/`review-agent`: use when broker delivery, ordering, acknowledgement, DLQ, backpressure, or replay changes; skip synchronous retry without message semantics."
+description: "`analysis-agent`/`task-agent`/`review-agent`: use when broker delivery, acknowledgement, DLQ, backpressure, or replay changes; skip synchronous retry without message semantics."
 ---
 
 # message-queue-design
@@ -55,6 +55,6 @@ Protect broker delivery, acknowledgement, ordering, retry, terminal disposition,
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [broker benchmarks](references/broker-benchmarks.md) | benchmark-pattern | delivery ordering rebalance visibility replay or backpressure semantics need a broker mechanism choice | the task is synchronous and has no broker delivery semantics | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
-| [checklist](references/checklist.md) | decision-checklist | A queue-topology, producer, or consumer change affects acknowledgement or visibility, concurrent duplicates, ordering or partition skew, schema evolution, replay, retries, or terminal disposition | broker semantics and handler behavior remain unchanged and proven | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | delivery idempotency lag or replay claims need current artifacts | fresh broker config and crash-path tests prove each claim | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [broker benchmarks](references/broker-benchmarks.md) | benchmark-pattern | delivery ordering rebalance visibility replay or backpressure semantics need a broker mechanism choice | the task is synchronous and has no broker delivery semantics | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | A queue-topology, producer, or consumer change affects acknowledgement or visibility, concurrent duplicates, ordering or partition skew, schema evolution, replay, retries, or terminal disposition | broker semantics and handler behavior remain unchanged and proven | task-agent, review-agent, analysis-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | delivery idempotency lag or replay claims need current artifacts | fresh broker config and crash-path tests prove each claim | task-agent, review-agent, analysis-agent | evidence-record, proof-limit, residual-risk |
