@@ -20,3 +20,167 @@ cases:
   - id: explicit-cause-analysis
     prompt: Diagnose the root cause of a failing background worker from logs tests and source evidence.
     expected: {start_profile: "analysis-agent", primary_skill: "engineering-change-analysis", layer3_skills: ["failure-diagnosis"], review_skill: null}
+
+  - id: pwa-offline-reconcile
+    prompt: Fix PWA offline edits so pending operations survive reconnect and merge conflicts.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    required_skills: ["offline-sync-conflict-resolution"]
+  - id: pwa-http-error
+    prompt: Fix PWA error banner after a failed HTTP request.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["offline-sync-conflict-resolution", "message-queue-design", "web-platform-professional-usage"]
+  - id: frontend-undiscovered-owner
+    prompt: Fix Vue component spacing but the owner file has not yet been located.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["repository-tooling-change-builder", "engineering-change-analysis"]
+  - id: tooling-generator-output
+    prompt: Change repository code generator output behavior.
+    expected: {start_profile: "task-agent", primary_skill: "repository-tooling-change-builder"}
+  - id: ai-button-spacing
+    prompt: Change frontend component button spacing in an AI chat page.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["ai-product-extension", "security-privacy-gate"]
+  - id: ai-retrieval-owner
+    prompt: Change backend service RAG retrieval permission filtering before model context construction.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    required_skills: ["ai-product-extension"]
+  - id: ai-evaluation-calibration
+    prompt: Implement RAG evaluation tests for judge calibration and evaluation dataset contamination.
+    expected: {start_profile: "task-agent", primary_skill: "quality-test-gate"}
+    required_skills: ["ai-product-extension"]
+    excluded_skills: ["security-privacy-gate"]
+  - id: ai-evaluation-ordinary-test
+    prompt: Implement button spacing tests for an AI chat page.
+    expected: {start_profile: "task-agent", primary_skill: "quality-test-gate"}
+    excluded_skills: ["ai-product-extension", "security-privacy-gate"]
+  - id: broker-offset-durable-effect
+    prompt: Change Kafka consumer offset acknowledgement after the durable side effect and replay behavior.
+    expected: {start_profile: "task-agent", primary_skill: "data-middleware-change-builder"}
+    required_skills: ["message-queue-design"]
+  - id: synchronous-http-retry
+    prompt: Change backend service synchronous HTTP retry timeout.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["message-queue-design"]
+  - id: ordinary-queue-handler
+    prompt: Fix queue handler retry backoff; broker offset acknowledgement visibility and replay semantics remain unchanged.
+    expected: {start_profile: "task-agent", primary_skill: "data-middleware-change-builder"}
+    excluded_skills: ["message-queue-design"]
+  - id: reusable-helm-render
+    prompt: Fix reusable Helm template rendering with no environment target.
+    expected: {start_profile: "task-agent", primary_skill: "platform-infrastructure-change-builder"}
+    excluded_skills: ["infrastructure-as-code-safety", "cloud-platform-extension"]
+  - id: target-terraform-identity
+    prompt: Change production Terraform resource identity in source; do not apply it.
+    expected: {start_profile: "task-agent", primary_skill: "platform-infrastructure-change-builder"}
+    required_skills: ["infrastructure-as-code-safety"]
+  - id: kotlin-backend-not-android
+    prompt: Fix Kotlin backend coroutine cancellation.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    required_skills: ["kotlin-professional-usage"]
+    excluded_skills: ["android-platform-extension"]
+  - id: android-lifecycle-restoration
+    prompt: Fix Android application lifecycle state restoration.
+    expected: {start_profile: "task-agent", primary_skill: "installed-client-change-builder"}
+    required_skills: ["android-platform-extension"]
+  - id: monorepo-vue-only
+    prompt: Fix Vue component spacing. The monorepo also contains Go Python SQL Terraform and Kubernetes; those modules remain unchanged.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["go-professional-usage", "python-professional-usage", "sql-professional-usage", "infrastructure-as-code-safety", "kubernetes-gateway"]
+  - id: firmware-local-timing
+    prompt: Fix local firmware sampling timing bug; no release behavior changes.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    required_skills: ["iot-embedded-extension"]
+    excluded_skills: ["delivery-release-gate"]
+  - id: firmware-ota-rollback
+    prompt: Change OTA rollback behavior.
+    expected: {start_profile: "task-agent", primary_skill: "delivery-release-gate"}
+    required_skills: ["iot-embedded-extension"]
+  - id: payment-provider-recovery
+    prompt: Fix payment provider callback unknown-result recovery and duplicate charge reconciliation.
+    expected: {start_profile: "task-agent", primary_skill: "integration-change-builder"}
+    required_skills: ["payment-trading-extension"]
+  - id: ordinary-order-integration
+    prompt: Fix external integration order label mapping; no monetary invariant or funds ledger settlement or execution state changes.
+    expected: {start_profile: "task-agent", primary_skill: "integration-change-builder"}
+    excluded_skills: ["payment-trading-extension"]
+  - id: monetary-domain-invariants
+    prompt: Analyze ledger balance conservation and settlement accounting invariants.
+    expected: {start_profile: "analysis-agent", primary_skill: "domain-impact-modeler"}
+    required_skills: ["payment-trading-extension"]
+  - id: swift-backend-actors
+    prompt: Fix Swift Linux backend actor isolation and cancellation.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    required_skills: ["swift-professional-usage"]
+    excluded_skills: ["ios-ipados-platform-extension", "macos-platform-extension"]
+  - id: swift-backend-generic
+    prompt: Fix Swift Linux backend request error wording.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["swift-professional-usage", "ios-ipados-platform-extension", "macos-platform-extension"]
+  - id: auxiliary-regression-proof
+    prompt: Fix the backend service invalid-input bug and add regression tests for this fix.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+  - id: resumed-implementation
+    prompt: Resume the interrupted backend service invalid-input fix; inspect current partial changes before continuing.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+  - id: existing-template-initialization
+    prompt: Initialize a new backend service using the existing project template.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["delivery-release-gate", "project-initialization"]
+  - id: sdk-contract-implementation
+    prompt: Implement an accepted SDK public API cancellation contract change.
+    expected: {start_profile: "task-agent", primary_skill: "data-api-contract-changer"}
+  - id: backend-with-adjacent-frontend
+    prompt: Fix backend input validation. A frontend component using React exists elsewhere in the repository.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["state-management-design"]
+  - id: unchanged-language-neighbor
+    prompt: Fix Go backend context cancellation. The monorepo also contains Kotlin coroutine helpers; those modules remain unchanged.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    required_skills: ["go-professional-usage"]
+    excluded_skills: ["kotlin-professional-usage", "android-platform-extension"]
+  - id: unchanged-infrastructure-mechanism
+    prompt: Fix reusable Helm template label rendering. State backend locking remains unchanged. The unchanged deployment uses state locking and recovery.
+    expected: {start_profile: "task-agent", primary_skill: "platform-infrastructure-change-builder"}
+    excluded_skills: ["infrastructure-as-code-safety"]
+
+  - id: browser-service-worker
+    prompt: Fix PWA service-worker cache invalidation after an update.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    required_skills: ["web-platform-professional-usage"]
+    excluded_skills: ["offline-sync-conflict-resolution"]
+  - id: unchanged-browser-mechanism
+    prompt: Fix frontend component spacing. The unchanged PWA also contains browser storage.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["web-platform-professional-usage", "offline-sync-conflict-resolution", "state-management-design"]
+  - id: unchanged-client-frameworks
+    prompt: Fix backend input validation. Tauri Qt and Kotlin Multiplatform are used in other unchanged modules.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["android-platform-extension", "kotlin-professional-usage"]
+  - id: training-worker-checkpoint
+    prompt: Fix Python training worker checkpoint restoration after interrupted writes; model evaluation and release behavior remain unchanged.
+    expected: {start_profile: "task-agent", primary_skill: "backend-change-builder"}
+    excluded_skills: ["ai-product-extension", "release-rollback"]
+  - id: installed-stable-targets
+    prompt: Fix lifecycle state restoration in a Kotlin Multiplatform installed application without changing the confirmed Android and iOS targets.
+    expected: {start_profile: "task-agent", primary_skill: "installed-client-change-builder"}
+    required_skills: ["client-lifecycle-state-restoration"]
+  - id: data-pipeline-checkpoint
+    prompt: Fix data pipeline feature CDC checkpoint replay and downstream consumer schema compatibility.
+    expected: {start_profile: "task-agent", primary_skill: "data-middleware-change-builder"}
+    required_skills: ["bigdata-product-extension"]
+  - id: tenant-permission-enforcement
+    prompt: Implement tenant isolation permission enforcement to prevent cross-tenant access to private records.
+    expected: {start_profile: "task-agent", primary_skill: "security-privacy-gate"}
+    excluded_skills: ["ai-product-extension", "payment-trading-extension"]
+  - id: tenant-display-copy
+    prompt: Change frontend component tenant isolation button wording; permission enforcement remains unchanged.
+    expected: {start_profile: "task-agent", primary_skill: "frontend-change-builder"}
+    excluded_skills: ["tenant-isolation", "permission-boundary-modeling"]
+  - id: sql-query-optimization
+    prompt: Optimize SQL database query join and index access pattern without changing schema or migration behavior.
+    expected: {start_profile: "task-agent", primary_skill: "data-middleware-change-builder"}
+    excluded_skills: ["data-migration-design"]
+  - id: sql-query-analysis
+    prompt: Analyze SQL database query join and index access pattern without changing schema or migration behavior.
+    expected: {start_profile: "analysis-agent"}
+    excluded_skills: ["data-migration-design"]

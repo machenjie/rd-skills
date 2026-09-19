@@ -1301,12 +1301,12 @@ entries:
     task_type: payment system change
     language_runtime: []
     cross_cutting_risks: [idempotency, audit evidence, authorization]
-    expected_professional_owner: engineering-change-analysis
+    expected_professional_owner: domain-impact-modeler
     expected_domain_extensions: [payment-trading-extension]
-    expected_foundation_skills: [repository-context-map]
+    expected_foundation_skills: []
     coverage_status: covered
     disposition: retain-existing
-    reason: Current payment route evidence is analysis-first and composes the payment Domain extension with repository context.
+    reason: Ledger conservation analysis keeps the domain-rule owner and adds payment-specific accounting and reconciliation constraints.
     evidence_fixtures: [payment-ledger-settlement-paraphrase]
   - id: domain-trading
     axis: product-domain
@@ -1538,10 +1538,10 @@ entries:
     cross_cutting_risks: [accessibility]
     expected_professional_owner: frontend-change-builder
     expected_domain_extensions: []
-    expected_foundation_skills: [web-platform-professional-usage]
+    expected_foundation_skills: []
     coverage_status: covered
     disposition: retain-existing
-    reason: React browser work routes to the frontend owner with web-platform guidance.
+    reason: Generic React browser work uses the frontend owner; browser-specific mechanisms require separate task evidence.
     evidence_fixtures: [capcov-route-react-web-owner]
   - id: route-android-installed-client
     axis: routing-combination
@@ -1655,10 +1655,10 @@ entries:
     cross_cutting_risks: [infrastructure as code]
     expected_professional_owner: platform-infrastructure-change-builder
     expected_domain_extensions: []
-    expected_foundation_skills: [infrastructure-as-code-safety]
+    expected_foundation_skills: []
     coverage_status: covered
     disposition: retain-existing
-    reason: Terraform source work routes to the infrastructure owner with IaC guidance while excluding the release owner.
+    reason: Reusable Terraform source work uses the infrastructure owner and its source-contract References; no state or identity change is established.
     evidence_fixtures: [capcov-route-terraform-source]
   - id: route-terraform-production-apply
     axis: routing-combination
@@ -1733,7 +1733,7 @@ entries:
     cross_cutting_risks: [lifecycle]
     expected_professional_owner: frontend-change-builder
     expected_domain_extensions: []
-    expected_foundation_skills: [web-platform-professional-usage]
+    expected_foundation_skills: []
     coverage_status: covered
     disposition: retain-existing
     reason: React browser work stays with the frontend owner and explicitly excludes installed-client ownership.
@@ -1759,7 +1759,7 @@ entries:
     cross_cutting_risks: [infrastructure as code, release]
     expected_professional_owner: platform-infrastructure-change-builder
     expected_domain_extensions: []
-    expected_foundation_skills: [infrastructure-as-code-safety]
+    expected_foundation_skills: []
     coverage_status: covered
     disposition: retain-existing
     reason: Terraform source work stays with the infrastructure builder and explicitly excludes production release ownership.

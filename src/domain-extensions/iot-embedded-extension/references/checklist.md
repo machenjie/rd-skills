@@ -1,6 +1,6 @@
 # IoT Embedded Extension Checklist
 
-Close triggered device and field-operation decisions.
+Close triggered device and field-operation decisions. Apply each item to the affected existing mechanism; local timing work alone does not require OTA, signing, fleet monitoring, manufacturing controls, or a physical safe-state design.
 
 ## Lifecycle
 

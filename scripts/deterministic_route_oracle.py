@@ -1228,7 +1228,7 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                 "boundary_atoms": ("permission", "model context"),
             },
             "agent-model-authority": {
-                "trigger_atoms": ("model", "evaluation"),
+                "trigger_atoms": ("model",),
                 "domain_signals": (
                     "agent",
                     "tool call",
@@ -1269,6 +1269,16 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                     "approval",
                 ),
                 "boundary_atoms": ("delegated authority", "consequential"),
+            },
+            "evaluation-evidence": {
+                "trigger_atoms": ("evaluation",),
+                "domain_signals": ("rag", "prompt", "model", "provider", "evaluation"),
+                "qualified_domain_signals": {
+                    "evaluation": ("rag", "prompt", "model", "judge", "ai"),
+                    "provider": ("model", "ai"),
+                },
+                "boundary_signals": ("judge calibration", "dataset contamination", "provider regression"),
+                "boundary_atoms": ("judge calibration", "dataset contamination", "provider regression"),
             },
         },
     },
@@ -1357,6 +1367,7 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                 ),
                 "domain_signals": (
                     "device",
+                    "firmware",
                     "edge",
                     "actuator",
                     "sensor",
@@ -1736,6 +1747,11 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                     "refund",
                     "custody",
                     "accounting",
+                    "duplicate financial effect",
+                    "duplicate charge",
+                    "unknown result",
+                    "unknown-result",
+                    "settlement event",
                 ),
                 "boundary_atoms": ("accounting", "reconciliation"),
             },
@@ -4025,6 +4041,7 @@ _BACKEND_IMPLEMENTATION_SURFACE_SIGNALS = (
     "service lifecycle",
     "worker behavior",
     "worker implementation",
+    "worker checkpoint",
     "linux server",
     "server-side",
     "server side",
@@ -4037,6 +4054,9 @@ _BACKEND_IMPLEMENTATION_SURFACE_SIGNALS = (
     "kotlin coroutine",
     "net service",
     "backend utility",
+    "local firmware",
+    "firmware sampling",
+    "native runtime",
 )
 _CLIENT_APPLICATION_SURFACE_SIGNALS = (
     "installed app",
@@ -4919,6 +4939,7 @@ def _bounded_effect_scopes(value: str) -> tuple[_EffectScope, ...]:
 def _scope_is_unchanged(scope: str) -> bool:
     return (
         scope.startswith(("no ", "without "))
+        or bool(re.match(r"(?:the\s+|an?\s+|this\s+|that\s+)?unchanged\b", scope.strip(), re.I))
         or scope.endswith(" unchanged")
         or " remains unchanged" in f" {scope}"
         or " remain unchanged" in f" {scope}"
@@ -6947,7 +6968,7 @@ def _coalesce_professional_family_matches(
 
 
 _TASK_ACTION_RE = re.compile(
-    r"\b(?P<verb>add|analy[sz]e|build|change|create|fix|implement|migrate|"
+    r"\b(?P<verb>add|analy[sz]e|build|change|create|fix|implement|initialize|resume|migrate|optimi[sz]e|"
     r"plan|prepare|refactor|repair|select|update|write)\b"
 )
 _TASK_CLAUSE_BOUNDARY_RE = re.compile(r";|[.!?](?=\s|$)")
@@ -6961,6 +6982,9 @@ _TEST_VALIDATION_TASK_OBJECT_SIGNALS = (
     "test proof",
     "test coverage",
     "validation freshness",
+    "evaluation tests",
+    "spacing tests",
+    "rendering test",
 )
 
 
@@ -7540,6 +7564,7 @@ def _parse_normalized_task_request(
         elif (
             deepest_owning_object is not None
             and deepest_owning_object.role == "test-object"
+            and re.search(r"\bfor (?:this|the)\s+$", between) is None
         ):
             disposition = "blocking-ambiguous"
             issue_code = None
@@ -8728,7 +8753,8 @@ def _classify_professional_families(
                 and not _scope_is_unchanged(without_inline_anti)
             ):
                 effect_scopes.append(without_inline_anti)
-        if effect_scopes:
+        statement_intent = _task_action_intent(projected_statement)
+        if effect_scopes and (statement_intent["implementation"] or statement_intent["preparation"]):
             effect_statements.append(" and ".join(effect_scopes))
     effect_value = " ; ".join(effect_statements)
     action_intent = _task_action_intent(value)
@@ -8833,6 +8859,9 @@ def _classify_professional_families(
             "browser component",
             "web component",
             "pwa",
+            "vue component",
+            "react component",
+            "chat page",
         )
     )
     add(
@@ -8901,8 +8930,20 @@ def _classify_professional_families(
             "cache",
             "search index",
             "search cluster",
+            "kafka",
+            "rabbitmq",
+            "message broker",
         )
+    ) or (
+        any(signal in effect_value for signal in ("data pipeline", "feature pipeline", "cdc"))
+        and any(signal in effect_value for signal in ("checkpoint", "replay", "source of truth", "consistency"))
     )
+    if frontend_subject and any(
+        signal in effect_value for signal in ("service worker", "service-worker", "browser storage", "indexeddb", "cache api")
+    ) and not any(
+        signal in effect_value for signal in ("database", "middleware", "queue", "server cache", "search cluster", "kafka", "rabbitmq")
+    ):
+        middleware_subject = False
     add(
         "data-middleware",
         middleware_subject,
@@ -8938,11 +8979,12 @@ def _classify_professional_families(
             "cross worker",
             "shared contract",
             "webhook integration",
+            "payment provider callback",
         )
     )
     add(
         "integration",
-        integration_subject and "accepted" in effect_value,
+        integration_subject,
         anti=(
             "no integration edge" in value
             or bool(re.search(r"\bunrelated\s+source\s+inspection\b", value))
@@ -8994,6 +9036,7 @@ def _classify_professional_families(
             "kustomize",
             "helm chart",
             "helm source",
+            "helm template",
             "infrastructure source",
             "infrastructure script",
             "cloud iam",
@@ -9029,6 +9072,13 @@ def _classify_professional_families(
         anti=(
             bool(re.search(r"\bno\s+material\s+change\b", value))
             or "already fresh and complete" in value
+            or (
+                bool(results)
+                and re.search(
+                    r"\b(?:regression tests?|test proof)\b[^.;!?]*"
+                    r"\bfor (?:this|the) (?:fix|change|repair)\b", value
+                ) is not None
+            )
         ),
         evidence=("behavior-proof-surface",),
     )
@@ -9423,6 +9473,18 @@ def _language_semantic_layers(text: str) -> list[str]:
     return selected
 
 
+def _task_local_context(text: str) -> str:
+    """Keep active statements and omit explicitly unchanged inventory context."""
+
+    return " ; ".join(
+        statement for statement in _EFFECT_STATEMENT_BOUNDARY_RE.split(text)
+        if _task_action_intent(statement)["implementation"] or not (
+            _scope_is_unchanged(statement)
+            or re.search(r"\b(?:contains?|elsewhere|inventory|background|unchanged)\b", statement)
+        )
+    )
+
+
 def _implementation_owner_layer3(
     family: str,
     text: str,
@@ -9434,6 +9496,14 @@ def _implementation_owner_layer3(
 ) -> list[str]:
     """Derive a bounded Layer 3 selection from task-local semantic evidence."""
 
+    configuration_risk = _configuration_runtime_policy_risk(text)
+    dependency_risk = _dependency_package_risk(text)
+    # Owner knowledge follows changed objects, never repository technology
+    # inventory or a neighboring module mentioned as background.
+    text = " ; ".join(
+        re.split(r"\bwithout\s+(?:changing|modifying|altering)\b", statement, maxsplit=1, flags=re.I)[0]
+        for statement in _EFFECT_STATEMENT_BOUNDARY_RE.split(_task_local_context(text))
+    )
     selected: list[str] = []
     if family == "backend":
         for _scope_id, scope in _bounded_effect_scopes(text):
@@ -9518,14 +9588,19 @@ def _implementation_owner_layer3(
                 not frontend_has_anti_scope
                 or explicit_state_effect is not None
             )
-        ) or (
-            "frontend component" in text
-            and not browser_specific
         ):
-            selected.append("state-management-design")
+                selected.append("state-management-design")
         if _accessibility_behavior_requested(text):
             selected.append("accessibility-inclusive-design")
-        if browser_specific and "state" not in text:
+        if browser_specific and any(
+            signal in text for signal in (
+                "service-worker", "service worker", "document lifecycle",
+                "navigation history", "history api", "cross-origin", "cors",
+                "content security policy", "indexeddb", "cache api", "storage quota",
+                "browser storage", "browser rendering", "web worker",
+                "streaming response", "abortcontroller", "browser permission",
+            )
+        ):
             selected.append("web-platform-professional-usage")
     elif family == "installed-client":
         if _accessibility_behavior_requested(text):
@@ -9610,12 +9685,9 @@ def _implementation_owner_layer3(
         if any(
             signal in text
             for signal in (
-                "terraform",
-                "opentofu",
-                "cloudformation",
-                "pulumi",
-                "helm",
-                "kustomize",
+                "resource identity", "state backend", "state identity", "drift",
+                "replacement", "destruction", "recovery", "plan unknown",
+                "preview unknown", "writer", "locking",
             )
         ):
             selected.append("infrastructure-as-code-safety")
@@ -9661,16 +9733,31 @@ def _implementation_owner_layer3(
     else:
         raise RoutingIntegrityError(f"unknown implementation family {family!r}")
     if family in _RUNTIME_POLICY_IMPLEMENTATION_FAMILIES:
-        if _configuration_runtime_policy_risk(text):
+        if configuration_risk:
             selected.append("configuration-runtime-policy")
-        if _dependency_package_risk(text):
+        if dependency_risk:
             selected.append("dependency-vulnerability-scanning")
+    if family in {"frontend", "installed-client"} and any(
+        "offline" in scope
+        and any(signal in scope for signal in ("edit", "write", "pending", "replay"))
+        and any(signal in scope for signal in ("reconnect", "conflict", "merge", "reconcil"))
+        for scope in _coordinated_implementation_change_scopes(text)
+    ):
+        selected.append("offline-sync-conflict-resolution")
+    if family in {"backend", "data-middleware"} and any(
+        any(signal in scope for signal in ("broker", "kafka", "rabbitmq", "sqs", "queue"))
+        and any(signal in scope for signal in (
+            "offset", "visibility", "rebalance", "consumer group", "consumer-group",
+            "transactional consum", "compaction", "retention", "delivery guarantee",
+            "dlq ownership", "late replay",
+        ))
+        for scope in _coordinated_implementation_change_scopes(text)
+    ):
+        selected.append("message-queue-design")
     if family in {"repository-tooling", "backend", "frontend", "installed-client"}:
         languages = _language_semantic_layers(text)
         if family == "frontend":
             languages = [name for name in languages if name == "typescript-professional-usage"]
-        elif family == "backend":
-            languages = [name for name in languages if name != "swift-professional-usage"]
         elif family == "installed-client":
             languages = [name for name in languages if name not in {
                 "python-professional-usage", "go-professional-usage", "java-jvm-professional-usage",
@@ -13896,8 +13983,9 @@ def _route_impl(
     technology_stack_risk = _technology_stack_commitment_risk(text)
     major_module_review = _major_module_boundary_review(text)
     dependency_package_risk = _dependency_package_risk(text)
-    target_domains = _installed_target_domains(text)
-    shared_framework = _shared_client_framework(text)
+    client_context = _task_local_context(text)
+    target_domains = _installed_target_domains(client_context)
+    shared_framework = _shared_client_framework(client_context)
     raw_cohort_candidates: list[dict[str, Any]] = []
     critical_evidence = _critical_unknown_evidence(
         text,
@@ -16278,7 +16366,19 @@ def _route_impl(
             precedence_class="analysis-artifact",
             match_evidence=["accepted-brief", "api-compatibility-artifact"],
         )
-    if "public api" in text or "old consumers" in text:
+    if (
+        action_intent["implementation"]
+        and not classified_families
+        and any(signal in text for signal in ("public api", "public cli", "sdk public"))
+        and any(signal in text for signal in ("contract", "compatibility", "schema"))
+    ):
+        add_candidate(
+            "direct", "task-agent", "data-api-contract-changer", [],
+            "architecture-impact-reviewer", rule_id="public-contract-implementation",
+            stage="contract", precedence_class="public-contract",
+            match_evidence=["public-contract-implementation"],
+        )
+    elif "public api" in text or "old consumers" in text:
         add_candidate(
             "analyzed",
             "analysis-agent",
@@ -16564,6 +16664,42 @@ def _route_impl(
             stage="release",
             precedence_class="production-boundary",
             match_evidence=["production-rollout"],
+        )
+    if action_intent["implementation"] and not classified_families and any(
+        "tenant isolation" in scope
+        and "permission enforcement" in scope
+        and any(signal in scope for signal in ("prevent cross tenant access", "prevent cross-tenant access"))
+        and any(signal in scope for signal in ("private records", "sensitive records"))
+        for scope in _coordinated_implementation_change_scopes(text)
+    ):
+        add_candidate(
+            "direct", "task-agent", "security-privacy-gate", [],
+            "security-privacy-gate", rule_id="tenant-boundary-implementation",
+            stage="risk", precedence_class="security-boundary",
+            match_evidence=["cross-tenant-private-record-permission-enforcement"],
+        )
+    if action_intent["implementation"] and any(
+        "ota" in scope
+        and any(signal in scope for signal in ("rollback", "activation", "rollout"))
+        for scope in _coordinated_implementation_change_scopes(text)
+    ):
+        add_candidate(
+            "direct", "task-agent", "delivery-release-gate", [],
+            "delivery-release-gate", rule_id="ota-release-behavior",
+            stage="release", precedence_class="production-boundary",
+            match_evidence=["ota-activation-rollout-or-rollback-behavior"],
+        )
+    if analysis_only_action and action_intent["analysis"] and not domain_object_analysis_intent and any(
+        any(signal in scope for signal in ("ledger", "balance", "settlement", "money"))
+        and any(signal in scope for signal in ("invariant", "conservation", "accounting rule"))
+        and not _scope_is_unchanged(scope)
+        for scope in _EFFECT_STATEMENT_BOUNDARY_RE.split(text)
+    ):
+        add_candidate(
+            "analyzed", "analysis-agent", "domain-impact-modeler", [],
+            "architecture-impact-reviewer", rule_id="monetary-invariant-analysis",
+            stage="domain", precedence_class="domain-model",
+            match_evidence=["monetary-invariant-analysis"],
         )
     if "migration documentation" in text:
         add_candidate(

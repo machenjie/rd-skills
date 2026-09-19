@@ -31,7 +31,7 @@ description: "Use `analysis-agent` for integration decisions or `task-agent` for
 ## Professional Decision Rules
 
 - Keep integration decisions within declared owners, inputs, stops, and outputs.
-- Align producer, consumer, provider, version, credential, and exact signed-representation contracts before changing the adapter or resolving implementation conflicts.
+- Align producer, consumer, provider, version, and applicable credential contracts; when the provider/protocol uses signing, bind its exact signed representation before changing the adapter or resolving implementation conflicts.
 - Define timeout, retry, idempotency, ordering, verification, replay, unknown-outcome, partial-failure, compensation, and reconciliation behavior at the owning boundary.
 - Validate the integrated diff, credential containment, mapping compatibility, and recovery behavior across affected consumers; isolated component success is insufficient.
 
@@ -51,7 +51,7 @@ description: "Use `analysis-agent` for integration decisions or `task-agent` for
 
 ## Stop / Escalation Conditions
 
-Block unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk.
+Block unresolved authority or proof for affected provider, credential, ordering, duplicate/failure, sensitive-data, or adapter boundaries. Require signed-byte proof only when the current provider/protocol uses signing; do not introduce signing or reconciliation mechanisms absent from the contract. Escalate material production/provider/combined-impact/weak-recovery risk.
 
 ## Output Contract
 

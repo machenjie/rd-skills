@@ -39,7 +39,7 @@ relations:
       paraphrase: payment-anti-authorization-copy
       distractor: mobile-anti-responsive-pwa
       transition: mobile-native-lifecycle-permission
-    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    stable_dimensions: [path, profile, primary_skill, review_skill]
     transition_dimensions: [primary_skill, layer3_skills]
     competing_route: direct
     competing_skill: installed-client-change-builder

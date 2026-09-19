@@ -324,7 +324,7 @@ professional_skills:
         do_not_load_when: "the domain impact modeler root or a task-named reference already resolves selection"
         required_by: ["analysis-agent"]
         required_output: ["reference-selection"]
-    layer3_candidates: ["domain-object-identification", "business-rule-extraction", "state-machine-modeling", "transaction-consistency", "concurrency-control", "business-invariant-analysis", "domain-event-modeling", "use-case-modeling", "windows-platform-extension"]
+    layer3_candidates: ["domain-object-identification", "business-rule-extraction", "state-machine-modeling", "transaction-consistency", "concurrency-control", "business-invariant-analysis", "domain-event-modeling", "use-case-modeling", "windows-platform-extension", "payment-trading-extension"]
     task_routable: true
   - name: architecture-impact-reviewer
     routing_mode: evidence-only
@@ -574,7 +574,7 @@ professional_skills:
           decision_problem: "same-pattern-scan-and-handoff-evidence"
           sequenced_after: []
           must_co_trigger_with: []
-    layer3_candidates: ["page-component-decomposition", "state-management-design", "frontend-testing", "form-validation-design", "interaction-state-modeling", "typescript-professional-usage", "frontend-api-integration", "routing-navigation-design", "accessibility-inclusive-design", "web-platform-professional-usage", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
+    layer3_candidates: ["page-component-decomposition", "state-management-design", "frontend-testing", "form-validation-design", "interaction-state-modeling", "typescript-professional-usage", "frontend-api-integration", "routing-navigation-design", "accessibility-inclusive-design", "web-platform-professional-usage", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning", "offline-sync-conflict-resolution"]
     task_routable: true
   - name: backend-change-builder
     routing_mode: automatic
@@ -582,7 +582,7 @@ professional_skills:
     required_expertise_tags: ["foundation-backend-engineering", "foundation-data-middleware", "foundation-domain-modeling", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-identity-access-control", "specialty-messaging-event-delivery", "specialty-transaction-consistency"]
     path: "src/professional-skills/backend-change-builder"
     role_support: ["task-agent"]
-    trigger_signals: ["backend behavior change", "service or worker change"]
+    trigger_signals: ["backend behavior change", "service or worker change", "local native or firmware runtime implementation"]
     anti_trigger_signals: ["frontend only", "source inspection only"]
     required_inputs: ["domain invariants", "authorization and failure-contract evidence", "transaction delivery and recovery constraints"]
     output_contract: ["changed backend invariants and boundaries", "authorization consistency delivery and recovery decisions", "post-edit validation result and proof limits", "residual operational risk"]
@@ -647,7 +647,7 @@ professional_skills:
           decision_problem: "solution-optimality"
           sequenced_after: []
           must_co_trigger_with: []
-    layer3_candidates: ["service-business-logic", "domain-object-identification", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "permission-boundary-modeling", "authentication-authorization", "regression-testing", "logging-error-handling", "message-queue-design", "observability", "failure-diagnosis", "failure-contract-design", "implementation-structure-design", "design-pattern-selection", "minimal-correct-implementation", "go-professional-usage", "java-jvm-professional-usage", "kotlin-professional-usage", "csharp-dotnet-professional-usage", "python-professional-usage", "language-idiom-enforcement", "language-performance-safety", "ai-product-extension", "payment-trading-extension", "low-level-systems-extension", "cloud-platform-extension", "windows-platform-extension", "async-job-design", "controller-api-implementation", "dependency-wiring-lifecycle", "domain-logic-implementation", "repository-persistence", "nodejs-runtime-professional-usage", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning", "typescript-professional-usage", "rust-professional-usage", "cpp-professional-usage"]
+    layer3_candidates: ["service-business-logic", "domain-object-identification", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "permission-boundary-modeling", "authentication-authorization", "regression-testing", "logging-error-handling", "message-queue-design", "observability", "failure-diagnosis", "failure-contract-design", "implementation-structure-design", "design-pattern-selection", "minimal-correct-implementation", "go-professional-usage", "java-jvm-professional-usage", "kotlin-professional-usage", "csharp-dotnet-professional-usage", "python-professional-usage", "language-idiom-enforcement", "language-performance-safety", "ai-product-extension", "payment-trading-extension", "low-level-systems-extension", "cloud-platform-extension", "windows-platform-extension", "async-job-design", "controller-api-implementation", "dependency-wiring-lifecycle", "domain-logic-implementation", "repository-persistence", "nodejs-runtime-professional-usage", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning", "typescript-professional-usage", "rust-professional-usage", "cpp-professional-usage", "iot-embedded-extension", "swift-professional-usage"]
     task_routable: true
   - name: data-middleware-change-builder
     routing_mode: automatic
@@ -691,7 +691,7 @@ professional_skills:
         do_not_load_when: "The change has no material recovery path beyond normal tests and the body quality gate is enough"
         required_by: ["analysis-agent", "task-agent"]
         required_output: ["option-comparison", "selected-approach"]
-    layer3_candidates: ["data-migration-design", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "cache-design", "permission-boundary-modeling", "observability", "performance-budgeting", "relational-database", "indexing-query-optimization", "sql-professional-usage", "regression-testing", "release-rollback", "ai-product-extension", "bigdata-product-extension", "file-storage-processing", "nosql-database", "search-analytics-design", "distributed-workflow-consistency", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
+    layer3_candidates: ["data-migration-design", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "cache-design", "permission-boundary-modeling", "observability", "performance-budgeting", "relational-database", "indexing-query-optimization", "sql-professional-usage", "regression-testing", "release-rollback", "ai-product-extension", "bigdata-product-extension", "file-storage-processing", "nosql-database", "search-analytics-design", "distributed-workflow-consistency", "configuration-runtime-policy", "dependency-vulnerability-scanning", "message-queue-design"]
     task_routable: true
   - name: integration-change-builder
     routing_mode: automatic
@@ -729,7 +729,7 @@ professional_skills:
         do_not_load_when: "The provider contract and accepted task already determine a bounded adapter change with no material delivery or failure-mode choice"
         required_by: ["analysis-agent", "task-agent"]
         required_output: ["failure-decision", "residual-risk"]
-    layer3_candidates: ["contract-testing", "failure-contract-design", "consumer-impact-analysis", "web-security", "idempotency-retry-design", "input-validation", "web3-product-extension", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
+    layer3_candidates: ["contract-testing", "failure-contract-design", "consumer-impact-analysis", "web-security", "idempotency-retry-design", "input-validation", "web3-product-extension", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning", "payment-trading-extension"]
     task_routable: true
   - name: quality-test-gate
     routing_mode: automatic
@@ -775,7 +775,7 @@ professional_skills:
         do_not_load_when: "No test-structure decision exists"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["validation-plan", "proof-limit"]
-    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing", "bigdata-product-extension"]
+    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing", "bigdata-product-extension", "ai-product-extension"]
     task_routable: true
   - name: security-privacy-gate
     routing_mode: evidence-only

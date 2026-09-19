@@ -1,6 +1,6 @@
 ---
 name: indexing-query-optimization
-description: "`task-agent`/`review-agent`: use when predicates, sorting, cardinality, query plans, pagination, indexes, or write cost change; skip when no query/index decision exists."
+description: "`analysis-agent`/`task-agent`/`review-agent`: use when predicates, sorting, cardinality, query plans, pagination, indexes, or write cost change; skip when no query/index decision exists."
 ---
 
 # indexing-query-optimization
@@ -48,6 +48,6 @@ Escalate when the beneficiary query or objective is unknown, or neither safe eng
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Index type, pagination, plan, or write-cost choices compete | No material query plan or access pattern changes | task-agent, review-agent | option-comparison, selected-approach |
-| [checklist](references/checklist.md) | decision-checklist | Optimization affects selectivity, ordering, writes, builds, or N-plus-one behavior | The query has no measurable resource or latency risk | task-agent, review-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Optimization claims need current plans, volumes, and benchmark results | No plan or capacity claim is being approved | task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Index type, pagination, plan, or write-cost choices compete | No material query plan or access pattern changes | analysis-agent, task-agent, review-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | Optimization affects selectivity, ordering, writes, builds, or N-plus-one behavior | The query has no measurable resource or latency risk | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Optimization claims need current plans, volumes, and benchmark results | No plan or capacity claim is being approved | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |

@@ -100,12 +100,12 @@ domain_skills:
           must_co_trigger_with: []
   - name: ai-product-extension
     routing_mode: modifier-only
-    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "security-privacy-gate"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "quality-test-gate", "security-privacy-gate"]
     required_expertise_tags: ["domain-ai-product-extension", "foundation-data-api-contracts", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
     path: "src/domain-extensions/ai-product-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
     trigger_signals: ["model", "prompt", "retrieval", "embedding", "evaluation", "AI data"]
-    boundary_signals: ["permission", "model context", "delegated authority", "consequential"]
+    boundary_signals: ["permission", "model context", "delegated authority", "consequential", "judge calibration", "dataset contamination", "provider regression"]
     anti_trigger_signals:
       - "deterministic product behavior with no AI surface"
       - "AI terminology, static algorithms, or ordinary search without a model decision"
@@ -194,7 +194,7 @@ domain_skills:
           must_co_trigger_with: []
   - name: iot-embedded-extension
     routing_mode: modifier-only
-    used_by: ["delivery-release-gate", "engineering-change-analysis"]
+    used_by: ["backend-change-builder", "delivery-release-gate", "engineering-change-analysis"]
     required_expertise_tags: ["domain-iot-embedded-extension", "domain-low-level-systems-extension", "foundation-delivery-platform", "foundation-reliability-operations", "foundation-security-privacy"]
     path: "src/domain-extensions/iot-embedded-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
@@ -215,7 +215,7 @@ domain_skills:
         required_output: ["checklist-result", "residual-risk"]
   - name: payment-trading-extension
     routing_mode: modifier-only
-    used_by: ["backend-change-builder", "engineering-change-analysis", "security-privacy-gate"]
+    used_by: ["backend-change-builder", "domain-impact-modeler", "engineering-change-analysis", "integration-change-builder", "security-privacy-gate"]
     required_expertise_tags: ["domain-payment-trading-extension", "foundation-data-middleware", "foundation-domain-modeling", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-identity-access-control", "specialty-transaction-consistency"]
     path: "src/domain-extensions/payment-trading-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]

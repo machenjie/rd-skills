@@ -24,6 +24,13 @@ class DecisionTests(unittest.TestCase):
             case = {'id': 'empty', 'prompt': 'Implement a bounded backend service fix.', 'expected': expected}
             self.assertEqual('fail', EVAL.evaluate_decision_document({'cases': [case]})['status'])
 
+    def test_required_expertise_is_checked_without_pinning_combination(self):
+        case = {'id': 'required', 'prompt': 'Review the actual diff.',
+                'expected': {'start_profile': 'review-agent'}, 'required_skills': ['offline-sync-conflict-resolution']}
+        self.assertEqual('fail', EVAL.evaluate_decision_document({'cases': [case]})['status'])
+        case['required_skills'] = ['code-review']
+        self.assertEqual('pass', EVAL.evaluate_decision_document({'cases': [case]})['status'])
+
     def test_excluded_expertise_is_checked(self):
         case = {'id': 'excluded', 'prompt': 'Review the actual diff.',
                 'expected': {'start_profile': 'review-agent'}, 'excluded_skills': ['code-review']}
