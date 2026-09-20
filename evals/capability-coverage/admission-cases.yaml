@@ -819,7 +819,7 @@ cases:
     layer: foundation
     skill: filesystem-process-safety
     case_kind: adjacent
-    prompt: Implement a Terraform module source change with no application filesystem or child-process contract.
+    prompt: Implement a Terraform resource identity source change with no application filesystem or child-process contract.
     expected: {selected: false, primary_skill: platform-infrastructure-change-builder}
   - id: capcov-admission-foundation-filesystem-process-safety-domain-owned-negative
     main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-filesystem-process-safety-domain-owned-negative}
@@ -3372,3 +3372,35 @@ cases:
     case_kind: domain-owned
     prompt: "Analyze blockchain wallet custody and chain transaction finality with no cryptographic construction change."
     expected: {selected: false, primary_skill: engineering-change-analysis}
+
+  - id: capcov-admission-foundation-message-queue-design-selected
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-message-queue-design-selected}
+    layer: foundation
+    skill: message-queue-design
+    case_kind: selected
+    prompt: Change Kafka consumer offset acknowledgement after a durable side effect and replay behavior.
+    expected: {selected: true, primary_skill: data-middleware-change-builder}
+
+  - id: capcov-admission-foundation-message-queue-design-simple
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-message-queue-design-simple}
+    layer: foundation
+    skill: message-queue-design
+    case_kind: simple
+    prompt: Change backend service synchronous HTTP retry timeout.
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-message-queue-design-adjacent
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-message-queue-design-adjacent}
+    layer: foundation
+    skill: message-queue-design
+    case_kind: adjacent
+    prompt: Fix Go backend goroutine cancellation.
+    expected: {selected: false, primary_skill: backend-change-builder}
+
+  - id: capcov-admission-foundation-message-queue-design-domain-owned
+    main_execution: {producer: main-control-agent, task_id: capcov-admission-foundation-message-queue-design-domain-owned}
+    layer: foundation
+    skill: message-queue-design
+    case_kind: domain-owned
+    prompt: Fix local firmware sampling timing; no broker behavior changes.
+    expected: {selected: false, primary_skill: backend-change-builder}

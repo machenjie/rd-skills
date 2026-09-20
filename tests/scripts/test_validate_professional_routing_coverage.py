@@ -281,8 +281,12 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
             for row in routing["results"]
         ]
         family_coverage = self.module._domain_family_coverage(results, domains)
-        self.assertEqual(21, len(family_coverage))
+        self.assertEqual(22, len(family_coverage))
         expected_family_case_ids = {
+            ("ai-product-extension", "evaluation-evidence"): {
+                "canonical": ["t2b-preparation-ai"],
+                "paraphrase": ["t2b-dedicated-ai-analysis"],
+            },
             ("ai-product-extension", "agent-model-authority"): {
                 "canonical": ["ai-agent-tool-authority"],
                 "paraphrase": ["ai-model-decision-paraphrase"],

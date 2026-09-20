@@ -5,7 +5,7 @@ cases:
     main_execution: {producer: main-control-agent, task_id: capcov-route-react-web-owner}
     prompt: Implement an accepted React web browser frontend component change.
     excluded_skills: [installed-client-change-builder]
-    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [web-platform-professional-usage], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [], review_skill: null}
   - id: capcov-route-pwa-only-owner
     main_execution: {producer: main-control-agent, task_id: capcov-route-pwa-only-owner}
     prompt: Implement an accepted PWA-only frontend component change with service-worker offline behavior.
@@ -57,7 +57,7 @@ cases:
     main_execution: {producer: main-control-agent, task_id: capcov-route-terraform-source}
     prompt: Implement an accepted Terraform module source change without applying it to production.
     excluded_skills: [delivery-release-gate]
-    expected: {path: direct, profile: task-agent, primary_skill: platform-infrastructure-change-builder, layer3_skills: [infrastructure-as-code-safety], review_skill: null}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "platform-infrastructure-change-builder", "layer3_skills": [], "review_skill": null}
   - id: capcov-route-terraform-apply
     main_execution: {producer: main-control-agent, task_id: capcov-route-terraform-apply}
     prompt: Review a Terraform production apply as a production rollout decision.
@@ -138,7 +138,7 @@ cases:
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: null}
   - id: capcov-natural-pwa-web-only
     main_execution: {producer: main-control-agent, task_id: capcov-natural-pwa-web-only}
-    prompt: Implement an accepted PWA web-only offline component change in the browser.
+    prompt: Implement an accepted PWA web-only service-worker offline component change in the browser.
     excluded_skills: [installed-client-change-builder, android-platform-extension, cross-platform-client-extension, ios-ipados-platform-extension, linux-desktop-platform-extension, macos-platform-extension, windows-platform-extension]
     expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [web-platform-professional-usage], review_skill: null}
   - id: capcov-natural-android-store-rollout

@@ -1,6 +1,6 @@
 ---
 name: relational-database
-description: "`task-agent`: use when physical relational schema or database-enforced integrity changes; skip conceptual-model, repository-only, or unchanged relational-storage work."
+description: "`analysis-agent`/`task-agent`: use when physical relational schema or database-enforced integrity changes; skip conceptual-model, repository-only, or unchanged storage work."
 ---
 
 # relational-database
@@ -49,6 +49,6 @@ Stop when invariant authority or writers, actual engine/version/configuration, t
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Constraint isolation index replica or physical-evolution mechanisms remain unresolved | Current engine schema workload and writer evidence select one bounded mechanism | task-agent | option-comparison, selected-approach |
-| [checklist](references/checklist.md) | decision-checklist | Change affects keys constraints conflicts isolation replicas indexes tenant scope or physical evolution | No physical relational integrity or representation decision changes | task-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Constraint conflict isolation replica index or DDL-safety claims need fresh proof | Current schema configuration plans queries and tests prove each bounded claim | task-agent | evidence-record, proof-limit, residual-risk |
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Constraint isolation index replica or physical-evolution mechanisms remain unresolved | Current engine schema workload and writer evidence select one bounded mechanism | task-agent, analysis-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | Change affects keys constraints conflicts isolation replicas indexes tenant scope or physical evolution | No physical relational integrity or representation decision changes | task-agent, analysis-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Constraint conflict isolation replica index or DDL-safety claims need fresh proof | Current schema configuration plans queries and tests prove each bounded claim | task-agent, analysis-agent | evidence-record, proof-limit, residual-risk |

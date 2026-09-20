@@ -38,6 +38,4 @@ Primary source:
 Version limit: built-in and standalone Kustomize versions can differ. Rendering
 does not prove admission, controller convergence, rollout safety, or live drift.
 ## Required Record
-Return the Kubernetes and packaging versions, cluster target, selected overlay or
-release, final rendered identities, field and controller owners, validation
-evidence, deletion or secret risks, recovery owner, and live-state proof limits.
+Return supported Kubernetes/packaging versions, selected templates or overlays, final rendered identities, consumer contracts, validation, and proof limits. For cluster-bound changes, add the actual cluster/release, affected field/controller owners, deletion/secret risks and recovery authority. Reusable chart or render-test work requires no invented cluster, live state, or production recovery owner.

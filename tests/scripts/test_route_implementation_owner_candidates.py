@@ -2488,20 +2488,23 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             ORACLE.route_with_trace(payment_prompt, main_execution=payment_main)
         )
         pass
-        self.assertEqual("engineering-change-analysis", payment["primary_skill"])
+        self.assertEqual("domain-impact-modeler", payment["primary_skill"])
         self.assertEqual(
-            ["payment-trading-extension", "repository-context-map"],
+            ["payment-trading-extension"],
             payment["layer3_skills"],
         )
 
     def test_router_registry_oracle_and_fixture_identity_are_locked(self) -> None:
         router_rows = []
+        modifier_rows = []
         for line in ROUTER_PATH.read_text(encoding="utf-8").splitlines():
             if not line.startswith("|") or line.startswith("|---"):
                 continue
             cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
             if len(cells) == 4 and cells[0] != "Task signal":
                 router_rows.append(cells)
+            elif len(cells) == 2 and cells[0] != "Active mechanism":
+                modifier_rows.append(cells)
 
         security_rows = [
             row
@@ -2511,18 +2514,14 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         ]
         payment_rows = [
             row
-            for row in router_rows
+            for row in modifier_rows
             if row[0].startswith("payment, ledger, balance")
         ]
         self.assertEqual(1, len(security_rows))
         self.assertEqual(1, len(payment_rows))
-        self.assertEqual(
-            (
-                "task-agent",
-                "backend-change-builder",
-                "architecture-impact-reviewer",
-            ),
-            payment_rows[0][1:],
+        self.assertEqual("payment-trading-extension", payment_rows[0][1])
+        self.assertFalse(
+            any(row[0].startswith("payment, ledger, balance") for row in router_rows)
         )
 
         security_registry = next(
@@ -2574,7 +2573,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         )
 
         router_mutation = list(payment_rows[0])
-        router_mutation[2] = "security-privacy-gate"
+        router_mutation[1] = "security-privacy-gate"
         self.assertNotEqual(tuple(router_mutation), payment_rows[0])
         registry_mutation = copy.deepcopy(security_registry)
         registry_mutation["trigger_signals"] = [
@@ -2843,7 +2842,9 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             actual_route = _projected_route(observed)
             expected_route = expected_anti_routes[family]
             route_keys = ("path", "profile", "primary_skill")
-            if not label.startswith("frontend-copy:"):
+            if label.startswith("frontend-copy:"):
+                expected_route = {**expected_route, "layer3_skills": []}
+            else:
                 actual_route = {
                     key: actual_route[key]
                     for key in route_keys

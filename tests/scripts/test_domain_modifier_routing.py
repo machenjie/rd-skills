@@ -109,6 +109,7 @@ REMOVED_DIRECT_IDS = {
 }
 EXPECTED_RECIPROCITY = {
     "ai-product-extension": {
+        "quality-test-gate",
         "ai-code-review-refactor",
         "backend-change-builder",
         "data-middleware-change-builder",
@@ -146,6 +147,7 @@ EXPECTED_RECIPROCITY = {
         "installed-client-change-builder",
     },
     "iot-embedded-extension": {
+        "backend-change-builder",
         "delivery-release-gate",
         "engineering-change-analysis",
     },
@@ -166,6 +168,8 @@ EXPECTED_RECIPROCITY = {
         "installed-client-change-builder",
     },
     "payment-trading-extension": {
+        "integration-change-builder",
+        "domain-impact-modeler",
         "backend-change-builder",
         "engineering-change-analysis",
         "security-privacy-gate",
@@ -298,7 +302,7 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
             for row in domains
         }
         self.assertEqual(EXPECTED_RECIPROCITY, actual)
-        self.assertEqual(48, sum(len(owners) for owners in actual.values()))
+        self.assertEqual(sum(map(len, EXPECTED_RECIPROCITY.values())), sum(map(len, actual.values())))
         domain_names = set(actual)
         professional_edges = {
             (row["name"], candidate)
@@ -1311,7 +1315,7 @@ class DomainModifierResultValidationTests(unittest.TestCase):
             return_value=rows,
         ):
             observed = ORACLE.route_with_trace(
-                "Select regression tests and validate final changed paths "
+                "Implement a repository code generator output change "
                 "where a model decision has delegated authority.",
                 main_execution=COHORTS._test_main_execution(task_id),
             )
@@ -1320,7 +1324,7 @@ class DomainModifierResultValidationTests(unittest.TestCase):
             candidate
             for candidate in trace["raw_candidates"]
             if candidate["candidate_id"]
-            == "implementation-owner:quality-test-gate"
+            == "implementation-owner:repository-tooling-change-builder"
         )
         expected_markers = [
             "domain-layer3-incompatible:ai-product-extension:"
@@ -1344,7 +1348,7 @@ class DomainModifierResultValidationTests(unittest.TestCase):
                 "candidate_type": "derived-conflict",
                 "reason": COHORTS.ACTIVATION_V2_139C_CONFLICT_REASON,
                 "source_candidate_ids": [
-                    "implementation-owner:quality-test-gate"
+                    "implementation-owner:repository-tooling-change-builder"
                 ],
                 "path": "analyzed",
                 "profile": "analysis-agent",

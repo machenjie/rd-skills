@@ -7,7 +7,7 @@ description: "`task-agent` infrastructure source changes within authority, exclu
 
 ## Role
 
-Begin by inspecting target/state/recovery. As `task-agent`, change source, run minimal validation, and do not proceed to production mutation.
+As `task-agent`, distinguish reusable source/render work from a change bound to a deployment target. Inspect the applicable source, versions, consumers, and existing state/recovery mechanisms; change source and run minimal validation without production mutation.
 
 ## When To Use
 
@@ -25,15 +25,16 @@ Begin by inspecting target/state/recovery. As `task-agent`, change source, run m
 ## Required Inputs
 
 - accepted design and expected desired-state change
-- exact account project subscription region cluster and environment target
-- current state backend lock or writer model and drift assumptions
+- for a target-bound change: applicable account/project/subscription/region/cluster/environment and current state/backend/lock/writer/drift evidence
+- for reusable modules, templates, or render tests: declared interfaces, versions, consumers, and representative render/test inputs; no invented live target
 - provider module chart controller and tool versions
-- authority boundary recovery owner and non-production validation path
+- authority boundary and non-production validation path; recovery owner when the affected mechanism has deployed state or recovery behavior
 
 ## Professional Decision Rules
 
-- Bind target, owner, state/backend/lock/writer, and versions.
-- Select the smallest recoverable change from current identity/drift evidence.
+- Bind source owner, versions, and affected consumers.
+- Require target/state/backend/lock/writer evidence only where the current change depends on those mechanisms.
+- Preserve existing identity and recovery from current evidence; reusable render work need not acquire a production target or state backend.
 - Compare proposal unknowns and destructive/privilege/network/secret/cost/dependency effects.
 
 ## High-Value Gotchas
@@ -44,16 +45,18 @@ Begin by inspecting target/state/recovery. As `task-agent`, change source, run m
 
 ## Execution Checklist
 
-1. Inspect owner, target, state/backend/writer model, versions, dependencies, and recovery.
+1. Inspect owner, versions, dependencies, and whether this is reusable source or target-bound work.
 2. Map replacement, destruction, privilege, network, secret, cost, drift, and dependency effects.
 3. Choose the smallest source change that preserves state identity and recovery.
-4. Validate rendered artifacts and fresh non-mutating proposal evidence against the exact target and versions.
-5. Record unknowns, unverified production state, recovery owner, residual risk, and release boundary.
-6. Keep production apply, deployment, release, and rollback approval outside this Skill's authority.
+4. Validate reusable source with representative render/tests.
+5. Bind target-specific non-mutating proposals to the actual target, applicable state, and versions.
+6. Record applicable unknowns, proof limits, recovery responsibility, residual risk, and release boundary.
+7. Keep production apply, deployment, release, and rollback approval outside this Skill's authority.
 
 ## Stop / Escalation Conditions
 
-- Stop while authority, state/writer/recovery, or effects remain unresolved.
+- Stop while authority, applicable state/writer/recovery, or material effects remain unresolved.
+- Absent production targets do not block reusable source/render work.
 
 ## Output Contract
 

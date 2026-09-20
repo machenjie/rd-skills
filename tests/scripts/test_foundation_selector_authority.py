@@ -35,7 +35,7 @@ CAPABILITY_COVERAGE_PATH = ROOT / "scripts/capability_coverage.py"
 
 AUTHORITY_CONTRACT = "changeforge.oracle-admission-authority/v1"
 FOUNDATION_PROVENANCE_DIGEST = (
-    "4f04b33e3e7d75ba68356c892f2efc3d5aaccf7ae15a6eee14bcd15737137fe6"
+    "260160475eebe24dff621e51e3450a5821af277ba11b9e673514492cb97523f2"
 )
 PRIMARY_SKILL_DIGEST = (
     "b742f0d00594d178882479f7388e235bf2b387451d164b74fc76940434498f73"
@@ -45,7 +45,7 @@ REVIEW_SKILL_DIGEST = (
 )
 FOUNDATION_SOURCE_COUNTS = {
     "direct-static": 45,
-    "dynamic-helper-only": 27,
+    "dynamic-helper-only": 28,
     "runtime-matcher": 3,
 }
 FOUNDATION_EFFECTS = ("selected", "domain-owned", "adjacent", "simple")
@@ -663,7 +663,7 @@ FOUNDATION_ALIAS_PRODUCER_FIXTURES = (
     },
     {
         "fixture_id": "alias-public-api-analysis",
-        "prompt": "Change a public API field with compatibility for old consumers.",
+        "prompt": "Analyze a public API field with compatibility for old consumers.",
         "alias_id": "public-api-analysis",
         "source_ids": (
             "production-release-decision",
@@ -3772,8 +3772,8 @@ class _FoundationSelectorSpec:
             for foundation in foundations
         ]
         self.assertNotEqual(66, len(foundation_ids))
-        self.assertEqual(75, len(foundation_ids))
-        self.assertEqual(75, len(set(foundation_ids)))
+        self.assertEqual(76, len(foundation_ids))
+        self.assertEqual(76, len(set(foundation_ids)))
         self.assertEqual(
             FOUNDATION_SOURCE_COUNTS,
             {
@@ -3782,7 +3782,7 @@ class _FoundationSelectorSpec:
             },
         )
         grammar = "".join(f"{row}\n" for row in rows).encode("utf-8")
-        self.assertEqual(3095, len(grammar))
+        self.assertEqual(3136, len(grammar))
         self.assertTrue(
             grammar.startswith(
                 b"direct-static\tacceptance-standard-definition\n"
@@ -3814,7 +3814,7 @@ class _FoundationSelectorSpec:
         self.assertEqual(PRIMARY_SKILL_DIGEST, _sha256(primary_grammar))
         self.assertEqual(REVIEW_SKILL_DIGEST, _sha256(review_grammar))
 
-    def test_r0_04_admission_target_is_105_300_48_and_complete(
+    def test_r0_04_admission_is_source_complete(
         self,
     ) -> None:
         expected = self._expected_combinations_from_sources()
@@ -3823,7 +3823,7 @@ class _FoundationSelectorSpec:
             for layer in ("professional", "foundation", "domain")
         }
         self.assertEqual(
-            {"professional": 105, "foundation": 300, "domain": 48},
+            {"professional": 105, "foundation": 304, "domain": 48},
             counts,
         )
         self.assertNotEqual(
@@ -3836,15 +3836,15 @@ class _FoundationSelectorSpec:
             for row in fixture_rows
         }
         self.assertNotEqual(411, len(fixture_rows))
-        self.assertEqual(453, len(fixture_rows))
-        self.assertEqual(453, len(fixture))
+        self.assertEqual(457, len(fixture_rows))
+        self.assertEqual(457, len(fixture))
         self.assertEqual(set(), fixture - expected)
         missing = expected - fixture
         self.assertNotEqual(WAVE1A_FOUNDATION_TRIPLES, missing)
         self.assertEqual(set(), missing)
         self.assertTrue(WAVE1A_FOUNDATION_TRIPLES.issubset(fixture))
         self.assertNotEqual(411, len(expected))
-        self.assertEqual(453, len(expected))
+        self.assertEqual(457, len(expected))
 
     def test_r0_04b_capcov_projection_requires_authority_refactor(
         self,
@@ -3861,7 +3861,7 @@ class _FoundationSelectorSpec:
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 300,
+                "foundation": 304,
                 "domain": 48,
             },
             counts,
@@ -3874,7 +3874,7 @@ class _FoundationSelectorSpec:
             counts,
         )
         self.assertNotEqual(411, len(combinations))
-        self.assertEqual(453, len(combinations))
+        self.assertEqual(457, len(combinations))
 
     def test_r0_05_four_special_selectors_are_exact(self) -> None:
         foundation_names = set(self.foundation_rows)
@@ -5939,7 +5939,7 @@ class _FoundationSelectorSpec:
             for row in rows
         ]
         self.assertNotEqual(411, len(rows))
-        self.assertEqual(453, len(rows))
+        self.assertEqual(457, len(rows))
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(combinations), len(set(combinations)))
 
@@ -6096,8 +6096,8 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F01_PROFESSIONAL_TRIPLES, actual_f01)
         self.assertEqual(55, len(actual_f01))
-        self.assertEqual(453, len(rows))
-        self.assertEqual(453, len(rows_by_triple))
+        self.assertEqual(457, len(rows))
+        self.assertEqual(457, len(rows_by_triple))
 
         expected = self._expected_combinations_from_sources()
         actual = set(rows_by_triple)
@@ -6204,8 +6204,8 @@ class _FoundationSelectorSpec:
             actual_f02,
         )
         self.assertEqual(16, len(actual_f02))
-        self.assertEqual(453, len(rows))
-        self.assertEqual(453, len(rows_by_triple))
+        self.assertEqual(457, len(rows))
+        self.assertEqual(457, len(rows_by_triple))
 
         expected = self._expected_combinations_from_sources()
         actual = set(rows_by_triple)
@@ -6315,12 +6315,12 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F03_FOUNDATION_TRIPLES, actual_f03)
         self.assertEqual(28, len(actual_f03))
-        self.assertEqual(453, len(rows))
-        self.assertEqual(453, len(rows_by_triple))
+        self.assertEqual(457, len(rows))
+        self.assertEqual(457, len(rows_by_triple))
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 300,
+                "foundation": 304,
                 "domain": 48,
             },
             {
@@ -6400,7 +6400,7 @@ class _FoundationSelectorSpec:
             if triple[0] == "professional"
             and triple in PHASE2_F01_PROFESSIONAL_TRIPLES
         }
-        self.assertEqual(72, len(old_ordinary))
+        self.assertEqual(76, len(old_ordinary))
         self.assertEqual(WAVE1A_FOUNDATION_TRIPLES, actual_wave1a)
         self.assertEqual(
             PHASE2_F02_SPECIAL_FOUNDATION_TRIPLES,
@@ -6493,12 +6493,12 @@ class _FoundationSelectorSpec:
         }
         self.assertEqual(PHASE2_F04_FOUNDATION_TRIPLES, actual_f04)
         self.assertEqual(44, len(actual_f04))
-        self.assertEqual(453, len(rows))
-        self.assertEqual(453, len(rows_by_triple))
+        self.assertEqual(457, len(rows))
+        self.assertEqual(457, len(rows_by_triple))
         self.assertEqual(
             {
                 "professional": 105,
-                "foundation": 300,
+                "foundation": 304,
                 "domain": 48,
             },
             {
@@ -6591,7 +6591,7 @@ class _FoundationSelectorSpec:
             {
                 "professional": 105,
                 "special": 16,
-                "pre-f03-ordinary": 72,
+                "pre-f03-ordinary": 76,
                 "f03": 28,
                 "f04": 44,
                 "wave1a": 12,

@@ -76,7 +76,7 @@ class HooklessEvaluationTests(unittest.TestCase):
                 "schema_version": 6,
                 "status": "pass",
                 "negative_case_count": 67,
-                "domain_family_case_count": 44,
+                "domain_family_case_count": 46,
                 "domain_anti_case_count": 26,
                 "domain_transition_case_count": 13,
                 "domain_unchanged_case_count": 14,
@@ -122,7 +122,7 @@ class HooklessEvaluationTests(unittest.TestCase):
             "ai-anti-database-model-evaluation": "engineering-change-analysis",
             "bigdata-anti-single-database-table": "data-middleware-change-builder",
             "bigdata-anti-single-table-without-pipeline": "data-middleware-change-builder",
-            "iot-anti-cloud-device-api": "engineering-change-analysis",
+            "iot-anti-cloud-device-api": "data-api-contract-changer",
             "iot-anti-cloud-only-no-firmware-physical": "engineering-change-analysis",
             "iot-anti-cloud-network-protocol-timing": "engineering-change-analysis",
             "low-level-anti-rust-business-service": "backend-change-builder",
@@ -189,7 +189,7 @@ class HooklessEvaluationTests(unittest.TestCase):
                 {"domain": family["domain"], "family": family["family"]},
                 row["matched_domain_family"],
             )
-        self.assertEqual(21, len(family_variants))
+        self.assertEqual(22, len(family_variants))
         self.assertTrue(
             all(
                 variants == {"canonical", "paraphrase"}

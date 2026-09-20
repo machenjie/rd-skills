@@ -101,6 +101,9 @@ def evaluate_decision_document(document: object, authority=None) -> dict[str, An
             for field, expected in case["expected"].items():
                 if field not in actual or actual[field] != expected:
                     case_errors.append(f"{case['id']}: {field}: expected {expected!r}, got {actual.get(field)!r}")
+            for required in case.get("required_skills", []):
+                if required not in actual["layer3_skills"]:
+                    case_errors.append(f"{case['id']}: missing required Layer 3 expertise {required}")
             for excluded in case.get("excluded_skills", []):
                 if excluded in [actual["primary_skill"], actual["review_skill"], *actual["layer3_skills"]]:
                     case_errors.append(f"{case['id']}: selected excluded expertise {excluded}")

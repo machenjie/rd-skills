@@ -75,7 +75,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         header_index = next(
             index for index, line in enumerate(table_lines) if "Task signal" in line
         )
-        rows = table_lines[header_index:]
+        rows = table_lines[header_index:next(i for i, line in enumerate(table_lines) if "Active mechanism" in line)]
         self.assertEqual(
             ["Task signal", "Start profile", "Primary Professional Skill", "Review expertise when selected"],
             [cell.strip() for cell in rows[0].strip("|").split("|")],
@@ -1751,11 +1751,11 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "Implement an external integration timeout and contract "
                 "change.",
                 {
-                    **external_route,
-                    "layer3_skills": [
-                        "consumer-impact-analysis",
-                        "failure-contract-design",
-                    ],
+                    "path": "direct",
+                    "profile": "task-agent",
+                    "primary_skill": "integration-change-builder",
+                    "review_skill": None,
+                    "layer3_skills": ["contract-testing"],
                 },
             ),
             "both-unchanged": (
@@ -3227,11 +3227,11 @@ class SkillRoutingRoleTests(unittest.TestCase):
         shared = [
             cells
             for cells in rows
-            if cells[2] == "installed-client-change-builder"
+            if len(cells) == 2 and cells[1] == "cross-platform-client-extension"
             and cells[0].startswith("shared installed client")
         ]
         self.assertEqual(1, len(shared))
-        self.assertEqual("ai-code-review-refactor", shared[0][3])
+        self.assertEqual("cross-platform-client-extension", shared[0][1])
         professional = self.routing.load_yaml_file(self.routing.PROFESSIONAL)
         installed = next(
             row

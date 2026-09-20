@@ -1023,9 +1023,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "platform-infrastructure-change-builder",
-      "layer3_skills": [
-        "infrastructure-as-code-safety"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "reliability-observability-gate",
@@ -1189,13 +1187,10 @@
     },
     {
       "case_id": "public-api",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
-      "layer3_skills": [
-        "api-contract-design",
-        "version-compatibility"
-      ],
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "data-api-contract-changer",
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [],
       "passed": true,
@@ -1260,12 +1255,11 @@
     },
     {
       "case_id": "integration",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "integration-change-builder",
       "layer3_skills": [
-        "consumer-impact-analysis",
-        "failure-contract-design"
+        "contract-testing"
       ],
       "review_skill": null,
       "excluded_skills": [],
@@ -1939,13 +1933,10 @@
     },
     {
       "case_id": "iot-anti-cloud-device-api",
-      "profile": "analysis-agent",
-      "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
-      "layer3_skills": [
-        "api-contract-design",
-        "version-compatibility"
-      ],
+      "profile": "task-agent",
+      "path": "direct",
+      "primary_skill": "data-api-contract-changer",
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "iot-embedded-extension"
@@ -2333,9 +2324,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "ios-ipados-platform-extension"
@@ -2373,10 +2362,9 @@
       "case_id": "payment-ledger-settlement-paraphrase",
       "profile": "analysis-agent",
       "path": "analyzed",
-      "primary_skill": "engineering-change-analysis",
+      "primary_skill": "domain-impact-modeler",
       "layer3_skills": [
-        "payment-trading-extension",
-        "repository-context-map"
+        "payment-trading-extension"
       ],
       "review_skill": null,
       "excluded_skills": [],
@@ -2483,9 +2471,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
@@ -2503,9 +2489,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
@@ -2523,9 +2507,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
@@ -2543,9 +2525,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "security-privacy-gate",
@@ -2706,9 +2686,7 @@
       "profile": "task-agent",
       "path": "direct",
       "primary_skill": "frontend-change-builder",
-      "layer3_skills": [
-        "state-management-design"
-      ],
+      "layer3_skills": [],
       "review_skill": null,
       "excluded_skills": [
         "web3-product-extension"
@@ -3179,7 +3157,11 @@
       "review_skill": null,
       "excluded_skills": [],
       "passed": true,
-      "domain_family": null,
+      "domain_family": {
+        "domain": "ai-product-extension",
+        "family": "evaluation-evidence",
+        "variant": "canonical"
+      },
       "domain_transition": null,
       "domain_anti": null,
       "domain_anti_variant": null,
@@ -3197,7 +3179,11 @@
       "review_skill": null,
       "excluded_skills": [],
       "passed": true,
-      "domain_family": null,
+      "domain_family": {
+        "domain": "ai-product-extension",
+        "family": "evaluation-evidence",
+        "variant": "paraphrase"
+      },
       "domain_transition": null,
       "domain_anti": null,
       "domain_anti_variant": null,
@@ -3921,7 +3907,6 @@
       "path": "direct",
       "primary_skill": "frontend-change-builder",
       "layer3_skills": [
-        "web-platform-professional-usage",
         "configuration-runtime-policy"
       ],
       "review_skill": null,
@@ -3990,7 +3975,6 @@
       "path": "direct",
       "primary_skill": "platform-infrastructure-change-builder",
       "layer3_skills": [
-        "infrastructure-as-code-safety",
         "configuration-runtime-policy"
       ],
       "review_skill": null,
@@ -4062,7 +4046,6 @@
       "path": "direct",
       "primary_skill": "frontend-change-builder",
       "layer3_skills": [
-        "web-platform-professional-usage",
         "dependency-vulnerability-scanning"
       ],
       "review_skill": null,
@@ -4131,7 +4114,6 @@
       "path": "direct",
       "primary_skill": "platform-infrastructure-change-builder",
       "layer3_skills": [
-        "infrastructure-as-code-safety",
         "dependency-vulnerability-scanning"
       ],
       "review_skill": null,
@@ -4471,7 +4453,7 @@
         "task-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 4,
+      "primary_case_count": 6,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4504,7 +4486,7 @@
         "analysis-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 3,
+      "primary_case_count": 4,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4524,7 +4506,7 @@
         "analysis-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 98,
+      "primary_case_count": 94,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4585,7 +4567,7 @@
         "task-agent"
       ],
       "task_routable": true,
-      "primary_case_count": 3,
+      "primary_case_count": 4,
       "review_case_count": 0,
       "negative_case_count": 0
     },
@@ -4675,7 +4657,7 @@
     "ai-product-extension": 8,
     "algorithm-data-structure-selection": 0,
     "android-platform-extension": 6,
-    "api-contract-design": 4,
+    "api-contract-design": 2,
     "architecture-enforcement-tooling": 0,
     "architecture-style-selection": 0,
     "architecture-tradeoff-analysis": 0,
@@ -4700,9 +4682,9 @@
     "code-review": 1,
     "concurrency-control": 2,
     "configuration-runtime-policy": 8,
-    "consumer-impact-analysis": 2,
+    "consumer-impact-analysis": 1,
     "containerization": 0,
-    "contract-testing": 1,
+    "contract-testing": 2,
     "controller-api-implementation": 0,
     "cpp-professional-usage": 0,
     "cross-platform-client-extension": 2,
@@ -4727,7 +4709,7 @@
     "error-code-design": 0,
     "event-driven-architecture": 0,
     "extensibility-design": 0,
-    "failure-contract-design": 2,
+    "failure-contract-design": 1,
     "failure-diagnosis": 2,
     "file-storage-processing": 0,
     "filesystem-process-safety": 1,
@@ -4741,7 +4723,7 @@
     "implementation-structure-design": 7,
     "indexing-query-optimization": 0,
     "information-architecture": 0,
-    "infrastructure-as-code-safety": 3,
+    "infrastructure-as-code-safety": 0,
     "input-validation": 0,
     "integration-testing": 0,
     "interaction-state-modeling": 2,
@@ -4789,7 +4771,7 @@
     "relational-database": 0,
     "release-rollback": 8,
     "repeat-failure-analysis": 0,
-    "repository-context-map": 74,
+    "repository-context-map": 73,
     "repository-impact-inspection": 0,
     "repository-persistence": 0,
     "requirement-clarification": 1,
@@ -4808,7 +4790,7 @@
     "solution-optimality-evaluation": 0,
     "sql-professional-usage": 0,
     "state-machine-modeling": 1,
-    "state-management-design": 8,
+    "state-management-design": 2,
     "swift-professional-usage": 0,
     "targeted-validation-selection": 7,
     "task-context-selection": 0,
@@ -4826,8 +4808,8 @@
     "use-case-modeling": 0,
     "user-flow-modeling": 0,
     "user-role-identification": 0,
-    "version-compatibility": 10,
-    "web-platform-professional-usage": 2,
+    "version-compatibility": 8,
+    "web-platform-professional-usage": 0,
     "web-security": 1,
     "web3-product-extension": 5,
     "windows-platform-extension": 4
@@ -5011,6 +4993,23 @@
         ],
         "paraphrase": [
           "ai-model-decision-paraphrase"
+        ]
+      },
+      "passing_case_count": 2
+    },
+    {
+      "domain": "ai-product-extension",
+      "family": "evaluation-evidence",
+      "required_variants": [
+        "canonical",
+        "paraphrase"
+      ],
+      "case_ids_by_variant": {
+        "canonical": [
+          "t2b-preparation-ai"
+        ],
+        "paraphrase": [
+          "t2b-dedicated-ai-analysis"
         ]
       },
       "passing_case_count": 2
@@ -5444,10 +5443,10 @@
   "admission_coverage": {
     "schema_version": 1,
     "evaluation_kind": "registry-derived-actual-route-admission",
-    "expected_obligation_count": 453,
-    "current_case_count": 453,
-    "passing_case_count": 453,
-    "covered_obligation_count": 453,
+    "expected_obligation_count": 457,
+    "current_case_count": 457,
+    "passing_case_count": 457,
+    "covered_obligation_count": 457,
     "missing_obligation_count": 0,
     "missing_obligations": [],
     "errors": []

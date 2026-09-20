@@ -34,7 +34,7 @@ Use this reference when cache closure depends on current source, prior claims, v
 
 ```yaml
 cache_evidence:
-  profile: task-agent | review-agent
+  profile: analysis-agent | task-agent | review-agent
   inspected_paths:
     - path: ""
       evidence_and_freshness: ""

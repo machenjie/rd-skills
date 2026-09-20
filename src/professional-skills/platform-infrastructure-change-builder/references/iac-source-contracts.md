@@ -46,11 +46,13 @@ Rolling sources do not prove current tool/provider/module/backend, target, exper
 
 ## Required Record
 
-Return tool/version, target, source/state/lock/writer/identity, fresh proposal unknown/targeting limits, destructive/secret effects, recovery owner, and live-state/no-production limits.
+Return source/tool/version, consumers and validation limits. For target-bound changes, also record applicable target/state/lock/writer/identity, fresh proposal unknowns, destructive/secret effects and recovery owner. Reusable modules and tests use declared interfaces and representative inputs; do not invent live state or a deployment target.
 
 ## Professional Decision Rules
 
-- Separate state layers; change the smallest owner; bind secret-free non-mutating proposal evidence to target and versions.
+- Change the smallest owner within the existing state layers.
+- Bind target-specific proposals to target and versions.
+- Validate reusable modules against their declared contracts and consumers.
 
 ## High-Value Gotchas
 

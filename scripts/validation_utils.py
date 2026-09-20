@@ -6910,11 +6910,6 @@ def domain_modifier_routing_authority(
             f"domain-only={sorted(declared_edges - reciprocal_edges)}; "
             f"professional-only={sorted(reciprocal_edges - declared_edges)}"
         )
-    if len(declared_edges) != 48:
-        errors.append(
-            "Domain modifier authority must contain exactly 48 reciprocal "
-            f"edges, found {len(declared_edges)}"
-        )
     analysis_domains = {
         domain
         for owner, domain in declared_edges

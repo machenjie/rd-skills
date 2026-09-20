@@ -143,7 +143,7 @@ def domain_router_coverage_errors(
             str(atom).casefold() for atom in spec.get("anti_atoms", ())
         } if isinstance(spec, dict) else set()
         for cells in router_rows:
-            if len(cells) != 4 or cells[0].count("; excluding ") != 1:
+            if len(cells) != 2 or cells[1] != name or cells[0].count("; excluding ") != 1:
                 continue
             positive, negative = cells[0].split("; excluding ", 1)
             if positive.count(" with ") != 1:
@@ -462,10 +462,14 @@ def main() -> int:
             errors.append(f"router missing {phrase!r}")
     router_rows: list[list[str]] = []
     for line in text.splitlines():
-        if not line.startswith("|") or line.startswith("| ---") or "Task signal" in line:
+        if not line.startswith("|") or line.startswith("| ---") or "Task signal" in line or "Active mechanism" in line:
             continue
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         router_rows.append(cells)
+        if len(cells) == 2:
+            if cells[1] not in domain_by_name:
+                errors.append(f"router modifier row selects unknown Domain: {line}")
+            continue
         errors.extend(validate_router_row(cells, by_name, layer3, source=line))
         if len(cells) != 4:
             continue

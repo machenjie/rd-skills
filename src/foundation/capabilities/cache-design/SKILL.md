@@ -1,6 +1,6 @@
 ---
 name: cache-design
-description: "Use with task-agent or review-agent for task-local cache scope, freshness, invalidation, and source-load risk. Do not use without a cache decision or as task owner."
+description: "Use with analysis-agent, task-agent, or review-agent for cache scope, freshness, invalidation, and source-load risk. Do not use without a cache decision or as task owner."
 ---
 
 # cache-design
@@ -53,6 +53,6 @@ Protect cache correctness, scope isolation, freshness, failure behavior, and sou
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Read/write pattern, invalidation, fallback, or load protection remains open | No cache topology or source-load decision changes | task-agent, review-agent | option-comparison, selected-approach |
-| [checklist](references/checklist.md) | decision-checklist | Cache behavior spans scope collisions, staleness, outages, or hot keys | The cache is absent from the affected correctness path | task-agent, review-agent | checklist-result, residual-risk |
-| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Cache safety claims need current topology and failure-path tests | No freshness, isolation, or source-load claim needs proof | task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Read/write pattern, invalidation, fallback, or load protection remains open | No cache topology or source-load decision changes | task-agent, review-agent, analysis-agent | option-comparison, selected-approach |
+| [checklist](references/checklist.md) | decision-checklist | Cache behavior spans scope collisions, staleness, outages, or hot keys | The cache is absent from the affected correctness path | task-agent, review-agent, analysis-agent | checklist-result, residual-risk |
+| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Cache safety claims need current topology and failure-path tests | No freshness, isolation, or source-load claim needs proof | task-agent, review-agent, analysis-agent | evidence-record, proof-limit, residual-risk |
