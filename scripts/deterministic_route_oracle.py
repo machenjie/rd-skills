@@ -8445,16 +8445,21 @@ def _test_actions_support_production_change(task: _TaskActionParse) -> bool:
     if not test_actions:
         return False
     for action in test_actions:
+        text = task.normalized_text[slice(*objects[action.action_id].span.normalized)]
+        proof = re.fullmatch(
+            r"(?:(?:a|the|required|necessary)\s+)*(?:regression tests?|test proof)"
+            r"(?P<referent>\s+for (?:this|the) (?:fix|change|repair))?",
+            text,
+        )
+        if proof is None:
+            return False
+        # An explicit referent keeps proof subordinate across "then" or a
+        # sentence boundary; standalone or differently targeted tests do not.
+        if proof.group("referent") is not None:
+            continue
         if (action.statement_id != changed[0].statement_id
                 or action.coordinator_span is None
                 or task.normalized_text[slice(*action.coordinator_span.normalized)] != "and"):
-            return False
-        text = task.normalized_text[slice(*objects[action.action_id].span.normalized)]
-        if re.fullmatch(
-            r"(?:(?:a|the|required|necessary)\s+)*(?:regression tests?|test proof)"
-            r"(?:\s+for (?:this|the) (?:fix|change|repair))?",
-            text,
-        ) is None:
             return False
     return True
 

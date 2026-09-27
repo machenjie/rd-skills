@@ -1,6 +1,6 @@
 ---
 name: integration-change-builder
-description: "Use `analysis-agent` or `task-agent` when internal runtime components or external providers need shared-contract or delivery-boundary changes. Merging AI task/worker outputs alone stays with the changed behavior owner. Skip work with no integration edge."
+description: "Use `analysis-agent` or `task-agent` for shared-contract or delivery changes between internal runtime components or external providers. AI task/worker output merges alone do not establish this boundary."
 ---
 
 # integration-change-builder

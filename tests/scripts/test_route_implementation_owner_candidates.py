@@ -426,6 +426,21 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         self.assertEqual(["backend", "test-validation"],
                          [item["routing_family"] for item in ORACLE.classify_professional_families(independent)])
 
+    def test_explicit_proof_referent_survives_action_separators(self) -> None:
+        for separator in (" and ", " then ", ". "):
+            for referent in ("this fix", "the change", "this repair"):
+                prompt = ("Fix a backend return value bug" + separator
+                          + "add regression tests for " + referent + ".")
+                with self.subTest(prompt=prompt):
+                    route = _projected_route(_route(prompt))
+                    self.assertEqual("backend-change-builder", route["primary_skill"])
+            for test_goal in ("standalone regression tests", "regression tests for unrelated backend behavior"):
+                prompt = ("Fix a backend return value bug" + separator
+                          + "add " + test_goal + ".")
+                with self.subTest(prompt=prompt):
+                    self.assertEqual(["backend", "test-validation"],
+                                     [item["routing_family"] for item in ORACLE.classify_professional_families(prompt)])
+
     def test_classifier_has_nine_positive_unchanged_and_anti_contracts(self) -> None:
         classify = getattr(ORACLE, "classify_professional_families", None)
         self.assertTrue(

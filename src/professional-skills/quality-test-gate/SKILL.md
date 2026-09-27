@@ -1,6 +1,6 @@
 ---
 name: quality-test-gate
-description: "Use `analysis-agent`, `task-agent`, or `review-agent` when standalone tests, validation strategy/infrastructure, or proof coverage/freshness is the task goal, including proving unchanged production code. Tests required by a production implementation stay with its behavior owner."
+description: "Use `analysis-agent`, `task-agent`, or `review-agent` for standalone tests, validation strategy/infrastructure, or current proof/coverage. Supporting tests stay with the production behavior owner."
 ---
 
 # quality-test-gate
