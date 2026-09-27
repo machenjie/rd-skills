@@ -1,6 +1,6 @@
 ---
 name: integration-change-builder
-description: "Use `analysis-agent` for integration decisions or `task-agent` for cross-system/external changes involving contracts, retries, idempotency, authentication, or reconciliation. Skip isolated work with no integration edge."
+description: "Use `analysis-agent` or `task-agent` when internal runtime components or external providers need shared-contract or delivery-boundary changes. Merging AI task/worker outputs alone stays with the changed behavior owner. Skip work with no integration edge."
 ---
 
 # integration-change-builder
@@ -12,13 +12,13 @@ description: "Use `analysis-agent` for integration decisions or `task-agent` for
 
 ## When To Use
 
-- cross worker merge
-- external integration change
-- shared contract alignment
+- internal runtime component or external provider integration change
+- producer-consumer shared contract or delivery boundary alignment
 
 ## Do Not Use
 
 - isolated change with no integration edge
+- merging AI task or worker outputs without a runtime integration boundary
 - unrelated source inspection
 
 ## Required Inputs

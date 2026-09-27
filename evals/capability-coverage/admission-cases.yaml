@@ -1496,7 +1496,7 @@ cases:
     layer: professional
     skill: integration-change-builder
     case_kind: true-conflict
-    prompt: Implement an accepted cross worker merge behavior change and an accepted backend service calculation change.
+    prompt: Implement an accepted internal producer-consumer shared contract change and an accepted backend service calculation change.
     expected: {selected: false, primary_skill: engineering-change-analysis}
 
   - id: capcov-admission-prof-logging-design-gate-selected

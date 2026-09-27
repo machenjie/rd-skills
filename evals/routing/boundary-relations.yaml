@@ -87,3 +87,25 @@ relations:
     transition_dimensions: [layer3_skills]
     competing_route: direct
     competing_skill: low-level-systems-extension
+
+  - id: production-owner-vs-standalone-proof
+    cases:
+      canonical: quality-owner-backend-regression
+      paraphrase: quality-owner-backend-paraphrase
+      distractor: quality-owner-backend-freshness
+      transition: quality-owner-standalone-tests
+    stable_dimensions: [path, profile, primary_skill, review_skill]
+    transition_dimensions: [primary_skill]
+    competing_route: direct
+    competing_skill: quality-test-gate
+
+  - id: runtime-integration-vs-agent-output-merge
+    cases:
+      canonical: integration-owner-internal-contract
+      paraphrase: integration-owner-provider-contract
+      distractor: integration-owner-merge-with-contract
+      transition: integration-owner-agent-merge
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [primary_skill, layer3_skills]
+    competing_route: direct
+    competing_skill: backend-change-builder

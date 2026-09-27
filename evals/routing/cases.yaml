@@ -1099,3 +1099,67 @@ cases:
     prompt: Analyze whether to run a local command whose target and mutation surface are unresolved; this product route must not inject the dev-only agent tool permission sandbox companion.
     excluded_skills: [agent-tool-permission-sandbox]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: null}
+  - id: quality-owner-backend-regression
+    main_execution: {producer: main-control-agent, task_id: quality-owner-backend-regression}
+    prompt: Fix a backend return value bug and add a regression test.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["regression-testing"], "review_skill": null}
+  - id: quality-owner-backend-paraphrase
+    main_execution: {producer: main-control-agent, task_id: quality-owner-backend-paraphrase}
+    prompt: Repair the backend response and add required regression tests.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["regression-testing"], "review_skill": null}
+  - id: quality-owner-backend-freshness
+    main_execution: {producer: main-control-agent, task_id: quality-owner-backend-freshness}
+    prompt: Fix the backend return value with validation freshness required.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: quality-owner-standalone-tests
+    main_execution: {producer: main-control-agent, task_id: quality-owner-standalone-tests}
+    prompt: Add standalone regression tests for the backend return value.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["regression-testing"], "review_skill": null}
+  - id: quality-owner-frontend-freshness
+    main_execution: {producer: main-control-agent, task_id: quality-owner-frontend-freshness}
+    prompt: Implement a frontend feature with validation freshness required.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: quality-owner-migration-regression
+    main_execution: {producer: main-control-agent, task_id: quality-owner-migration-regression}
+    prompt: Implement a database migration cursor fix and add required regression tests.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "data-middleware-change-builder", "layer3_skills": ["data-migration-design"], "review_skill": null}
+  - id: quality-owner-fixtures-mocks
+    main_execution: {producer: main-control-agent, task_id: quality-owner-fixtures-mocks}
+    prompt: Implement test fixtures and test mocks for backend responses.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": [], "review_skill": null}
+  - id: quality-owner-infrastructure
+    main_execution: {producer: main-control-agent, task_id: quality-owner-infrastructure}
+    prompt: Repair validation infrastructure for backend tests.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": [], "review_skill": null}
+  - id: quality-owner-current-proof
+    main_execution: {producer: main-control-agent, task_id: quality-owner-current-proof}
+    prompt: Update validation freshness for the backend; no material change is required.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": [], "review_skill": null}
+  - id: quality-owner-strategy
+    main_execution: {producer: main-control-agent, task_id: quality-owner-strategy}
+    prompt: Analyze the validation strategy and choose a proof portfolio for a failure mechanism, test level, and failure oracle.
+    expected: {"path": "analyzed", "profile": "analysis-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["test-strategy"], "review_skill": null}
+  - id: integration-owner-internal-contract
+    main_execution: {producer: main-control-agent, task_id: integration-owner-internal-contract}
+    prompt: Implement an internal producer-consumer shared contract for delivery ordering and idempotency.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "integration-change-builder", "layer3_skills": ["contract-testing", "idempotency-retry-design"], "review_skill": null}
+  - id: integration-owner-provider-contract
+    main_execution: {producer: main-control-agent, task_id: integration-owner-provider-contract}
+    prompt: Implement a shared contract for delivery ordering, idempotency, and reconciliation between external providers.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "integration-change-builder", "layer3_skills": ["contract-testing", "idempotency-retry-design"], "review_skill": null}
+  - id: integration-owner-merge-with-contract
+    main_execution: {producer: main-control-agent, task_id: integration-owner-merge-with-contract}
+    prompt: Implement a cross worker merge of AI task-agent outputs that changes an internal producer-consumer shared contract for delivery ordering and idempotency.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "integration-change-builder", "layer3_skills": ["contract-testing", "idempotency-retry-design"], "review_skill": null}
+  - id: integration-owner-agent-merge
+    main_execution: {producer: main-control-agent, task_id: integration-owner-agent-merge}
+    prompt: Implement a cross worker merge of two AI task-agent outputs for a backend return value fix.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: integration-owner-tooling-merge
+    main_execution: {producer: main-control-agent, task_id: integration-owner-tooling-merge}
+    prompt: Fix a cross worker merge conflict in the repository generator.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["build-tool-professional-usage", "targeted-validation-selection"], "review_skill": null}
+  - id: integration-owner-local-retry
+    main_execution: {producer: main-control-agent, task_id: integration-owner-local-retry}
+    prompt: Fix a backend retry counter with no integration edge.
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}

@@ -400,6 +400,32 @@ class ProfessionalRegistryRoutingContractTests(unittest.TestCase):
 
 
 class ImplementationFamilyClassifierTests(unittest.TestCase):
+    def test_primary_tracks_production_owner_or_standalone_proof_goal(self) -> None:
+        cases = {
+            "Fix a backend return value bug and add a regression test.": "backend-change-builder",
+            "Repair the backend response and add required regression tests.": "backend-change-builder",
+            "Implement a frontend feature with validation freshness required.": "frontend-change-builder",
+            "Implement a database migration cursor fix and add required regression tests.": "data-middleware-change-builder",
+            "Add standalone regression tests for the backend return value.": "quality-test-gate",
+            "Implement test fixtures and test mocks for backend responses.": "quality-test-gate",
+            "Repair validation infrastructure for backend tests.": "quality-test-gate",
+            "Update validation freshness for the backend; no material change is required.": "quality-test-gate",
+            "Implement a cross worker merge of two AI task-agent outputs for a backend return value fix.": "backend-change-builder",
+            "Fix a cross worker merge conflict in the repository generator.": "repository-tooling-change-builder",
+            "Fix a backend retry counter with no integration edge.": "backend-change-builder",
+            "Implement an external integration provider callback reconciliation change.": "integration-change-builder",
+            "Implement an internal producer-consumer shared contract for delivery ordering and idempotency.": "integration-change-builder",
+        }
+        for prompt, owner in cases.items():
+            with self.subTest(prompt=prompt):
+                route = _projected_route(_route(prompt))
+                self.assertEqual(("direct", "task-agent", owner),
+                                 (route["path"], route["profile"], route["primary_skill"]))
+        # A test goal followed by a separate production goal is still multi-owner.
+        independent = "Add regression tests for process death then implement an accepted backend service behavior change."
+        self.assertEqual(["backend", "test-validation"],
+                         [item["routing_family"] for item in ORACLE.classify_professional_families(independent)])
+
     def test_classifier_has_nine_positive_unchanged_and_anti_contracts(self) -> None:
         classify = getattr(ORACLE, "classify_professional_families", None)
         self.assertTrue(
@@ -896,19 +922,22 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "route": conflict_route,
                 "selected_domains": [],
             },
-            "product-plus-tests:installed-client": {
+            "product-with-supporting-tests:installed-client": {
                 "prompt": (
                     "Implement an accepted installed-client screen behavior "
                     "change and add regression tests."
                 ),
-                "families": ["installed-client", "test-validation"],
+                "families": ["installed-client"],
                 "domains": [],
                 "owners": [
                     "implementation-owner:installed-client-change-builder",
-                    quality_owner,
                 ],
-                "selected": "implementation-owner-conflict",
-                "route": conflict_route,
+                "selected": "implementation-owner:installed-client-change-builder",
+                "route": {
+                    "path": "direct",
+                    "profile": "task-agent",
+                    "primary_skill": "installed-client-change-builder",
+                },
                 "selected_domains": [],
             },
             "multiaction:backend-product-first-then-add-tests": {
@@ -1602,15 +1631,15 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "[canonical-fixture] Wave1A fixture-count drift; "
                 f"expected=30; actual={len(wave1a_rows)}"
             )
-        if len(document["cases"]) != 233:
+        if len(document["cases"]) != 249:
             mismatches.append(
                 "[canonical-fixture] total case-count drift; "
-                f"expected=233; actual={len(document['cases'])}"
+                f"expected=249; actual={len(document['cases'])}"
             )
-        if len(document["cases"]) - len(wave1a_rows) != 203:
+        if len(document["cases"]) - len(wave1a_rows) != 219:
             mismatches.append(
                 "[canonical-fixture] predecessor case-count drift; "
-                "expected=203; actual="
+                "expected=219; actual="
                 f"{len(document['cases']) - len(wave1a_rows)}"
             )
         if len(canonical_rows) != 1:
@@ -2534,7 +2563,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         self.assertIn("reachable", proved_trigger)
 
         document = load_yaml_file(ROOT / "evals" / "routing" / "cases.yaml")
-        self.assertEqual(233, len(document["cases"]))
+        self.assertEqual(249, len(document["cases"]))
         fixtures = {row["id"]: row for row in document["cases"]}
         for case_id, locked in LOCKED_ROUTING_FIXTURES.items():
             with self.subTest(fixture=case_id):

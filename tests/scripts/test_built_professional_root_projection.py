@@ -849,6 +849,10 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     BUILD._write_compact_professional_projection(root, item)
                     BUILD._append_layer3_entrypoint(root)
                     rendered = (root / "SKILL.md").read_text(encoding="utf-8")
+                    self.assertEqual(source_root.split("---", 2)[1],
+                                     rendered.split("---", 2)[1])
+                    for heading in ("When To Use", "Do Not Use", "Required Inputs"):
+                        self.assertNotIn(f"## {heading}", rendered)
                     BUILD._copy_skill_tree(item.path, root)
                     BUILD._write_compact_professional_projection(root, item, runtime_version="9.9.9", build_identity="_____________________w")
                     BUILD._append_layer3_entrypoint(root)

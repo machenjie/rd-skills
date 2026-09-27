@@ -2966,11 +2966,11 @@ def decision_eval_contract_errors(
         if len({item[3] for item in actual_bindings}) != len(actual_bindings):
             errors.append("Decision Eval failure ids must be unique")
     if contract["compatibility_baseline"] != {
-        "routing_cases": 233,
+        "routing_cases": 249,
         "capability_cases": 62,
     }:
         errors.append(
-            "decision_eval_contract.compatibility_baseline must freeze 233+62 routes"
+            "decision_eval_contract.compatibility_baseline must freeze 249+62 routes"
         )
     if contract["route_once"] != "required":
         errors.append("decision_eval_contract.route_once must be required")

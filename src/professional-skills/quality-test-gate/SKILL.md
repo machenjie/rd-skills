@@ -1,6 +1,6 @@
 ---
 name: quality-test-gate
-description: "Use `analysis-agent` to map acceptance to validation, `task-agent` to add or run bounded tests, and `review-agent` to assess proof coverage. Skip work with no material change or already-fresh complete validation."
+description: "Use `analysis-agent`, `task-agent`, or `review-agent` when standalone tests, validation strategy/infrastructure, or proof coverage/freshness is the task goal, including proving unchanged production code. Tests required by a production implementation stay with its behavior owner."
 ---
 
 # quality-test-gate
@@ -15,12 +15,13 @@ Map acceptance and failure paths to proving signals.
 
 ## When To Use
 
-- changed behavior needs proof
-- validation freshness required
+- standalone test implementation or validation strategy
+- test fixtures, mocks, or validation infrastructure are the changed owner
+- explicit proof coverage or current validation, even without production edits
 
 ## Do Not Use
 
-- no material change
+- tests or fresh validation are supporting obligations of a production implementation
 - validation already fresh and complete
 
 ## Required Inputs

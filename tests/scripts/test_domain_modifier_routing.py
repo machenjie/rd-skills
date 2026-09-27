@@ -2116,7 +2116,7 @@ class DomainModifierRouteTests(unittest.TestCase):
 class DomainModifierCorpusContractTests(unittest.TestCase):
     def test_corpus_counts_remain_exact(self) -> None:
         self.assertEqual(
-            233,
+            249,
             len(load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]),
         )
         self.assertEqual(

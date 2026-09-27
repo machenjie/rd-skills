@@ -6985,7 +6985,26 @@ _TEST_VALIDATION_TASK_OBJECT_SIGNALS = (
     "evaluation tests",
     "spacing tests",
     "rendering test",
+    "test fixture",
+    "test fixtures",
+    "test mock",
+    "test mocks",
+    "test infrastructure",
+    "validation infrastructure",
+    "proof coverage",
+    "current proof",
 )
+
+
+def _is_test_validation_task_object(value: str) -> bool:
+    # A proof requirement introduced by "with" does not own the object being
+    # implemented; "tests with fixtures" still has tests as its direct object.
+    value = re.sub(r"^with\s+no\b[^.;!?]{0,80}?\bbehaviou?r\b", "", value).strip()
+    direct_object = re.split(r"\bwith\b", value, maxsplit=1)[0]
+    return any(
+        _contains_signal(direct_object, signal)
+        for signal in _TEST_VALIDATION_TASK_OBJECT_SIGNALS
+    )
 
 
 @dataclass(frozen=True)
@@ -7489,10 +7508,7 @@ def _parse_normalized_task_request(
             parent_object_id=None,
             role=(
                 "test-object"
-                if any(
-                    _contains_signal(object_text, signal)
-                    for signal in _TEST_VALIDATION_TASK_OBJECT_SIGNALS
-                )
+                if _is_test_validation_task_object(object_text)
                 else "ordinary-object"
             ),
             span=object_span,
@@ -8413,6 +8429,36 @@ def _parsed_task_objects_are_test_validation_only(
     )
 
 
+def _test_actions_support_production_change(task: _TaskActionParse) -> bool:
+    """Recognize adjacent generic regression proof, not separate test goals."""
+
+    objects = {item.parent_action_id: item for item in task.objects}
+    changed = [action for action in task.actions
+               if action.role in {"direct", "coordinated"}
+               and action.polarity == EFFECT_CHANGED]
+    if (not changed or changed[0].action_id not in objects
+            or objects[changed[0].action_id].role == "test-object"):
+        return False
+    test_actions = [action for action in changed
+                    if objects.get(action.action_id) is not None
+                    and objects[action.action_id].role == "test-object"]
+    if not test_actions:
+        return False
+    for action in test_actions:
+        if (action.statement_id != changed[0].statement_id
+                or action.coordinator_span is None
+                or task.normalized_text[slice(*action.coordinator_span.normalized)] != "and"):
+            return False
+        text = task.normalized_text[slice(*objects[action.action_id].span.normalized)]
+        if re.fullmatch(
+            r"(?:(?:a|the|required|necessary)\s+)*(?:regression tests?|test proof)"
+            r"(?:\s+for (?:this|the) (?:fix|change|repair))?",
+            text,
+        ) is None:
+            return False
+    return True
+
+
 def _task_action_matches(scope: str) -> tuple[re.Match[str], ...]:
     """Return controlling task actions without treating object nouns as verbs."""
 
@@ -8856,6 +8902,7 @@ def _classify_professional_families(
         for signal in (
             "browser frontend",
             "frontend component",
+            "frontend feature",
             "browser component",
             "web component",
             "pwa",
@@ -8976,7 +9023,6 @@ def _classify_professional_families(
         for signal in (
             "external integration",
             "integration contract",
-            "cross worker",
             "shared contract",
             "webhook integration",
             "payment provider callback",
@@ -9058,10 +9104,11 @@ def _classify_professional_families(
         ),
         evidence=("infrastructure-definition",),
     )
-    testing_subject = any(
-        signal in effect_value
-        for signal in _TEST_VALIDATION_TASK_OBJECT_SIGNALS
-    )
+    changed_action_ids = {action.action_id for action in parsed.task_actions.actions
+                          if action.polarity == EFFECT_CHANGED}
+    testing_subject = any(item.role == "test-object"
+                          and item.parent_action_id in changed_action_ids
+                          for item in parsed.task_actions.objects)
     add(
         "test-validation",
         testing_subject
@@ -9070,14 +9117,10 @@ def _classify_professional_families(
             or value.startswith("select ")
         ),
         anti=(
-            bool(re.search(r"\bno\s+material\s+change\b", value))
-            or "already fresh and complete" in value
+            "already fresh and complete" in value
             or (
                 bool(results)
-                and re.search(
-                    r"\b(?:regression tests?|test proof)\b[^.;!?]*"
-                    r"\bfor (?:this|the) (?:fix|change|repair)\b", value
-                ) is not None
+                and _test_actions_support_production_change(parsed.task_actions)
             )
         ),
         evidence=("behavior-proof-surface",),
