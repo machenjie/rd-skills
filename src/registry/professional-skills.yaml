@@ -699,8 +699,8 @@ professional_skills:
     required_expertise_tags: ["foundation-data-api-contracts", "foundation-interface-contracts", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy", "specialty-messaging-event-delivery"]
     path: "src/professional-skills/integration-change-builder"
     role_support: ["analysis-agent", "task-agent"]
-    trigger_signals: ["cross worker merge", "external integration change", "shared contract alignment"]
-    anti_trigger_signals: ["isolated change with no integration edge", "unrelated source inspection"]
+    trigger_signals: ["internal runtime component or external provider integration change", "producer-consumer shared contract or delivery boundary alignment"]
+    anti_trigger_signals: ["isolated change with no integration edge", "merging AI task or worker outputs without a runtime integration boundary", "unrelated source inspection"]
     required_inputs: ["component handoffs", "contract summary"]
     required_inputs_by_role:
       analysis-agent: ["producer", "consumer", "credential", "failure", "reconciliation evidence"]
@@ -737,8 +737,8 @@ professional_skills:
     required_expertise_tags: ["foundation-quality-testing"]
     path: "src/professional-skills/quality-test-gate"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
-    trigger_signals: ["changed behavior needs proof", "validation freshness required"]
-    anti_trigger_signals: ["no material change", "validation already fresh and complete"]
+    trigger_signals: ["standalone test implementation or validation strategy", "test fixtures, mocks, or validation infrastructure are the changed owner", "explicit proof coverage or current validation, even without production edits"]
+    anti_trigger_signals: ["tests or fresh validation are supporting obligations of a production implementation", "validation already fresh and complete"]
     required_inputs: ["observable acceptance and non-goals", "validation entry points material risks and execution constraints"]
     required_inputs_by_role:
       analysis-agent: ["current behavior", "existing tests", "uncovered acceptance risks"]

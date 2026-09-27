@@ -55,7 +55,7 @@ This project uses a simple release history format with an `Unreleased` section u
   report-only inventory for maintainers.
 - Changed normal Android and iOS/iPadOS routing to their successor Domains.
   Removed legacy Skill ids are unsupported and are not redirected.
-- Changed the routing inventory to 233 canonical entries and 62 capability
+- Changed the routing inventory to 249 canonical entries and 62 capability
   entries. Its 429 deterministic admissions are 105 Professional, 276
   Foundation, and 48 Domain admissions; the Foundation projection covers 141
   unique Foundation Skills in the 163-entry Layer 3 catalog.

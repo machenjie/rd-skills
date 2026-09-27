@@ -96,9 +96,9 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual(0, report["legacy_route_count"])
         boundary_relations = report["boundary_relations"]
         self.assertEqual("pass", boundary_relations["status"])
-        self.assertEqual(8, boundary_relations["relation_count"])
-        self.assertEqual(8, boundary_relations["passed_count"])
-        self.assertEqual(32, boundary_relations["role_count"])
+        self.assertEqual(10, boundary_relations["relation_count"])
+        self.assertEqual(10, boundary_relations["passed_count"])
+        self.assertEqual(40, boundary_relations["role_count"])
         self.assertEqual("full", boundary_relations["candidate_coverage"])
         self.assertEqual("proven", boundary_relations["route_once"])
         self.assertEqual([], boundary_relations["errors"])

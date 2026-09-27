@@ -1597,7 +1597,7 @@
       {"mutant_id":"token-overflow-drops-layer3","axis":"professional-layer3-decision","invariant_id":"context-pressure-preserves-required-layer3","failure_id":"decision-context-preserve-required-layer3"},
       {"mutant_id":"review-copies-implementation-layer3","axis":"review-decision","invariant_id":"review-layer3-selected-from-review-risk","failure_id":"decision-review-layer3-independent"}
     ],
-    "compatibility_baseline": {"routing_cases":233,"capability_cases":62},
+    "compatibility_baseline": {"routing_cases":249,"capability_cases":62},
     "route_once": "required",
     "layer3_cardinality": {"minimum":0,"duplicates":"fail","selection":"current-engineering-need"},
     "runtime_dependency": false

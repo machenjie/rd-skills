@@ -530,8 +530,8 @@ def evaluate_boundary_relations(
             ],
         }
     relations = document["relations"]
-    if len(relations) != 8:
-        errors.append("boundary relation fixture must declare exactly 8 relations")
+    if len(relations) != 10:
+        errors.append("boundary relation fixture must declare exactly 10 relations")
 
     if not isinstance(route_results, list):
         route_results = []
@@ -750,8 +750,8 @@ def evaluate_boundary_relations(
         "relation_count": len(relations),
         "passed_count": sum(item["passed"] for item in relation_results),
         "role_count": role_count,
-        "candidate_coverage": "full" if not errors and role_count == 32 else "unavailable",
-        "route_once": "proven" if not errors and role_count == 32 else "unavailable",
+        "candidate_coverage": "full" if not errors and role_count == 40 else "unavailable",
+        "route_once": "proven" if not errors and role_count == 40 else "unavailable",
         "results": relation_results,
         "errors": errors,
     }
