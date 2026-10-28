@@ -14,13 +14,15 @@ Use this reference when documentation closure depends on source freshness, consu
 | Security disclosure is safe | Public/private boundary, redaction rule, sensitive detail scan, approval owner, and retained evidence path | Obvious secrets and sensitive internals were not knowingly published | Every future mirror, export, or support reply is safe |
 | Compliance evidence is retained | Control objective, artifact path, owner, approval source, freshness date, exception owner, and retention period | Evidence can be traced for the inspected control | Auditor interpretation or future control design is approved |
 
+For standalone documentation, check requested text or diagrams against supplied facts or their owning source. This supports content accuracy; it does not establish a runtime behavior change or demonstrate reader comprehension. Use the behavior-delta evidence above only when claiming that docs match changed behavior.
+
 ## Freshness Rules
 
 - Mark documentation evidence stale after changes to public behavior, schemas, generated specs, CLI help, config defaults, feature flags, runbook alerts, rollout/rollback mechanics, docs examples, or release notes.
 - Treat generated specs, diagrams, screenshots, rendered docs, and reports as selectors until the final source and validation command confirm them.
-- If docs were updated before final code review, rerun the docs validation or state the exact final source change that did not affect them.
+- If a source changes after documentation validation, repeat affected checks or explain why the documented claims remain valid. Standalone prose edits need no unrelated code review.
 - When current source, prior docs, prior task evidence, and generated artifacts disagree, prefer current source plus fresh validation and record stale artifacts explicitly.
 
 - If publishing docs, notifying customers, updating status page, sending compliance packet, require owner approval, audience, rollback/update path, and safe-disclosure review.
 - If reading production logs, support cases, customer data, or audit systems, require data class, redaction, retention, and approval boundary.
-- Classify inspected artifacts as source, docs, spec, runbook, release, or compliance and mark each updated, not required, or outstanding with rationale, validation, and owner.
+- For tasks spanning multiple artifacts, classify inspected surfaces as source, docs, spec, runbook, release, or compliance and record relevant status, validation, and owner.
