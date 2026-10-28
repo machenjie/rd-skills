@@ -1047,30 +1047,36 @@ professional_skills:
     required_expertise_tags: ["foundation-data-api-contracts", "foundation-delivery-platform", "foundation-engineering-workflow", "foundation-interface-contracts"]
     path: "src/professional-skills/change-documentation-gate"
     role_support: ["task-agent", "review-agent"]
-    trigger_signals: ["public behavior or operator workflow changed", "documentation impact"]
-    anti_trigger_signals: ["no audience facing change", "self review request"]
-    required_inputs: ["changed behavior summary", "documentation scope"]
+    trigger_signals: ["standalone documentation creation, editing, or review", "documentation impact from public behavior or operator workflow changes"]
+    anti_trigger_signals: ["implementation-only work with no documentation task", "self review request"]
+    required_inputs: ["documentation request, audience, and scope", "source evidence or accepted design; behavior delta when applicable"]
     required_inputs_by_role:
-      task-agent: ["owning documentation source", "generated origin", "link", "example", "command checks"]
-      review-agent: ["changed guidance", "behavior and freshness evidence"]
-    output_contract: ["documentation changes", "documentation verdict", "residual documentation debt"]
+      task-agent: ["owning documentation source", "generated origin if applicable", "checks for the affected content"]
+      review-agent: ["guidance under review", "source and freshness evidence"]
+    output_contract: ["documentation changes", "documentation verdict", "validation limits"]
     output_contract_by_role:
-      task-agent: ["documentation changes", "behavior mapping", "residual documentation debt"]
-      review-agent: ["documentation verdict", "stale guidance findings", "unproven audience behavior"]
+      task-agent: ["documentation changes", "source mapping and validation limits", "outstanding affected documentation, if any"]
+      review-agent: ["documentation verdict", "accuracy and coverage findings", "unverified claims and validation limits"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
         type: decision-checklist
-        load_when: "A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale"
-        do_not_load_when: "Detailed output fields or evidence closure is required"
+        load_when: "Documentation creation, editing, or review needs a quick coverage check across affected artifacts"
+        do_not_load_when: "A single local correction is fully covered by the root contract, or deeper artifact-specific guidance is needed"
         required_by: ["task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
       - path: "references/documentation-output-and-gates.md"
         type: targeted
-        load_when: "Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions"
+        load_when: "Documentation needs reader-task organization or artifact-specific closure for guides, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions"
         do_not_load_when: "Body output contract is sufficient for a small decision"
         required_by: ["task-agent", "review-agent"]
         required_output: ["gate-decision", "residual-risk"]
+      - path: "references/engineering-diagrams.md"
+        type: targeted
+        load_when: "The documentation deliverable creates, edits, or reviews an engineering diagram of supplied facts or an accepted design"
+        do_not_load_when: "No diagram deliverable is requested or needed, or unresolved business or architecture decisions are the task instead of documenting an accepted view"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["selected-approach", "validation-plan", "proof-limit"]
       - path: "references/evidence-patterns.md"
         type: evidence-pattern
         load_when: "Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries"

@@ -1,5 +1,7 @@
 # Documentation Checklist
 
+Use only the checks relevant to the requested document or affected audience. A local correction does not require an inventory of every artifact below.
+
 - Check README and developer setup notes.
 - Check API docs, schema docs, and client examples.
 - Check migration notes, rollout notes, and rollback notes.
@@ -8,14 +10,14 @@
 - Check runbooks, dashboards, alerts, and troubleshooting.
 - Check user-facing help, product copy, and workflow docs.
 - Check configuration and environment variable docs.
-- Record skipped docs with rationale.
+- Record affected docs left outstanding with rationale.
 
 ## Professional Decision Rules
 
-- Update documentation when behavior, public contract, configuration, operations, migration, deprecation, or user workflow changes.
+- Create, edit, or review requested documentation even when runtime behavior is unchanged; also maintain affected docs after behavior or contract changes.
 - Keep examples executable and consistent with current names, defaults, errors, and version behavior.
 - Place facts in the owning source document and link rather than duplicate unstable details.
-- Validate links, commands, generated outputs, and migration instructions against the final implementation.
+- Validate changed content against its applicable source, with implementation evidence for behavioral claims.
 
 ## High-Value Gotchas
 
@@ -25,9 +27,8 @@
 
 ## Execution Checklist
 
-1. Trace the behavior delta to its audience, owning document, generated origin, and version boundary.
-2. Choose update, migration note, deprecation guidance, or evidence-backed no-docs treatment.
-3. Verify examples, commands, links, rollback guidance, and safe-disclosure boundaries.
-4. **Task mode:** update the owning source for the accepted behavior delta.
-5. **Review mode:** judge examples, commands, links, and migration guidance.
-6. Stop closure when source behavior and published guidance cannot be reconciled.
+- Trace the documentation request or behavior delta to its audience and owning source, including generated origin and version boundary when relevant.
+- Choose the requested artifact, with migration, deprecation, or no-docs treatment only when the change calls for it.
+- **Task mode:** create or edit the owning source and check the affected content.
+- **Review mode:** judge accuracy, coverage, and applicable recovery or disclosure evidence.
+- Stop closure when material claims and authoritative sources cannot be reconciled.

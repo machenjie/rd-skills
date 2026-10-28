@@ -12,11 +12,18 @@
 
 - Inspect the current page, components, and design system before choosing changes.
 - Derive the visual direction from the product, user, scenario, existing design, and accepted goal.
-- Check hierarchy, typography, spacing, density, composition, geometry, color, motion, and media.
+- Check the dimensions implicated by the accepted goal or observed gap: hierarchy, typography, spacing, density, composition, geometry, color, motion, and media.
 - Limit generic AI visual patterns to diagnostic evidence without converting them into binding rules.
 - Prefer local repairs that address the accepted visual gap.
 - Do not rewrite an existing implementation only for aesthetic preference.
 - Check whole-page visual consistency after the changes.
+
+## Example: An Unclear Save Action
+
+- A settings page's Save action is easy to miss. Size alone does not explain the problem: inspect its grouping and position, its emphasis relative to secondary actions, and competing primary actions.
+- If placement or emphasis causes the gap, adjust grouping, position, or emphasis through existing components and tokens; enlarging the button or rebuilding the page may leave the cause intact.
+- For frequent data-scanning tasks, preserve useful density. More whitespace or larger headings can make comparison harder; use them only when they address the actual gap.
+- This example connects symptom, cause, and local repair; it is not a mandatory redesign sequence for every change.
 
 ## Engineering Boundaries
 
