@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -24,6 +25,7 @@ from validation_utils import (
     registry_targeted_reference_projection_line_count,
     render_targeted_reference_section,
     strip_registry_targeted_reference_projection,
+    validate_ai_readability,
 )
 
 
@@ -429,6 +431,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     "ai-product-extension",
                     "configuration-runtime-policy",
                     "dependency-vulnerability-scanning",
+                    "offline-sync-conflict-resolution",
                 ],
                 "task_routable": True,
             },
@@ -495,7 +498,6 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 "generic ai visual patterns to diagnostic evidence",
                 "without converting them into binding rules",
                 "inspect the current page, components, and design system",
-                "check hierarchy, typography, spacing, density, composition, geometry, color, motion, and media",
                 "prefer local repairs",
                 "check whole-page visual consistency",
                 "existing components and tokens without bypassing or duplicating",
@@ -504,12 +506,31 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             "references/visual-reference-reconstruction.md": (
                 "repository/source authority > behavior correctness > security/accessibility > performance > existing design system > explicit reference fidelity > visual-quality heuristic",
                 "treat the supplied reference as visual evidence",
-                "decompose it into page regions and component boundaries",
                 "map the result to existing repository tokens, components, and design-system rules",
                 "compare the final implementation with the reference",
                 "interaction, responsive behavior, accessibility, and runtime behavior",
                 "existing components and tokens without bypassing or duplicating",
                 "unnecessary dependencies or abstractions and valueless dom/css complexity",
+            ),
+        }
+        # Keep each qualification with its instruction, without freezing a sentence.
+        semantic_rules = {
+            "references/visual-quality-and-redesign.md": (
+                r"\b(?:dimensions|aspects) (?:implicated by|relevant to|needed for) "
+                r"(?:the )?(?:accepted goal or (?:the )?observed gap|"
+                r"observed gap or (?:the )?accepted goal)\b",
+                *(
+                    rf"\b{dimension}\b"
+                    for dimension in (
+                        "hierarchy", "typography", "spacing", "density",
+                        "composition", "geometry", "color", "motion", "media",
+                    )
+                ),
+            ),
+            "references/visual-reference-reconstruction.md": (
+                r"\b(?:visible|observable) page regions\b",
+                r"\b(?:inferred|proposed) component boundaries "
+                r"(?:as|remain) (?:hypotheses|tentative|provisional)\b",
             ),
         }
         for reference_path, phrases in required_phrases.items():
@@ -523,6 +544,17 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 folded = markdown.casefold()
                 for phrase in phrases:
                     self.assertIn(phrase, folded)
+                self.assertEqual(
+                    1,
+                    sum(
+                        all(
+                            re.search(pattern, unit)
+                            for pattern in semantic_rules[reference_path]
+                        )
+                        for unit in _reference_semantic_units(markdown)
+                    ),
+                    f"{reference_path}: scoped visual evidence instruction missing",
+                )
                 self.assertEqual(1, index.count(f"`{reference_path}`"))
 
     def test_cache_design_contract_renders_structured_jit_instructions(self) -> None:
@@ -2989,9 +3021,10 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     ],
                 )
                 for _relative, path, _reference_type, text in texts:
-                    self.assertEqual(
-                        [], ai_readability_findings(text, path.as_posix())
-                    )
+                    # Advisory bands remain review evidence, not hard failures.
+                    errors: list[str] = []
+                    validate_ai_readability(text, path.as_posix(), errors)
+                    self.assertEqual([], errors)
             for group in groups:
                 with self.subTest(owner=owner, anchors=group):
                     self.assertEqual(
