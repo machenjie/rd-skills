@@ -34,6 +34,18 @@ Foundation and Domain descriptions target 180 characters and fail above 260.
 Keep only the trigger, anti-trigger, and consuming profile or owner-Skill
 boundary in discovery metadata. Put workflow and evidence detail in the body.
 
+## AI Reader
+
+rd-skills combines an engineering control loop with professional skill injection.
+Assume a capable, open-ended AI reader. Add decision-changing knowledge rather
+than a rigid workflow. Keep Main on the control plane. Delegate engineering
+execution to the appropriate role.
+
+Use short sentences and concrete verbs. Put the action before its explanation.
+Keep one decision per list item. Preserve non-obvious failure modes and proof
+limits while removing repeated process language. State each Reference's load
+condition and skip condition before loading its detailed content.
+
 ## AI Readability Contract
 
 Apply one readability contract to every AI-facing sentence:
@@ -190,20 +202,21 @@ Compiled Foundation and Domain references are build outputs. Do not hand-edit ge
 
 ## Task, Evidence, and Completion Contracts
 
-Every executable task uses Task Contract v2 from `src/control-model/core-contracts.json`.
-It names Task ID, Status, Owner, inputs, read/write scope, non-goals, expected
-output, acceptance, verification, Evidence Requirements, workspace and
-integration ownership, review ownership, and stop conditions. DAG nodes also
-name Dependencies. A Direct Task omits Dependencies when they have no meaning.
+Use the smallest complete assignment for the task. Ordinary work needs its
+outcome, scope, constraints, and validation; it needs no formal record.
 
-Status is exactly `in_progress`, `blocked`, `partial`, or `completed`.
-Validation failure or unavailability, stale evidence, missing required review,
-unreviewed changed scope, or unresolved blocking findings cannot become
-`completed`. New work after `completed` starts a new Task ID.
+Use Task Contract v2 from `src/control-model/core-contracts.json` when a real
+cross-agent consumer or hard boundary needs explicit ownership and evidence.
+Name dependencies only when they control execution order. Use a DAG only when
+it clarifies integration or independent work.
 
-Evidence is a visible task-local Markdown Ledger in the handoff. Use the
-control-model fields and freshness rules; never create private persistence,
-a daemon, a runtime task-state engine, or a hidden protocol record.
+Keep evidence visible in the result or handoff. A structured Ledger is optional
+unless its consumer requires one. Never create private persistence, a daemon,
+a runtime task-state engine, or a hidden protocol record.
+
+Report incomplete validation, stale evidence, required review gaps, and blocking
+findings honestly. Do not claim completion until fresh evidence supports the
+requested outcome. A formal record follows its schema when one is required.
 
 ## Boundaries
 

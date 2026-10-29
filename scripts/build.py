@@ -18,6 +18,7 @@ from typing import Any
 
 from validation_utils import (
     COMPILED_LAYER3_FORMAT,
+    SOURCE_SKILL_INVENTORY,
     CORE_CONTRACTS,
     CORE_CONTRACTS_PATH,
     NAME_RE,
@@ -92,12 +93,7 @@ LEGACY_HOOK_FILE_NAMES = (
     "changeforge-route-preflight.md",
     "changeforge-professional-contract.md",
 )
-EXPECTED_RUNTIME_COUNTS = {
-    "control": 1,
-    "professional": 25,
-    "foundation": 150,
-    "domain": 13,
-}
+EXPECTED_RUNTIME_COUNTS = {layer: len(names) for layer, names in SOURCE_SKILL_INVENTORY.items()}
 LAYER3_PROJECTION_SECTIONS = {
     "foundation": (
         ("Skill Role", "Decision Boundary"),

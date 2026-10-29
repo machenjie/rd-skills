@@ -2,6 +2,12 @@
 
 rd-skills Skills are written for AI execution. The always-loaded root must provide the smallest complete decision contract; detailed or low-frequency material belongs in targeted references.
 
+The product combines an engineering control loop with professional skill
+injection. Main controls routing, decomposition, coordination, and feedback.
+Specialist agents perform the engineering work with bounded context.
+Independent reads may run in parallel. Concurrent writes require Host isolation
+and independent surfaces; shared-workspace writes remain serial.
+
 ## Reader Path
 
 - New authors: read [Required Root Structure](#required-root-structure), [Root

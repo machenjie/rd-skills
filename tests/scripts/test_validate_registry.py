@@ -59,6 +59,21 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
     def _copies(self) -> tuple[list[dict], list[dict]]:
         return copy.deepcopy(self.foundation), copy.deepcopy(self.professional)
 
+    def test_physical_inventory_does_not_accept_registry_omission_or_duplicate(self) -> None:
+        inventory = VALIDATION.source_skill_inventory(ROOT)
+        self.assertEqual(set(inventory["professional"]), {row["name"] for row in self.professional})
+        document = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+        missing = copy.deepcopy(document)
+        missing["professional_skills"] = [
+            row for row in missing["professional_skills"]
+            if row["name"] != "library-tool-product-builder"
+        ]
+        self.assertTrue(VALIDATION.professional_automatic_routing_contract_errors(missing))
+        duplicate = copy.deepcopy(document)
+        duplicate["professional_skills"].append(copy.deepcopy(duplicate["professional_skills"][-1]))
+        self.assertTrue(VALIDATION.professional_automatic_routing_contract_errors(duplicate))
+        self.assertEqual(inventory, VALIDATION.source_skill_inventory(ROOT))
+
     def test_current_scope_counts_and_reciprocity_pass(self) -> None:
         self.assertEqual(
             Counter(entry["delivery_scope"] for entry in self.foundation),

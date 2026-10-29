@@ -1,6 +1,6 @@
 ---
 name: engineering-change-analysis
-description: "`analysis-agent`: source-backed `implementation-preparation`, causal `diagnosis-only`, or repository `source-backed-answer`; skip source-free, implementation-ready, or accepted-artifact work."
+description: "Use `analysis-agent` for implementation preparation, diagnosis, source-backed answers, or technical investigation. Skip already-decided implementation and questions fully answered by supplied facts."
 ---
 
 # engineering-change-analysis
@@ -14,11 +14,12 @@ For `analysis-agent`, return one mode's source-backed read-only result.
 - implementation-preparation when the user requests design or evidence leaves an important implementation decision unresolved
 - diagnosis-only for verified cause analysis
 - source-backed-answer for a repository-dependent engineering question
+- technical-investigation for external facts, version compatibility, options, or feasibility
 
 ## Do Not Use
 
 - implementation whose remaining unknowns are local owner, file, test, or caller discovery
-- source-free question
+- question fully answered by supplied facts
 - accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis
 - module-boundary placement decision
 - dependency-direction placement decision
@@ -26,7 +27,8 @@ For `analysis-agent`, return one mode's source-backed read-only result.
 ## Required Inputs
 
 - selected mode
-- bounded source evidence and constraints
+- question, constraints, candidates, and available evidence
+- repository evidence only when the question depends on a repository
 - proof boundary
 
 ## Professional Decision Rules
@@ -42,8 +44,8 @@ For `analysis-agent`, return one mode's source-backed read-only result.
 
 1. Choose the analysis mode.
 2. Separate source fact, supported inference, and unknown.
-3. Prove ownership from current source rather than proximity.
-4. Establish placement from the current dependency graph.
+3. Prove repository ownership when the question depends on code.
+4. Use target-version primary sources for external technical claims.
 5. Treat earlier reports and generated graphs as selectors until current source confirms their claims.
 6. Return the selected mode contract's result with validation and explicit Proof Limits.
 
@@ -66,3 +68,5 @@ For `analysis-agent`, return one mode's source-backed read-only result.
 | [index](references/index.md) | index | competing engineering change analysis references require dependency, conflict, or output-fragment selection | the engineering change analysis root or a task-named reference already resolves selection | analysis-agent | reference-selection |
 | [solution optimality](references/solution-optimality.md) | targeted | Performance/resource blast radius may include CPU, memory, network, disk, lock contention, throughput, or latency | No performance-sensitive path or resource tradeoff is material | analysis-agent | selected-approach, residual-risk |
 | [source backed answer](references/source-backed-answer.md) | mode-contract | engineering change analysis selects source-backed-answer | engineering change analysis is executing another mode | analysis-agent | mode-result, proof-limit |
+| [technical investigation](references/technical-investigation.md) | mode-contract | Technical investigation needs external facts version compatibility or option comparison | Implementation is already decided or the question is answered by supplied facts | analysis-agent | mode-result, proof-limit |
+| [feasibility experiment design](references/feasibility-experiment-design.md) | targeted | A technical uncertainty needs a falsifiable bounded experiment | Existing evidence resolves the question without an experiment | analysis-agent | decision-record, validation-plan, proof-limit |

@@ -66,6 +66,17 @@ class SkillRoutingRoleTests(unittest.TestCase):
         cls.routing = _load("validate-skill-routing.py", "validate_skill_routing")
         cls.trajectory = _load("eval-agent-lightweight.py", "eval_agent_lightweight")
 
+    def test_daily_development_modes_preserve_implementation_ownership(self) -> None:
+        cases = load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]
+        selected = [case for case in cases if case["id"].startswith("daily-")]
+        self.assertTrue(selected)
+        for case in selected:
+            with self.subTest(case=case["id"]):
+                actual = _route(case["prompt"], task_id=case["id"])
+                self.assertEqual(case["expected"], actual)
+                names = {actual["primary_skill"], *actual["layer3_skills"]}
+                self.assertFalse(names.intersection(case["excluded_skills"]))
+
     def test_global_router_has_no_layer3_payload(self) -> None:
         router = (
             ROOT

@@ -113,6 +113,7 @@ _EXPECTED_PRIMARY_TASK_SKILLS = (
     "incident-response-coordinator",
     "installed-client-change-builder",
     "integration-change-builder",
+    "library-tool-product-builder",
     "logging-design-gate",
     "platform-infrastructure-change-builder",
     "quality-test-gate",
@@ -261,6 +262,7 @@ _IMPLEMENTATION_OWNER_FAMILY_EVIDENCE = {
     "logging": "diagnostic-record-surface",
     "platform-infrastructure": "infrastructure-definition",
     "repository-tooling": "repository-developer-tool",
+    "library-tool-product": "distributed-library-tool",
     "test-validation": "behavior-proof-surface",
 }
 
@@ -9042,7 +9044,21 @@ def _classify_professional_families(
         ),
         evidence=("integration-edge",),
     )
-    repository_subject = bool(_LANGUAGE_CLI_RE.search(effect_value)) or (
+    library_subject = any(signal in effect_value for signal in (
+        "standalone library", "independent library", "distributed library",
+        "python library", "typescript library", "public cli", "sdk internal",
+        "developer tool product",
+    ))
+    public_contract_change = bool(re.search(
+        r"(?:change|extend|redesign|migrate)\b[^.;!?]{0,100}\b(?:public api|public cancellation|sdk public|public cli contract)",
+        effect_value,
+    ))
+    add(
+        "library-tool-product", library_subject,
+        anti=public_contract_change or "repository-internal" in effect_value,
+        evidence=("distributed-library-tool",),
+    )
+    repository_subject = (bool(_LANGUAGE_CLI_RE.search(effect_value)) and not library_subject) or (
         "repository" in effect_value
         and any(
             signal in effect_value
@@ -9056,7 +9072,9 @@ def _classify_professional_families(
                 "repository cli",
                 "automation",
                 "maintenance utility",
-                "tooling",
+                "tooling", "build configuration", "build graph", "bootstrap",
+                "development workspace", "toolchain", "dependency graph",
+                "lockfile", "rebase", "merge conflict", "branch recovery",
             )
         )
     )
@@ -9729,6 +9747,13 @@ def _implementation_owner_layer3(
             )
         ):
             selected.append("targeted-validation-selection")
+    elif family == "library-tool-product":
+        if filesystem_effect_state == EFFECT_CHANGED:
+            selected.append("filesystem-process-safety")
+        if "regression test" in text:
+            selected.append("regression-testing")
+        if any(signal in text for signal in ("package exports", "artifact packaging", "build graph")):
+            selected.append("build-tool-professional-usage")
     elif family == "platform-infrastructure":
         if any(
             signal in text
@@ -9802,7 +9827,21 @@ def _implementation_owner_layer3(
         for scope in _coordinated_implementation_change_scopes(text)
     ):
         selected.append("message-queue-design")
-    if family in {"repository-tooling", "backend", "frontend", "installed-client"}:
+    if family in {"repository-tooling", "backend", "frontend", "installed-client", "library-tool-product"}:
+        if any(signal in text for signal in ("initialization contract", "bootstrap contract", "new repository layout")):
+            selected.append("project-initialization")
+        if any(signal in text for signal in ("rebase", "merge conflict", "history recovery", "branch recovery")):
+            selected.append("git-professional-usage")
+        if any(signal in text for signal in ("build graph", "build configuration", "toolchain identity")):
+            selected.append("build-tool-professional-usage")
+        if any(signal in text for signal in ("dependency graph", "api migration", "codemod", "dependency compatibility", "package lifecycle")):
+            if "mechanical lockfile refresh" not in text:
+                selected.append("package-dependency-management")
+        if any(signal in text for signal in ("structural refactor", "behavior-preserving refactor", "behaviour-preserving refactor")):
+            if not any(signal in text for signal in ("simple rename", "formatting only", "owner is unresolved")):
+                selected.append("refactoring")
+        if any(signal in text for signal in ("local ci mismatch", "local passes but ci fails", "environment differential")):
+            selected.append("failure-diagnosis")
         languages = _language_semantic_layers(text)
         if family == "frontend":
             languages = [name for name in languages if name == "typescript-professional-usage"]
@@ -10275,6 +10314,10 @@ def _review_stage_evidence(
 
     if "review the actual diff" in value:
         return ["actual-diff-review"]
+    if value.startswith(("audit ", "review ")) and any(
+        signal in value for signal in ("snapshot", "fixed commit", "current code")
+    ):
+        return ["bounded-snapshot-audit"]
     if value.startswith("review ") and (
         "regression test" in value or has_material_risk
     ):
@@ -16224,6 +16267,16 @@ def _route_impl(
             stage="risk",
             precedence_class="security-boundary",
             match_evidence=["authorization-permission-privacy-or-security"],
+        )
+    if not action_intent["implementation"] and any(signal in text for signal in (
+        "technical investigation", "technical-investigation", "compare framework options",
+        "verify version compatibility", "design a feasibility experiment",
+    )):
+        add_candidate(
+            "analyzed", "analysis-agent", "engineering-change-analysis", [],
+            "architecture-impact-reviewer", rule_id="technical-investigation",
+            stage="source-analysis", precedence_class="analysis-mode",
+            match_evidence=["external-technical-question"],
         )
     if any(signal in text for signal in ("diagnose the root cause", "failure diagnosis")):
         add_candidate(

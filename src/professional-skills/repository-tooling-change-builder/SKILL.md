@@ -1,63 +1,62 @@
 ---
 name: repository-tooling-change-builder
-description: "Use `task-agent` for a bounded repository generator, plugin, harness, CLI, monorepo automation, or maintenance utility source change. Skip product behavior, config-only work, docs, release, review, and planning."
+description: "Use `task-agent` for repository tools, development workspace/build/dependency changes, or Git collaboration. Keep product behavior, infrastructure, and production release decisions with their owners."
 ---
 
-# repository-tooling-change-builder
+# Repository Tooling Change Builder
 
 ## Role
 
-Support `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.
+Support `task-agent` in implementing repository tooling, reproducible development workspaces, and bounded Git collaboration.
 
 ## When To Use
 
-- one bounded repository code generator, compiler plugin, linter, formatter, harness, internal CLI, build or monorepo automation, or maintenance utility change
-- a direct task whose primary consumers are repository developers, tests, builds, or local automation
+- Tool source: generators, compiler plugins, harnesses, internal CLIs, and automation.
+- Workspace/build: bootstrap, toolchains, build graphs, dependencies, and CI compilation configuration.
+- Git collaboration: branches, rebase, conflicts, and authorized history recovery.
 
 ## Do Not Use
 
-- backend service, product behavior, or business logic
-- build-graph or build-configuration-only work with no repository-tool source change
-- documentation-only work
-- production mutation, deployment, release, or rollback
-- independent review, task decomposition, planning, routing, or control
+- Product behavior, cloud resources, or runner infrastructure.
+- Production release, promotion, or rollback decisions.
+- An incidental build or Git operation inside an already owned feature task.
 
 ## Required Inputs
 
-- behavior, scope, owner, consumer, invocation, tests, and outcomes
-- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback
+- Selected mode, requested outcome, repository state, and affected consumers.
+- Source, generated-output, and lockfile authority.
+- Authorized mutation, recovery boundary, and observable acceptance.
 
 ## Professional Decision Rules
 
-- Honor tooling ownership, inputs, stops and output contract.
-- Bind generated output/plugins to authoritative inputs, source ownership, destination, tool/host versions, compatibility, deterministic identity and non-circular clean-checkout bootstrap.
-- Bind mutating commands/subprocesses to resolved targets and invocation contracts, atomic completion or explicit recovery, cancellation/child cleanup and safe reruns.
-- Prove harness oracles with valid/invalid controls; distinguish harness health from changed behavior correctness.
+- Bind generated output to authoritative source, tool versions, and reproducible bootstrap order.
+- Compare actual build inputs and resolved dependencies when local and CI results differ.
+- Preserve user work before Git mutation; resolve semantic conflicts at their source owner.
+- Keep subprocess completion, cancellation, cleanup, and rerun behavior explicit.
+- Prove harness oracles with valid and invalid controls.
 
 ## High-Value Gotchas
 
-- Generated output can look correct while bootstrap order or source authority is wrong.
-- A subprocess can report success before output, cleanup, or child completion is durable.
-- A maintenance command can cross its intended workspace or mutate files on rerun.
+- Successful local compilation can hide undeclared inputs or stale generated output.
+- A command can exit before its children finish or output becomes durable.
+- A clean merge can preserve syntax while changing behavior.
 
 ## Execution Checklist
 
-- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.
-- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.
-- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.
-- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.
-- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.
+1. Confirm the mode, source authority, consumers, and mutation boundary.
+2. Reuse the owning command, generator, build graph, or Git operation.
+3. Apply the smallest coherent change with a recoverable checkpoint.
+4. Validate the changed behavior and relevant clean-checkout or rerun path.
 
 ## Stop / Escalation Conditions
 
-- Inspect affected owners, shared contracts, and dependencies directly. Request deeper analysis only when a concrete unresolved decision could change implementation.
-- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.
-- Keep other work at its owner; do not claim review.
+- Resolve unknown ownership, destructive authority, bootstrap order, or recovery before the affected mutation.
+- Hand off newly discovered product, infrastructure, or production release decisions.
 
 ## Output Contract
 
-- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions
-- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs
+- Changed files, mode, source authority, consumer, and compatibility decisions.
+- Validation outcomes, recovery path, untested environments, and residual risk.
 
 ## Targeted References
 
@@ -66,3 +65,4 @@ Support `task-agent` in changing bounded repository tooling with authority, comp
 | [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |
 | [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |
 | [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |
+| [workspace build and git modes](references/workspace-build-and-git-modes.md) | targeted | Bootstrap toolchain build dependency or Git state needs implementation | Only repository tool source changes under unchanged workspace and Git contracts | task-agent | decision-record, validation-plan, proof-limit |

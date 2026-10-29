@@ -20,7 +20,9 @@ from changeforge_install import InstallError, product_next_step_lines  # noqa: E
 
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
-EXPECTED_RUNTIME_SKILL_COUNT = 26
+from validation_utils import EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT
+
+EXPECTED_RUNTIME_SKILL_COUNT = EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT
 MATERIAL_SUCCESS_RE = re.compile(
     r"\b(?:warn(?:ing)?|legacy|backup|recover(?:y|able)?|restore|rollback|"
     r"migration|migrated|cleanup|cleaned\s+up|removed?)\b",

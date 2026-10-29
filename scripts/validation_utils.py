@@ -6487,10 +6487,30 @@ _REFERENCE_BROKEN_CONDITION_RES = (
     re.compile(r"^(?:(?:patterns|checklist|evidence):\s*)?or\b", re.IGNORECASE),
 )
 FRONTMATTER_DELIMITER = "---"
-EXPECTED_PROFESSIONAL_SKILL_COUNT = 25
+def source_skill_inventory(root: Path = ROOT) -> dict[str, tuple[str, ...]]:
+    """Return physical authored identities independently of registry entries."""
+
+    locations = {
+        "control": "src/control-skills",
+        "professional": "src/professional-skills",
+        "foundation": "src/foundation/capabilities",
+        "domain": "src/domain-extensions",
+    }
+    return {
+        layer: tuple(sorted(
+            path.parent.name
+            for path in (root / location).glob("*/SKILL.md")
+            if not path.parent.name.startswith("_")
+        ))
+        for layer, location in locations.items()
+    }
+
+
+SOURCE_SKILL_INVENTORY = source_skill_inventory()
+EXPECTED_PROFESSIONAL_SKILL_COUNT = len(SOURCE_SKILL_INVENTORY["professional"])
 EXPECTED_CONTROL_SKILL_COUNT = 1
-EXPECTED_FOUNDATION_CAPABILITY_COUNT = 150
-EXPECTED_DOMAIN_EXTENSION_COUNT = 13
+EXPECTED_FOUNDATION_CAPABILITY_COUNT = len(SOURCE_SKILL_INVENTORY["foundation"])
+EXPECTED_DOMAIN_EXTENSION_COUNT = len(SOURCE_SKILL_INVENTORY["domain"])
 MARKETPLACE_SCHEMA_VERSION = 3
 COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
 REGISTRY_SCHEMA_VERSIONS = {
@@ -6513,6 +6533,7 @@ PROFESSIONAL_AUTOMATIC_ROUTING_FAMILIES = frozenset(
         "platform-infrastructure",
         "test-validation",
         "repository-tooling",
+        "library-tool-product",
     }
 )
 PROFESSIONAL_AUTOMATIC_ROUTING_POLICY = {
@@ -6626,8 +6647,8 @@ def professional_automatic_routing_contract_errors(
                 f"{row_context}.routing_family is allowed only for automatic rows"
             )
     expected_counts = {
-        "automatic": 9,
-        "evidence-only": 16,
+        "automatic": len(PROFESSIONAL_AUTOMATIC_ROUTING_FAMILIES),
+        "evidence-only": EXPECTED_PROFESSIONAL_SKILL_COUNT - len(PROFESSIONAL_AUTOMATIC_ROUTING_FAMILIES),
         "not-automatic": 0,
     }
     if mode_counts != expected_counts:
@@ -7445,7 +7466,7 @@ PROFESSIONAL_COVERAGE_STATES = (
 )
 PROFESSIONAL_COVERAGE_DECISION_KIND = "professional-coverage-gate"
 EXPECTED_FOUNDATION_DELIVERY_SCOPE_COUNTS = {
-    "product": 141,
+    "product": EXPECTED_FOUNDATION_CAPABILITY_COUNT - 9,
     "authoring-only": 1,
     "dev-only": 8,
 }
@@ -7454,7 +7475,7 @@ EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT = (
 )
 EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS = {
     "top_level_skill": EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT,
-    "targeted_reference": 154,
+    "targeted_reference": EXPECTED_FOUNDATION_DELIVERY_SCOPE_COUNTS["product"] + EXPECTED_DOMAIN_EXTENSION_COUNT,
     "routing_index_only": 9,
 }
 
@@ -12485,6 +12506,7 @@ def reference_type_for_path(path: str) -> str:
         "implementation-preparation",
         "diagnosis-only",
         "source-backed-answer",
+        "technical-investigation",
     }:
         return "mode-contract"
     if "checklist" in stem:

@@ -1,6 +1,6 @@
 ---
 name: refactoring
-description: "`analysis-agent`/`review-agent`: use when splitting, merging, moving, or deleting code while preserving behavior; skip behavior-changing implementation."
+description: "Use task-agent, analysis-agent, or review-agent for structural changes with fixed ownership and preserved behavior. Skip simple renames, formatting, and intentional behavior changes."
 ---
 
 # refactoring
@@ -16,6 +16,7 @@ description: "`analysis-agent`/`review-agent`: use when splitting, merging, movi
 **Do not use when**
 
 - no task-local refactoring decision is required
+- simple rename, formatting, or local edits without structural preservation risk
 
 ## Skill Role
 
@@ -43,6 +44,6 @@ Escalate unknown behavior, an unfixed destination, uncovered consequential paths
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [behavior preservation evidence](references/behavior-preservation-evidence.md) | evidence-pattern | the change claims behavior preservation across a structural rewrite | the task intentionally changes externally observable behavior | review-agent, analysis-agent | evidence-record, proof-limit, residual-risk |
-| [checklist](references/checklist.md) | decision-checklist | structural change affects observable behavior contracts ownership steps or rollback | simple local rename preserves behavior and all public boundaries | review-agent, analysis-agent | checklist-result, residual-risk |
-| [split merge cleanup](references/split-merge-cleanup-patterns.md) | benchmark-pattern | the diff splits merges relocates responsibilities or must sequence an accepted deletion decision | deletion readiness is unresolved or no structural cleanup or ownership change is proposed | review-agent, analysis-agent | option-comparison, selected-approach |
+| [behavior preservation evidence](references/behavior-preservation-evidence.md) | evidence-pattern | the change claims behavior preservation across a structural rewrite | the task intentionally changes externally observable behavior | review-agent, analysis-agent, task-agent | evidence-record, proof-limit, residual-risk |
+| [checklist](references/checklist.md) | decision-checklist | structural change affects observable behavior contracts ownership steps or rollback | simple local rename preserves behavior and all public boundaries | review-agent, analysis-agent, task-agent | checklist-result, residual-risk |
+| [split merge cleanup](references/split-merge-cleanup-patterns.md) | benchmark-pattern | the diff splits merges relocates responsibilities or must sequence an accepted deletion decision | deletion readiness is unresolved or no structural cleanup or ownership change is proposed | review-agent, analysis-agent, task-agent | option-comparison, selected-approach |

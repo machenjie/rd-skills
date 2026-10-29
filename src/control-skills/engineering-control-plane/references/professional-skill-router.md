@@ -16,6 +16,9 @@ Main owns selection. Each Analysis, Task, and Review assignment carries directly
 | bounded backend feature with local owner discovery | task-agent | backend-change-builder | architecture-impact-reviewer |
 | bounded local backend repair | task-agent | backend-change-builder | ai-code-review-refactor |
 | bounded repository-owned generator plugin harness internal CLI monorepo automation or maintenance utility source change | task-agent | repository-tooling-change-builder | ai-code-review-refactor |
+| repository bootstrap toolchain build configuration dependency or Git collaboration implementation | task-agent | repository-tooling-change-builder | ai-code-review-refactor |
+| independently distributed library SDK internals public CLI or developer tool implementation with fixed public contract | task-agent | library-tool-product-builder | ai-code-review-refactor |
+| external technical facts version compatibility options or feasibility (`technical-investigation`) | analysis-agent | engineering-change-analysis | architecture-impact-reviewer |
 | source-backed engineering question (`source-backed-answer`) | analysis-agent | engineering-change-analysis | architecture-impact-reviewer |
 | failure diagnosis (`diagnosis-only`) | analysis-agent | engineering-change-analysis | reliability-observability-gate |
 | integration implementation with established dependencies | task-agent | integration-change-builder | ai-code-review-refactor |
@@ -39,6 +42,7 @@ Main owns selection. Each Analysis, Task, and Review assignment carries directly
 | release implementation | task-agent | delivery-release-gate | delivery-release-gate |
 | explicit release rollout or rollback plan analysis | analysis-agent | delivery-release-gate | delivery-release-gate |
 | documentation implementation | task-agent | change-documentation-gate | change-documentation-gate |
+| bounded fixed-commit or current-code snapshot audit | review-agent | ai-code-review-refactor | ai-code-review-refactor |
 | general diff review | review-agent | ai-code-review-refactor | ai-code-review-refactor |
 ## Domain Modifiers
 After selecting the task owner, consider the named Domain through that Professional's generated selector when its mechanism is active. Primary and Profile remain with the task outcome and existing authorization. AI evaluation stays with quality; financial integration stays with integration; local firmware stays with implementation and OTA activation or rollback stays with delivery. Unchanged modules in a polyglot repository provide no loading evidence.

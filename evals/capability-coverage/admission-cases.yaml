@@ -3404,3 +3404,94 @@ cases:
     case_kind: domain-owned
     prompt: Fix local firmware sampling timing; no broker behavior changes.
     expected: {selected: false, primary_skill: backend-change-builder}
+  - id: capcov-admission-professional-library-tool-product-builder-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-professional-library-tool-product-builder-selected"}
+    layer: professional
+    skill: library-tool-product-builder
+    case_kind: selected
+    prompt: "Fix a standalone Python library internal algorithm boundary defect; the public API is unchanged."
+    expected: {"selected": true, "primary_skill": "library-tool-product-builder"}
+  - id: capcov-admission-professional-library-tool-product-builder-alternate-owner
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-professional-library-tool-product-builder-alternate-owner"}
+    layer: professional
+    skill: library-tool-product-builder
+    case_kind: alternate-owner
+    prompt: "Implement a repository-owned generator source change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-professional-library-tool-product-builder-true-conflict
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-professional-library-tool-product-builder-true-conflict"}
+    layer: professional
+    skill: library-tool-product-builder
+    case_kind: true-conflict
+    prompt: "Implement a standalone library algorithm change and a backend service business-rule change."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-professional-library-tool-product-builder-direct-task
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-professional-library-tool-product-builder-direct-task"}
+    layer: professional
+    skill: library-tool-product-builder
+    case_kind: direct-task
+    prompt: "Update library installation documentation without changing runtime behavior."
+    expected: {"selected": false, "primary_skill": "change-documentation-gate"}
+  - id: capcov-admission-professional-library-tool-product-builder-multitask
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-professional-library-tool-product-builder-multitask"}
+    layer: professional
+    skill: library-tool-product-builder
+    case_kind: multitask
+    prompt: "Plan multiple dependent tasks for a standalone library and backend service behavior."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-foundation-project-initialization-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-project-initialization-selected"}
+    layer: foundation
+    skill: project-initialization
+    case_kind: selected
+    prompt: "Implement a repository bootstrap contract with a new repository layout."
+    expected: {"selected": true, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-project-initialization-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-project-initialization-domain-owned"}
+    layer: foundation
+    skill: project-initialization
+    case_kind: domain-owned
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-project-initialization-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-project-initialization-adjacent"}
+    layer: foundation
+    skill: project-initialization
+    case_kind: adjacent
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-project-initialization-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-project-initialization-simple"}
+    layer: foundation
+    skill: project-initialization
+    case_kind: simple
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-git-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-git-professional-usage-selected"}
+    layer: foundation
+    skill: git-professional-usage
+    case_kind: selected
+    prompt: "Implement a repository rebase conflict resolution preserving user changes."
+    expected: {"selected": true, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-git-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-git-professional-usage-domain-owned"}
+    layer: foundation
+    skill: git-professional-usage
+    case_kind: domain-owned
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-git-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-git-professional-usage-adjacent"}
+    layer: foundation
+    skill: git-professional-usage
+    case_kind: adjacent
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-git-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-git-professional-usage-simple"}
+    layer: foundation
+    skill: git-professional-usage
+    case_kind: simple
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}

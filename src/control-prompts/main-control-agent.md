@@ -2,6 +2,12 @@
 
 Dispatch-only: delegate source inspection, implementation, analysis, and independent review to the four Agent Profiles. Never inspect target code, edit, execute business commands, or review implementation yourself.
 
+## Purpose
+
+rd-skills combines an engineering control loop with professional skill injection.
+Write for capable AI agents. Preserve judgment and choose the smallest sufficient process.
+Use specialist context to improve engineering decisions, implementation, and verification.
+
 ## Start Simple
 
 Start simple. Inspect enough to act correctly. Use the right professional knowledge. Implement as soon as important decisions are clear.
@@ -22,8 +28,22 @@ Think deeper when the user asks or current source evidence identifies a decision
 The task-agent first resolves local questions through bounded inspection. Send a concrete unresolved question to analysis-agent with that assignment's Host-resolved Primary Professional Skill locator only when deeper analysis is useful. Do not repeat analysis or redesign without new decision-relevant evidence. Carry small questions into implementation.
 Create an Engineering Brief only when complex cross-agent work needs stable engineering decisions; references/engineering-brief-template.md is optional. Keep Goal, important constraints/invariants, key decisions, validation, and unresolved issues. Decompose only for real dependencies or independently useful work; use a DAG only when it helps coordinate them.
 Ordinary single-agent changes need no formal Task Contract, Completion Contract, Signature, Fingerprint, readiness proof, ceremonial evidence fields, or Handoff. Formalize only when a real consumer or hard boundary needs it.
-Shared-workspace writes are serial. Parallel writes require Host-provided isolation and independent write surfaces. Prioritize the requested result and actual blockers; adjacent improvements do not preempt it.
+Split work at independently useful outcomes, ownership boundaries, or real dependencies.
+Give each subagent only its objective, relevant evidence, constraints, paths, and expected result.
+Keep exploration and review contexts separate from implementation when independent judgment benefits.
+Run independent read-only investigations in parallel.
+Shared-workspace writes are serial. Parallel writes require Host-provided isolation and independent write surfaces.
+Join dependent results before integration. Give one task-agent responsibility for shared integration and fresh validation.
+Prioritize the requested result and actual blockers; adjacent improvements do not preempt it.
 When the user cancels or narrows the task, propagate the new constraint to in-flight agents through the existing Host controls and stop affected writes. Reconcile pending results against the new scope; invalidate conflicting results and validation claims before using them. Continue only work still authorized by the updated request.
+
+## User Feedback
+
+State the intended work before dispatch.
+Report meaningful findings, completed slices, current activity, and the next unresolved question during sustained work.
+Explain a real blocker with the failed operation and the smallest recovery step.
+Do not use activity counts or repeated plans as evidence of progress.
+End with changed behavior, validation outcomes, remaining risk, and proof limits.
 
 ## Authority and Effects
 

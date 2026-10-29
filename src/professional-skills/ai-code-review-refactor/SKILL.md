@@ -1,32 +1,34 @@
 ---
 name: ai-code-review-refactor
-description: "Use `review-agent` on implementation or repair diffs for hallucinated APIs, unsupported assumptions, unsafe abstractions, and dependency or regression risks. Skip work without a diff or after reviewer edits."
+description: "Use `review-agent` for diff-review or a bounded snapshot-audit. Find reachable defects and unsupported assumptions. Skip module explanation, unbounded scope, and code implemented by the reviewer."
 ---
 
 # ai-code-review-refactor
 
 ## Role
 
-Support `review-agent` in independently reviewing the actual implementation or
-repair diff. Review is non-mutating and does not change its assigned scope.
+Support `review-agent` in independently reviewing a current diff or bounded code snapshot. Remain read-only and preserve the assigned scope.
 
 ## When To Use
 
 - implementation diff ready
 - repair diff ready for re-review
+- snapshot-audit with a fixed commit or snapshot, paths, questions, and depth
 
 ## Do Not Use
 
-- no actual diff
+- no bounded diff or code snapshot
+- module explanation without an audit question
 - reviewer implemented changed scope
 
 ## Required Inputs
 
-- fixed Goal/Acceptance/Non-goals, boundary, invariants, actual diff and changed paths, and fresh evidence
+- Mode, fixed commit or snapshot identity, paths, questions, depth, and available validation.
+- Diff and changed paths for diff-review; inspected module scope for snapshot-audit.
 
 ## Professional Decision Rules
 
-- Inspect the actual diff within fixed acceptance and boundary.
+- Inspect the selected diff or snapshot within fixed acceptance and boundary.
 - When a finding is proposed, reject it unless current source evidence establishes a reachable failure path.
 - Classify adjacent risk separately.
 - Record reviewed/unreviewed scope, severity, repair boundary, freshness, proof limits, and residual risk.
@@ -40,14 +42,15 @@ repair diff. Review is non-mutating and does not change its assigned scope.
 
 ## Execution Checklist
 
-- **Review mode:** Bind the actual diff to fixed acceptance, boundary, invariants, changed paths, and current evidence.
-- Inspect changed and reachable source, tests, contracts, and validation.
+- Bind the selected mode to its commit, scope, questions, and current evidence.
+- Inspect scoped source, reachable consumers, tests, contracts, and validation.
 - Reject a candidate without a concrete failure mechanism.
 - Record findings or non-findings, reviewed and unreviewed scope, severity, repair boundary, freshness, proof limits, and residual risk.
 
 ## Stop / Escalation Conditions
 
-- Block on inaccessible diff, stale evidence, or unbounded scope; record out-of-boundary risk as unreviewed without expanding authority.
+- Report inaccessible source, stale evidence, or unbounded scope before issuing a verdict.
+- Leave uninspected paths explicit; send repairs to the implementation owner.
 
 ## Output Contract
 
@@ -62,3 +65,4 @@ repair diff. Review is non-mutating and does not change its assigned scope.
 | [index](references/index.md) | index | competing ai code review refactor references require dependency, conflict, or output-fragment selection | the ai code review refactor root or a task-named reference already resolves selection | review-agent | reference-selection |
 | [review output and gates](references/review-output-and-gates.md) | targeted | review needs exhaustive schema, quality gates, handoff routing, or repair/re-review semantics | A compact severity finding list is sufficient | review-agent | gate-decision, residual-risk |
 | [solution optimality](references/solution-optimality.md) | targeted | An AI-generated diff introduces a material algorithm, data-structure, concurrency, cache, abstraction, or measurable resource-use choice | The issue is already a concrete finding or no material implementation choice changed | review-agent | selected-approach, residual-risk |
+| [snapshot audit](references/snapshot-audit.md) | targeted | Review examines bounded current code without requiring a diff | The request is a diff review or module explanation | review-agent | decision-record, proof-limit, residual-risk |

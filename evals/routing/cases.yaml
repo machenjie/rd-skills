@@ -1016,15 +1016,15 @@ cases:
   - id: wave1a-dependency-frontend
     main_execution: {producer: main-control-agent, task_id: wave1a-dependency-frontend}
     prompt: Implement an accepted browser frontend component dependency graph change requiring vulnerability reachability analysis and package remediation.
-    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [dependency-vulnerability-scanning], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [dependency-vulnerability-scanning, package-dependency-management], review_skill: null}
   - id: wave1a-dependency-installed-client
     main_execution: {producer: main-control-agent, task_id: wave1a-dependency-installed-client}
     prompt: Implement an accepted installed-client application dependency graph change requiring license compatibility review and bounded package-risk acceptance.
-    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [dependency-vulnerability-scanning], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: installed-client-change-builder, layer3_skills: [dependency-vulnerability-scanning, package-dependency-management], review_skill: null}
   - id: wave1a-dependency-backend
     main_execution: {producer: main-control-agent, task_id: wave1a-dependency-backend}
     prompt: Implement an accepted backend service dependency graph change requiring package provenance and signature verification.
-    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [dependency-vulnerability-scanning], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [dependency-vulnerability-scanning, package-dependency-management], review_skill: null}
   - id: wave1a-dependency-data-middleware
     main_execution: {producer: main-control-agent, task_id: wave1a-dependency-data-middleware}
     prompt: Implement an accepted database middleware dependency graph change requiring malicious-package detection and remediation.
@@ -1040,7 +1040,7 @@ cases:
   - id: wave1a-dependency-repository-tooling
     main_execution: {producer: main-control-agent, task_id: wave1a-dependency-repository-tooling}
     prompt: Implement an accepted repository code generator plugin dependency graph change requiring explicit package-risk acceptance with owner and expiry.
-    expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, targeted-validation-selection, dependency-vulnerability-scanning], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, targeted-validation-selection, dependency-vulnerability-scanning, package-dependency-management], review_skill: null}
   - id: wave1a-stack-language-negative
     main_execution: {producer: main-control-agent, task_id: wave1a-stack-language-negative}
     prompt: Analyze whether to change the programming language runtime while the framework, platform, datastore, and managed services remain fixed with no new technology-stack commitment.
@@ -1073,7 +1073,7 @@ cases:
     main_execution: {producer: main-control-agent, task_id: wave1a-config-build-only-negative}
     prompt: Implement an accepted repository build configuration change for CI compilation only; application runtime behavior, defaults, flags, modes, and reload semantics do not change.
     excluded_skills: [configuration-runtime-policy]
-    expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: null}
+    expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage], review_skill: null}
   - id: wave1a-config-secret-only-negative
     main_execution: {producer: main-control-agent, task_id: wave1a-config-secret-only-negative}
     prompt: Implement an accepted backend service secret reference rotation; typed runtime defaults, feature flags, modes, hot reload, and config precedence remain unchanged.
@@ -1158,8 +1158,83 @@ cases:
   - id: integration-owner-tooling-merge
     main_execution: {producer: main-control-agent, task_id: integration-owner-tooling-merge}
     prompt: Fix a cross worker merge conflict in the repository generator.
-    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["build-tool-professional-usage", "targeted-validation-selection"], "review_skill": null}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["build-tool-professional-usage", "targeted-validation-selection", "git-professional-usage"], "review_skill": null}
   - id: integration-owner-local-retry
     main_execution: {producer: main-control-agent, task_id: integration-owner-local-retry}
     prompt: Fix a backend retry counter with no integration edge.
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: daily-library-internal-repair
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-library-internal-repair"}
+    prompt: "Fix a standalone Python library internal algorithm boundary defect; the public API is unchanged."
+    excluded_skills: ["repository-tooling-change-builder", "data-api-contract-changer"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": [], "review_skill": null}
+  - id: daily-library-cli-product
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-library-cli-product"}
+    prompt: "Implement a public CLI output-format bug fix under its unchanged public contract."
+    excluded_skills: ["repository-tooling-change-builder"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": [], "review_skill": null}
+  - id: daily-library-repository-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-library-repository-negative"}
+    prompt: "Implement a repository-owned generator source change."
+    excluded_skills: ["library-tool-product-builder"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["build-tool-professional-usage", "targeted-validation-selection"], "review_skill": null}
+  - id: daily-library-service-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-library-service-negative"}
+    prompt: "Implement a backend service resource cleanup repair."
+    excluded_skills: ["library-tool-product-builder"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: daily-library-contract-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-library-contract-negative"}
+    prompt: "Change SDK public cancellation contract and compatibility semantics."
+    excluded_skills: ["library-tool-product-builder"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "data-api-contract-changer", "layer3_skills": [], "review_skill": null}
+  - id: daily-workspace-bootstrap
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-workspace-bootstrap"}
+    prompt: "Implement a repository bootstrap contract with a new repository layout."
+    excluded_skills: ["delivery-release-gate"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["project-initialization"], "review_skill": null}
+  - id: daily-git-collaboration
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-git-collaboration"}
+    prompt: "Implement a repository rebase conflict resolution preserving user changes."
+    excluded_skills: ["delivery-release-gate"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["git-professional-usage"], "review_skill": null}
+  - id: daily-dependency-semantic
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-dependency-semantic"}
+    prompt: "Implement a repository tooling dependency graph compatibility change."
+    excluded_skills: ["dependency-vulnerability-scanning"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["package-dependency-management"], "review_skill": null}
+  - id: daily-frontend-migration
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-frontend-migration"}
+    prompt: "Implement a browser frontend dependency API migration with dependency compatibility decisions."
+    excluded_skills: ["dependency-vulnerability-scanning"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["package-dependency-management"], "review_skill": null}
+  - id: daily-refactor-task-owner
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-refactor-task-owner"}
+    prompt: "Implement a backend behavior-preserving refactor; owner and destination are fixed."
+    excluded_skills: ["ai-code-review-refactor"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["refactoring"], "review_skill": null}
+  - id: daily-refactor-rename-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-refactor-rename-negative"}
+    prompt: "Implement a backend simple rename with formatting only."
+    excluded_skills: ["refactoring"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: daily-environment-differential
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-environment-differential"}
+    prompt: "Repair a repository toolchain environment differential; local passes but CI fails."
+    excluded_skills: []
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "repository-tooling-change-builder", "layer3_skills": ["failure-diagnosis"], "review_skill": null}
+  - id: daily-technical-investigation
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-technical-investigation"}
+    prompt: "Perform technical investigation to compare framework options for a new project without a repository."
+    excluded_skills: []
+    expected: {"path": "analyzed", "profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": [], "review_skill": null}
+  - id: daily-snapshot-audit
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-snapshot-audit"}
+    prompt: "Audit a fixed commit code snapshot of the parser module for resource leaks; no diff exists."
+    excluded_skills: []
+    expected: {"path": "direct", "profile": "review-agent", "primary_skill": "ai-code-review-refactor", "layer3_skills": ["code-review"], "review_skill": "ai-code-review-refactor"}
+  - id: daily-snapshot-explain-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "daily-snapshot-explain-negative"}
+    prompt: "Explain this parser module using repository source evidence."
+    excluded_skills: ["ai-code-review-refactor"]
+    expected: {"path": "analyzed", "profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": ["repository-context-map"], "review_skill": null}
