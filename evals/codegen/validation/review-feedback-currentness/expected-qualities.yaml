@@ -1,0 +1,8 @@
+id: "review-feedback-currentness"
+category: "validation"
+focus: ["current review evidence", "independent feedback and external-action decisions"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
+expected_outcomes: ["Old feedback remains actionable when its current anchor and behavior are reverified.", "Accepted decisions carry bounded edit, proof, and risk; each external action needs its own grant."]
+required_qualities: ["Compare exact current snapshots and independently executed boundary observations.", "Distinguish obsolete, fixed, duplicate, conflicting, and non-defect feedback."]
+forbidden_shortcuts: ["Rejecting every comment from an older commit.", "Inferring reply, resolution, or rereview authority from a code fix."]
+evidence: ["Passing executable assertions cover semantic observations and each separate authority.", "Incomplete starter and isolated old-comment rejection control are rejected."]
