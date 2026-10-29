@@ -463,9 +463,27 @@ rules and no missing decision semantics. All four Semantic fingerprints remain
 unchanged, and all 149 applications remain current. All three fixed attestations
 retain their prior bytes. The collector now reports 331 advisory documents and
 802 findings with zero hard or compound-bullet blockers; these results do not
-establish Readability acceptance. A third full-coverage Readability round,
-Professional Completeness review, final Full Regression, and the clean final-tree
-Core formal gate remain required.
+establish Readability acceptance. At that checkpoint, a third full-coverage
+Readability round, Professional Completeness review, final Full Regression, and
+the clean final-tree Core formal gate remained required.
+
+The third Readability round used frozen source commit `1780b9a2`. All three
+independent reviewers judged the 26 density targets and all 802 findings in
+331 logical documents. Their original canonical manifests matched their
+precommitted byte counts and SHA-256 digests and passed official materialization
+and ballot validation. The derived decision accepted all 26 density targets and
+all 331 documents, with no majority tightening. It retains 29 single-vote
+tightening findings across 27 documents; those opinions were not overwritten.
+
+Official attestation and compare-and-swap promotion replaced only
+`evals/expert-panel/readability.json`. Its 896,793 bytes have SHA-256
+`9cbb10b1d3aa35184e2d652b705481ccf94f0b87ae32b7be0ce75056290b104d`.
+No Skill, Reference, Profile, registry, detector, or review contract changed in
+this evidence update. The Semantic and Professional fixed files retain their
+prior bytes. This closes the Readability axis only. Professional Completeness,
+final Full Regression, final Development Affected checks, and the clean final-tree
+Core formal gate remain pending. Static readability review does not establish
+professional correctness, actual Host behavior, or installed user experience.
 
 ## First Slice Validation
 
