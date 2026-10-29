@@ -1,0 +1,44 @@
+---
+name: beam-professional-usage
+description: "For analysis/task/review agents: use for Elixir/Erlang process, mailbox, supervision, or distributed-call semantics; skip generic service changes."
+---
+
+# beam-professional-usage
+
+## Registry Trigger
+
+**Use when**
+
+- BEAM processes, messages, links, monitors, supervisors, or distributed nodes affect completion and recovery.
+- A restart or timeout can leave queued messages, stale process identity, or an unknown external effect.
+
+**Do not use when**
+
+- Elixir or Erlang appears only in dependency metadata or unchanged source.
+- Generic service logic changes without a BEAM process or runtime boundary.
+
+## Skill Role
+
+Protect process identity, message correlation, supervision semantics, and distributed result uncertainty.
+
+## High-Value Rules
+
+- Give process state and external effects separate recovery contracts.
+- Distinguish linked exit propagation from monitor notifications.
+- Correlate replies with operation references and current process generations.
+- Bound mailbox growth and inspect selective receives that leave unrelated messages behind.
+- Choose supervision strategy and restart limits from actual child dependencies.
+- Treat timeout and node disconnection as possible unknown outcomes.
+- Verify cancellation, retry, and deduplication at the external effect owner.
+- Bind OTP behavior and version assumptions to the deployed runtime.
+
+## Anti-Patterns
+
+- Supervisor restart is treated as undoing a payment, write, or other external effect.
+- A cached PID remains authoritative after a child restarts.
+- Repeated unmatched messages grow a mailbox while expected replies still arrive.
+- Node disconnection is interpreted as proof that a command never executed.
+
+## Targeted References
+
+- No task-local Reference is indexed for this Skill.
