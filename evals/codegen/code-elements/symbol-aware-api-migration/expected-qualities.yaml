@@ -1,0 +1,8 @@
+id: "symbol-aware-api-migration"
+category: "code-elements"
+focus: ["symbol-aware migration", "semantic preservation and residual evidence"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
+expected_outcomes: ["Only resolved legacy API calls migrate; uncertain uses retain the original source.", "Default, error, and lifecycle behavior survives migration despite unchanged static annotations."]
+required_qualities: ["Use executable API doubles and independent event/value assertions.", "Keep edits idempotent and expose residual and mixed imports."]
+forbidden_shortcuts: ["Matching every identically spelled fetch call.", "Approving migration because compilation succeeds."]
+evidence: ["Passing candidate assertions include aliases, shadows, and non-ASCII byte offsets.", "Incomplete starter and one widened-symbol-match control are rejected."]
