@@ -167353,17 +167353,11 @@
       "status": "pass"
     },
     "formal_release": {
-      "blockers": [
-        {
-          "id": "semantic-decision-application-invalid",
-          "message": "semantic fixed attestation disposition mismatch"
-        }
-      ],
-      "status": "blocked"
+      "blockers": [],
+      "status": "pass"
     },
     "limitations": [
-      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness.",
-      "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed attestation disposition mismatch"
+      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness."
     ],
     "schema_version": 1,
     "selected_gate": "authoring"
@@ -328193,22 +328187,19 @@
   },
   "schema_version": 10,
   "semantic_disposition_application": {
-    "applied_count": 0,
+    "applied_count": 149,
     "completed_rewrite_count": 0,
     "decision": {
       "path": "evals/expert-panel/semantic-disposition.json",
-      "sha256": null
+      "sha256": "866adbb283b6409105579f351577bd9402eeed49f90dfe9605e5d14c9dca8151"
     },
     "decision_kind": "changeforge.semantic-disposition-attestation",
-    "error": {
-      "id": "semantic-decision-application-invalid",
-      "message": "semantic fixed attestation disposition mismatch"
-    },
+    "error": null,
     "kind": "changeforge.semantic-disposition-application",
-    "review_id": null,
+    "review_id": "semantic-20261029-coverage-fb93138e",
     "schema_version": 1,
-    "status": "invalid",
-    "target_count": 0
+    "status": "current",
+    "target_count": 149
   },
   "skill_detector": {
     "classification_values": [

@@ -17,8 +17,9 @@ These checks do not prove real framework or language execution, real Host startu
 model quality, GPU behavior, production capacity, or every user environment.
 The fixed Readability and Professional Completeness attestations remain unchanged.
 Their stale or pending state cannot authorize current carry or establish
-`formal-release-ready`. Semantic Disposition requires its own current-source
-round; the readability repairs below invalidate three prior application bindings.
+`formal-release-ready`. The fresh Semantic Disposition round below covers all
+149 current targets and resolves the three application bindings invalidated by
+the readability repairs.
 
 ## Engineering Work
 
@@ -411,10 +412,35 @@ The eligible set still contains 49 Root and 100 Reference candidates.
 
 The fresh readability collector reports 331 advisory documents and 809 sentence
 findings, with zero hard failures or compound-bullet blockers. These collector
-results do not replace three independent full-target votes. All three fixed
-attestations retain their prior bytes. A complete fresh Semantic round must
-resolve the changed bindings before the second Readability round, Professional
-Completeness review, final Full Regression, and final clean-head gates.
+results do not replace three independent full-target votes. At that checkpoint,
+all three fixed attestations retained their prior bytes. The changed bindings
+required a complete fresh Semantic round before the second Readability round,
+Professional Completeness review, final Full Regression, and final clean-head gates.
+
+The fresh `semantic-20261029-coverage-fb93138e` round used the repaired source
+commit `fb93138e`. Each of three independent reviewers judged all 149 targets
+(49 Root and 100 Reference), 220 occurrences, and 140 source paths. Their original
+current-round tool inputs were recovered as data without executing historical
+code. Each complete manifest matched its precommitted byte count and SHA-256
+digest before official materialization and validation. The Methods review
+retains its disclosure of incidental historical configuration exposure in an
+earlier round; that exposure was not used as authority for current judgments.
+
+The official two-of-three decision produced 121 `valid-contextual-rule` and
+28 `false-positive` dispositions, with no `rewrite` or time-bounded exceptions.
+Six dispositions differ from the preceding round. The application configuration
+was derived from that decision, preserving all reviewers' explanations and
+dissent in the retained review artifacts. Official attestation and compare-and-swap
+promotion replaced only the canonical Semantic attestation. Its SHA-256 is
+`866adbb283b6409105579f351577bd9402eeed49f90dfe9605e5d14c9dca8151`.
+
+Fresh authoring audit and strict Reference validation passed with zero blockers
+or semantic confirmations. All 149 Semantic applications are current, and all
+four candidate/detector fingerprints equal the immutable review packet. The
+Readability and Professional Completeness attestations retain their previous
+bytes. This closes the Semantic axis only; the second Readability round,
+Professional Completeness review, final Full Regression, and clean final-tree
+Core formal gate remain required.
 
 ## First Slice Validation
 
