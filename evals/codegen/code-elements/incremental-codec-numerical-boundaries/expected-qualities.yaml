@@ -1,0 +1,8 @@
+id: "incremental-codec-numerical-boundaries"
+category: "code-elements"
+focus: ["incremental frame state", "numerical input and convergence bounds"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
+expected_outcomes: ["Chunk partitions preserve UTF-8 frame meaning and incomplete EOF is rejected.", "Partial writes preserve bytes; allocation conserves integer totals and unconverged solvers remain unsuccessful."]
+required_qualities: ["Use independent expected frames, analytic results, and conservation assertions.", "Bound lengths before allocation and distinguish units, shapes, and finite domains."]
+forbidden_shortcuts: ["Accepting truncated EOF as a complete stream.", "Replaying an acknowledged write prefix or treating iteration exhaustion as convergence."]
+evidence: ["Passing candidate executable assertions with finite generated partitions and allocations.", "Incomplete starter and isolated truncated-EOF fault are rejected by the same assertions."]
