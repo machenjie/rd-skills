@@ -146,6 +146,59 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
         ):
             self.assertIn(authority, limitations)
 
+    def test_registered_bridge_requires_complete_current_contract(self) -> None:
+        packet = _protocol_packet()
+        for mutation in (
+            "fingerprint", "schema", "decision-method", "abstentions",
+            "formula", "retrieval-allowance", "top-k",
+        ):
+            with self.subTest(mutation=mutation):
+                changed = copy.deepcopy(packet)
+                selection = changed["panel_contract"]["adjacency_contract"][
+                    "required_candidate_selection"
+                ]
+                if mutation == "fingerprint":
+                    changed["review_contract_fingerprint"] = "0" * 64
+                elif mutation == "schema":
+                    changed["schema_version"] = 2
+                elif mutation == "decision-method":
+                    changed["panel_contract"]["decision_method"] = "unregistered"
+                elif mutation == "abstentions":
+                    changed["panel_contract"]["abstentions_allowed"] = True
+                elif mutation == "formula":
+                    selection["per_target_budget"]["formula"] = "catalog-size-minus-one"
+                elif mutation == "retrieval-allowance":
+                    selection["per_target_budget"]["retrieval_allowance"] += 1
+                else:
+                    selection["overall_top_k"] += 1
+                with mock.patch.object(
+                    PANEL,
+                    "_ProfessionalSchema3RegisteredSelection",
+                    side_effect=AssertionError("marker issued before admission"),
+                ), self.assertRaises(PANEL.PanelReviewError):
+                    PANEL._professional_v3_registered_v2_projection(changed)
+
+    def test_registered_bridge_does_not_authorize_plain_schema2_json(self) -> None:
+        packet = _protocol_packet()
+        admitted = PANEL._professional_v3_registered_v2_projection(packet)
+        PANEL._validate_professional_completeness_packet_v2(
+            admitted,
+            negative_route_match_version=PANEL.PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION,
+        )
+        for plain in (
+            PANEL._professional_v2_projection_from_v3(packet),
+            json.loads(json.dumps(admitted)),
+        ):
+            with self.assertRaisesRegex(PANEL.PanelReviewError, "panel_contract"):
+                PANEL._validate_professional_completeness_packet_v2(plain)
+        historical = professional_support._historical_schema2_packet()
+        selection = historical["panel_contract"]["adjacency_contract"][
+            "required_candidate_selection"
+        ]
+        self.assertEqual("layered-required-candidates-v2", selection["version"])
+        self.assertEqual(57, selection["maximum_required_candidates_per_target"])
+        PANEL._validate_professional_completeness_packet_v2(historical)
+
 
 def _baseline_state(packet: dict, *, depth: int) -> dict:
     state = PANEL._professional_v3_packet_state(
@@ -350,6 +403,32 @@ def _protocol_packet() -> dict:
 
 
 class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
+    def test_standalone_and_stream_accept_the_same_current_fixture_ballots(self) -> None:
+        # Isolated synthetic evidence only; never a real reviewer or panel run.
+        with professional_support._synthetic_schema3_professional_decision() as fixture:
+            packet = fixture["packet"]
+            packet_sha256 = hashlib.sha256(
+                fixture["packet_path"].read_bytes()
+            ).hexdigest()
+            for _path, ballot in fixture["ballots"]:
+                self.assertEqual(
+                    ballot,
+                    PANEL.validate_ballot(
+                        packet,
+                        ballot,
+                        packet_sha256=packet_sha256,
+                        validation_root=fixture["validation_root"],
+                    ),
+                )
+            streamed = PANEL.aggregate_professional_completeness_ballot_paths_v3(
+                packet=packet,
+                packet_path=fixture["packet_path"],
+                ballot_paths=[path for path, _ballot in fixture["ballots"]],
+                decided_on=fixture["decision"]["decided_on"],
+                validation_root=fixture["validation_root"],
+            )
+            self.assertEqual(fixture["decision"], streamed)
+
     @staticmethod
     def _historical_promotion_fixture() -> tuple[dict, dict[str, dict]]:
         return (
@@ -2343,16 +2422,14 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         contract_fingerprint = (
             PANEL._professional_evidence_review_contract_fingerprint()
         )
-        # Keep the full inventory while testing one assigned Skill through
-        # the real CLI on the existing small-source synthetic catalog.
+        # Preserve the real catalog and a legal fanout beyond schema 2's 57
+        # candidates, while testing one assigned Skill through the real CLI.
         review_id = "schema3-cli-smoke"
         voter_id = "domain-one"
-        with tempfile.TemporaryDirectory() as raw, mock.patch.object(
-            PANEL, "PROFESSIONAL_ADJACENCY_TOP_K", 0
-        ), mock.patch.object(
-            PANEL, "PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K", 0
-        ):
-            targets = professional_support._synthetic_schema3_professional_targets()
+        with tempfile.TemporaryDirectory() as raw:
+            targets = PANEL._professional_v3_base_targets(
+                _bootstrap_packet()["professional_targets"]
+            )
             validation_root = Path(raw)
             for target in targets:
                 for material in [target["root"], *target["indexed_references"]]:
@@ -2402,11 +2479,20 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 )
                 packet_path = validation_root / packet_relative
                 packet = json.loads(packet_path.read_text(encoding="utf-8"))
-                skill_id = packet["review_plan"]["fresh_targets"][0]["skill_id"]
-                target = next(
-                    row
-                    for row in packet["professional_targets"]
-                    if row["skill_id"] == skill_id
+                self.assertEqual(
+                    PANEL.PROFESSIONAL_PACKAGE_COUNT,
+                    len(packet["professional_targets"]),
+                )
+                target = max(
+                    packet["professional_targets"],
+                    key=lambda row: len(
+                        row["routing_adjacency"]["required_candidates"]
+                    ),
+                )
+                skill_id = target["skill_id"]
+                self.assertGreater(
+                    len(target["routing_adjacency"]["required_candidates"]),
+                    57,
                 )
                 self.assertEqual(
                     0,
@@ -2587,6 +2673,18 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                     self.assertEqual(0, PANEL.main(materialize_arguments))
                     self.assertEqual(1, PANEL.main(materialize_arguments))
                 self.assertEqual(completed, json.loads(template_path.read_text("utf-8")))
+                self.assertEqual(
+                    0,
+                    PANEL.main(
+                        [
+                            "validate-ballot",
+                            "--packet",
+                            packet_relative,
+                            "--ballot",
+                            ballot_relative,
+                        ]
+                    ),
+                )
                 self.assertFalse(
                     (template_path.parent / f".{voter_id}.json.materialize.lock").exists()
                 )

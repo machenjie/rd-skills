@@ -10371,6 +10371,125 @@ def _professional_v2_projection_from_v3(
     }
 
 
+def _professional_v3_registered_v2_projection(
+    packet: dict[str, Any],
+    *,
+    validation_mode: str = VALIDATION_MODE_CURRENT,
+) -> dict[str, Any]:
+    """Admit a schema-3 selector only after its full contract is verified."""
+
+    validation_mode = _closed_validation_mode(validation_mode)
+    if (
+        packet.get("schema_version")
+        != PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+        or packet.get("kind") != PROFESSIONAL_COMPLETENESS_PACKET_KIND
+    ):
+        raise PanelReviewError(
+            "professional completeness schema-3 packet kind is invalid"
+        )
+    packet_contract_fingerprint = _lowercase_sha256(
+        packet.get("review_contract_fingerprint"),
+        label="professional completeness schema-3 review contract",
+    )
+    expected_contract_fingerprint = (
+        _professional_evidence_review_contract_fingerprint()
+        if validation_mode == VALIDATION_MODE_CURRENT
+        else packet_contract_fingerprint
+    )
+    if packet_contract_fingerprint != expected_contract_fingerprint:
+        raise PanelReviewError(
+            "professional completeness schema-3 review contract is stale"
+        )
+    raw_targets = packet.get("professional_targets")
+    target_count = len(raw_targets) if isinstance(raw_targets, list) else -1
+    _layer_counts, legacy_selection = _professional_package_profile(
+        target_count,
+        validation_mode=validation_mode,
+    )
+    registered_schema3_selection = False
+    if validation_mode == VALIDATION_MODE_CURRENT:
+        if not isinstance(raw_targets, list) or any(
+            not isinstance(target, dict)
+            or set(target) != PROFESSIONAL_V3_PACKET_TARGET_FIELDS
+            for target in raw_targets
+        ):
+            raise PanelReviewError(
+                "professional completeness schema-3 packet target fields are invalid"
+            )
+        if packet.get("panel_contract") != _professional_v3_panel_contract(
+            target_count=target_count,
+            include_selection_derivation=not legacy_selection,
+        ):
+            raise PanelReviewError(
+                "professional completeness schema-3 panel contract is invalid"
+            )
+        registered_schema3_selection = True
+    else:
+        current_registered_contract = (
+            panel_contracts.professional_review_contract_fingerprint()
+        )
+        registered_contracts = {
+            current_registered_contract,
+            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
+        }
+        historical_panel_contract = packet.get("panel_contract")
+        if (
+            packet_contract_fingerprint not in registered_contracts
+            or not isinstance(historical_panel_contract, dict)
+            or historical_panel_contract.get("decision_method")
+            != PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
+            or historical_panel_contract.get("required_target_count")
+            != target_count
+        ):
+            raise PanelReviewError(
+                "professional completeness historical panel contract is invalid"
+            )
+        historical_selection = historical_panel_contract.get(
+            "adjacency_contract", {}
+        ).get("required_candidate_selection")
+        if packet_contract_fingerprint in {
+            current_registered_contract,
+            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+        }:
+            registered_schema3_selection = True
+            expected_historical_selection = (
+                (_professional_adjacency_selection_contract
+                 if packet_contract_fingerprint == current_registered_contract
+                 else _professional_adjacency_selection_contract_v2)(
+                    target_count=target_count,
+                    include_derivation=not legacy_selection,
+                )
+            )
+            if historical_selection != expected_historical_selection:
+                raise PanelReviewError(
+                    "professional completeness historical selection contract is invalid"
+                )
+        elif not isinstance(
+            historical_selection, _ProfessionalHistoricalV1Selection
+        ):
+            raise PanelReviewError(
+                "professional completeness exact legacy contract is not bound"
+            )
+    projected = _professional_v2_projection_from_v3(
+        packet,
+        validation_mode=validation_mode,
+    )
+    if registered_schema3_selection:
+        projected_selection = projected["panel_contract"][
+            "adjacency_contract"
+        ]["required_candidate_selection"]
+        projected["panel_contract"]["adjacency_contract"][
+            "required_candidate_selection"
+        ] = _ProfessionalSchema3RegisteredSelection(projected_selection)
+    return projected
+
+
 def _professional_v3_binding_state(
     base_targets: list[dict[str, Any]],
     *,
@@ -11236,106 +11355,13 @@ def _professional_v3_packet_state(
     if VOTER_ID_PATTERN.fullmatch(packet_review_id) is None:
         raise PanelReviewError("schema-3 packet review_id is not canonical")
     _iso_date(packet.get("created_on"), label="packet.created_on")
-    packet_contract_fingerprint = _lowercase_sha256(
-        packet.get("review_contract_fingerprint"),
-        label="professional completeness schema-3 review contract",
-    )
-    expected_contract_fingerprint = (
-        _professional_evidence_review_contract_fingerprint()
-        if validation_mode == VALIDATION_MODE_CURRENT
-        else packet_contract_fingerprint
-    )
-    if packet_contract_fingerprint != expected_contract_fingerprint:
-        raise PanelReviewError(
-            "professional completeness schema-3 review contract is stale"
-        )
-    raw_targets = packet.get("professional_targets")
-    target_count = len(raw_targets) if isinstance(raw_targets, list) else -1
-    _layer_counts, legacy_selection = _professional_package_profile(
-        target_count,
-        validation_mode=validation_mode,
-    )
-    registered_schema3_selection = False
-    if validation_mode == VALIDATION_MODE_CURRENT:
-        if not isinstance(raw_targets, list) or any(
-            not isinstance(target, dict)
-            or set(target) != PROFESSIONAL_V3_PACKET_TARGET_FIELDS
-            for target in raw_targets
-        ):
-            raise PanelReviewError(
-                "professional completeness schema-3 packet target fields are invalid"
-            )
-        if packet.get("panel_contract") != _professional_v3_panel_contract(
-            target_count=target_count,
-            include_selection_derivation=not legacy_selection,
-        ):
-            raise PanelReviewError(
-                "professional completeness schema-3 panel contract is invalid"
-            )
-        registered_schema3_selection = True
-    else:
-        current_registered_contract = (
-            panel_contracts.professional_review_contract_fingerprint()
-        )
-        registered_contracts = {
-            current_registered_contract,
-            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
-                PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
-            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
-            PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
-            PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
-        }
-        historical_panel_contract = packet.get("panel_contract")
-        if (
-            packet_contract_fingerprint not in registered_contracts
-            or not isinstance(historical_panel_contract, dict)
-            or historical_panel_contract.get("decision_method")
-            != PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
-            or historical_panel_contract.get("required_target_count")
-            != target_count
-        ):
-            raise PanelReviewError(
-                "professional completeness historical panel contract is invalid"
-            )
-        historical_selection = historical_panel_contract.get(
-            "adjacency_contract", {}
-        ).get("required_candidate_selection")
-        if packet_contract_fingerprint in {
-            current_registered_contract,
-            PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
-            PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
-            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
-        }:
-            registered_schema3_selection = True
-            expected_historical_selection = (
-                (_professional_adjacency_selection_contract
-                 if packet_contract_fingerprint == current_registered_contract
-                 else _professional_adjacency_selection_contract_v2)(
-                    target_count=target_count,
-                    include_derivation=not legacy_selection,
-                )
-            )
-            if historical_selection != expected_historical_selection:
-                raise PanelReviewError(
-                    "professional completeness historical selection contract is invalid"
-                )
-        elif not isinstance(
-            historical_selection, _ProfessionalHistoricalV1Selection
-        ):
-            raise PanelReviewError(
-                "professional completeness exact legacy contract is not bound"
-            )
-    projected = _professional_v2_projection_from_v3(
+    projected = _professional_v3_registered_v2_projection(
         packet,
         validation_mode=validation_mode,
     )
-    if registered_schema3_selection:
-        projected_selection = projected["panel_contract"][
-            "adjacency_contract"
-        ]["required_candidate_selection"]
-        projected["panel_contract"]["adjacency_contract"][
-            "required_candidate_selection"
-        ] = _ProfessionalSchema3RegisteredSelection(projected_selection)
+    packet_contract_fingerprint = packet["review_contract_fingerprint"]
+    expected_contract_fingerprint = packet_contract_fingerprint
+    raw_targets = packet["professional_targets"]
     _validate_professional_completeness_packet_v2(
         projected,
         validation_mode=validation_mode,
@@ -12722,7 +12748,7 @@ def _professional_v3_ballot_v2_projection(
     *,
     validation_mode: str = VALIDATION_MODE_CURRENT,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    projected_packet = _professional_v2_projection_from_v3(
+    projected_packet = _professional_v3_registered_v2_projection(
         packet,
         validation_mode=validation_mode,
     )
@@ -12790,7 +12816,7 @@ def prepare_professional_completeness_ballot_template_v3(
         raise PanelReviewError(
             "schema-3 ballot assignment must exactly match its capsule"
         )
-    projected_packet = _professional_v2_projection_from_v3(packet)
+    projected_packet = _professional_v3_registered_v2_projection(packet)
     template = prepare_professional_completeness_ballot_template(
         packet=projected_packet,
         packet_sha256=packet_sha256,
