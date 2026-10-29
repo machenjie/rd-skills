@@ -15,8 +15,9 @@ Content review judges the professional method. None substitutes for another.
 
 These checks do not prove real framework or language execution, real Host startup,
 model quality, GPU behavior, production capacity, or every user environment.
-The three fixed expert attestations remain unchanged. Their stale or pending state
-cannot authorize current carry or establish `formal-release-ready`.
+The fixed Readability and Professional Completeness attestations remain unchanged.
+Their stale or pending state cannot authorize current carry or establish
+`formal-release-ready`. Semantic Disposition uses its separate current-source round.
 
 ## Engineering Work
 
@@ -212,6 +213,19 @@ All three consumers share this projection. Eighteen focused tests and the actual
 routing validator passed, including the prior visibility and freshness guards.
 The prior semantic manifests remain unchanged; this detector repair requires the
 same fresh full Semantic Disposition round before evidence can be promoted.
+
+The fresh `semantic-20261029-coverage-1a5bc422` round covered all 149 current
+targets and 220 occurrences. Three independent reviewers produced complete new
+manifests. Their exact bytes, SHA-256, record counts and template order passed
+verification before official materialization and validation. Each reviewer's
+own standard diff was used only to transfer that complete result losslessly;
+the prior manifests remain unchanged. The official majority is 123 contextual
+rules and 26 false positives, with no rewrite or temporary exception.
+The existing configuration now records those majorities with current candidate
+bindings and all supporting and dissenting rationales. The collector passes
+authoring with zero blockers; the old fixed Semantic detector binding remains
+stale until the official promotion step. The Methods historical-exposure
+limitation remains in its original reviewer result.
 
 ## First Slice Validation
 
