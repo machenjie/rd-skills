@@ -177,9 +177,10 @@ class SelectorJitDomainParityTests(unittest.TestCase):
     def test_shared_authority_is_complete_and_oracle_consumes_it(self) -> None:
         authority = self._authority()
         self.assertEqual("changeforge.layer3-selector-authority/v1", authority["contract"])
-        self.assertEqual(69, len(authority["selectors"]))
+        inventory = FOUNDATION["selector_authority"]["inventory"]
+        self.assertEqual(inventory["selector_count"], len(authority["selectors"]))
         self.assertEqual(
-            76,
+            inventory["selectable_layer3_count"],
             len(
                 {
                     skill
@@ -189,7 +190,7 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            265,
+            inventory["owner_binding_count"],
             sum(len(record["owner_bindings"]) for record in authority["selectors"]),
         )
         oracle = ORACLE.oracle_admission_authority(
@@ -281,6 +282,79 @@ class SelectorJitDomainParityTests(unittest.TestCase):
         self.assertFalse(fixed["selector_loaded"])
         self.assertEqual([], fixed["selectors"])
         self.assertEqual(["api-contract-design"], fixed["exact_layer3"])
+
+    def test_shared_exact_validation_preserves_order_authority_and_reference_tristate(self) -> None:
+        authority = self._authority()
+        kwargs = dict(
+            professional_skill="repository-tooling-change-builder",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+        )
+        ordinary = VALIDATION.layer3_selector_runtime_projection(
+            authority, exact_layer3=None, **kwargs
+        )
+        boundary = dict(
+            authorized_layer3=ordinary["authorized_layer3"],
+            domain_authorization=ordinary["domain_authorization"],
+            runtime_domains=authority["runtime_domains"],
+        )
+        valid = [
+            [],
+            ["python-professional-usage"],
+            ["targeted-validation-selection", "python-professional-usage",
+             "filesystem-process-safety", "build-tool-professional-usage"],
+        ]
+        original_authority = copy.deepcopy(authority)
+        for selected in valid:
+            with self.subTest(selected=selected):
+                checked = VALIDATION.layer3_selector_validate_exact_selection(
+                    selected, **boundary
+                )
+                fixed = VALIDATION.layer3_selector_runtime_projection(
+                    authority, exact_layer3=selected, **kwargs
+                )
+                self.assertEqual(selected, checked)
+                self.assertEqual(selected, fixed["exact_layer3"])
+                self.assertFalse(fixed["selector_loaded"])
+                self.assertEqual([], fixed["selectors"])
+                self.assertTrue(fixed["reference_selector_loaded"])
+                self.assertIsNone(fixed["exact_references"])
+                self.assertEqual(ordinary["reference_records"], fixed["reference_records"])
+                checked.append("local-result-mutation")
+                fixed["reference_records"][0]["required_output"].append("local-output")
+                self.assertNotIn("local-result-mutation", selected)
+                self.assertEqual(original_authority, authority)
+        for selected in (
+            "python-professional-usage", ("python-professional-usage",),
+            ["python-professional-usage", "python-professional-usage"],
+            ["unknown-layer3"], ["transaction-consistency"], [""], [7],
+        ):
+            with self.subTest(invalid=selected):
+                with self.assertRaises(VALIDATION.ValidationProblem) as shared:
+                    VALIDATION.layer3_selector_validate_exact_selection(selected, **boundary)
+                with self.assertRaises(VALIDATION.ValidationProblem) as complete:
+                    VALIDATION.layer3_selector_runtime_projection(
+                        authority, exact_layer3=selected, **kwargs
+                    )
+                self.assertEqual(str(shared.exception), str(complete.exception))
+
+        # A known Domain remains forbidden even if a malformed candidate list
+        # includes it without the Professional's separate Domain authorization.
+        domain = next(name for name in authority["runtime_domains"]
+                      if name not in ordinary["domain_authorization"])
+        changed = copy.deepcopy(authority)
+        changed["runtime_professionals"][kwargs["professional_skill"]][
+            "candidates_by_role"
+        ][kwargs["profile"]].append(domain)
+        with self.assertRaises(VALIDATION.ValidationProblem):
+            VALIDATION.layer3_selector_validate_exact_selection(
+                [domain], **{**boundary,
+                            "authorized_layer3": [*boundary["authorized_layer3"], domain]}
+            )
+        with self.assertRaises(VALIDATION.ValidationProblem):
+            VALIDATION.layer3_selector_runtime_projection(
+                changed, exact_layer3=[domain], **kwargs
+            )
 
     def test_exact_layer3_requires_itemwise_professional_role_and_domain_authorization(
         self,

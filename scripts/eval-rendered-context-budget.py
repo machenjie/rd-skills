@@ -15,6 +15,7 @@ import sys
 import tempfile
 import unicodedata
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from itertools import combinations
 from pathlib import Path, PurePosixPath
@@ -38,6 +39,7 @@ from validation_utils import (
     layer3_selector_runtime_projection,
     layer3_selector_runtime_selection_receipt,
     layer3_selector_runtime_selection_receipt_errors,
+    layer3_selector_validate_exact_selection,
     load_yaml_file,
     parse_frontmatter,
     reference_context_admissibility_authority,
@@ -1063,29 +1065,56 @@ def _admissible_selector_equivalence_classes(
                 "selected_layer3": list(receipt["selected_layer3"]), "receipt": receipt,
             })
 
-    for selected_class in classes_by_selected.values():
-        selected = selected_class["selected_layer3"]
-        try:
-            fixed = layer3_selector_runtime_projection(
-                authority,
-                professional_skill=projection["professional_skill"],
-                profile=projection["profile"],
-                selection_owner=projection["selection_owner"],
-                exact_layer3=selected,
-            )
-        except ValidationProblem as exc:
-            errors.append(str(exc))
-            continue
-        if fixed["selector_loaded"] or fixed["exact_layer3"] != selected:
-            errors.append(
-                f"{projection['professional_skill']}:{projection['profile']} "
-                "exact Layer 3 did not skip selector loading"
-            )
+    # Authorize this surface once, then apply the projector's same exact-list
+    # validator to every class without copying its unchanged Reference payload.
+    try:
+        fixed_surface = layer3_selector_runtime_projection(
+            authority,
+            professional_skill=projection["professional_skill"],
+            profile=projection["profile"],
+            selection_owner=projection["selection_owner"],
+            exact_layer3=[],
+        )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        fixed_surface = None
+    if fixed_surface is not None:
+        for selected_class in classes_by_selected.values():
+            try:
+                layer3_selector_validate_exact_selection(
+                    selected_class["selected_layer3"],
+                    authorized_layer3=fixed_surface["authorized_layer3"],
+                    domain_authorization=fixed_surface["domain_authorization"],
+                    runtime_domains=authority["runtime_domains"],
+                )
+            except ValidationProblem as exc:
+                errors.append(str(exc))
 
     replay_class = max(
         classes_by_selected.values(),
         key=lambda item: len(item["selected_layer3"]),
     )
+    try:
+        fixed = layer3_selector_runtime_projection(
+            authority,
+            professional_skill=projection["professional_skill"],
+            profile=projection["profile"],
+            selection_owner=projection["selection_owner"],
+            exact_layer3=replay_class["selected_layer3"],
+        )
+        if (
+            fixed["selector_loaded"]
+            or fixed["exact_layer3"] != replay_class["selected_layer3"]
+            or not fixed["reference_selector_loaded"]
+            or fixed["exact_references"] is not None
+            or fixed["reference_records"] != projection["reference_records"]
+        ):
+            errors.append(
+                f"{projection['professional_skill']}:{projection['profile']} "
+                "exact Layer 3 changed selector or unresolved Reference delivery"
+            )
+    except ValidationProblem as exc:
+        errors.append(str(exc))
     replay_errors = layer3_selector_runtime_selection_receipt_errors(
         replay_class["receipt"],
         expected_owner=projection["selection_owner"],
@@ -1434,6 +1463,59 @@ def _render_signature_tokens(candidate: dict[str, Any]) -> int:
     )
 
 
+FRONTIER_TOKEN_WORKERS = 4
+FRONTIER_TOKEN_CHUNK_SIZE = 128
+
+
+def _render_signature_token_chunk(
+    candidates: list[dict[str, Any]],
+) -> list[int]:
+    return [_render_signature_tokens(candidate) for candidate in candidates]
+
+
+def _measured_frontier_candidates(
+    candidates_by_key: dict[tuple[Any, ...], dict[str, Any]],
+    *,
+    signature_tokens: dict[tuple[tuple[str, str], ...], int],
+    executor: ThreadPoolExecutor,
+):
+    """Measure bounded chunks, then yield every candidate in canonical order."""
+
+    ordered = sorted(candidates_by_key.items(), key=lambda item: repr(item[0]))
+    batch_size = FRONTIER_TOKEN_WORKERS * FRONTIER_TOKEN_CHUNK_SIZE
+    for start in range(0, len(ordered), batch_size):
+        batch = ordered[start : start + batch_size]
+        pending: dict[tuple[tuple[str, str], ...], dict[str, Any]] = {}
+        for _key, candidate in batch:
+            signature = candidate["render_signature"]
+            if signature not in signature_tokens:
+                pending.setdefault(signature, candidate)
+        measured: list[tuple[tuple[tuple[str, str], ...], int]] = []
+        if not signature_tokens and pending:
+            # Initialize the existing canonical encoder in the caller.
+            signature = next(iter(pending))
+            measured.append((signature, _render_signature_tokens(pending.pop(signature))))
+        items = list(pending.items())
+        chunks = [
+            items[index : index + FRONTIER_TOKEN_CHUNK_SIZE]
+            for index in range(0, len(items), FRONTIER_TOKEN_CHUNK_SIZE)
+        ]
+        # Each map submits at most one chunk per worker. Preserve input order
+        # and publish cache entries only after every result in this batch succeeds.
+        results = list(executor.map(
+            _render_signature_token_chunk,
+            [[candidate for _signature, candidate in chunk] for chunk in chunks],
+        ))
+        for chunk, tokens in zip(chunks, results):
+            measured.extend(
+                (signature, count)
+                for (signature, _candidate), count in zip(chunk, tokens)
+            )
+        signature_tokens.update(measured)
+        for key, candidate in batch:
+            yield key, candidate, signature_tokens[candidate["render_signature"]]
+
+
 def _active_reference_ids(candidate: dict[str, Any]) -> list[str]:
     """Return source-owned References resident in this measured candidate stage."""
 
@@ -1516,129 +1598,128 @@ def _dominance_frontier_projection(
     mapping_hasher = hashlib.sha256()
     component_fingerprints: set[tuple[str, str, str]] = set()
 
-    for budget_class in ADMISSIBLE_BUDGET_CLASSES:
-        soft_target = CONTEXT_BUDGET_LIMITS[budget_class]["soft_target"]
-        candidates_by_key = canonical_candidates[budget_class]
-        signatures: set[tuple[tuple[str, str], ...]] = set()
-        candidate_tokens: list[int] = []
-        all_members = {
-            "professional": set(),
-            "layer3": set(),
-            "active_reference": set(),
-        }
-        frontier_members = {
-            "professional": set(),
-            "layer3": set(),
-            "active_reference": set(),
-        }
-        member_maxima: dict[str, dict[str, tuple[int, str, dict[str, Any]]]] = {
-            "professional": {},
-            "layer3": {},
-            "active_reference": {},
-        }
-        over_target_candidate_count = 0
-
-        for equivalence_key, candidate in sorted(
-            candidates_by_key.items(), key=lambda item: repr(item[0])
-        ):
-            render_signature = candidate["render_signature"]
-            signatures.add(render_signature)
-            tokens = signature_tokens.get(render_signature)
-            if tokens is None:
-                tokens = _render_signature_tokens(candidate)
-                signature_tokens[render_signature] = tokens
-            candidate_tokens.append(tokens)
-            active_references = _active_reference_ids(candidate)
-            members = {
-                "professional": [candidate["professional_skill"]],
-                "layer3": sorted(candidate["selected_layer3"]),
-                "active_reference": active_references,
+    with ThreadPoolExecutor(max_workers=FRONTIER_TOKEN_WORKERS) as executor:
+        for budget_class in ADMISSIBLE_BUDGET_CLASSES:
+            soft_target = CONTEXT_BUDGET_LIMITS[budget_class]["soft_target"]
+            candidates_by_key = canonical_candidates[budget_class]
+            signatures: set[tuple[tuple[str, str], ...]] = set()
+            candidate_tokens: list[int] = []
+            all_members = {
+                "professional": set(),
+                "layer3": set(),
+                "active_reference": set(),
             }
-            over_target = tokens > soft_target
-            over_target_candidate_count += int(over_target)
-            equivalence_key_text = _canonical_json_text(equivalence_key)
-            equivalence_key_rank = _sha256_text(equivalence_key_text)
-            render_signature_sha256 = _sha256_text(
-                _canonical_json_text(render_signature)
-            )
-            mapping_hasher.update(
-                (
-                    _canonical_json_text(
-                        {
-                            "budget_class": budget_class,
-                            "canonical_reduction_key": equivalence_key,
-                            "render_signature_sha256": render_signature_sha256,
-                            "tokens": tokens,
-                        }
-                    )
-                    + "\n"
-                ).encode("utf-8")
-            )
-            component_fingerprints.update(
-                (component["kind"], component["path"], component["sha256"])
-                for component in candidate["components"]
-            )
-            for member_kind, values in members.items():
-                all_members[member_kind].update(values)
-                if over_target:
-                    frontier_members[member_kind].update(values)
-                for member in values:
-                    current = member_maxima[member_kind].get(member)
-                    rank = (tokens, equivalence_key_rank)
-                    if current is None or rank > (current[0], current[1]):
-                        member_maxima[member_kind][member] = (
-                            tokens,
-                            equivalence_key_rank,
-                            _frontier_member_witness(
-                                member=member,
-                                tokens=tokens,
-                                equivalence_key=equivalence_key,
-                                render_signature=render_signature,
-                            ),
-                        )
+            frontier_members = {
+                "professional": set(),
+                "layer3": set(),
+                "active_reference": set(),
+            }
+            member_maxima: dict[str, dict[str, tuple[int, str, dict[str, Any]]]] = {
+                "professional": {},
+                "layer3": {},
+                "active_reference": {},
+            }
+            over_target_candidate_count = 0
 
-        outside_members = {
-            member_kind: sorted(all_members[member_kind] - frontier_members[member_kind])
-            for member_kind in all_members
-        }
-        budget_rows[budget_class] = {
-            "soft_target": soft_target,
-            "hard_ceiling": CONTEXT_BUDGET_LIMITS[budget_class]["hard_ceiling"],
-            "candidate_count": len(candidates_by_key),
-            "exact_render_signature_count": len(signatures),
-            "token_distribution": _token_distribution(candidate_tokens),
-            "growth_distribution": _unavailable_growth_distribution(),
-            "over_target_candidate_count": over_target_candidate_count,
-            "frontier_counts": {
-                member_kind: len(frontier_members[member_kind])
-                for member_kind in frontier_members
-            },
-            "frontier": {
-                member_kind: sorted(frontier_members[member_kind])
-                for member_kind in frontier_members
-            },
-            "frontier_witnesses": {
-                member_kind: [
-                    member_maxima[member_kind][member][2]
-                    for member in sorted(frontier_members[member_kind])
-                ]
-                for member_kind in frontier_members
-            },
-            "outside_counts": {
-                member_kind: len(outside_members[member_kind])
-                for member_kind in outside_members
-            },
-            "outside": {
-                member_kind: [
-                    {
-                        "member": member,
-                        "maximum_tokens": member_maxima[member_kind][member][0],
-                    }
-                    for member in outside_members[member_kind]
-                ]
-                for member_kind in outside_members
-            },
-        }
+            for equivalence_key, candidate, tokens in _measured_frontier_candidates(
+                candidates_by_key,
+                signature_tokens=signature_tokens,
+                executor=executor,
+            ):
+                render_signature = candidate["render_signature"]
+                signatures.add(render_signature)
+                candidate_tokens.append(tokens)
+                active_references = _active_reference_ids(candidate)
+                members = {
+                    "professional": [candidate["professional_skill"]],
+                    "layer3": sorted(candidate["selected_layer3"]),
+                    "active_reference": active_references,
+                }
+                over_target = tokens > soft_target
+                over_target_candidate_count += int(over_target)
+                equivalence_key_text = _canonical_json_text(equivalence_key)
+                equivalence_key_rank = _sha256_text(equivalence_key_text)
+                render_signature_sha256 = _sha256_text(
+                    _canonical_json_text(render_signature)
+                )
+                mapping_hasher.update(
+                    (
+                        _canonical_json_text(
+                            {
+                                "budget_class": budget_class,
+                                "canonical_reduction_key": equivalence_key,
+                                "render_signature_sha256": render_signature_sha256,
+                                "tokens": tokens,
+                            }
+                        )
+                        + "\n"
+                    ).encode("utf-8")
+                )
+                component_fingerprints.update(
+                    (component["kind"], component["path"], component["sha256"])
+                    for component in candidate["components"]
+                )
+                for member_kind, values in members.items():
+                    all_members[member_kind].update(values)
+                    if over_target:
+                        frontier_members[member_kind].update(values)
+                    for member in values:
+                        current = member_maxima[member_kind].get(member)
+                        rank = (tokens, equivalence_key_rank)
+                        if current is None or rank > (current[0], current[1]):
+                            member_maxima[member_kind][member] = (
+                                tokens,
+                                equivalence_key_rank,
+                                _frontier_member_witness(
+                                    member=member,
+                                    tokens=tokens,
+                                    equivalence_key=equivalence_key,
+                                    render_signature=render_signature,
+                                ),
+                            )
+
+            outside_members = {
+                member_kind: sorted(all_members[member_kind] - frontier_members[member_kind])
+                for member_kind in all_members
+            }
+            budget_rows[budget_class] = {
+                "soft_target": soft_target,
+                "hard_ceiling": CONTEXT_BUDGET_LIMITS[budget_class]["hard_ceiling"],
+                "candidate_count": len(candidates_by_key),
+                "exact_render_signature_count": len(signatures),
+                "token_distribution": _token_distribution(candidate_tokens),
+                "growth_distribution": _unavailable_growth_distribution(),
+                "over_target_candidate_count": over_target_candidate_count,
+                "frontier_counts": {
+                    member_kind: len(frontier_members[member_kind])
+                    for member_kind in frontier_members
+                },
+                "frontier": {
+                    member_kind: sorted(frontier_members[member_kind])
+                    for member_kind in frontier_members
+                },
+                "frontier_witnesses": {
+                    member_kind: [
+                        member_maxima[member_kind][member][2]
+                        for member in sorted(frontier_members[member_kind])
+                    ]
+                    for member_kind in frontier_members
+                },
+                "outside_counts": {
+                    member_kind: len(outside_members[member_kind])
+                    for member_kind in outside_members
+                },
+                "outside": {
+                    member_kind: [
+                        {
+                            "member": member,
+                            "maximum_tokens": member_maxima[member_kind][member][0],
+                        }
+                        for member in outside_members[member_kind]
+                    ]
+                    for member_kind in outside_members
+                },
+            }
 
     task_review_classes = ("task", "review")
     global_all: dict[str, set[str]] = {
@@ -1768,6 +1849,30 @@ def _evaluate_admissible_context_compositions(
     domain_names = set(authority["runtime_domains"])
     capsule_envelopes = _capsule_envelopes(cases)
     component_cache: dict[tuple[str, Path], dict[str, Any]] = {}
+    reference_binding_cache: dict[tuple[Any, ...], tuple[str, Path]] = {}
+
+    def reference_target(
+        runtime_name: str,
+        primary: str,
+        owner: str,
+        entry: dict[str, Any],
+    ) -> tuple[str, Path]:
+        # Like the component cache, this belongs only to this fixed evaluation.
+        # Bind the full source entry and Runtime identity before reusing success.
+        key = (
+            DIST_SKILLS / runtime_name,
+            admissible_build_identity,
+            primary,
+            owner,
+            _canonical_json_text(entry),
+        )
+        if key not in reference_binding_cache:
+            reference_binding_cache[key] = (
+                _runtime_reference_target_for_authoring_entry(
+                    runtime_name, primary, owner, entry
+                )
+            )
+        return reference_binding_cache[key]
 
     def file_component(kind: str, path: Path) -> dict[str, Any]:
         key = (kind, path)
@@ -2024,7 +2129,7 @@ def _evaluate_admissible_context_compositions(
                         logical_id = f"{layer3_name}/{entry['path']}"
                         try:
                             _runtime_path, nested_path = (
-                                _runtime_reference_target_for_authoring_entry(
+                                reference_target(
                                 runtime_name,
                                 professional,
                                 layer3_name,
@@ -2199,7 +2304,7 @@ def _evaluate_admissible_context_compositions(
                                 for reference_owner, entry in professional_envelope:
                                     try:
                                         _runtime_path, reference_path = (
-                                            _runtime_reference_target_for_authoring_entry(
+                                            reference_target(
                                             runtime_name,
                                             professional,
                                             reference_owner,
@@ -2237,8 +2342,7 @@ def _evaluate_admissible_context_compositions(
                                         file_component("primary_skill", primary_path),
                                     ]
                                     loaded_paths: list[str] = [
-                                        _relative(profile_path),
-                                        _relative(primary_path),
+                                        component["path"] for component in components
                                     ]
                                     for reference, component in (
                                         professional_component_rows.items()

@@ -247,6 +247,81 @@ Profile hard-readability or compound-bullet findings. Its canonical Semantic
 application remains current for all 149 targets. All three fixed attestation
 files retain their original bytes; the repair changes no Semantic binding.
 
+The third Full Regression attempt used material commit `0c37d1af`.
+The prior Profile failure did not recur, but Core's rendered-context producer
+exceeded its declared 600-second timeout. Core reported `process-timeout` and
+`report-not-refreshed`; dependent documentation consistency did not run.
+The failed Core run and its owned routing child were stopped with no remaining
+owned processes; Core exited 143. Commands 2–14 did not run, and the previous
+rendered-context report is not evidence for this attempt.
+A bounded 45-second diagnostic profile identified repeated exact-selection
+projection and deep copying as the dominant sampled work. That diagnostic is
+not a completed validation or evidence of improved execution performance.
+
+The exact-selection repair shares the existing projector's itemwise validator,
+checks every selection class, and retains complete per-surface projections with
+unresolved Reference delivery. Reference bindings reuse successful validation
+only within one evaluation, keyed by Runtime root/build, Professional, owner,
+and the complete source entry. Stage paths reuse the same cached components.
+All 65 surfaces and 137,509 selection classes retain byte-identical class,
+receipt, statistics, and error projections. The selector suite passes 17 tests;
+two cache identity/revalidation tests pass. The suite first exposed three old
+hard-coded inventory assertions (69/76/265); these now consume the current
+registry's 80/87/446 declaration while retaining the independent per-record
+oracle. Historical fixture values are unchanged. A complete bounded comparison
+also preserves 32 stage/candidate groups and 96 Host mappings, including path
+order, receipts, and all result fields.
+
+Two direct diagnostics of the failed producer still reached the unchanged
+600-second limit after these partial repairs (600.753 and 600.482 seconds).
+Both were terminated, and neither produced passing validation evidence.
+A subsequent phase probe completed enumeration in 169.117 seconds: 65 surfaces,
+137,509 selection classes, 2,943,845 stages and canonical candidates, and
+8,831,535 mappings across three Hosts. A separate 45-second frontier profile
+spent 33.125 seconds in 134,273 complete-string BPE encodings while still in the
+first budget class. The earlier projection/path hotspots are reduced, but the
+overall timeout remains unresolved at this diagnostic checkpoint. These
+observations do not establish product performance or replace Full Regression.
+
+The frontier repair retains the existing complete-string encoder and every
+candidate. One evaluation-local executor measures at most four chunks of 128
+signatures per batch; canonical aggregation and cache publication remain in
+the caller's original order. Five affected tests pass, including complete
+serial/parallel frontier equality, bounded work, reversed completion order,
+cache identity, and failure propagation without report publication. Independent
+incremental review found no new defects. A local 8,192-encoding comparison
+produced identical counts in 1.336 seconds serially and 0.488 seconds with the
+default chunks; these observations describe this diagnostic environment only.
+
+The complete producer diagnostic then finished in 574.687 seconds within the
+unchanged 600-second limit, but exited 1 on a newly reached conformance failure.
+All 2,943,845 canonical candidates and 8,831,535 Host mappings were retained.
+The task maximum is 3,883 tokens against the unchanged 3,400 hard ceiling:
+`library-tool-product-builder` with `package-dependency-management`,
+`git-professional-usage`, `project-initialization`, and the single resident
+`ecosystem-command-map.md` Reference. This fresh failed report, rather than the
+previous projection, is the current diagnostic evidence. No new Full Regression
+has begun. A fresh authoring audit has zero blockers; all four Semantic source
+and detector fingerprints remain unchanged, with all 149 applications current.
+The three fixed attestation files retain their original bytes.
+
+The user subsequently authorized a maximum context allowance of 4,000 if
+needed. Read-only content analysis found a natural equivalent command-map draft
+could save 264 tokens, below the required 483. Moving the material would burden
+another Reference context already measured at 3,364 tokens; a budget-driven
+split would add structure without a new knowledge boundary. The accepted repair
+therefore preserves all professional content and changes only Core's Task hard
+ceiling from 3,400 to 4,000. The 3,000 soft target, other context limits,
+600-second producer timeout, exact counter, and complete candidate population
+remain unchanged. The earlier diagnostic is not relabeled as passing evidence.
+Four existing budget tests pass under the new authority, including the 4,000 /
+4,001 boundary and budget-independent selection. Exact contract comparison
+confirms that only the Task hard ceiling changed; all three managed budget
+documentation blocks match their owning renderers. The post-change authoring
+audit has zero blockers, the four Semantic fingerprints are unchanged, and
+all 149 applications remain current. Full Regression is still pending at this
+material checkpoint.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.

@@ -9491,6 +9491,41 @@ def layer3_selector_authority(
     }
 
 
+def layer3_selector_validate_exact_selection(
+    exact_layer3: object,
+    *,
+    authorized_layer3: list[str],
+    domain_authorization: list[str],
+    runtime_domains: dict[str, Any],
+) -> list[str]:
+    """Validate an exact list against an already validated owner/profile surface."""
+
+    if (
+        not isinstance(exact_layer3, list)
+        or len(exact_layer3) != len(set(exact_layer3))
+        or not all(isinstance(item, str) and item for item in exact_layer3)
+    ):
+        raise ValidationProblem(
+            "exact Layer 3 must be an ordered unique list; never truncate"
+        )
+    unauthorized = [
+        item for item in exact_layer3 if item not in authorized_layer3
+    ]
+    unauthorized_domains = [
+        item
+        for item in exact_layer3
+        if item in runtime_domains
+        and item not in domain_authorization
+    ]
+    if unauthorized or unauthorized_domains:
+        raise ValidationProblem(
+            "exact Layer 3 contains unauthorized Professional, profile, "
+            "or Domain items: "
+            f"{sorted(set([*unauthorized, *unauthorized_domains]))}"
+        )
+    return list(exact_layer3)
+
+
 def layer3_selector_runtime_projection(
     authority: object,
     *,
@@ -9629,29 +9664,12 @@ def layer3_selector_runtime_projection(
         ),
     }
     if exact_layer3 is not None:
-        if (
-            not isinstance(exact_layer3, list)
-            or len(exact_layer3) != len(set(exact_layer3))
-            or not all(isinstance(item, str) and item for item in exact_layer3)
-        ):
-            raise ValidationProblem(
-                "exact Layer 3 must be an ordered unique list; never truncate"
-            )
-        unauthorized = [
-            item for item in exact_layer3 if item not in authorized_layer3
-        ]
-        unauthorized_domains = [
-            item
-            for item in exact_layer3
-            if item in runtime_domains
-            and item not in domain_authorization
-        ]
-        if unauthorized or unauthorized_domains:
-            raise ValidationProblem(
-                "exact Layer 3 contains unauthorized Professional, profile, "
-                "or Domain items: "
-                f"{sorted(set([*unauthorized, *unauthorized_domains]))}"
-            )
+        selected_layer3 = layer3_selector_validate_exact_selection(
+            exact_layer3,
+            authorized_layer3=authorized_layer3,
+            domain_authorization=domain_authorization,
+            runtime_domains=runtime_domains,
+        )
         return {
             "contract": LAYER3_SELECTOR_RUNTIME_CONTRACT,
             "authority_contract": authority["contract"],
@@ -9666,7 +9684,7 @@ def layer3_selector_runtime_projection(
             "authorized_layer3": authorized_layer3,
             "domain_authorization": list(domain_authorization),
             "selector_loaded": False,
-            "exact_layer3": list(exact_layer3),
+            "exact_layer3": selected_layer3,
             "selectors": [],
             **reference_delivery,
         }

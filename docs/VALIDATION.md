@@ -549,16 +549,22 @@ selection, frontier construction, rejection, or exit. Conformance applies the
 Core-derived hard ceiling after complete context measurement and records soft
 growth advisories separately.
 
-Reference delivery now includes directly readable Host paths and independent
-owner-index instructions. After removing repeated assignment text and AI build
-markers, full calibration of the fixed simulated Host measured 669,854 valid
-candidates, including 118,514 Direct Task candidates. The Task maximum was
-3,389 tokens (component upper bound 3,395). Core's provisional Task hard ceiling
-therefore changes from 3,200 to a fixed 3,400 (+6.25%); the 3,000 soft target and
-all other budgets remain unchanged. This is a static fixture allowance, not a
-live Host measurement or an automatically expanding limit. Candidate selection,
-required bodies, and the conservative fixture envelope remain budget-independent;
-one token above the hard ceiling still fails Conformance.
+The expanded inventory's complete diagnostic measured 2,943,845 canonical
+candidates, including 580,254 Direct Task candidates. Its Task maximum was
+3,883 tokens (component upper bound 3,889), with one resident dependency-command
+Reference and three selected Layer 3 bodies. The command map preserves distinct
+frozen-install, lock-input, dependency-graph, vulnerability/SBOM, and compatibility
+rules across 14 ecosystems. A bounded content review found no established
+natural reduction sufficient to fit the previous 3,400 ceiling without losing
+that scope or introducing an unnecessary split.
+
+The accepted provisional Task hard ceiling is therefore a fixed 4,000; the
+3,000 soft target and all other budgets remain unchanged. This is a static
+fixture allowance, not a live Host measurement or a calibrated optimum.
+Candidate selection, required bodies, and the conservative fixture envelope
+remain budget-independent; one token above the hard ceiling still fails
+Conformance. The failed 3,400-ceiling diagnostic remains a failure; current
+conformance requires a fresh producer result under the accepted authority.
 
 ## Rendered Context Budget Contract
 
@@ -575,7 +581,7 @@ Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool Sy
 | Category | Context | Soft target | Hard ceiling | Calibration status |
 | --- | --- | ---: | ---: | --- |
 | Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
-| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3400 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 4000 | provisional-migration-value |
 | Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
 | Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
 | Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |

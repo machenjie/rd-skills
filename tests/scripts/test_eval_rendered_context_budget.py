@@ -3,13 +3,18 @@ from __future__ import annotations
 import importlib.util
 import copy
 import hashlib
+import io
 import json
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest import mock
 
@@ -1956,6 +1961,290 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [],
             list((ROOT / "dist").rglob("fixture_capsule_contract.py")),
         )
+
+    def _bounded_reference_compositions(self, owners):
+        authority = EVAL._selector_authority()
+        documents = EVAL.layer3_selector_control_projections(authority)
+        selected_documents = {
+            key: document for key, document in documents.items()
+            if document["professional_skill"] in owners
+        }
+        original_classes = EVAL._admissible_selector_equivalence_classes
+
+        def empty_selection_classes(authority, projection, build_identity):
+            # This fixture bounds Layer 3 expansion; real Reference envelopes,
+            # path bindings, staged plans and render candidates remain active.
+            narrowed = copy.deepcopy(projection)
+            narrowed["selectors"] = []
+            return original_classes(authority, narrowed, build_identity)
+
+        primary_rows = EVAL._registry_rows_by_name(
+            EVAL.load_yaml_file(EVAL.PROFESSIONAL_REGISTRY), "professional_skills"
+        )
+        expected = {}
+        for owner in owners:
+            for entry in primary_rows[owner]["reference_index"]:
+                if entry["type"] == "index":
+                    continue
+                # The uncached path binder is the independent expected binding.
+                try:
+                    _, target = EVAL._runtime_reference_target_for_authoring_entry(
+                        EVAL.RUNTIME_NAME, owner, owner, entry
+                    )
+                except ValueError:
+                    continue
+                expected[(owner, entry["path"])] = target.resolve()
+        observed = set()
+        original_frontier = EVAL._dominance_frontier_projection
+
+        def inspect_candidates(**kwargs):
+            for candidates in kwargs["canonical_candidates"].values():
+                for candidate in candidates.values():
+                    self.assertEqual(
+                        [component["path"] for component in candidate["components"]],
+                        candidate["loaded_paths"],
+                    )
+                    references = {
+                        tuple(reference)
+                        for reference in candidate["stage_loaded_references"]
+                    }
+                    actual_paths = {
+                        (ROOT / component["path"]).resolve()
+                        for component in candidate["components"]
+                        if component["kind"] == "targeted_reference"
+                    }
+                    self.assertEqual(
+                        {expected[reference] for reference in references},
+                        actual_paths,
+                    )
+                    observed.update(references)
+            return original_frontier(**kwargs)
+
+        manifest = json.loads((EVAL.DIST_SKILLS / EVAL.RUNTIME_NAME /
+                               ".changeforge-build-manifest.json").read_text())
+        cases = EVAL._fixture_cases(json.loads(EVAL.FIXTURES.read_text()))
+        with mock.patch.object(EVAL, "layer3_selector_control_projections",
+                               return_value=selected_documents), mock.patch.object(
+            EVAL, "_admissible_selector_equivalence_classes",
+            side_effect=empty_selection_classes,
+        ), mock.patch.object(EVAL, "_dominance_frontier_projection",
+                             side_effect=inspect_candidates):
+            result = EVAL._evaluate_admissible_context_compositions(
+                cases=cases, runtime_manifests={EVAL.RUNTIME_NAME: manifest}
+            )
+        return result, observed
+
+    def test_admissible_binding_cache_preserves_professional_entry_and_subject_identity(self) -> None:
+        owners = {"logging-design-gate", "reliability-observability-gate"}
+        result, observed = self._bounded_reference_compositions(owners)
+        self.assertEqual(owners, {owner for owner, _path in observed})
+        self.assertGreater(len(observed), len(owners))
+        self.assertEqual([], [error for error in result["errors"]
+                              if "coverage missing" not in error
+                              and " measurement" not in error])
+        # Same logical source and build identity in a distinct subject must
+        # resolve that subject's files, never targets retained from the first.
+        with tempfile.TemporaryDirectory() as raw:
+            skills = Path(raw) / "skills"
+            runtime = skills / EVAL.RUNTIME_NAME
+            runtime.mkdir(parents=True)
+            original = EVAL.DIST_SKILLS / EVAL.RUNTIME_NAME
+            shutil.copy2(original / ".changeforge-build-manifest.json", runtime)
+            for owner in owners:
+                shutil.copytree(original / owner, runtime / owner)
+            with mock.patch.object(EVAL, "DIST_SKILLS", skills):
+                second, second_observed = self._bounded_reference_compositions(owners)
+            self.assertEqual(observed, second_observed)
+            self.assertEqual(result["inventory"], second["inventory"])
+
+    def test_admissible_binding_cache_revalidates_next_evaluation(self) -> None:
+        owner = "logging-design-gate"
+        initial, observed = self._bounded_reference_compositions({owner})
+        self.assertTrue(observed)
+        self.assertFalse(any("Runtime" in error for error in initial["errors"]))
+        partition_path = EVAL.DIST_SKILLS / EVAL.RUNTIME_NAME / owner / (
+            "references/runtime/reference-records"
+        ) / f"{owner}.json"
+        original = partition_path.read_bytes()
+        manifest_path = EVAL.DIST_SKILLS / EVAL.RUNTIME_NAME / ".changeforge-build-manifest.json"
+        original_manifest = manifest_path.read_bytes()
+        try:
+            for field, value, error in (
+                ("load_when", "changed binding fixture", "does not bind one Runtime record"),
+                ("path", "../outside.md", "malformed"),
+            ):
+                with self.subTest(field=field):
+                    partition = json.loads(original)
+                    partition["reference_records"][0][field] = value
+                    partition_path.write_text(json.dumps(partition))
+                    if field == "path":
+                        manifest = json.loads(original_manifest)
+                        manifest["authoritative_build_inputs"]["sha256"] = "f" * 64
+                        manifest_path.write_text(json.dumps(manifest))
+                    result, _ = self._bounded_reference_compositions({owner})
+                    self.assertTrue(any(error in message for message in result["errors"]),
+                                    result["errors"])
+        finally:
+            partition_path.write_bytes(original)
+            manifest_path.write_bytes(original_manifest)
+
+    def _small_frontier_arguments(self):
+        captured = []
+        original = EVAL._dominance_frontier_projection
+
+        def capture(**kwargs):
+            captured.append(copy.deepcopy(kwargs))
+            return original(**kwargs)
+
+        with mock.patch.object(EVAL, "_dominance_frontier_projection", side_effect=capture):
+            self._bounded_reference_compositions(
+                {"logging-design-gate", "reliability-observability-gate"}
+            )
+        self.assertEqual(1, len(captured))
+        return captured[0]
+
+    def test_parallel_frontier_preserves_complete_serial_projection(self) -> None:
+        arguments = self._small_frontier_arguments()
+        exact = EVAL._render_signature_tokens
+
+        def serial_rows(rows, *, signature_tokens, executor):
+            for key, candidate in sorted(rows.items(), key=lambda item: repr(item[0])):
+                signature = candidate["render_signature"]
+                if signature not in signature_tokens:
+                    signature_tokens[signature] = exact(candidate)
+                yield key, candidate, signature_tokens[signature]
+
+        with mock.patch.object(EVAL, "_measured_frontier_candidates", side_effect=serial_rows):
+            expected = EVAL._dominance_frontier_projection(**arguments)
+        unique_signatures = {
+            candidate["render_signature"]
+            for rows in arguments["canonical_candidates"].values()
+            for candidate in rows.values()
+        }
+        for workers in (1, 2, 4):
+            calls = Counter()
+            lock = threading.Lock()
+
+            def measured(candidate):
+                with lock:
+                    calls[candidate["render_signature"]] += 1
+                return exact(candidate)
+
+            with self.subTest(workers=workers), mock.patch.object(
+                EVAL, "FRONTIER_TOKEN_WORKERS", workers
+            ), mock.patch.object(EVAL, "FRONTIER_TOKEN_CHUNK_SIZE", 2), mock.patch.object(
+                EVAL, "_render_signature_tokens", side_effect=measured
+            ):
+                actual = EVAL._dominance_frontier_projection(**arguments)
+            # Full equality includes mapping digest, distributions, memberships,
+            # source bindings and every witness. Each invocation starts fresh.
+            self.assertEqual(expected, actual)
+            self.assertEqual(Counter({signature: 1 for signature in unique_signatures}), calls)
+
+    def test_parallel_frontier_bounds_work_and_preserves_ordered_identity(self) -> None:
+        def candidate(texts):
+            components = [EVAL._component("fixture", f"fixture:{index}", text)
+                          for index, text in enumerate(texts)]
+            return {"components": components,
+                    "render_signature": tuple((item["kind"], item["sha256"])
+                                              for item in components)}
+
+        values = [candidate([text]) for text in (
+            "warm – <|endoftext|> 中文", "first batch", "slow", "fast", "changed text"
+        )]
+        values.extend([values[0], candidate(["alpha ", "beta"]),
+                       candidate(["beta", "alpha "])])
+        rows = {(index,): value for index, value in enumerate(values)}
+        exact = EVAL._render_signature_tokens
+        expected = [(key, value, exact(value)) for key, value in rows.items()]
+        gate = threading.Event()
+        lock = threading.Lock()
+        completed = []
+        calls = Counter()
+
+        def measured(value):
+            text = value["components"][0]["_text"]
+            if text == "slow":
+                self.assertTrue(gate.wait(5), "second chunk did not complete")
+            result = exact(value)
+            with lock:
+                calls[value["render_signature"]] += 1
+                completed.append(text)
+            if text == "fast":
+                gate.set()
+            return result
+
+        class ObservedExecutor(ThreadPoolExecutor):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.pending = 0
+                self.maximum_pending = 0
+                self.chunk_sizes = []
+
+            def submit(self, fn, *args, **kwargs):
+                with lock:
+                    self.pending += 1
+                    self.maximum_pending = max(self.maximum_pending, self.pending)
+                    self.chunk_sizes.append(len(args[0]))
+                future = super().submit(fn, *args, **kwargs)
+
+                def finished(_future):
+                    with lock:
+                        self.pending -= 1
+
+                future.add_done_callback(finished)
+                return future
+
+        cache = {}
+        with mock.patch.object(EVAL, "FRONTIER_TOKEN_WORKERS", 2), mock.patch.object(
+            EVAL, "FRONTIER_TOKEN_CHUNK_SIZE", 1
+        ), mock.patch.object(EVAL, "_render_signature_tokens", side_effect=measured):
+            with ObservedExecutor(max_workers=2) as executor:
+                actual = list(EVAL._measured_frontier_candidates(
+                    rows, signature_tokens=cache, executor=executor
+                ))
+                repeated_budget = list(EVAL._measured_frontier_candidates(
+                    {(8,): values[2], (9,): values[3]},
+                    signature_tokens=cache, executor=executor,
+                ))
+        self.assertEqual(expected, actual)
+        self.assertEqual([exact(values[2]), exact(values[3])],
+                         [row[2] for row in repeated_budget])
+        self.assertLess(completed.index("fast"), completed.index("slow"))
+        self.assertEqual(Counter({value["render_signature"]: 1 for value in values}), calls)
+        self.assertEqual(0, executor.pending)
+        self.assertLessEqual(executor.maximum_pending, 2)
+        self.assertTrue(executor.chunk_sizes)
+        self.assertLessEqual(max(executor.chunk_sizes), 1)
+
+    def test_parallel_frontier_worker_failure_does_not_publish_partial_report(self) -> None:
+        arguments = self._small_frontier_arguments()
+        first_rows = next(rows for rows in arguments["canonical_candidates"].values() if rows)
+        signatures = list(dict.fromkeys(candidate["render_signature"] for _key, candidate
+                                       in sorted(first_rows.items(), key=lambda item: repr(item[0]))))
+        self.assertGreater(len(signatures), 1)
+        failure_signature = signatures[1]
+        exact = EVAL._render_signature_tokens
+
+        def failed(candidate):
+            if candidate["render_signature"] == failure_signature:
+                raise ValueError("exact tokenizer worker failure")
+            return exact(candidate)
+
+        with mock.patch.object(EVAL, "_render_signature_tokens", side_effect=failed):
+            cache = {}
+            with ThreadPoolExecutor(max_workers=EVAL.FRONTIER_TOKEN_WORKERS) as executor:
+                with self.assertRaisesRegex(ValueError, "exact tokenizer worker failure"):
+                    list(EVAL._measured_frontier_candidates(
+                        first_rows, signature_tokens=cache, executor=executor
+                    ))
+            self.assertEqual({}, cache)
+            with mock.patch.object(EVAL, "evaluate", side_effect=lambda _mode:
+                                   EVAL._dominance_frontier_projection(**arguments)), mock.patch.object(
+                EVAL, "_write_reports"
+            ) as write_reports, redirect_stderr(io.StringIO()):
+                self.assertEqual(1, EVAL.main([]))
+            write_reports.assert_not_called()
 
     def test_admissible_composition_inventory_is_source_derived(self) -> None:
         composition = self._admissible_report()

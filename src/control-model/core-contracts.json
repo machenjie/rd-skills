@@ -1481,7 +1481,7 @@
     },
     "budget_classes": {
       "main": {"label":"Main always-loaded","category":"resident_runtime","soft_target":2305,"hard_ceiling":2650,"calibration_status":"provisional-migration-value"},
-      "task": {"label":"Direct Task dispatch","category":"dispatch_composition","soft_target":3000,"hard_ceiling":3400,"calibration_status":"provisional-migration-value"},
+      "task": {"label":"Direct Task dispatch","category":"dispatch_composition","soft_target":3000,"hard_ceiling":4000,"calibration_status":"provisional-migration-value"},
       "analyzed_task": {"label":"Analyzed Task dispatch","category":"dispatch_composition","soft_target":6000,"hard_ceiling":6500,"calibration_status":"provisional-migration-value"},
       "analysis": {"label":"Analysis dispatch","category":"dispatch_composition","soft_target":4500,"hard_ceiling":5000,"calibration_status":"provisional-migration-value"},
       "review": {"label":"Review dispatch","category":"dispatch_composition","soft_target":3700,"hard_ceiling":4000,"calibration_status":"provisional-migration-value"},
