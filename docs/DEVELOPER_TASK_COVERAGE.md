@@ -222,10 +222,10 @@ own standard diff was used only to transfer that complete result losslessly;
 the prior manifests remain unchanged. The official majority is 123 contextual
 rules and 26 false positives, with no rewrite or temporary exception.
 The existing configuration now records those majorities with current candidate
-bindings and all supporting and dissenting rationales. The collector passes
-authoring with zero blockers; the old fixed Semantic detector binding remains
-stale until the official promotion step. The Methods historical-exposure
-limitation remains in its original reviewer result.
+bindings and all supporting and dissenting rationales. Official promotion passed
+against the clean configuration commit. The refreshed collector passes authoring
+with zero blockers and reports the Semantic application as current. The Methods
+historical-exposure limitation remains in its original reviewer result.
 
 ## First Slice Validation
 
