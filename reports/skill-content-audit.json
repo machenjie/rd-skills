@@ -137,7 +137,7 @@
         "compound_bullets": 0,
         "documents": 157,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 273,
+        "review_as_complex_sentences": 272,
         "tighten_sentences": 0
       },
       "foundation-capability-description": {
@@ -153,7 +153,7 @@
         "compound_bullets": 0,
         "documents": 412,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 405,
+        "review_as_complex_sentences": 399,
         "tighten_sentences": 13
       },
       "professional-reference": {
@@ -29890,9 +29890,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "1dab2e46614c3d7e680d084024a5ee3901d0cae898b681218d7f3e8ea5e2591c",
+        "content_fingerprint": "377ec39af3a3931cd21c96f6f357f62192e6a88138e12dbd655e23f1b188c2de",
         "document_context": {
-          "line_count": 48,
+          "line_count": 49,
           "line_offset": 4,
           "lines": [
             {
@@ -29989,107 +29989,111 @@
             },
             {
               "line": 24,
-              "text": "- **Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior."
+              "text": "- **Classify retry and cancellation outcomes.** Distinguish transient, permanent, unknown, and partial outcomes."
             },
             {
               "line": 25,
-              "text": "- **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner."
+              "text": "- **Coordinate retry and cancellation with effects.** Preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior."
             },
             {
               "line": 26,
-              "text": "- **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job."
+              "text": "- **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner."
             },
             {
               "line": 27,
-              "text": ""
+              "text": "- **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job."
             },
             {
               "line": 28,
-              "text": "## Anti-Patterns"
+              "text": ""
             },
             {
               "line": 29,
-              "text": ""
+              "text": "## Anti-Patterns"
             },
             {
               "line": 30,
-              "text": "- Return acceptance before durable intent exists or infer completion from enqueue or worker acknowledgement alone."
+              "text": ""
             },
             {
               "line": 31,
-              "text": "- Retry non-idempotent partial work, or let cancellation imply an effect stopped when commit status remains unknown."
+              "text": "- Return acceptance before durable intent exists or infer completion from enqueue or worker acknowledgement alone."
             },
             {
               "line": 32,
-              "text": "- Hide exhausted work in an unowned queue, generic failed state, or alert with no repair or disposition path."
+              "text": "- Retry non-idempotent partial work, or let cancellation imply an effect stopped when commit status remains unknown."
             },
             {
               "line": 33,
-              "text": ""
+              "text": "- Hide exhausted work in an unowned queue, generic failed state, or alert with no repair or disposition path."
             },
             {
               "line": 34,
-              "text": "## Stop Conditions"
+              "text": ""
             },
             {
               "line": 35,
-              "text": ""
+              "text": "## Stop Conditions"
             },
             {
               "line": 36,
-              "text": "Escalate when job identity is ambiguous, acceptance can lose work, partial effects cannot reconcile, cancellation races are unsafe, or concurrency can violate invariants. Also escalate when overload is unbounded or terminal work lacks an accountable recovery owner."
+              "text": ""
             },
             {
               "line": 37,
-              "text": ""
+              "text": "Escalate when job identity is ambiguous, acceptance can lose work, partial effects cannot reconcile, cancellation races are unsafe, or concurrency can violate invariants. Also escalate when overload is unbounded or terminal work lacks an accountable recovery owner."
             },
             {
               "line": 38,
-              "text": "## Output Contract"
+              "text": ""
             },
             {
               "line": 39,
-              "text": ""
+              "text": "## Output Contract"
             },
             {
               "line": 40,
-              "text": "- async-job decision with identity and authority, durable acceptance, lifecycle, concurrency, retry and cancellation, progress, overload and terminal recovery, failure evidence, and residual owners"
+              "text": ""
             },
             {
               "line": 41,
-              "text": ""
+              "text": "- async-job decision with identity and authority, durable acceptance, lifecycle, concurrency, retry and cancellation, progress, overload and terminal recovery, failure evidence, and residual owners"
             },
             {
               "line": 42,
-              "text": "## Targeted References"
-            },
-            {
-              "line": 43,
               "text": ""
             },
             {
+              "line": 43,
+              "text": "## Targeted References"
+            },
+            {
               "line": 44,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 45,
-              "text": "|---|---|---|---|---|---|"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 46,
-              "text": "| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Durability, retry, acknowledgement, or recovery mechanisms remain undecided | Synchronous execution already satisfies accepted loss semantics | task-agent, review-agent | option-comparison, selected-approach |"
+              "text": "|---|---|---|---|---|---|"
             },
             {
               "line": 47,
-              "text": "| [checklist](references/checklist.md) | decision-checklist | Job design spans duplicates, leases, cancellation, replay, or deploy skew | A single bounded attempt has no durable side effects | task-agent, review-agent | checklist-result, residual-risk |"
+              "text": "| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Durability, retry, acknowledgement, or recovery mechanisms remain undecided | Synchronous execution already satisfies accepted loss semantics | task-agent, review-agent | option-comparison, selected-approach |"
             },
             {
               "line": 48,
+              "text": "| [checklist](references/checklist.md) | decision-checklist | Job design spans duplicates, leases, cancellation, replay, or deploy skew | A single bounded attempt has no durable side effects | task-agent, review-agent | checklist-result, residual-risk |"
+            },
+            {
+              "line": 49,
               "text": "| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Job safety claims require fresh topology and failure-path results | No durability or replay claim needs closure evidence | task-agent, review-agent | evidence-record, proof-limit, residual-risk |"
             }
           ],
-          "sha256": "1dab2e46614c3d7e680d084024a5ee3901d0cae898b681218d7f3e8ea5e2591c",
-          "text": "\n# async-job-design\n\n## Registry Trigger\n\n**Use when**\n\n- design background jobs queues schedules workers retries and status visibility\n\n**Do not use when**\n\n- no task-local async job design decision is required\n\n## Skill Role\n\nDefine job identity, acceptance and commit boundaries, lifecycle, scheduling, concurrency, retry, cancellation, progress, overload, terminal recovery, and evidence. Exclude broker mechanics and event architecture.\n\n## High-Value Rules\n\n- **Define logical job identity and authority.** Bind task meaning to tenant or subject, inputs, version, initiator, deduplication scope, and which current source may create, cancel, retry, or inspect the work.\n- **Coordinate acceptance with durable intent.** Map crashes before and after request response, job record, enqueue, business effect, progress update, and acknowledgement so accepted work cannot disappear silently or execute twice.\n- **Model lifecycle and unknown outcomes.** Define queued, leased or running, blocked, cancelling, completed, failed, exhausted, and repair states only where semantics differ, including stale leases and lost worker responses.\n- **Bound concurrency and scheduling.** Derive worker, tenant, key, dependency, priority, fairness, deadline, and overlap controls from current side effects, capacity, and ordering requirements.\n- **Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior.\n- **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner.\n- **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job.\n\n## Anti-Patterns\n\n- Return acceptance before durable intent exists or infer completion from enqueue or worker acknowledgement alone.\n- Retry non-idempotent partial work, or let cancellation imply an effect stopped when commit status remains unknown.\n- Hide exhausted work in an unowned queue, generic failed state, or alert with no repair or disposition path.\n\n## Stop Conditions\n\nEscalate when job identity is ambiguous, acceptance can lose work, partial effects cannot reconcile, cancellation races are unsafe, or concurrency can violate invariants. Also escalate when overload is unbounded or terminal work lacks an accountable recovery owner.\n\n## Output Contract\n\n- async-job decision with identity and authority, durable acceptance, lifecycle, concurrency, retry and cancellation, progress, overload and terminal recovery, failure evidence, and residual owners\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Durability, retry, acknowledgement, or recovery mechanisms remain undecided | Synchronous execution already satisfies accepted loss semantics | task-agent, review-agent | option-comparison, selected-approach |\n| [checklist](references/checklist.md) | decision-checklist | Job design spans duplicates, leases, cancellation, replay, or deploy skew | A single bounded attempt has no durable side effects | task-agent, review-agent | checklist-result, residual-risk |\n| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Job safety claims require fresh topology and failure-path results | No durability or replay claim needs closure evidence | task-agent, review-agent | evidence-record, proof-limit, residual-risk |"
+          "sha256": "377ec39af3a3931cd21c96f6f357f62192e6a88138e12dbd655e23f1b188c2de",
+          "text": "\n# async-job-design\n\n## Registry Trigger\n\n**Use when**\n\n- design background jobs queues schedules workers retries and status visibility\n\n**Do not use when**\n\n- no task-local async job design decision is required\n\n## Skill Role\n\nDefine job identity, acceptance and commit boundaries, lifecycle, scheduling, concurrency, retry, cancellation, progress, overload, terminal recovery, and evidence. Exclude broker mechanics and event architecture.\n\n## High-Value Rules\n\n- **Define logical job identity and authority.** Bind task meaning to tenant or subject, inputs, version, initiator, deduplication scope, and which current source may create, cancel, retry, or inspect the work.\n- **Coordinate acceptance with durable intent.** Map crashes before and after request response, job record, enqueue, business effect, progress update, and acknowledgement so accepted work cannot disappear silently or execute twice.\n- **Model lifecycle and unknown outcomes.** Define queued, leased or running, blocked, cancelling, completed, failed, exhausted, and repair states only where semantics differ, including stale leases and lost worker responses.\n- **Bound concurrency and scheduling.** Derive worker, tenant, key, dependency, priority, fairness, deadline, and overlap controls from current side effects, capacity, and ordering requirements.\n- **Classify retry and cancellation outcomes.** Distinguish transient, permanent, unknown, and partial outcomes.\n- **Coordinate retry and cancellation with effects.** Preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior.\n- **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner.\n- **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job.\n\n## Anti-Patterns\n\n- Return acceptance before durable intent exists or infer completion from enqueue or worker acknowledgement alone.\n- Retry non-idempotent partial work, or let cancellation imply an effect stopped when commit status remains unknown.\n- Hide exhausted work in an unowned queue, generic failed state, or alert with no repair or disposition path.\n\n## Stop Conditions\n\nEscalate when job identity is ambiguous, acceptance can lose work, partial effects cannot reconcile, cancellation races are unsafe, or concurrency can violate invariants. Also escalate when overload is unbounded or terminal work lacks an accountable recovery owner.\n\n## Output Contract\n\n- async-job decision with identity and authority, durable acceptance, lifecycle, concurrency, retry and cancellation, progress, overload and terminal recovery, failure evidence, and residual owners\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [benchmarks and patterns](references/benchmarks-and-patterns.md) | benchmark-pattern | Durability, retry, acknowledgement, or recovery mechanisms remain undecided | Synchronous execution already satisfies accepted loss semantics | task-agent, review-agent | option-comparison, selected-approach |\n| [checklist](references/checklist.md) | decision-checklist | Job design spans duplicates, leases, cancellation, replay, or deploy skew | A single bounded attempt has no durable side effects | task-agent, review-agent | checklist-result, residual-risk |\n| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Job safety claims require fresh topology and failure-path results | No durability or replay claim needs closure evidence | task-agent, review-agent | evidence-record, proof-limit, residual-risk |"
         },
         "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
         "document_part": "body",
@@ -30098,7 +30102,7 @@
         "line_offset": 4,
         "owner": "async-job-design",
         "path": "src/foundation/capabilities/async-job-design/SKILL.md",
-        "review_as_complex_count": 6,
+        "review_as_complex_count": 5,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/foundation/capabilities/async-job-design/SKILL.md"
@@ -37023,9 +37027,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "595e6396223edcc8e39f8b535e36fe78d94372b8f23729a1a3a98842df303cfe",
+        "content_fingerprint": "8cf025191152f4f4e91a9fa44c1c366a2ceefa5941f00ea1fa32507f092febad",
         "document_context": {
-          "line_count": 26,
+          "line_count": 32,
           "line_offset": 0,
           "lines": [
             {
@@ -37130,11 +37134,35 @@
             },
             {
               "line": 26,
-              "text": "- If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available, stop condition, rollback or forward-fix path, and secret/output redaction."
+              "text": ""
+            },
+            {
+              "line": 27,
+              "text": "For destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback commands:"
+            },
+            {
+              "line": 28,
+              "text": ""
+            },
+            {
+              "line": 29,
+              "text": "- Require explicit permission."
+            },
+            {
+              "line": 30,
+              "text": "- Require a dry-run or rendered diff when available."
+            },
+            {
+              "line": 31,
+              "text": "- Require a stop condition and a rollback or forward-fix path."
+            },
+            {
+              "line": 32,
+              "text": "- Require secret/output redaction."
             }
           ],
-          "sha256": "595e6396223edcc8e39f8b535e36fe78d94372b8f23729a1a3a98842df303cfe",
-          "text": "# Cleanup Deletion Evidence Patterns\n\nUse this reference when closure depends on repository inspection, prior task evidence, observable action sequence, validation freshness, command output, generated reports, or a deletion-to-validation map. Keep it as an evidence map, not a second cleanup tutorial.\n\n## Deletion Claim To Evidence Map\n\n| Deletion claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Artifact has no callers | Static search scope, generated/reference search, runtime registration/reflection search, config/script/docs search, and skipped-search rationale. | The inspected caller classes did not reference the artifact. | Unknown dynamic consumers, external users, or unsearched runtime paths are absent. |\n| Public contract can be removed | Consumer inventory, usage threshold/window, compatibility/deprecation rule, migration docs, release note, rollback path. | Inspected consumers have a migration and removal basis. | Unknown external consumers or stale generated clients are safe. |\n| Flag or fallback is obsolete | Owner, rollout or incident state, telemetry window, old/new branch behavior, re-enable or replacement path, tests. | The inspected temporary path is no longer needed or has a bounded replacement. | Future incident recovery or unobserved cohorts are safe. |\n| Expand/contract path can contract | Migration phase, backfill/data integrity result, old-version usage, old-path telemetry, rollback/data-loss limit, contract tests. | The inspected old data or compatibility path is safe to remove under the stated condition. | Production volume, mixed-version deploys, or undiscovered old producers are covered. |\n| Generated/runtime artifact can be removed | Generator source, rebuild command, registration search, package/install impact, generated diff. | The generated/runtime path is tied to source and validated after regeneration. | Other generated outputs or runtime plugins are unaffected. |\n| Shortcut can be closed | Bounded shortcut note, ceiling, owner, review date, upgrade/deletion trigger, validation command, closure evidence. | The accepted shortcut has an accountable conversion or deletion path. | Similar shortcuts or future scope expansion are governed. |\n| Validation is fresh | Command, working directory, exit code, output summary, report/artifact path, covered paths, final-edit order. | Evidence was produced after the final material edit for the mapped deletion risk. | Later source/config/generated/report edits or untested consumers are covered. |\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, old cleanup notes, generated reports, prior validation, and observable action sequence as selectors until current source confirms them.\n- Accept prior \"unused\", \"no consumer\", \"flag complete\", \"fallback obsolete\", or \"generated artifact safe\" claims only when current source, generated inputs, telemetry/report paths, and validator mappings still match.\n- Reject or downgrade memory that lacks date, owner, inspected path scope, command/report artifact, validation freshness, or residual-risk owner.\n- Mark evidence stale after edits to source, registries, config, generated artifacts, docs, reports, tests, validators, package/install outputs, or cleanup records.\n- For each final deletion-safety claim, cite current source, graph or search evidence, telemetry or report, validator output, owner approval, or explicit not-run residual risk. The handoff also names unsearched dynamic or external consumers.\n\n- If generated rebuild, package/install validation, or cleanup fixture regeneration, record source-of-truth input, generated output owner, diff review, and revert path.\n- If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available, stop condition, rollback or forward-fix path, and secret/output redaction.\n"
+          "sha256": "8cf025191152f4f4e91a9fa44c1c366a2ceefa5941f00ea1fa32507f092febad",
+          "text": "# Cleanup Deletion Evidence Patterns\n\nUse this reference when closure depends on repository inspection, prior task evidence, observable action sequence, validation freshness, command output, generated reports, or a deletion-to-validation map. Keep it as an evidence map, not a second cleanup tutorial.\n\n## Deletion Claim To Evidence Map\n\n| Deletion claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Artifact has no callers | Static search scope, generated/reference search, runtime registration/reflection search, config/script/docs search, and skipped-search rationale. | The inspected caller classes did not reference the artifact. | Unknown dynamic consumers, external users, or unsearched runtime paths are absent. |\n| Public contract can be removed | Consumer inventory, usage threshold/window, compatibility/deprecation rule, migration docs, release note, rollback path. | Inspected consumers have a migration and removal basis. | Unknown external consumers or stale generated clients are safe. |\n| Flag or fallback is obsolete | Owner, rollout or incident state, telemetry window, old/new branch behavior, re-enable or replacement path, tests. | The inspected temporary path is no longer needed or has a bounded replacement. | Future incident recovery or unobserved cohorts are safe. |\n| Expand/contract path can contract | Migration phase, backfill/data integrity result, old-version usage, old-path telemetry, rollback/data-loss limit, contract tests. | The inspected old data or compatibility path is safe to remove under the stated condition. | Production volume, mixed-version deploys, or undiscovered old producers are covered. |\n| Generated/runtime artifact can be removed | Generator source, rebuild command, registration search, package/install impact, generated diff. | The generated/runtime path is tied to source and validated after regeneration. | Other generated outputs or runtime plugins are unaffected. |\n| Shortcut can be closed | Bounded shortcut note, ceiling, owner, review date, upgrade/deletion trigger, validation command, closure evidence. | The accepted shortcut has an accountable conversion or deletion path. | Similar shortcuts or future scope expansion are governed. |\n| Validation is fresh | Command, working directory, exit code, output summary, report/artifact path, covered paths, final-edit order. | Evidence was produced after the final material edit for the mapped deletion risk. | Later source/config/generated/report edits or untested consumers are covered. |\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, old cleanup notes, generated reports, prior validation, and observable action sequence as selectors until current source confirms them.\n- Accept prior \"unused\", \"no consumer\", \"flag complete\", \"fallback obsolete\", or \"generated artifact safe\" claims only when current source, generated inputs, telemetry/report paths, and validator mappings still match.\n- Reject or downgrade memory that lacks date, owner, inspected path scope, command/report artifact, validation freshness, or residual-risk owner.\n- Mark evidence stale after edits to source, registries, config, generated artifacts, docs, reports, tests, validators, package/install outputs, or cleanup records.\n- For each final deletion-safety claim, cite current source, graph or search evidence, telemetry or report, validator output, owner approval, or explicit not-run residual risk. The handoff also names unsearched dynamic or external consumers.\n\n- If generated rebuild, package/install validation, or cleanup fixture regeneration, record source-of-truth input, generated output owner, diff review, and revert path.\n\nFor destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback commands:\n\n- Require explicit permission.\n- Require a dry-run or rendered diff when available.\n- Require a stop condition and a rollback or forward-fix path.\n- Require secret/output redaction.\n"
         },
         "document_id": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -37143,7 +37171,7 @@
         "line_offset": 0,
         "owner": "cleanup-deletion-governance",
         "path": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md",
-        "review_as_complex_count": 3,
+        "review_as_complex_count": 2,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md"
@@ -67926,9 +67954,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "0ebe96e60ee2086f192b8f585b9637b37abd7832c30d63ba7d2d517e06be9203",
+        "content_fingerprint": "855ad566294b4a466e380e3d904a74c02115fbd242aea8e1ef4357e7864931e5",
         "document_context": {
-          "line_count": 28,
+          "line_count": 34,
           "line_offset": 0,
           "lines": [
             {
@@ -68041,11 +68069,35 @@
             },
             {
               "line": 28,
-              "text": "- If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner, and redaction rule."
+              "text": ""
+            },
+            {
+              "line": 29,
+              "text": "For production DB plans, index builds/drops, telemetry exports, deploys, or rollback commands:"
+            },
+            {
+              "line": 30,
+              "text": ""
+            },
+            {
+              "line": 31,
+              "text": "- Require permission and an owner."
+            },
+            {
+              "line": 32,
+              "text": "- Require a dry-run when available."
+            },
+            {
+              "line": 33,
+              "text": "- Require a stop condition and a rollback/forward-fix path."
+            },
+            {
+              "line": 34,
+              "text": "- Require a redaction rule."
             }
           ],
-          "sha256": "0ebe96e60ee2086f192b8f585b9637b37abd7832c30d63ba7d2d517e06be9203",
-          "text": "# Indexing Query Optimization Evidence Patterns\n\nUse this reference when query/index closure depends on prior task evidence, repository inspection, observable action sequence, validation freshness, tool permission boundaries, or production evidence limits. Keep it as an evidence map, not a second indexing tutorial.\n\n## Changed-Query-To-Validation Map\n\n| Query or index claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Target query is current | SQL text or ORM builder, repository/service call site, schema/index definitions, parameters, and caller frequency inspected | The optimization targets the inspected read path | Hidden ad hoc SQL, reporting jobs, or generated queries are covered |\n| Plan bottleneck is real | Representative `EXPLAIN` or engine plan plus row counts, buffer/read signals, sort/join details, and data volume | The inspected plan explains the observed slow path | Peak production contention, cache warmth, or every parameter distribution is proven |\n| Proposed index serves one named query | Index columns, order, partial condition, include columns, and named query are mapped together | The index has a concrete read beneficiary | The index is worth keeping after traffic changes |\n| Composite order is justified | Equality/range/sort predicates, selectivity or cardinality, stable tie-breaker, and rejected column orders | The selected order matches the inspected access pattern | Future filters or alternate sort orders are optimal |\n| Pagination is bounded | Table size, ordering columns, cursor/tie-breaker contract, and depth behavior are stated | The selected pagination strategy avoids the inspected deep-scan failure | Client compatibility or all UI/API semantics are safe |\n| Write cost is acceptable | Write rate, index count, storage growth, maintenance/vacuum cost, and read frequency/SLO budget | The read benefit has been weighed against inspected write pressure | Production write spikes or long-term storage cost are fully known |\n| Build/drop path is safe enough to propose | Selected online/concurrent or authorized offline method, lock and availability behavior, recovery or disable path, observation window, and owner | The change has a bounded release path for the inspected table | Real production lock contention or operator response is guaranteed |\n| Validation is fresh | Command, working directory or environment, exit code, report/artifact path, and final-edit freshness | Evidence was produced after the material query/index change | Later source, fixture, report, or build edits are covered |\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, prior agent runs, issue history, slow-query dashboards, and old validation reports as discovery inputs until current source and plan evidence confirm them.\n- Accept a prior query or index claim only while current SQL or ORM shape, schema or index definitions, table size, statistics, deployment path, and validation command still match. Examples include \"index exists\", \"query is covered\", \"offset is acceptable\", \"N+1 was fixed\", and \"build is online\".\n- Mark evidence stale after edits to repository methods, query builders, generated SQL, schema/index files, migrations, seed/fixture volume, validation commands, reports, build outputs, telemetry queries, or pagination contracts.\n- Record inspected and skipped query surfaces: repository call sites, raw SQL, ORM scopes, reports, background jobs, dashboards, generated clients, external consumers, and manual analytics surfaces.\n- For each final optimization claim, cite a current command, plan, telemetry query, benchmark artifact, source path, or owner approval.\n- Otherwise, mark the claim unverified and name the unexercised data shape, environment, or residual risk.\n\n- If local database plan or benchmark command, record dataset, schema version, parameters, cleanup, and absence of production credentials.\n- If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner, and redaction rule.\n"
+          "sha256": "855ad566294b4a466e380e3d904a74c02115fbd242aea8e1ef4357e7864931e5",
+          "text": "# Indexing Query Optimization Evidence Patterns\n\nUse this reference when query/index closure depends on prior task evidence, repository inspection, observable action sequence, validation freshness, tool permission boundaries, or production evidence limits. Keep it as an evidence map, not a second indexing tutorial.\n\n## Changed-Query-To-Validation Map\n\n| Query or index claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Target query is current | SQL text or ORM builder, repository/service call site, schema/index definitions, parameters, and caller frequency inspected | The optimization targets the inspected read path | Hidden ad hoc SQL, reporting jobs, or generated queries are covered |\n| Plan bottleneck is real | Representative `EXPLAIN` or engine plan plus row counts, buffer/read signals, sort/join details, and data volume | The inspected plan explains the observed slow path | Peak production contention, cache warmth, or every parameter distribution is proven |\n| Proposed index serves one named query | Index columns, order, partial condition, include columns, and named query are mapped together | The index has a concrete read beneficiary | The index is worth keeping after traffic changes |\n| Composite order is justified | Equality/range/sort predicates, selectivity or cardinality, stable tie-breaker, and rejected column orders | The selected order matches the inspected access pattern | Future filters or alternate sort orders are optimal |\n| Pagination is bounded | Table size, ordering columns, cursor/tie-breaker contract, and depth behavior are stated | The selected pagination strategy avoids the inspected deep-scan failure | Client compatibility or all UI/API semantics are safe |\n| Write cost is acceptable | Write rate, index count, storage growth, maintenance/vacuum cost, and read frequency/SLO budget | The read benefit has been weighed against inspected write pressure | Production write spikes or long-term storage cost are fully known |\n| Build/drop path is safe enough to propose | Selected online/concurrent or authorized offline method, lock and availability behavior, recovery or disable path, observation window, and owner | The change has a bounded release path for the inspected table | Real production lock contention or operator response is guaranteed |\n| Validation is fresh | Command, working directory or environment, exit code, report/artifact path, and final-edit freshness | Evidence was produced after the material query/index change | Later source, fixture, report, or build edits are covered |\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, prior agent runs, issue history, slow-query dashboards, and old validation reports as discovery inputs until current source and plan evidence confirm them.\n- Accept a prior query or index claim only while current SQL or ORM shape, schema or index definitions, table size, statistics, deployment path, and validation command still match. Examples include \"index exists\", \"query is covered\", \"offset is acceptable\", \"N+1 was fixed\", and \"build is online\".\n- Mark evidence stale after edits to repository methods, query builders, generated SQL, schema/index files, migrations, seed/fixture volume, validation commands, reports, build outputs, telemetry queries, or pagination contracts.\n- Record inspected and skipped query surfaces: repository call sites, raw SQL, ORM scopes, reports, background jobs, dashboards, generated clients, external consumers, and manual analytics surfaces.\n- For each final optimization claim, cite a current command, plan, telemetry query, benchmark artifact, source path, or owner approval.\n- Otherwise, mark the claim unverified and name the unexercised data shape, environment, or residual risk.\n\n- If local database plan or benchmark command, record dataset, schema version, parameters, cleanup, and absence of production credentials.\n\nFor production DB plans, index builds/drops, telemetry exports, deploys, or rollback commands:\n\n- Require permission and an owner.\n- Require a dry-run when available.\n- Require a stop condition and a rollback/forward-fix path.\n- Require a redaction rule.\n"
         },
         "document_id": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -68054,7 +68106,7 @@
         "line_offset": 0,
         "owner": "indexing-query-optimization",
         "path": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md",
-        "review_as_complex_count": 6,
+        "review_as_complex_count": 5,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md"
@@ -74144,9 +74196,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "6a47cc60d0643e06885f494cf0453c28f14f53c6c7acf0b171b4791c3d46ed8c",
+        "content_fingerprint": "24d67c74c2d6be57ba8f13fd1f431201b4cc1c41bb4d2d259f0fe2981bac1ad5",
         "document_context": {
-          "line_count": 31,
+          "line_count": 37,
           "line_offset": 0,
           "lines": [
             {
@@ -74271,11 +74323,35 @@
             },
             {
               "line": 31,
-              "text": "- If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and stop condition."
+              "text": ""
+            },
+            {
+              "line": 32,
+              "text": "For live service, production data, cloud console, package publishing, or security scanner export operations:"
+            },
+            {
+              "line": 33,
+              "text": ""
+            },
+            {
+              "line": 34,
+              "text": "- Require permission."
+            },
+            {
+              "line": 35,
+              "text": "- Require redaction and a retention limit."
+            },
+            {
+              "line": 36,
+              "text": "- Require rollback or no-write proof."
+            },
+            {
+              "line": 37,
+              "text": "- Require a stop condition."
             }
           ],
-          "sha256": "6a47cc60d0643e06885f494cf0453c28f14f53c6c7acf0b171b4791c3d46ed8c",
-          "text": "# Language Idiom Evidence Patterns\n\nUse this reference when idiom-enforcement closure depends on repository convention evidence, validation freshness, prior source or task evidence claims, AI-generated symbol verification, tool permission boundaries, or changed-idiom-to-validation mapping. Keep it as an evidence map, not a language tutorial.\n\n## Changed-Idiom-To-Validation Map\n\n| Idiom claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Local convention is known | Existing nearby examples, formatter/linter config, language version, and owner convention inspected | The review is anchored in current repository practice | Uninspected packages, generated code, or older branches use the same style |\n| Public API follows language idiom | Changed signature, naming, visibility, doc-comment format, error/result/nullability contract, and consumer impact inspected | The covered public surface follows the selected convention | Unknown consumers, semver rollout, or generated SDK adoption are safe |\n| Runtime boundary is validated | Validator location, malformed fixture, denied/invalid test output, and static-type proof limit | External input is checked at the inspected boundary | Every producer, legacy payload, or production shape is covered |\n| Resource/concurrency lifecycle is idiomatic | Acquisition site, owner, cleanup/cancel path, race/leak/cancel command, and residual interleaving risk | Covered lifecycle paths follow target runtime idiom | All scheduler timings, load patterns, or sibling paths are safe |\n| Dependency/helper is idiomatic | Reuse scan, standard-library alternative, existing dependency check, license/security signal, and placement rationale | The helper or dependency has a reviewed reason to exist | Future maintainers will not need consolidation or removal |\n| AI-generated code is verified | Symbol/import search, installed-version check, compiler/typecheck/lint output, and behavior test | Named AI-generated symbols and idioms are valid for the current toolchain | Uninspected generated blocks or runtime-only paths are correct |\n\n## Evidence Quality Labels\n\n- **Strong evidence**: current source and local convention examples inspected after final edit, command or artifact named, exit code or review status recorded, and proof limit stated.\n- **Weak evidence**: generic style guide, old review note, prior claim, formatter-only output, or examples outside the changed surface.\n- **Missing evidence**: no language/runtime version, no local convention example, no validation command, no malformed fixture for runtime boundary, or no owner for exception.\n- **Invalid evidence**: copied blog pattern, unverified AI symbol, static type used as runtime proof, generated artifact trusted without source, or stale command after final idiom edit.\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, prior reviews, generated docs, and old command output as discovery inputs until current source, installed versions, and validation confirm them.\n- Accept a prior \"this is idiomatic\", \"formatter passed\", \"API is stable\", or \"AI code was reviewed\" claim only when language version, config, changed files, generated artifacts, and command output still match.\n- Mark evidence stale after edits to public API signatures, error/result models, validators, resource lifecycle, concurrency primitives, formatter/linter config, generated code, dependency versions, or test fixtures.\n- Map every accepted idiom claim to a current command, typecheck, lint, formatter, test, static analysis, local example, owner approval, or explicit not-run residual risk.\n\n- If dependency install, code generation, fixture refresh, or formatter rewrite, record source of truth, generated output owner, diff review, rollback path, and package/version boundary.\n- If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and stop condition.\n"
+          "sha256": "24d67c74c2d6be57ba8f13fd1f431201b4cc1c41bb4d2d259f0fe2981bac1ad5",
+          "text": "# Language Idiom Evidence Patterns\n\nUse this reference when idiom-enforcement closure depends on repository convention evidence, validation freshness, prior source or task evidence claims, AI-generated symbol verification, tool permission boundaries, or changed-idiom-to-validation mapping. Keep it as an evidence map, not a language tutorial.\n\n## Changed-Idiom-To-Validation Map\n\n| Idiom claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Local convention is known | Existing nearby examples, formatter/linter config, language version, and owner convention inspected | The review is anchored in current repository practice | Uninspected packages, generated code, or older branches use the same style |\n| Public API follows language idiom | Changed signature, naming, visibility, doc-comment format, error/result/nullability contract, and consumer impact inspected | The covered public surface follows the selected convention | Unknown consumers, semver rollout, or generated SDK adoption are safe |\n| Runtime boundary is validated | Validator location, malformed fixture, denied/invalid test output, and static-type proof limit | External input is checked at the inspected boundary | Every producer, legacy payload, or production shape is covered |\n| Resource/concurrency lifecycle is idiomatic | Acquisition site, owner, cleanup/cancel path, race/leak/cancel command, and residual interleaving risk | Covered lifecycle paths follow target runtime idiom | All scheduler timings, load patterns, or sibling paths are safe |\n| Dependency/helper is idiomatic | Reuse scan, standard-library alternative, existing dependency check, license/security signal, and placement rationale | The helper or dependency has a reviewed reason to exist | Future maintainers will not need consolidation or removal |\n| AI-generated code is verified | Symbol/import search, installed-version check, compiler/typecheck/lint output, and behavior test | Named AI-generated symbols and idioms are valid for the current toolchain | Uninspected generated blocks or runtime-only paths are correct |\n\n## Evidence Quality Labels\n\n- **Strong evidence**: current source and local convention examples inspected after final edit, command or artifact named, exit code or review status recorded, and proof limit stated.\n- **Weak evidence**: generic style guide, old review note, prior claim, formatter-only output, or examples outside the changed surface.\n- **Missing evidence**: no language/runtime version, no local convention example, no validation command, no malformed fixture for runtime boundary, or no owner for exception.\n- **Invalid evidence**: copied blog pattern, unverified AI symbol, static type used as runtime proof, generated artifact trusted without source, or stale command after final idiom edit.\n\n## Current Evidence And Freshness\n\n- Treat repository inspection, prior task evidence, prior reviews, generated docs, and old command output as discovery inputs until current source, installed versions, and validation confirm them.\n- Accept a prior \"this is idiomatic\", \"formatter passed\", \"API is stable\", or \"AI code was reviewed\" claim only when language version, config, changed files, generated artifacts, and command output still match.\n- Mark evidence stale after edits to public API signatures, error/result models, validators, resource lifecycle, concurrency primitives, formatter/linter config, generated code, dependency versions, or test fixtures.\n- Map every accepted idiom claim to a current command, typecheck, lint, formatter, test, static analysis, local example, owner approval, or explicit not-run residual risk.\n\n- If dependency install, code generation, fixture refresh, or formatter rewrite, record source of truth, generated output owner, diff review, rollback path, and package/version boundary.\n\nFor live service, production data, cloud console, package publishing, or security scanner export operations:\n\n- Require permission.\n- Require redaction and a retention limit.\n- Require rollback or no-write proof.\n- Require a stop condition.\n"
         },
         "document_id": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -74284,7 +74360,7 @@
         "line_offset": 0,
         "owner": "language-idiom-enforcement",
         "path": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md",
-        "review_as_complex_count": 7,
+        "review_as_complex_count": 6,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md"
@@ -86247,9 +86323,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "4927856621ee3bd40bca2cb45f8e6df7dad99cf32e5380aa7d2a948451f7de9a",
+        "content_fingerprint": "aef600db72c7d189a5e049f2ad514359326d9267b71c5c3e554c6c82b86832d5",
         "document_context": {
-          "line_count": 31,
+          "line_count": 37,
           "line_offset": 0,
           "lines": [
             {
@@ -86374,11 +86450,35 @@
             },
             {
               "line": 31,
-              "text": "- If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forward-fix path, and secret redaction rule."
+              "text": ""
+            },
+            {
+              "line": 32,
+              "text": "For dependency publish, deploy, rollback, registry token use, production scanner, or connector write operations:"
+            },
+            {
+              "line": 33,
+              "text": ""
+            },
+            {
+              "line": 34,
+              "text": "- Require an explicit owner."
+            },
+            {
+              "line": 35,
+              "text": "- Require a dry-run where available."
+            },
+            {
+              "line": 36,
+              "text": "- Require a stop condition and a rollback/forward-fix path."
+            },
+            {
+              "line": 37,
+              "text": "- Require a secret redaction rule."
             }
           ],
-          "sha256": "4927856621ee3bd40bca2cb45f8e6df7dad99cf32e5380aa7d2a948451f7de9a",
-          "text": "# Package Dependency Evidence Patterns\n\n**Treat lifecycle code as executable supply chain.** Inspect install hooks, build plugins, generators, native extensions, downloaded binaries, registry provenance, checksums, and credential exposure according to current trust policy.\n\nUse this reference when dependency approval depends on repository inspection, prior task evidence, observable action sequence, validation freshness, tool permission boundaries, generated artifacts, or production evidence limits. Keep it as an evidence map, not a package-manager tutorial.\n\n## Dependency Change-To-Evidence Map\n\n| Dependency claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| New package beats simpler options | Need statement, stdlib/native/existing repository/existing dependency/local-code ladder, and the actually viable package alternatives; record why other options are excluded, even when only one supported package remains | The inspected dependency add has a concrete reason and rejected alternatives | Future maintenance cost, advisory risk, or every product path is acceptable |\n| Lockfile is reproducible | Manifest diff, lockfile diff, package-manager version, frozen install command, and exit code | The inspected environment resolves the named graph consistently | Other tool versions, registries, or platforms resolve identically |\n| Transitive graph is bounded | `npm ls`, `pnpm why`, `pipdeptree`, `cargo tree`, `go mod graph`, `mvn dependency:tree`, or equivalent output plus package count | The inspected graph change and direct/transitive split are known | Hidden runtime imports, optional platform packages, or future registry changes are covered |\n| License evidence is ready for handoff | Direct and new transitive licenses, outbound project license, scanner/report path, and accountable policy or legal owner | The inspected graph and distribution facts are recorded for the owner decision | Legal advice, downstream redistribution, or unscanned vendored artifacts are complete |\n| Vulnerability evidence is ready for handoff | Advisory IDs, full selected-group scanner command/output, patched version or compensating control, owner, and expiration | The inspected advisory state is recorded for `dependency-vulnerability-scanning` | Risk is accepted, future CVEs, private advisories, or unselected exploit paths are absent |\n| Lifecycle and provenance evidence is ready for handoff | Lifecycle script inventory, package source, maintainer/release health, OpenSSF/SLSA/SBOM evidence, and selected graph scope | The inspected supply-chain execution boundary is recorded for the accountable risk owner | Provenance risk is accepted, the package is immune to future compromise, or all registry mirrors are trustworthy |\n| Runtime/deploy compatibility is covered | Actual target runtime/platform and current behavior proof, plus container identity or native build evidence when those surfaces are used | The inspected dependency works on the selected deploy target | Every customer platform, downstream consumer, or production traffic shape is covered |\n| Generated package output is fresh | Source schema/spec, generated output diff, drift check command, cache inputs, and committed/ignored policy | The inspected generated artifact matches its declared source of truth | External consumers or unpublished generated variants are compatible |\n| Monorepo/package boundary stays valid | Workspace graph, hoisting/peer dependency check, isolated install/build, affected-test map, and forbidden import check | The inspected package can build within its declared boundaries | All publish/install modes or future workspace moves are safe |\n| Rollback or repin path is viable | Previous pin/digest, downgrade command, migration reversal, release owner, and stop condition | The inspected dependency change has a named recovery path | Data migrations, third-party outages, or production rollback timing are guaranteed |\n\n## Current Evidence And Freshness\n\n- Treat prior task evidence, Renovate/Dependabot notes, old scan reports, generated dependency reports, and prior agent output as discovery inputs until current manifests, lockfiles, graph commands, scans, and tests confirm them.\n- Accept a prior \"safe dependency\", \"scan green\", \"license approved\", \"native build works\", or \"generated client current\" claim only when current package-manager resolution, runtime target, generated artifacts, and validation commands still match.\n- Mark evidence stale after edits to manifests, lockfiles, package-manager config, workspace layout, generated sources, container image digests, runtime versions, CI install mode, scanner config, fixtures, or build outputs.\n- Record inspected and skipped boundaries: manifests, lockfiles, workspace config, package-manager version, generated outputs, container base images, native-extension platforms, CI install commands, vulnerability/license scanners, SBOM, package publishing, and prior exceptions.\n- Map every final approval claim to a current command, report/artifact path, source diff, owner approval, or explicit not-verified residual risk.\n\n- If package registry, advisory database, OpenSSF, SLSA/provenance, or license service lookup, cite source URL/service, timestamp, package coordinates, timeout, and absence of production credentials.\n- If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forward-fix path, and secret redaction rule.\n"
+          "sha256": "aef600db72c7d189a5e049f2ad514359326d9267b71c5c3e554c6c82b86832d5",
+          "text": "# Package Dependency Evidence Patterns\n\n**Treat lifecycle code as executable supply chain.** Inspect install hooks, build plugins, generators, native extensions, downloaded binaries, registry provenance, checksums, and credential exposure according to current trust policy.\n\nUse this reference when dependency approval depends on repository inspection, prior task evidence, observable action sequence, validation freshness, tool permission boundaries, generated artifacts, or production evidence limits. Keep it as an evidence map, not a package-manager tutorial.\n\n## Dependency Change-To-Evidence Map\n\n| Dependency claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| New package beats simpler options | Need statement, stdlib/native/existing repository/existing dependency/local-code ladder, and the actually viable package alternatives; record why other options are excluded, even when only one supported package remains | The inspected dependency add has a concrete reason and rejected alternatives | Future maintenance cost, advisory risk, or every product path is acceptable |\n| Lockfile is reproducible | Manifest diff, lockfile diff, package-manager version, frozen install command, and exit code | The inspected environment resolves the named graph consistently | Other tool versions, registries, or platforms resolve identically |\n| Transitive graph is bounded | `npm ls`, `pnpm why`, `pipdeptree`, `cargo tree`, `go mod graph`, `mvn dependency:tree`, or equivalent output plus package count | The inspected graph change and direct/transitive split are known | Hidden runtime imports, optional platform packages, or future registry changes are covered |\n| License evidence is ready for handoff | Direct and new transitive licenses, outbound project license, scanner/report path, and accountable policy or legal owner | The inspected graph and distribution facts are recorded for the owner decision | Legal advice, downstream redistribution, or unscanned vendored artifacts are complete |\n| Vulnerability evidence is ready for handoff | Advisory IDs, full selected-group scanner command/output, patched version or compensating control, owner, and expiration | The inspected advisory state is recorded for `dependency-vulnerability-scanning` | Risk is accepted, future CVEs, private advisories, or unselected exploit paths are absent |\n| Lifecycle and provenance evidence is ready for handoff | Lifecycle script inventory, package source, maintainer/release health, OpenSSF/SLSA/SBOM evidence, and selected graph scope | The inspected supply-chain execution boundary is recorded for the accountable risk owner | Provenance risk is accepted, the package is immune to future compromise, or all registry mirrors are trustworthy |\n| Runtime/deploy compatibility is covered | Actual target runtime/platform and current behavior proof, plus container identity or native build evidence when those surfaces are used | The inspected dependency works on the selected deploy target | Every customer platform, downstream consumer, or production traffic shape is covered |\n| Generated package output is fresh | Source schema/spec, generated output diff, drift check command, cache inputs, and committed/ignored policy | The inspected generated artifact matches its declared source of truth | External consumers or unpublished generated variants are compatible |\n| Monorepo/package boundary stays valid | Workspace graph, hoisting/peer dependency check, isolated install/build, affected-test map, and forbidden import check | The inspected package can build within its declared boundaries | All publish/install modes or future workspace moves are safe |\n| Rollback or repin path is viable | Previous pin/digest, downgrade command, migration reversal, release owner, and stop condition | The inspected dependency change has a named recovery path | Data migrations, third-party outages, or production rollback timing are guaranteed |\n\n## Current Evidence And Freshness\n\n- Treat prior task evidence, Renovate/Dependabot notes, old scan reports, generated dependency reports, and prior agent output as discovery inputs until current manifests, lockfiles, graph commands, scans, and tests confirm them.\n- Accept a prior \"safe dependency\", \"scan green\", \"license approved\", \"native build works\", or \"generated client current\" claim only when current package-manager resolution, runtime target, generated artifacts, and validation commands still match.\n- Mark evidence stale after edits to manifests, lockfiles, package-manager config, workspace layout, generated sources, container image digests, runtime versions, CI install mode, scanner config, fixtures, or build outputs.\n- Record inspected and skipped boundaries: manifests, lockfiles, workspace config, package-manager version, generated outputs, container base images, native-extension platforms, CI install commands, vulnerability/license scanners, SBOM, package publishing, and prior exceptions.\n- Map every final approval claim to a current command, report/artifact path, source diff, owner approval, or explicit not-verified residual risk.\n\n- If package registry, advisory database, OpenSSF, SLSA/provenance, or license service lookup, cite source URL/service, timestamp, package coordinates, timeout, and absence of production credentials.\n\nFor dependency publish, deploy, rollback, registry token use, production scanner, or connector write operations:\n\n- Require an explicit owner.\n- Require a dry-run where available.\n- Require a stop condition and a rollback/forward-fix path.\n- Require a secret redaction rule.\n"
         },
         "document_id": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -86387,7 +86487,7 @@
         "line_offset": 0,
         "owner": "package-dependency-management",
         "path": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md",
-        "review_as_complex_count": 7,
+        "review_as_complex_count": 6,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md"
@@ -101908,9 +102008,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "957fe543f425f8b199b5d2a1d95b60eb8b56bf08a05ce76d06d791100fa28220",
+        "content_fingerprint": "d48a9e0d8b2f33ca01d43798cff3680776900dab0d10ee6103b72f685868c881",
         "document_context": {
-          "line_count": 27,
+          "line_count": 32,
           "line_offset": 0,
           "lines": [
             {
@@ -102003,7 +102103,7 @@
             },
             {
               "line": 23,
-              "text": "- If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction."
+              "text": "For registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke operations:"
             },
             {
               "line": 24,
@@ -102011,19 +102111,39 @@
             },
             {
               "line": 25,
-              "text": "## Anti-Patterns"
+              "text": "- Require an owner."
             },
             {
               "line": 26,
-              "text": ""
+              "text": "- Require a dry-run or staging where available."
             },
             {
               "line": 27,
+              "text": "- Require a rollback/yank/hotfix path and a stop condition."
+            },
+            {
+              "line": 28,
+              "text": "- Require secret redaction."
+            },
+            {
+              "line": 29,
+              "text": ""
+            },
+            {
+              "line": 30,
+              "text": "## Anti-Patterns"
+            },
+            {
+              "line": 31,
+              "text": ""
+            },
+            {
+              "line": 32,
               "text": "- Do not infer compatibility or adoption from a declaration diff or source-only fixture."
             }
           ],
-          "sha256": "957fe543f425f8b199b5d2a1d95b60eb8b56bf08a05ce76d06d791100fa28220",
-          "text": "# SDK Library Contract Evidence Patterns\n\nUse this reference when SDK/library closure depends on validation freshness, generated-client reproducibility, consumer compatibility evidence, publication provenance, stale prior evidence, or proof limits. Keep it as an evidence map, not a second SDK release guide.\n\n## SDK Change-To-Validation Map\n\n| SDK claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Public surface is compatible | Export paths, public API diff, type/signature snapshot, change-class rationale, and reviewed diff status | The inspected exported surface matches the declared semver class | Unpublished consumers, dynamic reflection, or undocumented extension use are compatible |\n| Generated client is reproducible | Source spec hash, generator name/version/digest, config file, regeneration command, generated diff review | The generated output matches the declared source and toolchain | Future generator releases or uncommitted local templates remain stable |\n| Runtime and dependency floors hold | Package metadata diff, lockfile or dependency range review, runtime/package-manager matrix command | The inspected release installs on declared runtime floors | Every consumer OS, package mirror, or optional dependency path is covered |\n| Examples match artifact | Packed/installed artifact path, example command, exit code, and docs version | The published package entry points support the documented flow | Source-only examples, old docs, or downstream custom setup remain compatible |\n| Consumer compatibility is current | Fixture project list, old/new build output, contract/smoke test report, and final-edit freshness | Known fixture consumers still build or pass against the release candidate | Unknown external consumers or private integrations are safe |\n| Publication integrity is verifiable | Artifact digest and source/build provenance, registry metadata, recovery owner, and signature or SBOM evidence required by the actual publication policy | The release artifact can be traced and recovered according to the named registry policy | Registry outage, future credential compromise, or consumer upgrade timing is solved |\n\n## Evidence Quality Labels\n\n- **Strong evidence**: current export/package/generated/docs/consumer paths inspected, command or artifact named, exit code or review result recorded, final-edit freshness stated, and proof limits named.\n- **Weak evidence**: local compile only, maintainer memory, changelog-only review, unpinned generator output, source-tree example run, or stale downstream smoke report.\n- **Missing evidence**: absent proof required by the selected claim, such as public API comparison, consumer compatibility, packed-artifact examples, or publication/recovery authority. Spec hashes and generated-diff review apply to generated surfaces; provenance, SBOM, and signing checks follow the actual artifact and release contract.\n- **Invalid evidence**: semver class contradicts API diff, generated output from floating `latest`, docs example imports source internals, old validation predates final generated diff, or release artifact is unsigned when policy requires signing.\n\n- If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction.\n\n## Anti-Patterns\n\n- Do not infer compatibility or adoption from a declaration diff or source-only fixture.\n"
+          "sha256": "d48a9e0d8b2f33ca01d43798cff3680776900dab0d10ee6103b72f685868c881",
+          "text": "# SDK Library Contract Evidence Patterns\n\nUse this reference when SDK/library closure depends on validation freshness, generated-client reproducibility, consumer compatibility evidence, publication provenance, stale prior evidence, or proof limits. Keep it as an evidence map, not a second SDK release guide.\n\n## SDK Change-To-Validation Map\n\n| SDK claim | Minimum evidence | What it proves | What it does not prove |\n| --- | --- | --- | --- |\n| Public surface is compatible | Export paths, public API diff, type/signature snapshot, change-class rationale, and reviewed diff status | The inspected exported surface matches the declared semver class | Unpublished consumers, dynamic reflection, or undocumented extension use are compatible |\n| Generated client is reproducible | Source spec hash, generator name/version/digest, config file, regeneration command, generated diff review | The generated output matches the declared source and toolchain | Future generator releases or uncommitted local templates remain stable |\n| Runtime and dependency floors hold | Package metadata diff, lockfile or dependency range review, runtime/package-manager matrix command | The inspected release installs on declared runtime floors | Every consumer OS, package mirror, or optional dependency path is covered |\n| Examples match artifact | Packed/installed artifact path, example command, exit code, and docs version | The published package entry points support the documented flow | Source-only examples, old docs, or downstream custom setup remain compatible |\n| Consumer compatibility is current | Fixture project list, old/new build output, contract/smoke test report, and final-edit freshness | Known fixture consumers still build or pass against the release candidate | Unknown external consumers or private integrations are safe |\n| Publication integrity is verifiable | Artifact digest and source/build provenance, registry metadata, recovery owner, and signature or SBOM evidence required by the actual publication policy | The release artifact can be traced and recovered according to the named registry policy | Registry outage, future credential compromise, or consumer upgrade timing is solved |\n\n## Evidence Quality Labels\n\n- **Strong evidence**: current export/package/generated/docs/consumer paths inspected, command or artifact named, exit code or review result recorded, final-edit freshness stated, and proof limits named.\n- **Weak evidence**: local compile only, maintainer memory, changelog-only review, unpinned generator output, source-tree example run, or stale downstream smoke report.\n- **Missing evidence**: absent proof required by the selected claim, such as public API comparison, consumer compatibility, packed-artifact examples, or publication/recovery authority. Spec hashes and generated-diff review apply to generated surfaces; provenance, SBOM, and signing checks follow the actual artifact and release contract.\n- **Invalid evidence**: semver class contradicts API diff, generated output from floating `latest`, docs example imports source internals, old validation predates final generated diff, or release artifact is unsigned when policy requires signing.\n\nFor registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke operations:\n\n- Require an owner.\n- Require a dry-run or staging where available.\n- Require a rollback/yank/hotfix path and a stop condition.\n- Require secret redaction.\n\n## Anti-Patterns\n\n- Do not infer compatibility or adoption from a declaration diff or source-only fixture.\n"
         },
         "document_id": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -102032,7 +102152,7 @@
         "line_offset": 0,
         "owner": "sdk-library-contract-design",
         "path": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md",
-        "review_as_complex_count": 2,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md"
@@ -103347,9 +103467,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "637b32426f4236deb0dee1c23588584e6ff137882900b61a315aecd660be490a",
+        "content_fingerprint": "89236feabf88d2618b78efdedb201a64c8723735809d15d169b95ac39d8ef77f",
         "document_context": {
-          "line_count": 21,
+          "line_count": 28,
           "line_offset": 0,
           "lines": [
             {
@@ -103430,15 +103550,43 @@
             },
             {
               "line": 20,
-              "text": "Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary. Classify the claim before selecting proof."
+              "text": "For any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink change, or retention change:"
             },
             {
               "line": 21,
               "text": ""
+            },
+            {
+              "line": 22,
+              "text": "- Require an authorized owner."
+            },
+            {
+              "line": 23,
+              "text": "- Require least privilege and bounded scope."
+            },
+            {
+              "line": 24,
+              "text": "- Require redaction and a retention boundary."
+            },
+            {
+              "line": 25,
+              "text": "- Require a stop condition and a rollback/forward-fix boundary."
+            },
+            {
+              "line": 26,
+              "text": ""
+            },
+            {
+              "line": 27,
+              "text": "Classify the claim before selecting proof."
+            },
+            {
+              "line": 28,
+              "text": ""
             }
           ],
-          "sha256": "637b32426f4236deb0dee1c23588584e6ff137882900b61a315aecd660be490a",
-          "text": "# Secret Configuration Security Evidence Patterns\n\n- Keep raw values out of prompts, commands, diffs, fixtures, screenshots, reports, and retained scanner output. Validate transformation-aware redaction with representative secret-bearing shapes and downstream sinks.\n\nUse this evidence-pattern Reference only when a no-leak, least-privilege, redaction, rotation, or recovery claim needs fresh proof; skip when no secret/config security claim awaits validation.\n\n## Evidence Map\n\n- **Source:** bind current detector/version, searched source/history/generated scope, reviewed sensitive paths, and limits; a miss does not prove history, providers, logs, or unscanned artifacts clean.\n- **Frontend:** bind public-prefix rules, bundles/static configuration, source-map/CDN scope, environment labels, deployments and cache limits.\n- **Logs and support:** bind safe allowlisted fields, representative secret-bearing shapes, observed sinks/audience/retention, and downstream/export limits.\n- **Images and builds:** bind Docker/build configuration, image history/provenance, SBOM/report, cache boundary, base/tag limits, and raw-value exclusion.\n- **Rotation:** bind known consumers, rollout order, redacted adoption/audit/health evidence, revoke criteria, rollback trigger, unknown/offline/cache/backup limits.\n- **KMS or secret manager:** bind redacted policy diff, principal/purpose/operation/lifetime scope, deletion/recovery, audit and break-glass owner, runtime/emergency/drift limits.\n\n## Evidence Quality And Authority\n\nStrong evidence is current, final-edit fresh, scoped, redacted, reproducible, owner-attributed, and explicit about limits. Old scans, screenshots without policy diffs, masked settings without representative output, or unknown scope are weak. Missing scope/path/redaction/consumer/recovery/permission evidence remains a gap. Raw secrets, unsafe rollback, unredacted output, or approval substituted for no-leak proof is invalid.\n\nAny provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary. Classify the claim before selecting proof.\n\n"
+          "sha256": "89236feabf88d2618b78efdedb201a64c8723735809d15d169b95ac39d8ef77f",
+          "text": "# Secret Configuration Security Evidence Patterns\n\n- Keep raw values out of prompts, commands, diffs, fixtures, screenshots, reports, and retained scanner output. Validate transformation-aware redaction with representative secret-bearing shapes and downstream sinks.\n\nUse this evidence-pattern Reference only when a no-leak, least-privilege, redaction, rotation, or recovery claim needs fresh proof; skip when no secret/config security claim awaits validation.\n\n## Evidence Map\n\n- **Source:** bind current detector/version, searched source/history/generated scope, reviewed sensitive paths, and limits; a miss does not prove history, providers, logs, or unscanned artifacts clean.\n- **Frontend:** bind public-prefix rules, bundles/static configuration, source-map/CDN scope, environment labels, deployments and cache limits.\n- **Logs and support:** bind safe allowlisted fields, representative secret-bearing shapes, observed sinks/audience/retention, and downstream/export limits.\n- **Images and builds:** bind Docker/build configuration, image history/provenance, SBOM/report, cache boundary, base/tag limits, and raw-value exclusion.\n- **Rotation:** bind known consumers, rollout order, redacted adoption/audit/health evidence, revoke criteria, rollback trigger, unknown/offline/cache/backup limits.\n- **KMS or secret manager:** bind redacted policy diff, principal/purpose/operation/lifetime scope, deletion/recovery, audit and break-glass owner, runtime/emergency/drift limits.\n\n## Evidence Quality And Authority\n\nStrong evidence is current, final-edit fresh, scoped, redacted, reproducible, owner-attributed, and explicit about limits. Old scans, screenshots without policy diffs, masked settings without representative output, or unknown scope are weak. Missing scope/path/redaction/consumer/recovery/permission evidence remains a gap. Raw secrets, unsafe rollback, unredacted output, or approval substituted for no-leak proof is invalid.\n\nFor any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink change, or retention change:\n\n- Require an authorized owner.\n- Require least privilege and bounded scope.\n- Require redaction and a retention boundary.\n- Require a stop condition and a rollback/forward-fix boundary.\n\nClassify the claim before selecting proof.\n\n"
         },
         "document_id": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md#reference",
         "document_part": "reference",
@@ -103447,7 +103595,7 @@
         "line_offset": 0,
         "owner": "secret-configuration-security",
         "path": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md",
-        "review_as_complex_count": 2,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md"
@@ -145863,55 +146011,27 @@
         "band": "review-as-complex",
         "decisions": null,
         "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
-        "finding_id": "391793c8a54c7cd7ab949f0cdf31b7fdb973f96f409a6e704835c41f677ea53b",
-        "kind": "sentence-length",
-        "line": 24,
-        "preview": "**Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation race",
-        "sentence": "**Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior.",
-        "sentence_fingerprint": "c07c6308f7c8324c568356f607ca6206ac6b1dd75984b51488bf08eadebdb86b",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 224,
-          "end_line": 24,
-          "end_offset": 1551,
-          "lines": [
-            {
-              "line": 24,
-              "text": "- **Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior."
-            }
-          ],
-          "sha256": "f422342425e3f84bfbba4c926c5e0511cc2098a8292070d6aa603ad64a92e952",
-          "start_column": 3,
-          "start_line": 24,
-          "start_offset": 1330
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
         "finding_id": "aff44d003b50635c4eefb811a4e9b42fad02d20fe8f6698bc6823bba5ecc0d2f",
         "kind": "sentence-length",
-        "line": 25,
+        "line": 26,
         "preview": "**Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quaran",
         "sentence": "**Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner.",
         "sentence_fingerprint": "219055ecc13bd8ea0018a9ac139b7e4accd11be138560c9b48bbd576e3116261",
         "severity": "advisory",
         "source_span": {
           "end_column": 235,
-          "end_line": 25,
-          "end_offset": 1786,
+          "end_line": 26,
+          "end_offset": 1834,
           "lines": [
             {
-              "line": 25,
+              "line": 26,
               "text": "- **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner."
             }
           ],
           "sha256": "5ca604d402be69c4fcdf36092565ea6661f352ff5ad2fbf83d21724c3e91666e",
           "start_column": 3,
-          "start_line": 25,
-          "start_offset": 1554
+          "start_line": 26,
+          "start_offset": 1602
         },
         "words": 29
       },
@@ -145921,25 +146041,25 @@
         "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
         "finding_id": "d5bd7351e326a18b4d5e6a5f4e63363954a20f6c9340f6a0ca520b5b6d653af3",
         "kind": "sentence-length",
-        "line": 26,
+        "line": 27,
         "preview": "**Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to t",
         "sentence": "**Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job.",
         "sentence_fingerprint": "526d624a2e7a84611b5585fef38ae16da485cdd505fe395c37d36ec33ceaf965",
         "severity": "advisory",
         "source_span": {
           "end_column": 198,
-          "end_line": 26,
-          "end_offset": 1984,
+          "end_line": 27,
+          "end_offset": 2032,
           "lines": [
             {
-              "line": 26,
+              "line": 27,
               "text": "- **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job."
             }
           ],
           "sha256": "03501d2f8b78bcc6afa54abd866824477114229570303530880cf4d09a059652",
           "start_column": 3,
-          "start_line": 26,
-          "start_offset": 1789
+          "start_line": 27,
+          "start_offset": 1837
         },
         "words": 25
       },
@@ -147286,34 +147406,6 @@
           "start_offset": 2779
         },
         "words": 27
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md#reference",
-        "finding_id": "7831e974fce29cb932f5d8e5ea88ff0083357a18520ae2150cf0b40ecabd3ff3",
-        "kind": "sentence-length",
-        "line": 26,
-        "preview": "If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available",
-        "sentence": "If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available, stop condition, rollback or forward-fix path, and secret/output redaction.",
-        "sentence_fingerprint": "91e22df95d3a531b2191680a65969d3d1f310868c521a98f5bad8d537daa74cd",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 259,
-          "end_line": 26,
-          "end_offset": 3976,
-          "lines": [
-            {
-              "line": 26,
-              "text": "- If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available, stop condition, rollback or forward-fix path, and secret/output redaction."
-            }
-          ],
-          "sha256": "fdcc54efb6ab7831844b6cd22b8afce03a3f4b2f8c3fced04e900024774d09c8",
-          "start_column": 3,
-          "start_line": 26,
-          "start_offset": 3720
-        },
-        "words": 32
       },
       {
         "band": "review-as-complex",
@@ -154314,34 +154406,6 @@
       {
         "band": "review-as-complex",
         "decisions": null,
-        "document_id": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md#reference",
-        "finding_id": "4e2a951924e98ff8128e828588765c5651534d6a8bede47ea375a53697c3aa84",
-        "kind": "sentence-length",
-        "line": 28,
-        "preview": "If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner",
-        "sentence": "If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner, and redaction rule.",
-        "sentence_fingerprint": "a4d15e801ff239d37658267d98b9e7733dbe87c936dd4cf5017552046c4bcf2f",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 204,
-          "end_line": 28,
-          "end_offset": 4153,
-          "lines": [
-            {
-              "line": 28,
-              "text": "- If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner, and redaction rule."
-            }
-          ],
-          "sha256": "cc6e3f1e8e401677ddda8698a8e973f41eff20b73179406bb704a5d0b2276ba6",
-          "start_column": 3,
-          "start_line": 28,
-          "start_offset": 3952
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
         "document_id": "src/foundation/capabilities/information-architecture/SKILL.md#body",
         "finding_id": "d6dd6ffa4a2d0e661181f18905853a5e3648d0e76330b13bf30abb336c637f1c",
         "kind": "sentence-length",
@@ -155512,34 +155576,6 @@
           "start_column": 3,
           "start_line": 27,
           "start_offset": 3272
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md#reference",
-        "finding_id": "9848c858d6318b25cb00c98aa716d09157f1541ffcf7db9ebb55bc353cc6eae9",
-        "kind": "sentence-length",
-        "line": 31,
-        "preview": "If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and sto",
-        "sentence": "If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and stop condition.",
-        "sentence_fingerprint": "4301eb164e181cf4e3f65df503f52707e8601f750cb15c1ff7b9096366365ab7",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 195,
-          "end_line": 31,
-          "end_offset": 4041,
-          "lines": [
-            {
-              "line": 31,
-              "text": "- If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and stop condition."
-            }
-          ],
-          "sha256": "58e0abca50d069ed145245e80383b84a4c66f1642bed5d116221f581c1a838e5",
-          "start_column": 3,
-          "start_line": 31,
-          "start_offset": 3849
         },
         "words": 25
       },
@@ -158570,34 +158606,6 @@
       {
         "band": "review-as-complex",
         "decisions": null,
-        "document_id": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md#reference",
-        "finding_id": "fedfa4c98f45254ac69880f636cfedf7bb87639accf4216815800f6a07d117f9",
-        "kind": "sentence-length",
-        "line": 31,
-        "preview": "If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forwa",
-        "sentence": "If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forward-fix path, and secret redaction rule.",
-        "sentence_fingerprint": "204ff5054f8d01a0fcaa7c01b8d1d9b846f91ede427f9ce6162f70e71a322389",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 222,
-          "end_line": 31,
-          "end_offset": 5555,
-          "lines": [
-            {
-              "line": 31,
-              "text": "- If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forward-fix path, and secret redaction rule."
-            }
-          ],
-          "sha256": "36928fc5b490778346c46ec95da5d8783ad39e16a7290c149e8d6270066fda56",
-          "start_column": 3,
-          "start_line": 31,
-          "start_offset": 5336
-        },
-        "words": 27
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
         "document_id": "src/foundation/capabilities/page-component-decomposition/SKILL.md#body",
         "finding_id": "32b35b410a6061303d88bda302ada6f3d33c3c1ed45cb02c3a107e4912e809fe",
         "kind": "sentence-length",
@@ -161286,34 +161294,6 @@
       {
         "band": "review-as-complex",
         "decisions": null,
-        "document_id": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md#reference",
-        "finding_id": "3a15af9d92aee3e44e2720a9269fc8777e92eb71c6c9f0f27703105d2fc823fb",
-        "kind": "sentence-length",
-        "line": 23,
-        "preview": "If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix",
-        "sentence": "If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction.",
-        "sentence_fingerprint": "047becfc5c55117869da8f527ee8cdf5965e84afd81880cf94fd7ce703f7d3f5",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 227,
-          "end_line": 23,
-          "end_offset": 3411,
-          "lines": [
-            {
-              "line": 23,
-              "text": "- If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction."
-            }
-          ],
-          "sha256": "436b05165e1bff5d8d6b3dec8d6fb4a8bad584832b63d1cbc899ee8e132861ed",
-          "start_column": 3,
-          "start_line": 23,
-          "start_offset": 3187
-        },
-        "words": 28
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
         "document_id": "src/foundation/capabilities/search-analytics-design/references/benchmarks-and-patterns.md#reference",
         "finding_id": "55c1f4d5555c8ee8391719204c5eb96338d5edc5ef3e78a74cff25ae46ea0588",
         "kind": "sentence-length",
@@ -161674,34 +161654,6 @@
           "start_offset": 268
         },
         "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md#reference",
-        "finding_id": "bb737463af946afd3ec2779112666b1e450ff2fb64d8799bdfbcfe1b5a7a1f12",
-        "kind": "sentence-length",
-        "line": 20,
-        "preview": "Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope",
-        "sentence": "Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary.",
-        "sentence_fingerprint": "d508284efa3ad6d9a40c9a2be3c30fd44a191f4b00cf3db95c6cd6867bd02b3b",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 245,
-          "end_line": 20,
-          "end_offset": 2191,
-          "lines": [
-            {
-              "line": 20,
-              "text": "Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary. Classify the claim before selecting proof."
-            }
-          ],
-          "sha256": "5ef6f23ae4056d5788ee9d9de4779fec210333ba47890255d20ebd842c10d6ca",
-          "start_column": 1,
-          "start_line": 20,
-          "start_offset": 1947
-        },
-        "words": 28
       },
       {
         "band": "review-as-complex",
@@ -167256,17 +167208,17 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 1077,
-      "value": "5c09a7318c1daeb49b173bad44a409b20fb5e8e84c57ac27f9fb91ad534079c8"
+      "value": "f851d2b55f23f5ffc4eec84b1565127a0da114e180cd87477e2ff3383dd70591"
     },
     "summary": {
       "advisory_documents": 331,
-      "advisory_sentences": 809,
+      "advisory_sentences": 802,
       "blocker_findings": 0,
       "compound_bullets": 0,
       "documents": 1077,
       "hard_fail_sentences": 0,
       "hard_gate_ready": true,
-      "review_as_complex_sentences": 795,
+      "review_as_complex_sentences": 788,
       "tighten_sentences": 14
     }
   },
@@ -167451,8 +167403,8 @@
         "evidence-pattern": {
           "existing_indexed": 165,
           "indexed": 165,
-          "indexed_lines": 4455,
-          "indexed_tokens": 79593,
+          "indexed_lines": 4491,
+          "indexed_tokens": 79657,
           "structural_advisory_references": 0
         },
         "index": {
@@ -167510,8 +167462,8 @@
         "foundation": {
           "existing_indexed": 411,
           "indexed": 411,
-          "indexed_lines": 11365,
-          "indexed_tokens": 211447,
+          "indexed_lines": 11401,
+          "indexed_tokens": 211511,
           "missing": 0,
           "orphan": 0,
           "physical": 412,
@@ -167557,7 +167509,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 1050,
-        "value": "d32da983bb977acee2715c53d6a3f550b2df9cd37c3bbde7ff30f2f1a282f50d"
+        "value": "55721024fdf2cf66719bd82dd790fe3f680ec8a9fd3aaf6bc995b76fa7857f36"
       },
       "source_precedence": [
         "local",
@@ -190496,12 +190448,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 26,
+        "line_count": 32,
         "max_decision_section_item_count": 0,
         "owner": "cleanup-deletion-governance",
         "path": "src/foundation/capabilities/cleanup-deletion-governance/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 754
+        "token_count": 762
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -206999,12 +206951,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 28,
+        "line_count": 34,
         "max_decision_section_item_count": 0,
         "owner": "indexing-query-optimization",
         "path": "src/foundation/capabilities/indexing-query-optimization/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 793
+        "token_count": 805
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -210505,12 +210457,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 31,
+        "line_count": 37,
         "max_decision_section_item_count": 0,
         "owner": "language-idiom-enforcement",
         "path": "src/foundation/capabilities/language-idiom-enforcement/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 773
+        "token_count": 781
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -216611,12 +216563,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 31,
+        "line_count": 37,
         "max_decision_section_item_count": 0,
         "owner": "package-dependency-management",
         "path": "src/foundation/capabilities/package-dependency-management/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 1031
+        "token_count": 1042
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -224583,7 +224535,7 @@
           },
           {
             "level": 2,
-            "line": 25,
+            "line": 30,
             "title": "Anti-Patterns"
           }
         ],
@@ -224593,12 +224545,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 27,
+        "line_count": 32,
         "max_decision_section_item_count": 0,
         "owner": "sdk-library-contract-design",
         "path": "src/foundation/capabilities/sdk-library-contract-design/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 649
+        "token_count": 659
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -225472,12 +225424,12 @@
         "invalid_decision_section_headings": [],
         "kind": "evidence-pattern",
         "layer": "foundation",
-        "line_count": 21,
+        "line_count": 28,
         "max_decision_section_item_count": 0,
         "owner": "secret-configuration-security",
         "path": "src/foundation/capabilities/secret-configuration-security/references/evidence-patterns.md",
         "reference_type": null,
-        "token_count": 444
+        "token_count": 459
       },
       {
         "advisory_kind": "benchmark-pattern",
@@ -313054,9 +313006,9 @@
       "effective_required_output": 659,
       "exactly_one_h1": 659,
       "existing_indexed_references": 659,
-      "indexed_lines": 17563,
+      "indexed_lines": 17599,
       "indexed_reference_entries": 659,
-      "indexed_tokens": 296146,
+      "indexed_tokens": 296210,
       "indexed_unique_paths": 659,
       "load_when_prefaces": 58,
       "missing_effective_do_not_load_when": 0,
@@ -314500,7 +314452,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": "compact",
         "content_class_rationale": null,
-        "content_fingerprint": "1dab2e46614c3d7e680d084024a5ee3901d0cae898b681218d7f3e8ea5e2591c",
+        "content_fingerprint": "377ec39af3a3931cd21c96f6f357f62192e6a88138e12dbd655e23f1b188c2de",
         "content_hard_tokens": 900,
         "content_hard_words": 500,
         "content_target_tokens": null,
@@ -314508,13 +314460,13 @@
         "decision_density": 1.0,
         "document_id": "src/foundation/capabilities/async-job-design/SKILL.md#body",
         "document_part": "body",
-        "high_value_rule_count": 7,
-        "high_value_rule_decision_count": 7,
+        "high_value_rule_count": 8,
+        "high_value_rule_decision_count": 8,
         "high_value_rule_sentence_max": 1,
         "high_value_rules_over_sentence_limit": 0,
         "high_value_rules_without_decision_semantics": 0,
         "layer": "foundation-capability",
-        "line_count": 48,
+        "line_count": 49,
         "max_prose_line_words": 37,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
@@ -314524,9 +314476,9 @@
         "over_content_target_words": false,
         "owner": "async-job-design",
         "path": "src/foundation/capabilities/async-job-design/SKILL.md",
-        "token_count": 534,
+        "token_count": 544,
         "tutorial_explanatory_density": 0.0,
-        "word_count": 380
+        "word_count": 386
       },
       {
         "content_fingerprint": "9d15f1f8217510a3e79f17c3d85715920deac7fcafe8e9c37bd63d6751ea33a3",
@@ -328076,7 +328028,7 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 409,
-      "value": "a630efa59823c596d58bf48b53a0dc096b1cb5a09a6e648b0febd332766c4418"
+      "value": "77cbfe1104869c02e1c1006768c9ff35e961c0a663ba8b391e8bcdccff629500"
     },
     "summary": {
       "agent_facing_root_documents": 409,
@@ -331320,7 +331272,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 6,
       "benchmark_section_length": 0,
-      "bullet_count": 13,
+      "bullet_count": 14,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -331341,20 +331293,20 @@
       "findings": [],
       "front_loaded_action_score": 40,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 41,
+      "governed_line_count": 42,
       "has_shared_optimality": false,
       "heading_count": 8,
       "high_confidence_control_scaffold": false,
-      "high_value_rule_count": 7,
-      "high_value_rule_decision_count": 7,
+      "high_value_rule_count": 8,
+      "high_value_rule_decision_count": 8,
       "high_value_rule_sentence_max": 1,
       "high_value_rules_over_sentence_limit": 0,
       "high_value_rules_without_decision_semantics": 0,
       "kind": "foundation-capability",
-      "largest_section_lines": 10,
-      "largest_section_title": "Registry Trigger",
+      "largest_section_lines": 11,
+      "largest_section_title": "High-Value Rules",
       "largest_table_rows": 4,
-      "line_count": 48,
+      "line_count": 49,
       "max_prose_line_words": 37,
       "name": "async-job-design",
       "optimality_section_length": 0,
@@ -331382,10 +331334,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 534,
+      "token_count": 544,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 1,
-      "word_count": 380
+      "word_count": 386
     },
     {
       "actionability_applicable": false,

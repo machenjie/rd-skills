@@ -442,6 +442,31 @@ bytes. This closes the Semantic axis only; the second Readability round,
 Professional Completeness review, final Full Regression, and clean final-tree
 Core formal gate remain required.
 
+The second Readability round used frozen source commit `cb2f9177`. Each of the
+same three independent reviewers judged all 26 density targets and all 809
+findings in 331 complete logical documents. Their canonical manifests matched
+their original byte counts and SHA-256 digests and passed official
+materialization and validation. The two-of-three decision accepted all density
+targets and required tightening in seven documents, covering seven findings.
+The 35 single-vote findings remain recorded separately from that majority.
+
+The resulting seven-file repair was committed as `a0b40086`. It separates
+outcome classification from asynchronous-effect safeguards and separates
+operational evidence controls under their original applicability conditions.
+The repair map preserves 48 original scope and control obligations. Independent
+review compared all seven files with their originals and found no P0–P2 defects.
+No Reference loading contract, inventory, budget, detector, or panel rule changed.
+
+Source, strict Reference, and readability hard checks passed after the final
+edit, as did the fresh authoring audit. The changed Foundation root has eight
+rules and no missing decision semantics. All four Semantic fingerprints remain
+unchanged, and all 149 applications remain current. All three fixed attestations
+retain their prior bytes. The collector now reports 331 advisory documents and
+802 findings with zero hard or compound-bullet blockers; these results do not
+establish Readability acceptance. A third full-coverage Readability round,
+Professional Completeness review, final Full Regression, and the clean final-tree
+Core formal gate remain required.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.
