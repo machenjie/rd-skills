@@ -28,4 +28,10 @@ Use this reference when dependency approval depends on repository inspection, pr
 - Map every final approval claim to a current command, report/artifact path, source diff, owner approval, or explicit not-verified residual risk.
 
 - If package registry, advisory database, OpenSSF, SLSA/provenance, or license service lookup, cite source URL/service, timestamp, package coordinates, timeout, and absence of production credentials.
-- If dependency publish, deploy, rollback, registry token use, production scanner, or connector write, require explicit owner, dry-run where available, stop condition, rollback/forward-fix path, and secret redaction rule.
+
+For dependency publish, deploy, rollback, registry token use, production scanner, or connector write operations:
+
+- Require an explicit owner.
+- Require a dry-run where available.
+- Require a stop condition and a rollback/forward-fix path.
+- Require a secret redaction rule.

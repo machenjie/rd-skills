@@ -20,7 +20,12 @@ Use this reference when SDK/library closure depends on validation freshness, gen
 - **Missing evidence**: absent proof required by the selected claim, such as public API comparison, consumer compatibility, packed-artifact examples, or publication/recovery authority. Spec hashes and generated-diff review apply to generated surfaces; provenance, SBOM, and signing checks follow the actual artifact and release contract.
 - **Invalid evidence**: semver class contradicts API diff, generated output from floating `latest`, docs example imports source internals, old validation predates final generated diff, or release artifact is unsigned when policy requires signing.
 
-- If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction.
+For registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke operations:
+
+- Require an owner.
+- Require a dry-run or staging where available.
+- Require a rollback/yank/hotfix path and a stop condition.
+- Require secret redaction.
 
 ## Anti-Patterns
 

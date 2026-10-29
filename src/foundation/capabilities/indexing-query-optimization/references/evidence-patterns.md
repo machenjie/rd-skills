@@ -25,4 +25,10 @@ Use this reference when query/index closure depends on prior task evidence, repo
 - Otherwise, mark the claim unverified and name the unexercised data shape, environment, or residual risk.
 
 - If local database plan or benchmark command, record dataset, schema version, parameters, cleanup, and absence of production credentials.
-- If production DB plan, index build/drop, telemetry export, deploy, or rollback command, require permission, dry-run when available, stop condition, rollback/forward-fix path, owner, and redaction rule.
+
+For production DB plans, index builds/drops, telemetry exports, deploys, or rollback commands:
+
+- Require permission and an owner.
+- Require a dry-run when available.
+- Require a stop condition and a rollback/forward-fix path.
+- Require a redaction rule.

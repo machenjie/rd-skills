@@ -17,5 +17,12 @@ Use this evidence-pattern Reference only when a no-leak, least-privilege, redact
 
 Strong evidence is current, final-edit fresh, scoped, redacted, reproducible, owner-attributed, and explicit about limits. Old scans, screenshots without policy diffs, masked settings without representative output, or unknown scope are weak. Missing scope/path/redaction/consumer/recovery/permission evidence remains a gap. Raw secrets, unsafe rollback, unredacted output, or approval substituted for no-leak proof is invalid.
 
-Any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink or retention change requires an authorized owner, least privilege, bounded scope, redaction, stop, retention, and rollback/forward-fix boundary. Classify the claim before selecting proof.
+For any provider/API read, CI/support export, rotation/revocation, KMS deletion, release, cleanup, sink change, or retention change:
+
+- Require an authorized owner.
+- Require least privilege and bounded scope.
+- Require redaction and a retention boundary.
+- Require a stop condition and a rollback/forward-fix boundary.
+
+Classify the claim before selecting proof.
 

@@ -23,4 +23,10 @@ Use this reference when closure depends on repository inspection, prior task evi
 - For each final deletion-safety claim, cite current source, graph or search evidence, telemetry or report, validator output, owner approval, or explicit not-run residual risk. The handoff also names unsearched dynamic or external consumers.
 
 - If generated rebuild, package/install validation, or cleanup fixture regeneration, record source-of-truth input, generated output owner, diff review, and revert path.
-- If destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback command, require explicit permission, dry-run or rendered diff when available, stop condition, rollback or forward-fix path, and secret/output redaction.
+
+For destructive deletion, live config removal, deploy, publish, migration, backup, restore, or rollback commands:
+
+- Require explicit permission.
+- Require a dry-run or rendered diff when available.
+- Require a stop condition and a rollback or forward-fix path.
+- Require secret/output redaction.

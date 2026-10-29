@@ -25,7 +25,8 @@ Define job identity, acceptance and commit boundaries, lifecycle, scheduling, co
 - **Coordinate acceptance with durable intent.** Map crashes before and after request response, job record, enqueue, business effect, progress update, and acknowledgement so accepted work cannot disappear silently or execute twice.
 - **Model lifecycle and unknown outcomes.** Define queued, leased or running, blocked, cancelling, completed, failed, exhausted, and repair states only where semantics differ, including stale leases and lost worker responses.
 - **Bound concurrency and scheduling.** Derive worker, tenant, key, dependency, priority, fairness, deadline, and overlap controls from current side effects, capacity, and ordering requirements.
-- **Coordinate retry and cancellation with effects.** Distinguish transient, permanent, unknown, and partial outcomes; preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior.
+- **Classify retry and cancellation outcomes.** Distinguish transient, permanent, unknown, and partial outcomes.
+- **Coordinate retry and cancellation with effects.** Preserve idempotency, aggregate retry budget, cancellation races, cleanup, and late completion behavior.
 - **Expose progress and terminal recovery.** Make status meaningful, monotonic where promised, attributable to current attempts, and connected to reconciliation, compensation, quarantine, manual repair, or accepted loss with an owner.
 - **Prove crash and overload paths.** Exercise duplicate acceptance, worker death, timeout, cancellation, retry exhaustion, poison input, queue saturation, and recovery relevant to the changed job.
 

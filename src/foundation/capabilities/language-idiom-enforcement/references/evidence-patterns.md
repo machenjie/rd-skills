@@ -28,4 +28,10 @@ Use this reference when idiom-enforcement closure depends on repository conventi
 - Map every accepted idiom claim to a current command, typecheck, lint, formatter, test, static analysis, local example, owner approval, or explicit not-run residual risk.
 
 - If dependency install, code generation, fixture refresh, or formatter rewrite, record source of truth, generated output owner, diff review, rollback path, and package/version boundary.
-- If live service, production data, cloud console, package publishing, or security scanner export, require permission, redaction, retention limit, rollback or no-write proof, and stop condition.
+
+For live service, production data, cloud console, package publishing, or security scanner export operations:
+
+- Require permission.
+- Require redaction and a retention limit.
+- Require rollback or no-write proof.
+- Require a stop condition.
