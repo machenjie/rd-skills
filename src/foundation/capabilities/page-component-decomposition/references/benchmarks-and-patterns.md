@@ -19,6 +19,6 @@ For local component state, choose the nearest owner containing its current reade
 
 Reject visual-box-only splitting, shared “utils/components” without a semantic owner, and primitives that import router/store/API/analytics/env. Also reject custom hooks returning UI, duplicate server truth in local state, and state placed so high that resetting it requires unrelated unmounting.
 
-Inspect current components, imports, effects, stories/tests, design-system candidates, and actual consumers. Source structure cannot prove runtime render cost, subscription behavior, accessibility, or future reuse; a second consumer is evidence only when the semantic contract really matches.
+Inspect current components, imports, effects, stories/tests, design-system candidates, and actual consumers. Source structure cannot prove runtime render cost, subscription behavior, accessibility, or future reuse. A second consumer is evidence only when the semantic contract really matches.
 
 Route state lifetime/cache/persistence to `state-management-design`, permission policy to `permission-boundary-modeling`, shared visual governance to `design-system-rules`, API lifecycle to `frontend-api-integration`, and behavior/accessibility proof to `frontend-testing`.

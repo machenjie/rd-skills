@@ -22,7 +22,8 @@ Use this reference when role-inventory closure depends on current source evidenc
 - Record inspected and skipped boundaries: actor source, policy file, API route, UI route, job, webhook, service account, IdP/provider, support tool, audit event, test path, report artifact, and production-only control.
 - For each final actor-confidence claim, cite a current source path, command, report, test, policy or documentation section, or owner review. An unsupported claim remains unverified with named residual risk.
 
-- If connector, telemetry, production policy, IdP, IAM, or support-tool reads, treat them as external or secret-sensitive, require owner-approved bounded credentials, timestamp, redaction, and evidence-limit disclosure.
+- For connector, telemetry, production policy, IdP, IAM, or support-tool reads, treat them as external or secret-sensitive. Require owner-approved bounded credentials for those reads.
+- Timestamp and redact evidence from those external or secret-sensitive reads. Disclose its limits.
 - If role policy, permission contract, source, test, or documentation updates, record diff scope, rollback path, validation map, and downstream Skill or owner.
 
 ## Blocking Conditions

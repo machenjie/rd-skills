@@ -22,5 +22,5 @@ Load this reference when permission authority, enforcement reachability, object 
 ## Anti-Patterns
 
 - Treat a role, hidden UI control, gateway scope, authenticated caller, or internal workload as the authoritative permission decision for object- or tenant-sensitive work.
-- Let caller-controlled owner, tenant, role, status, purpose, or mutable privilege fields establish entitlement, or filter a broad result after protected data has crossed its disclosure boundary.
+- Let caller-controlled owner, tenant, role, status, purpose, or mutable privilege fields establish entitlement. Filter a broad result after protected data has crossed its disclosure boundary.
 - Generalize one endpoint’s denial response, one policy placement, or one happy-path fixture to unrelated resources, entry points, bulk behavior, delegated actors, or deployed policy state.

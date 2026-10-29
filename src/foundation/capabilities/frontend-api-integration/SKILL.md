@@ -23,7 +23,8 @@ Implement request identity, API contract use, cancellation, stale-response handl
 
 - **Bind requests to current user intent.** Define input identity, tenant or account context, cache key, supersession, cancellation, and late-response ordering so stale work cannot overwrite newer state.
 - **Consume the declared API contract.** Map request and response fields, errors, pagination, empty values, compatibility, and partial outcomes without inferring behavior from one successful sample.
-- **Coordinate authentication expiry centrally.** Follow the current session and replay contract, prevent refresh amplification, preserve safe navigation intent, and avoid replaying consequential requests whose commit status is unknown.
+- **Coordinate authentication expiry centrally.** Follow the current session and replay contract. Prevent refresh amplification.
+- **Recover safely from authentication expiry.** Preserve safe navigation intent. Avoid replaying consequential requests whose commit status is unknown.
 - **Model cache freshness and invalidation.** Identify authoritative source, key dimensions, ownership, stale allowance, mutation effects, pagination interaction, account switching, and recovery after invalidation failure.
 - **Treat pagination and streaming as changing datasets.** Define cursor or offset stability, duplicate and missing item behavior, ordering, filter changes, cancellation, completion, and reconciliation with concurrent updates.
 - **Reconcile optimistic and unknown outcomes.** Preserve prior state, operation identity, server authority, rejection, timeout, duplicate submission, rollback or forward reconciliation, and user-visible uncertainty.

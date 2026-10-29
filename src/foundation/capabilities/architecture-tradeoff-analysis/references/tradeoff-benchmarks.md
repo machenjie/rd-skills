@@ -11,7 +11,7 @@ Load this reference when feasible options need a comparison method and current e
 | Evidence strength | Observed, authoritative, modeled, assumed, or unavailable | Do not convert evidence quality into false arithmetic precision |
 | Assumption sensitivity | Selection stable, unstable, or unresolved under plausible change | Show whether supported input ranges change feasibility or the selected option |
 
-Start with qualitative comparison. Use numeric scoring only when feasible options share an evidence-backed scale and the result remains interpretable under uncertainty; define the scale before comparison and show sensitivity. Do not invent weights, placeholder values, or totals to make an already preferred option appear objective.
+Start with qualitative comparison. Use numeric scoring only when feasible options share an evidence-backed scale and the result remains interpretable under uncertainty. Define the scale before comparison. Show sensitivity. Do not invent weights, placeholder values, or totals to make an already preferred option appear objective.
 
 A disqualified option remains outside preference comparison until evidence shows the hard constraint no longer applies. If hard constraints leave one feasible path, report the constraint result and proof limits instead of manufacturing a tradeoff matrix.
 

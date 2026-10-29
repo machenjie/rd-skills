@@ -22,7 +22,7 @@ Define route identity, parameter and state semantics, navigation intent, guards,
 ## High-Value Rules
 
 - **Treat route identity as a consumer contract.** Define canonical path, parameters, query state, fragments, aliases, serialization, and compatibility for bookmarks, shared links, analytics, crawlers, and external launchers relevant to the task.
-- **Separate reachability from permission.** Route guards may coordinate navigation, but protected actions and resources remain enforced at their authoritative service or policy boundary; avoid leaking existence through divergent route behavior.
+- **Separate reachability from permission.** Route guards may coordinate navigation, but protected actions and resources remain enforced at their authoritative service or policy boundary. Avoid leaking existence through divergent route behavior.
 - **Preserve navigation intent through authentication and recovery.** Validate return targets, tenant and account context, stale state, and open-redirect boundaries before resuming an interrupted path.
 - **Make redirects deliberate and bounded.** State source, destination, parameter preservation, loop prevention, history replacement or addition, compatibility window, and fallback when the destination is unavailable.
 - **Model history and back behavior by user task.** Cover entry from internal navigation, direct link, refresh, external launcher, modal or nested flow, completion, cancellation, and expired state without assuming one stack shape.

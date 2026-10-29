@@ -22,11 +22,11 @@ Define physical relational representation, database-enforceable integrity, engin
 
 ## High-Value Rules
 
-- Place each invariant at the strongest authority that can express it under concurrent writers.
-- Use a database constraint as the final authority for an engine-expressible predicate reachable through concurrent writer paths.
+- Place each invariant at the strongest authority that can express it under concurrent writers. Use a database constraint as the final authority for an engine-expressible predicate reachable through concurrent writer paths.
 - Treat application validation as feedback rather than race-safe authority for such predicates.
 - Define key, relationship, and lifecycle semantics before DDL: identity stability, tenant scope, composite uniqueness, null versus absent meaning, foreign-key update or delete behavior, soft deletion, history, and orphan handling. Physical convenience cannot invent business meaning.
-- Treat constraint conflicts as expected concurrent outcomes. Map uniqueness, reference, check, or version conflicts into stable domain failures, and prove the losing path preserves required failure atomicity; a read-then-write precheck alone is race-prone.
+- Treat constraint conflicts as expected concurrent outcomes. Map uniqueness, reference, check, or version conflicts into stable domain failures.
+- Prove the losing path of a constraint conflict preserves required failure atomicity. A read-then-write precheck alone is race-prone.
 - Name the anomaly before selecting isolation, locks, or versions from effective engine, connection, replica, and retry semantics.
 - Map proposed indexes to named query access characteristics, data distribution, and mutation cost without assuming plan optimality.
 - Before a physical schema change, classify engine-specific lock, rewrite, validation, mixed-version, reader/writer, recovery, and rollback consequences. Route rollout and backfill mechanics to `data-migration-design` rather than prescribing a universal DDL recipe.

@@ -23,7 +23,7 @@ Use this reference when documentation closure depends on claim-to-source mapping
 - Map every final documentation claim to a source path, command, generated artifact, validation report, owner review, or explicit not-verified residual risk.
 
 - If command snippets that mutate files, data, infrastructure, credentials, or external systems, record preconditions, dry-run or sandbox, rollback/forward-fix, owner, and redaction rule.
-- If connector, ticket, wiki, cloud console, or production telemetry supports documentation, treat it as external or credential-scoped, use bounded approved credentials when required, and record scope, timestamp, redaction, and owner.
+- If a connector, ticket, wiki, cloud console, or production telemetry supports documentation, treat it as external or credential-scoped. For that evidence, use bounded approved credentials when required. Record its scope, timestamp, redaction, and owner.
 
 ## Anti-Patterns
 

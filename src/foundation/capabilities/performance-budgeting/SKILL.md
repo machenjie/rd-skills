@@ -26,7 +26,7 @@ Define threshold authority, representative workload, changed-surface coverage, m
 - **Map changed surfaces to budgets.** Connect affected routes, endpoints, queries, jobs, payloads, dependencies, resource pools, and unit-cost drivers to explicit metrics, validators, owners, and release actions; exclude uninspected siblings from coverage.
 - **Protect measurement integrity.** Report matched conditions, distributions, errors, rejections, variance, and noise rather than one convenient sample.
 - **Choose enforcement from consequence and evidence quality.** Warning, blocking, abort, degradation, rollback, or follow-up are risk decisions; do not impose one gate mechanism across unrelated budgets.
-- **Preserve correctness, security, and durability.** A faster or cheaper path fails when it changes accepted semantics, drops required work, weakens isolation, or hides errors; measure rejected and degraded outcomes with success.
+- **Preserve correctness, security, and durability.** A faster or cheaper path fails when it changes accepted semantics, drops required work, weakens isolation, or hides errors. Measure rejected and degraded outcomes alongside successful outcomes.
 - **Make exceptions explicit and removable.** Record authority, affected outcome, rationale, mitigation, revisit or expiry trigger, residual risk, and the evidence that removes the exception.
 
 ## Anti-Patterns

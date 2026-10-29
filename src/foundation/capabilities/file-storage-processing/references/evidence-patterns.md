@@ -22,5 +22,6 @@ Use this reference when file-storage closure depends on validation freshness, pr
 - Mark evidence stale after edits to upload/download routes, signed-URL policy, object key shape, scanners, processors, lifecycle rules, cleanup jobs, bucket/IAM/KMS policy, CDN rules, tests, reports, or build outputs.
 - For each final-handoff claim about a file class, state transition, access rule, scan gate, processor, lifecycle rule, storage policy, or cleanup, name supporting command, test, report, manual artifact, or explicit residual risk.
 
-- If cloud bucket/IAM/KMS/CDN policy read, scanner update, or telemetry query, treat it as external or credential-scoped, use bounded approved credentials where required, and record scope, timestamp, redaction, and evidence owner.
+- For a cloud bucket/IAM/KMS/CDN policy read, scanner update, or telemetry query, treat the operation as external or credential-scoped. Use bounded approved credentials where required for that operation.
+- Record scope, timestamp, redaction, and evidence owner for that policy read, scanner update, or telemetry query.
 - If bucket policy change, deletion, quarantine release, CDN purge, key rotation, scanner signature update, or production cleanup run, require explicit permission, rollback/containment path, stop condition, owner, and redaction rule.

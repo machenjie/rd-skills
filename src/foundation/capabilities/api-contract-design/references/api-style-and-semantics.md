@@ -29,5 +29,5 @@ Load this reference for API contract decisions, public/partner/mobile contracts,
 
 Apply the governing published API and consumer-compatibility policy before selecting a versioning mechanism.
 An additive field or endpoint avoids a version change only when consumer evidence preserves validation, exhaustive matching, generated clients, defaults, ordering, and side effects.
-For removal, required fields, or observable semantic change, select a major version, compatibility bridge, or coordinated migration from policy and consumer evidence; document mixed-version behavior, deprecation, and rollback.
+For removal, required fields, or observable semantic change, select a major version, compatibility bridge, or coordinated migration from policy and consumer evidence. For the selected transition, document mixed-version behavior, deprecation, and rollback.
 Use expand-contract only with current writer/reader coordination and rollback evidence. A GraphQL addition or `@deprecated(reason)` still requires schema-policy compliance and current consumer proof.

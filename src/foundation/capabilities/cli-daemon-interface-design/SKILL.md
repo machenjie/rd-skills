@@ -23,7 +23,7 @@ Define explicit CLI and daemon behavior for human use, automation, side effects,
 
 - Define command grammar, configuration precedence, output and error contracts, and exit semantics from the affected human and automation consumers before implementation.
 - When output is machine-consumed, separate stable requested data on stdout from diagnostics on stderr and select a versioned machine-readable representation appropriate to the consumer.
-- For commands with remote, destructive, credential, or out-of-workspace effects, choose truthful preview, scoped confirmation, idempotency, or reconciliation controls from the effect and available authority; do not label a partial simulation as dry-run.
+- For commands with remote, destructive, credential, or out-of-workspace effects, choose truthful preview, scoped confirmation, idempotency, or reconciliation controls from the effect and available authority. Do not label a partial simulation as dry-run.
 - Define non-idempotent rerun and partial-result behavior that prevents harmful silent repetition.
 - When a process handles termination or reload, define cleanup, lock and child ownership, in-flight work, observable completion, and exit behavior from the supervisor and caller contracts.
 - Require explicit production targets and credential input channels protected from history and process listings.

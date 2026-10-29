@@ -15,7 +15,7 @@ Load this Reference for a named fixture ownership, isolation, privacy, determini
 
 ## Isolation, Privacy, And Determinism
 
-- Inventory created rows, documents, keys, queue/DLQ items, files, notifications, sessions, and external records; clean only an owned transaction, namespace, resource, or TTL scope and prove or disclose residue.
+- Inventory created rows, documents, keys, queue/DLQ items, files, notifications, sessions, and external records. Clean only an owned transaction, namespace, resource, or TTL scope. Prove or disclose residue.
 - Control clocks, zones, locales, randomness, IDs, prefixes, ordering, timers, workers, and environment state when the oracle depends on them; a repeated seed proves only that seed.
 - Use synthetic reserved-domain identities and provider-approved values.
 - Label inert secret/cookie fixtures and preserve tested parsing, expiry, signature, `SameSite`, domain, or path semantics.

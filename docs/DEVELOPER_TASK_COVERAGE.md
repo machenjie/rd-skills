@@ -17,7 +17,8 @@ These checks do not prove real framework or language execution, real Host startu
 model quality, GPU behavior, production capacity, or every user environment.
 The fixed Readability and Professional Completeness attestations remain unchanged.
 Their stale or pending state cannot authorize current carry or establish
-`formal-release-ready`. Semantic Disposition uses its separate current-source round.
+`formal-release-ready`. Semantic Disposition requires its own current-source
+round; the readability repairs below invalidate three prior application bindings.
 
 ## Engineering Work
 
@@ -378,6 +379,42 @@ SIGTERM; the wrapper recorded Core exit -15 after 403.380 seconds. No owned
 process remained and commands 2–14 did not run. This is
 `interrupted-for-verified-acceptance-gap`, not a passing Full Regression or a
 reported failure of those unexecuted checks.
+
+The first Readability round used frozen source commit `8e7c403d`. Each of three
+independent AI reviewers covered all 26 density targets and all 839 findings in
+339 logical documents. Their original manifests were recovered or received
+without changing judgments, matched their precommitted byte counts and SHA-256
+digests, and passed official materialization and validation. The official
+two-of-three decision accepted all density targets and required tightening in
+28 documents, covering 30 findings. Four additional single-vote findings remain
+in the decision record and were not represented as majority requirements.
+
+The resulting repair changes those 28 physical files. It separates independent
+actions, conditions, exceptions, and evidence requirements while mapping 88
+original obligations to their resulting sentences. Five Foundation roots were
+reorganized within their existing responsibilities to preserve the 3–8-rule
+and two-sentence limits. No new Reference, loading edge, inventory entry,
+budget, detector, or panel criterion was added. Independent review inspected
+all changed files and the complete diff and found no priority-level defects;
+that review confirms semantic preservation, not panel acceptance.
+
+Final targeted Source validation and the existing readability checks passed.
+The ten changed Foundation roots have 6–8 rules, at most two sentences per
+rule, and no missing decision semantics. Strict Reference validation exited 1
+on one unresolved semantic confirmation. The fresh authoring audit also exited
+1: two Root confirmations and that Reference confirmation remain unresolved.
+They concern `cli-daemon-interface-design`, `extensibility-design`, and
+`test-data-management/references/benchmarks-and-patterns.md`. Both candidate
+manifest fingerprints changed; both detector fingerprints remained unchanged.
+The Semantic application is invalid because its application entries are stale.
+The eligible set still contains 49 Root and 100 Reference candidates.
+
+The fresh readability collector reports 331 advisory documents and 809 sentence
+findings, with zero hard failures or compound-bullet blockers. These collector
+results do not replace three independent full-target votes. All three fixed
+attestations retain their prior bytes. A complete fresh Semantic round must
+resolve the changed bindings before the second Readability round, Professional
+Completeness review, final Full Regression, and final clean-head gates.
 
 ## First Slice Validation
 

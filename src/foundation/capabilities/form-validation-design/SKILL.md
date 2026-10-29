@@ -21,12 +21,12 @@ Define field meaning, client and authoritative validation handoff, async orderin
 
 ## High-Value Rules
 
-- **Define field meaning and canonical value.** Name source, optionality, empty and null behavior, normalization, units, locale, sensitive classification, and the authoritative business object or command each field affects.
+- **Define field meaning and canonical value.** Name source, optionality, empty and null behavior, normalization, units, locale, sensitive classification, and the authoritative business object or command each field affects. Avoid leaking sensitive state during error recovery.
 - **Split immediate guidance from authoritative validation.** Use client checks for timely structural feedback while preserving server, domain, permission, uniqueness, and current-state decisions at their owned boundaries.
 - **Order asynchronous validation safely.** Bind results to field value, form identity, user or tenant context, and request generation so stale responses cannot clear or replace newer errors.
-- **Give submission a stable operation boundary.** Prevent accidental duplicates, preserve unknown outcomes, coordinate cancellation and retry with idempotency, and distinguish accepted, pending, completed, rejected, and failed states.
+- **Give submission a stable operation boundary.** Prevent accidental duplicates, preserve unknown outcomes, coordinate cancellation and retry with idempotency, and distinguish accepted, pending, completed, rejected, and failed states. Retain safe user input during error recovery.
 - **Route ambient-credential mutations to security review.** When browsers attach credentials without an explicit per-request authorization act, require `web-security` and the selected security owners. Their decision defines request-integrity controls and proves cross-site denial.
-- **Map errors to actionable recovery.** Preserve field, form, conflict, permission, dependency, and unexpected meanings, retain safe user input, focus or announce relevant feedback, and avoid leaking sensitive state.
+- **Map errors to actionable recovery.** Preserve field, form, conflict, permission, dependency, and unexpected meanings. Focus or announce relevant feedback.
 - **Handle cross-field and server changes.** Re-evaluate dependent fields when inputs change and reconcile stale drafts, concurrent updates, expired state, and server-normalized values without silently discarding user intent.
 - **Prove representative interaction paths.** Exercise keyboard and assistive use, invalid and boundary values, async races, duplicate submission, timeout, server rejection, recovery, and preserved-input behavior relevant to the task.
 

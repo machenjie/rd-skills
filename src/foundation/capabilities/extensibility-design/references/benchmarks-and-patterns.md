@@ -29,7 +29,7 @@ Use this reference when an extensibility-design output needs pattern choice, ben
 
 - **Core-owned invariants:** authorization, validation, pricing, accounting, audit, tenant isolation, retry/idempotency, and state transitions stay outside extension control. Extensions may receive read-only views or produce candidate outputs that core logic validates.
 - **Typed contract first:** prefer explicit method signatures, schema fields, error types, and lifecycle states over generic maps, string commands, or reflection.
-- **Least privilege by extension class:** grant filesystem, network, and service access only for the extension's actual capability and consequence boundary; process placement alone does not determine those grants; webhooks receive signed bounded payloads; tenant config cannot invoke code.
+- **Least privilege by extension class:** grant filesystem, network, and service access only for the extension's actual capability and consequence boundary. Process placement alone does not determine those grants. Webhooks receive signed bounded payloads. Tenant config cannot invoke code.
 - **Observability per implementer:** include extension ID, version, tenant or owner, invocation path, duration, result, error class, and redacted input/output summary.
 - **Lifecycle ownership:** each extension point has interface owner, implementer approval owner, deprecation owner, support window, and cleanup trigger. Add on-call escalation when operational failure consequences or platform policy require it.
 

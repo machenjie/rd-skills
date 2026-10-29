@@ -5,7 +5,7 @@ Use this benchmark-pattern Reference only when multiple exposure paths or rotati
 ## Root-Relocated Exposure And Rotation Rules
 
 - Trace changed values through source and history, CI variables and logs, build cache and image layers, client bundles and source maps, runtime manifests, observability sinks, support exports, backups, and offline consumers.
-- Treat a plausibly exposed credential as compromised according to its authority and policy: contain access, rotate or revoke, verify consumer adoption, then decide whether history or artifact cleanup is also required.
+- Treat a plausibly exposed credential as compromised according to its authority and policy. Follow that authority and policy to contain access. Rotate or revoke the credential accordingly. Verify consumer adoption. Then decide whether history or artifact cleanup is also required.
 - Design rotation as a state transition across known consumers. Define overlap or dual-read behavior when required, adoption evidence, revoke criteria, failure recovery, and a forward-safe rollback that does not revive compromised material.
 - Deleting a committed value, masking a CI setting, or removing one log line does not revoke copies already present in history, caches, artifacts, or external sinks.
 - Public build prefixes, client-side config, serialized request objects, crash reports, and support exports can cross the intended audience boundary without an obvious “secret” field name.

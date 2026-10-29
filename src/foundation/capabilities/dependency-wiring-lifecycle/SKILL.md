@@ -29,7 +29,7 @@ Define construction authority, dependency direction, lifetime scope, context pro
 - **Own reusable clients and pools.** Define construction, sharing, refresh, health, credential and endpoint changes, connection lifecycle, shutdown, and metrics according to the underlying library contract.
 - **Make startup and shutdown dependency-aware.** Validate required configuration and connectivity at the appropriate boundary, order acquisition and release, drain in-flight work, and expose partial-start or failed-shutdown behavior.
 - **Keep test overrides bounded and equivalent.** Replace dependencies through the same composition contract, preserve material lifecycle and failure semantics, and prevent test-only wiring from becoming a production bypass.
-- **Detect cycles and hidden construction.** Trace factories, providers, callbacks, lazy initialization, global registries, and framework hooks, then prove the changed graph and lifecycle with focused startup, concurrency, and cleanup evidence.
+- **Detect cycles and hidden construction.** Trace factories, providers, callbacks, lazy initialization, global registries, and framework hooks. Then prove the changed graph and lifecycle with focused startup, concurrency, and cleanup evidence.
 
 ## Anti-Patterns
 

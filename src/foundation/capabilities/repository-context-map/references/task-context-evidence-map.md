@@ -24,7 +24,7 @@ Use this reference when repository context depends on generated graph evidence, 
 6. Deepen analysis only for a concrete unresolved question that can change implementation, such as competing owners or a contradicted shared invariant.
 7. Keep small locator corrections and directly resolvable questions within implementation.
 8. Task and Review consume their assigned expertise without rerouting or loading a catalog.
-9. If new evidence invalidates an important decision, revisit only that decision and its affected consumers; an optional Brief may record the result for cross-agent use.
+9. If new evidence invalidates an important decision, revisit only that decision and its affected consumers. An optional Brief may record that result for cross-agent use.
 10. Limit current-source claims to current repository facts rather than Desired Behavior, Acceptance, Non-goals, or target architecture.
 11. Accept multiple necessary enforcement points when current source establishes their roles.
 12. Choose structural, textual, registry, config, generated, dynamic, or FFI evidence by artifact effectiveness without imposing a fixed structural priority.
