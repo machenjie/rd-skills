@@ -1050,7 +1050,7 @@
             },
             {
               "axis": "semantic-disposition",
-              "path_patterns": ["scripts/audit-skill-content.py", "scripts/expert_panel_attestation.py", "scripts/expert_panel_contracts.py", "scripts/expert_panel_manifest.py", "scripts/expert_panel_review.py", "scripts/validate-professionalism-regression.py", "scripts/validation_utils.py", "src/control-model/core-contracts.json", "config/professionalism-release-review.yaml", "evals/expert-panel/semantic-disposition.json"]
+              "path_patterns": ["scripts/routing_scenarios.py", "scripts/audit-skill-content.py", "scripts/expert_panel_attestation.py", "scripts/expert_panel_contracts.py", "scripts/expert_panel_manifest.py", "scripts/expert_panel_review.py", "scripts/validate-professionalism-regression.py", "scripts/validation_utils.py", "src/control-model/core-contracts.json", "config/professionalism-release-review.yaml", "evals/expert-panel/semantic-disposition.json"]
             },
             {
               "axis": "professional-completeness",
@@ -1216,8 +1216,14 @@
         "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_eval_agent_lightweight.py", "tests/test_hookless_architecture.py"]
       },
       {
+        "id": "authoring-router-declarations",
+        "path_patterns": ["scripts/deterministic_route_oracle.py", "scripts/routing_scenarios.py", "scripts/codegen_benchmark_manifest.py"],
+        "producer_ids": ["eval-routing", "validate-skill-routing", "audit-skill-content", "validate-reference-content"],
+        "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_skill_routing_roles.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_decision_eval.py", "tests/scripts/test_domain_modifier_routing.py", "tests/scripts/test_eval_agent_lightweight.py", "tests/scripts/test_foundation_selector_authority.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_run_codegen_benchmarks.py", "tests/scripts/test_selector_jit_domain_parity.py"]
+      },
+      {
         "id": "routing-fixtures-and-helpers",
-        "path_patterns": ["evals/capability-coverage/**", "evals/routing/**", "scripts/capability_coverage.py", "scripts/deterministic_route_oracle.py", "scripts/routing_scenarios.py"],
+        "path_patterns": ["evals/capability-coverage/**", "evals/routing/**", "scripts/capability_coverage.py"],
         "producer_ids": ["eval-routing"],
         "test_modules": ["tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_decision_eval.py", "tests/scripts/test_domain_modifier_routing.py", "tests/scripts/test_eval_agent_lightweight.py", "tests/scripts/test_foundation_selector_authority.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_run_codegen_benchmarks.py", "tests/scripts/test_selector_jit_domain_parity.py"]
       },
@@ -1230,7 +1236,7 @@
       {"id":"codegen-fixtures","path_patterns":["evals/codegen/**"],"producer_ids":[],"test_modules":["tests/scripts/test_run_codegen_benchmarks.py"]},
       {
         "id": "codegen-tooling",
-        "path_patterns": ["scripts/codegen_benchmark_harness.py", "scripts/codegen_benchmark_manifest.py", "scripts/run-codegen-assertion.py", "scripts/run-codegen-benchmarks.py", "scripts/validate-codegen-benchmarks.py"],
+        "path_patterns": ["scripts/codegen_benchmark_harness.py", "scripts/run-codegen-assertion.py", "scripts/run-codegen-benchmarks.py", "scripts/validate-codegen-benchmarks.py"],
         "producer_ids": [],
         "test_modules": ["tests/scripts/test_run_codegen_benchmarks.py"]
       },

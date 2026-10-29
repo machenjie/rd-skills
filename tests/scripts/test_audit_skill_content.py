@@ -64,6 +64,72 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.module = _load_module()
 
+    def test_router_budget_requires_exact_independent_row_declarations(self) -> None:
+        import routing_scenarios as authority
+
+        contract = authority.load_authoring_router_contract(ROOT)
+        text = (ROOT / authority.ROUTER_PATH).read_text()
+        self.assertEqual((38, 26, 78), (len(contract["primary_rows"]), len(contract["domain_rows"]), contract["line_limit"]))
+        self.assertEqual([], authority.authoring_router_markdown_errors(text, contract))
+        first_row = "| " + " | ".join(contract["primary_rows"][0]) + " |"
+        domain_row = "| " + " | ".join(contract["domain_rows"][0]) + " |"
+        variants = {
+            "duplicate": text + first_row + "\n",
+            "undeclared": text + first_row.replace("bounded local backend bug fix", "unapproved extra example") + "\n",
+            "missing-release": text.replace(first_row + "\n", ""),
+            "missing-domain": text.replace(domain_row + "\n", ""),
+            "missing-anti": text.replace("; excluding ordinary transactional persistence", "; excluding ordinary persistence", 1),
+            "fenced": "```\n" + text + "```\n",
+            "excess-prose": text + "Additional prose.\n" * 2,
+        }
+        for name, changed in variants.items():
+            with self.subTest(name=name):
+                self.assertTrue(authority.authoring_router_markdown_errors(changed, contract))
+                self.assertEqual(78, authority.load_authoring_router_contract(ROOT)["line_limit"])
+        for groups in (
+            authority.DOMAIN_ROUTER_ROW_GROUPS[1:],
+            authority.DOMAIN_ROUTER_ROW_GROUPS + authority.DOMAIN_ROUTER_ROW_GROUPS[:1],
+            tuple((name, families, signal.replace("; excluding ", "; ignoring ", 1)) for name, families, signal in authority.DOMAIN_ROUTER_ROW_GROUPS),
+        ):
+            with self.subTest(groups=len(groups)), mock.patch.object(authority, "DOMAIN_ROUTER_ROW_GROUPS", groups):
+                with self.assertRaises(self.module.ValidationProblem):
+                    authority.load_authoring_router_contract(ROOT)
+
+    def test_router_budget_does_not_expand_an_ordinary_targeted_reference(self) -> None:
+        physical, texts, errors = self.module._physical_references()
+        path = "src/professional-skills/frontend-change-builder/references/react-render-effects-and-identity.md"
+        altered = deepcopy(physical)
+        next(row for row in altered if row["path"] == path)["line_count"] = 61
+        with mock.patch.object(self.module, "_physical_references", return_value=(altered, texts, errors)):
+            content = self.module._collect_reference_content()
+        self.assertTrue(any(row["path"] == path and row["limit"] == 60 for row in content["advisories"]["targeted_over_60_lines"]))
+        self.assertTrue(any(path in error for error in content["surface_validation"]["surfaces"]["professional"]["errors"]))
+
+    def test_reference_detector_binds_router_declaration_and_formula_sources(self) -> None:
+        baseline = self.module._reference_semantic_detector_fingerprint()
+        source_reader = self.module._detector_repository_source_text
+
+        def changed(path: Path) -> str:
+            source = source_reader(path)
+            if path.name == "routing_scenarios.py":
+                return source.replace("ROUTER_NON_DATA_LINE_BUDGET = 14", "ROUTER_NON_DATA_LINE_BUDGET = 15")
+            return source
+
+        with mock.patch.object(self.module, "_detector_repository_source_text", side_effect=changed):
+            self.assertNotEqual(baseline, self.module._reference_semantic_detector_fingerprint())
+
+    def test_router_authority_changes_select_its_consumers_and_stale_semantic_evidence(self) -> None:
+        import impact_graph
+
+        core = json.loads((ROOT / "src/control-model/core-contracts.json").read_text())
+        result = impact_graph.resolve_entries(
+            core, [("M", "scripts/routing_scenarios.py")],
+            base_sha="a" * 40, head_sha="b" * 40,
+        )
+        self.assertTrue({"audit-skill-content", "validate-reference-content", "validate-skill-routing"} <= set(result["selected_producer_ids"]))
+        self.assertEqual(["semantic-disposition"], result["expert_panel_evidence"]["affected_axes"])
+        self.assertEqual("soft-stale", result["expert_panel_evidence"]["status"])
+
     def test_current_root_schema_domains_exclude_lifecycle(self) -> None:
         self.assertEqual(8, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
         self.assertEqual(7, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
@@ -2257,7 +2323,7 @@ Return security authority decisions to the service that owns the protected resou
         self.assertEqual("skill-content-detector-v4", payload["contract_version"])
         self.assertRegex(payload["aggregate_source_digest"], r"^[0-9a-f]{64}$")
         self.assertEqual(
-            ["scripts/audit-skill-content.py", "scripts/validation_utils.py"],
+            ["scripts/audit-skill-content.py", "scripts/validation_utils.py", "scripts/routing_scenarios.py"],
             [row["path"] for row in payload["source_manifest"]],
         )
         self.assertTrue(

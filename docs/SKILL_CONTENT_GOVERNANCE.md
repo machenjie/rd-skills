@@ -476,9 +476,16 @@ Template assets are allowed to remain unindexed and may contain multiple H1 or
 empty placeholder headings. Those exceptions remain visible as reported facts;
 a template with no H1 is still invalid.
 
-The strict authoring gates are fixed at 60 lines for a targeted Reference,
-except that the canonical Professional Skill router permits 62 lines for its
-closed route table. Mode-contract References permit 80 lines, and Gate,
+The strict authoring gates are fixed at 60 lines for a targeted Reference.
+The canonical Professional router adds only its independently declared data rows
+to a fixed 14-line non-data allowance. That allowance preserves the prior
+62-line contract minus its 34 Primary and 14 Domain rows at `1b0892b2`.
+Current declarations permit 38 Primary and 26 Domain rows: 78 lines total.
+`routing_scenarios.py` owns the non-release examples and exact Domain family groups.
+Release examples retain their registry authority. Registry and oracle atoms,
+family membership, anti-triggers and Markdown rows must agree exactly.
+Extra, duplicate, missing or fenced rows cannot raise the budget.
+Mode-contract References permit 80 lines, and Gate,
 Checklist, or Decision headings permit 15 items. Missing effective reference
 type, load condition, and do-not-load condition are also strict gates; literal
 local-only coverage remains reported separately. Strict validation runs

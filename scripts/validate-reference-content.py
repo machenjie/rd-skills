@@ -1596,6 +1596,7 @@ def _evaluate(
         "targeted_over_60": len(targeted_over),
         "mode_contract_over_80": len(mode_contract_over),
         "decision_items_over_15": len(decision_items_over),
+        "router_contract_errors": len(advisories.get("router_contract_errors") or []),
         **preface_counts,
         **semantic_counts,
     }
@@ -1624,6 +1625,7 @@ def _evaluate(
                 continue
             validate_ai_readability(markdown, relative, errors)
     default_gates = (
+        ("closed authoring router contract error(s)", "router_contract_errors"),
         ("missing indexed reference(s)", "missing"),
         ("non-template orphan reference(s)", "non_template_orphan"),
         ("indexed reference(s) missing H1", "missing_h1"),

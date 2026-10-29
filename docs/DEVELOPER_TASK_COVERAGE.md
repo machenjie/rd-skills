@@ -161,6 +161,22 @@ The interpreter is Python 3.14.6. Its fixed dependencies are markdown-it-py 4.2.
 mdurl 0.1.2, jsonschema 4.26.0, and tiktoken 0.14.0.
 The temporary environment preserves the repository's declared dependency contract.
 
+The first Full Regression attempt used material commit `9437bfff`.
+Core observed `audit-skill-content` exit 1: compound Profile bullets, the expanded
+router's local line budget, and unresolved semantic candidates blocked authoring.
+The attempt stopped during rendered-context validation after that known failure.
+Core exited 143 on requested termination. Commands 2–14 did not run.
+This incomplete attempt is not passing Full Regression evidence.
+The Profile loading bullets are now separated without removing their contracts.
+The router budget now uses closed declarations and the original prose allowance.
+Seven focused tests pass, including extra/missing/duplicate rows, family and
+anti-trigger omissions, fenced rows, prose overflow and the ordinary 60-line bound.
+The dependency selector includes the collector and routing/Reference consumers.
+Its semantic detector fingerprint binds the declaration and formula source.
+The refreshed collector reports readability hard-gate ready, no router-contract
+errors and no oversized targeted References. Semantic candidates remain pending
+independent disposition review; this audit still exits 1 and is not release evidence.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.

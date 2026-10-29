@@ -23,6 +23,9 @@ from validation_utils import (
     professional_automatic_routing_contract_errors,
 )
 from routing_scenarios import (
+    authoring_router_contract,
+    authoring_router_markdown_errors,
+    contains_contract_atom as _contains_contract_atom,
     load_release_routing_scenarios,
     release_routing_scenario_errors,
 )
@@ -401,14 +404,6 @@ def domain_router_coverage_errors(
     return errors
 
 
-def _contains_contract_atom(text: str, atom: str) -> bool:
-    """Match one contract atom without accepting identifier substrings."""
-
-    normalized = text.casefold()
-    right = r"(?![a-z0-9+])" if atom == "c" else r"(?![a-z0-9])"
-    return re.search(rf"(?<![a-z0-9]){re.escape(atom)}{right}", normalized) is not None
-
-
 def main() -> int:
     errors: list[str] = []
     try:
@@ -479,9 +474,14 @@ def main() -> int:
             errors.append("obsolete split analysis primary change-impact-analyzer is forbidden")
     errors.extend(domain_router_coverage_errors(router_rows, domain_by_name))
     try:
+        release_rows = load_release_routing_scenarios(RELEASE_ROUTING_SCENARIOS)
+        contract = authoring_router_contract(
+            release_rows, by_name, domain_by_name, DOMAIN_ROUTE_SPECS
+        )
+        errors.extend(authoring_router_markdown_errors(text, contract))
         errors.extend(
             _release_routing_projection_errors(
-                load_release_routing_scenarios(RELEASE_ROUTING_SCENARIOS),
+                release_rows,
                 text,
             )
         )

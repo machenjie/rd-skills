@@ -34,6 +34,12 @@ from pathlib import Path
 
 import expert_panel_contracts as _expert_panel_contracts
 import validation_utils as _validation_utils
+from routing_scenarios import (
+    ROUTER_PATH as AUTHORING_ROUTER_PATH,
+    authoring_router_contract,
+    authoring_router_markdown_errors,
+    load_authoring_router_contract,
+)
 
 from validation_utils import (
     AI_COMPLEX_SENTENCE_TARGET_WORDS,
@@ -7005,10 +7011,12 @@ _FOLD_ROOT_CANDIDATES_DETECTOR_SOURCE = _fold_root_candidates
 _DETECTOR_REPOSITORY_SOURCE_PATHS = (
     "scripts/audit-skill-content.py",
     "scripts/validation_utils.py",
+    "scripts/routing_scenarios.py",
 )
 _DETECTOR_REPOSITORY_SOURCE_FILES = (
     ("audit-skill-content", Path(__file__).resolve()),
     ("validation_utils", (ROOT / "scripts" / "validation_utils.py").resolve()),
+    ("routing_scenarios", (ROOT / "scripts" / "routing_scenarios.py").resolve()),
 )
 _DETECTOR_SOURCE_WALKER_CONTRACT = (
     "repository-source-reachable-symbol-walker-v1"
@@ -7889,7 +7897,8 @@ def _reference_semantic_detector_payload() -> dict[str, object]:
     """Return the closed reachable-behavior projection for Reference semantics."""
 
     return _detector_repository_payload(
-        (_reference_semantic_candidates,),
+        (_reference_semantic_candidates, _targeted_reference_line_limit,
+         authoring_router_contract, authoring_router_markdown_errors),
         contract_version="reference-semantic-detector-contract-v1",
     )
 
@@ -8906,12 +8915,14 @@ def _reference_budget_kind(item: ReferenceMetrics) -> str | None:
 
 
 def _targeted_reference_line_limit(item: ReferenceMetrics) -> int:
-    """Keep the router's closed route table within its reviewed local exception."""
-    if item.path == (
-        "src/control-skills/engineering-control-plane/references/"
-        "professional-skill-router.md"
-    ):
-        return 62
+    """Only declared router data rows extend the unchanged local prose budget."""
+    if item.path == AUTHORING_ROUTER_PATH:
+        try:
+            return load_authoring_router_contract(ROOT)["line_limit"]
+        except ValidationProblem:
+            # The collector reports the invalid authority separately. An invalid
+            # declaration never grants a larger Reference budget.
+            return 60
     return 60
 
 
@@ -10128,6 +10139,7 @@ def _reference_surface_validation(reference_content: dict) -> dict:
         else:
             common_errors.append("effective preface conflict is not a mapping")
     for key, label in (
+        ("router_contract_errors", "invalid closed authoring router"),
         ("non_template_multiple_h1", "non-template reference with multiple H1"),
         ("non_template_empty_headings", "non-template reference with empty heading"),
         ("targeted_over_60_lines", "targeted reference over 60 lines"),
@@ -10136,7 +10148,8 @@ def _reference_surface_validation(reference_content: dict) -> dict:
     ):
         for item in advisories.get(key) or []:
             if isinstance(item, dict):
-                add_record_error(item, f"{label}: {item.get('path')}")
+                detail = f": {item['message']}" if key == "router_contract_errors" else ""
+                add_record_error(item, f"{label}: {item.get('path')}{detail}")
             else:
                 common_errors.append(f"{key} advisory is not a mapping")
 
@@ -10402,7 +10415,22 @@ def _collect_reference_content(
             "budget_kind": _reference_budget_kind(item),
         }
 
+    router_errors = []
+    if AUTHORING_ROUTER_PATH in visible_markdown:
+        try:
+            router_errors = authoring_router_markdown_errors(
+                visible_markdown[AUTHORING_ROUTER_PATH],
+                load_authoring_router_contract(ROOT),
+            )
+        except ValidationProblem as exc:
+            router_errors = [str(exc)]
+
     advisories = {
+        "router_contract_errors": [
+            {"layer": "control", "owner": "engineering-control-plane",
+             "path": AUTHORING_ROUTER_PATH, "message": message}
+            for message in router_errors
+        ],
         "non_template_multiple_h1": [
             {**finding_base(item), "h1_count": item.h1_count}
             for item in references

@@ -2462,7 +2462,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 domain,
             ),
         )
-        missing_ai = [cells for cells in router_rows if not cells[0].startswith("model, prompt")]
+        missing_ai = [cells for cells in router_rows if len(cells) != 2 or cells[1] != "ai-product-extension"]
         self.assertTrue(
             any(
                 "ai-product-extension" in error
@@ -2475,12 +2475,12 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_anti = copy.deepcopy(router_rows)
-        ai_row = next(cells for cells in stale_anti if cells[0].startswith("model, prompt"))
+        ai_row = next(cells for cells in stale_anti if cells[0].startswith("prompt, retrieval"))
         ai_row[0] = "AI model retrieval or agent-tool authority decision"
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "no authoritative router row" in error
+                and "Router omits trigger atoms" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_anti,
                     domain,
@@ -2489,7 +2489,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_trigger = copy.deepcopy(router_rows)
-        ai_row = next(cells for cells in stale_trigger if cells[0].startswith("model, prompt"))
+        ai_row = next(cells for cells in stale_trigger if cells[0].startswith("prompt, retrieval"))
         ai_row[0] = (
             "AI retrieval boundary; excluding AI terminology, static algorithms, "
             "or ordinary search without a model decision"
@@ -2497,7 +2497,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "no authoritative router row" in error
+                and "Router omits trigger atoms" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_trigger,
                     domain,
@@ -2524,13 +2524,13 @@ class SkillRoutingRoleTests(unittest.TestCase):
         ai_row = next(
             cells
             for cells in positive_only_drift
-            if cells[0].startswith("model, prompt")
+            if cells[0].startswith("prompt, retrieval")
         )
-        ai_row[0] = ai_row[0].replace("model, ", "", 1)
+        ai_row[0] = ai_row[0].replace("prompt, ", "", 1)
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "Router omits trigger atoms: model" in error
+                and "Router omits trigger atoms" in error and "prompt" in error
                 for error in self.routing.domain_router_coverage_errors(
                     positive_only_drift,
                     domain,

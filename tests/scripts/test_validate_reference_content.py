@@ -480,6 +480,18 @@ class ValidateReferenceContentTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.module = _load_module()
 
+    def test_router_contract_failure_blocks_default_and_strict_modes(self) -> None:
+        content = _content(advisories={"router_contract_errors": [{
+            "layer": "control", "owner": "engineering-control-plane",
+            "path": "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+            "message": "authoring router extra or duplicate declared rows",
+        }]})
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                counts, errors = self.module._evaluate(content, strict=strict)
+                self.assertEqual(1, counts["router_contract_errors"])
+                self.assertIn("closed authoring router contract error(s): 1", errors)
+
     def test_default_allows_reported_template_exceptions(self) -> None:
         content = _content(
             references=[
