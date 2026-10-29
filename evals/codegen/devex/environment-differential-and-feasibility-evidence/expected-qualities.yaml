@@ -1,0 +1,33 @@
+id: environment-differential-and-feasibility-evidence
+category: devex
+focus:
+  - "environment causal evidence"
+  - "controlled comparison"
+  - "falsifiable feasibility"
+route_hints:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills:
+    - unit-testing
+  review_skill: null
+expected_outcomes:
+  - "Observed environment differences remain hypotheses until an isolated intervention reproduces the failure and its removal."
+  - "Application, toolchain, and configuration evidence stay distinct."
+  - "Comparable paired experiments obey explicit boundary, input, version, budget, and stopping contracts."
+  - "Retain, discard, and promote decisions preserve prototype-only proof limits."
+required_qualities:
+  - "Normalize actual environment values using declared source precedence."
+  - "Use observed dependency graphs and execution facts rather than lockfile claims."
+  - "Compute paired ratios and cumulative costs independently of reported success."
+  - "Preserve inputs and validate finite measurements."
+forbidden_shortcuts:
+  - "Promoting a difference or cleanup command to verified cause."
+  - "Accepting a runnable mock demo as critical boundary evidence."
+  - "Ignoring early stopping, budget exhaustion, or incomparable inputs."
+  - "Calling a prototype production-ready."
+evidence:
+  - "Eight executable assertion methods exercise controlled and inconclusive neighbors."
+  - "Paired ratios, resource sums, fact differences, and event order provide independent oracles."
+  - "The delta-is-cause control changes only causal-evidence admission."
+  - "Passing, starter, faulty control, and default smoke run separately."
