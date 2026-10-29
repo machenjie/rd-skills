@@ -1,6 +1,7 @@
 """Small deterministic fixture adapters; not a transport or numerical runtime."""
 
 import math
+from fractions import Fraction
 
 
 def decode_frames(chunks, max_frame=256, max_total=1024, eof=True):
@@ -76,3 +77,37 @@ def allocate(total, weights):
     for index in order[:total - sum(shares)]:
         shares[index] += 1
     return shares
+
+def rod_evidence(problem, temperatures, residual_budget=1e-10, boundary_budget=1e-10):
+    """Assess a uniform-grid, steady, source-free, constant-conductivity rod model."""
+    values = [problem["length_m"], problem["conductivity"], problem["heat_source"],
+              problem["left"]["value"], problem["right"]["value"], residual_budget, boundary_budget,
+              *temperatures]
+    try:
+        finite = all(type(value) in (int, float) and math.isfinite(value) for value in values)
+    except OverflowError:
+        finite = False
+    if (not finite
+            or problem["length_m"] <= 0 or problem["conductivity"] <= 0
+            or residual_budget < 0 or boundary_budget < 0 or len(temperatures) < 3):
+        raise ValueError("invalid rod evidence")
+    spacing = problem["length_m"] / (len(temperatures) - 1)
+    if spacing == 0:
+        raise ValueError("invalid rod evidence")
+    exact_spacing = Fraction(problem["length_m"]) / (len(temperatures) - 1)
+    exact_temperatures = [Fraction(value) for value in temperatures]
+    exact_residual = max(abs(Fraction(problem["conductivity"]) *
+                            (exact_temperatures[index - 1] - 2 * exact_temperatures[index]
+                             + exact_temperatures[index + 1]) / exact_spacing ** 2)
+                         for index in range(1, len(temperatures) - 1))
+    try:
+        residual = float(exact_residual)
+    except OverflowError:
+        residual = math.inf
+    numerical_pass = exact_residual <= Fraction(residual_budget)
+    applicable = (problem["heat_source"] == 0 and problem["left"]["kind"] == "temperature"
+                  and problem["right"]["kind"] == "temperature")
+    boundary_pass = (applicable and abs(temperatures[0] - problem["left"]["value"]) <= boundary_budget
+                     and abs(temperatures[-1] - problem["right"]["value"]) <= boundary_budget)
+    return {"residual": residual, "numerical_pass": numerical_pass, "applicable": applicable,
+            "boundary_pass": boundary_pass, "accepted": numerical_pass and applicable and boundary_pass}

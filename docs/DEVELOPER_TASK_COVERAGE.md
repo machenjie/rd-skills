@@ -40,8 +40,8 @@ Product-owner routing is verified separately in `evals/routing/cases.yaml`.
 
 | Key | Case | What its assertions establish |
 |---|---|---|
-| B1 | `code-elements/incremental-codec-numerical-boundaries` | All finite chunk partitions, UTF-8/frame boundaries, partial writes, EOF, size limits, unit/shape/tolerance, solver convergence, conservation |
-| B2 | `integration/resource-lifetime-and-unknown-outcome` | Stream/effect cleanup, tenant/locale cache identity, unknown-result reconciliation, host origin, restart/upgrade/unload/uninstall |
+| B1 | `code-elements/incremental-codec-numerical-boundaries` | All finite chunk partitions, UTF-8/frame boundaries, partial writes, EOF, size limits, unit/shape/tolerance, solver convergence, conservation, independent model-domain and endpoint validity |
+| B2 | `integration/resource-lifetime-and-unknown-outcome` | Stream/effect/query lifetime, tenant/locale cache identity, selected MCP contract and effect authority, initial hydration and transfer boundary, server-action authorization, unknown-result reconciliation, host lifecycle |
 | B3 | `backend/commerce-saas-repeated-events` | Reservation expiry, partial returns, duplicate-event conservation, bounded generation, shrinking/replay, entitlement/usage revision |
 | B4 | `validation/ai-experiment-evidence-validity` | Retrieval miss versus unused evidence, claim support, trial terminal state, leakage, full restore, randomization/SRM/stopping rules |
 | B5 | `performance/offered-load-and-quality-accounting` | Offered/sent/completed work, unsent arrivals, failures, quality/tail/cost criteria, hosted versus self-hosted evidence |
@@ -50,13 +50,31 @@ Product-owner routing is verified separately in `evals/routing/cases.yaml`.
 | B8 | `performance/media-simulation-device-evidence` | Rational presentation/seek times, track cleanup, pause/catch-up conservation, replay/save identity, completed device dependencies and artifact versions |
 | B9 | `devex/environment-differential-and-feasibility-evidence` | Reproduction identity, causal interventions, source/environment classification, falsifiable hypotheses, experiment budgets and applicability |
 
-B1–B9 each have a passing candidate and an incomplete starter.
-Eight have one isolated fault; B8 has four.
-The shared `_run_assertion_files` run passed all nine candidates.
-It rejected all nine starters and twelve single-mechanism faults.
-Every rejection contained an assertion failure, not a setup or import failure.
-Sixty-six positive test methods exist across these nine cases.
-That is not the repository's total test count.
+B1–B9 each have a passing candidate and an incomplete starter. B1 has two
+isolated faults, B2 has ten, B8 has four, and the other six cases each have one.
+The earlier shared `_run_assertion_files` run passed all nine candidates and
+rejected all nine starters and the twelve faults then present. The current
+extension reran the two changed cases: B1's ten and B2's nineteen positive
+methods pass; their two starters and twelve isolated faults are rejected.
+Every rejection contains an assertion failure, not a setup or import failure.
+Eighty positive test methods now exist across these nine cases. Unchanged cases
+were not rerun for this bounded extension; final Full Regression remains
+separate. These method counts are not the repository's total test count.
+Directed boundary probes also exposed a rod grid spacing that underflowed to
+zero and a tool-schema number outside finite floating-point representation.
+Both now reject through their declared validation errors; their assertions
+passed after the final edits.
+Independent review then exposed intermediate residual underflow and Python
+equality conflating boolean and integer protocol IDs. Regression assertions
+reproduced both. The rod fixture now compares an unrounded residual with an
+independent decimal test reference; tool responses match the supported request
+ID by both type and value. Both repairs retain the existing fault controls.
+The independent follow-up review found both defects repaired and no new
+priority finding. Its verification retained all 29 positive methods, two
+incomplete starters, and twelve isolated faults. The benchmark definition
+check passed all 82 definitions, including 32 assertion-backed cases. This is
+review and targeted-fixture evidence; final Full Regression and the final
+Core formal gate remain pending the current independent panels.
 
 ## 29-Item Matrix
 
@@ -78,11 +96,11 @@ authorized Primary; it does not make every Primary legal.
 | F05 | Added data-format `incremental-stream-codecs.md` | Library/backend/integration/data contract / A/T/R | Incremental bytes, framing or resource bounds; skip ordinary scalar formatting | Expansion route and unchanged control, role capsules, B1; finite fixture domain only |
 | F06 | Added numerical-correctness and `error-budget-and-oracles.md` | Actual numerical owner / A/T/R | Error/precision/conditioning decisions; skip CRUD and unrelated money formatting | Numerical route and unchanged control, role capsules, B1; no universal epsilon or real numerical-library certification |
 | F07 | Added six language Foundations; Scala Reference on JVM | Actual implementation/analysis/review owner | Language semantics affect the task; skip inventory and unchanged mechanisms | Per-language table below; route, role, and content evidence; no installed language-runtime execution |
-| F08 | Added React, Vue, Spring, Django, SQLAlchemy, ASGI References | Frontend / T; JVM/Python owners / A/T/R | Actual render/effect, advice, ORM, or resource lifetime; skip CSS/copy/package-only work | Exact Reference role/owner checks; B2 validates abstract resource/effect traces; real framework behavior remains untested |
+| F08 | Added React, Vue, Spring, Django, SQLAlchemy, ASGI References | Frontend / T; JVM/Python owners / A/T/R | Actual render/effect, advice, ORM, or resource lifetime; skip CSS/copy/package-only work | Exact Reference role/owner checks; B2 proves effect cleanup, lazy-query construction/evaluation/transaction ordering, bounded materialization and post-exit serialization; real framework/database behavior remains untested |
 | A01 | Added AI `rag-quality-and-retrieval-design.md` | Actual AI implementation or quality owner / A/T/R | Retrieval and answer-use quality; skip unrelated CRUD | RAG positive/unchanged routes, capsules, B4; fixture evidence does not measure a live model |
 | A02 | Added AI `ai-evaluation-design-and-analysis.md` | quality-test-gate / A/T/R | Dataset, graders, trials and decision uncertainty; skip unsupported score claims | Capsules and B4 trial/claim controls; no live grader or benchmark ranking claim |
-| A03 | Added integration `mcp-protocol-contracts.md` | integration / A/T | MCP negotiation, message/call lifecycle or authorization; skip arbitrary tool keywords | Legal Professional Reference, B2 timeout/reconciliation/origin traces; no real MCP server execution |
-| A04 | Added frontend `server-client-rendering-contracts.md` | frontend / T | SSR, hydration, streaming, server entrypoint; skip CSS/copy | Legal Reference and B2 lifetime/cache isolation; no actual hydration renderer executed |
+| A03 | Added integration `mcp-protocol-contracts.md` | integration / A/T | MCP negotiation, message/call lifecycle or authorization; skip arbitrary tool keywords | B2 separates selected version/SDK support, schema drift, token audience, non-authoritative annotations, business/protocol/result-shape failure, and timeout reconciliation; no real MCP implementation executed |
+| A04 | Added frontend `server-client-rendering-contracts.md` | frontend / T | SSR, hydration, streaming, server entrypoint; skip CSS/copy | B2 checks initial time/offset/locale markup, rejects later-effect masking and unsupported transferred values, and enforces direct server-action authority alongside cache/cleanup traces; no framework renderer executed |
 | A05 | Added unit-testing `generative-invariant-testing.md` | quality or implementation / A/T/R | Generators, state, metamorphic laws or shrinking; skip decorative randomness | B3 executes 20 bounded generated groups and valid three-event shrink/replay; B1 finite partitions |
 | A06 | Added test-strategy `load-model-and-capacity-evidence.md` | quality-test-gate / A/T/R | Arrival process and saturation evidence; skip throughput-only claims | B5 distinguishes intended arrivals, outcomes, errors and budgets; no production capacity claim |
 | A07 | Added AI `llm-inference-performance.md` | Reliability/platform/quality or implementation / A/T/R | Actual inference cost, quality and performance; skip AI name alone | Platform inference route, owner edges, B5; provider and device behavior remain untested |
@@ -94,7 +112,7 @@ authorized Primary; it does not make every Primary legal.
 | D03 | Added realtime-media Domain and timing/processing References | Actual client/backend/library owner / A/T/R | Clock, buffering, track, seek or media processing; skip media nouns alone | Positive/unchanged routes, capsules, B8 recorded rational clock/seek and cleanup assertions; no actual playback or codec execution |
 | D04 | Added game-simulation Domain and clock/save References | Actual client/backend/library owner / A/T/R | Tick, replay, authority, assets or save evolution; skip game-themed CRUD | Positive/unchanged routes, capsules, B8 recorded fixed-step/pause/catch-up/save/replay assertions; no physical model or cross-environment determinism claim |
 | D05 | Added graphics-compute Domain and WebGPU/Vulkan/Metal/CUDA-HIP References | Actual GPU implementation owner / A/T/R | Submission, visibility, lifetime, failure or artifact compatibility; skip CSS rendering | Positive/unchanged routes, capsules, B8 recorded completion and artifact mismatch assertions; no live GPU or API-equivalence claim |
-| D06 | Added scientific-computing Domain | Library/backend/analysis/quality / A/T/R | Scientific model, solver or convergence; skip unrelated formula vocabulary | Positive/unchanged routes, capsules, B1 rejects unconverged results; no scientific result certification |
+| D06 | Added scientific-computing Domain | Library/backend/analysis/quality / A/T/R | Scientific model, solver or convergence; skip unrelated formula vocabulary | Positive/unchanged routes, capsules, B1 rejects unconverged results and zero-residual solutions outside the declared rod model or endpoint contract; independent analytic comparisons prove only this bounded fixture |
 
 ## F07 Language Disposition
 
@@ -156,7 +174,9 @@ Current validation still rejects that 188-package packet; its bytes were unchang
 
 Final clean-head Development Affected and the complete Full Regression are still
 pending the final material tree. Their commands, selected head, results, repairs,
-and skipped formal gate will be recorded here after execution.
+and the required final Core formal gate will be recorded here after execution.
+Stale panel evidence must be replaced by actual independent review before that
+formal gate can establish release readiness.
 All final commands use `/tmp/rd-skills-validation-venv/bin/python3` through `PATH`.
 The interpreter is Python 3.14.6. Its fixed dependencies are markdown-it-py 4.2.0,
 mdurl 0.1.2, jsonschema 4.26.0, and tiktoken 0.14.0.
@@ -348,6 +368,16 @@ fresh content audit has zero blockers; all four Semantic fingerprints remain
 equal to the current packet, all 149 applications are current, and the three
 fixed attestations retain their original bytes. A complete Full Regression on
 the repaired material tree remains required.
+
+The fifth Full Regression attempt started from clean commit `ab8f10fc` and was
+interrupted for verified acceptance gaps before Core completed. The missing
+fixture evidence concerns MCP contract failures, initial hydration and transfer
+boundaries, deferred query evaluation across a transaction, and numerical model
+applicability. Core and its two active owned descendants were stopped with
+SIGTERM; the wrapper recorded Core exit -15 after 403.380 seconds. No owned
+process remained and commands 2–14 did not run. This is
+`interrupted-for-verified-acceptance-gap`, not a passing Full Regression or a
+reported failure of those unexecuted checks.
 
 ## First Slice Validation
 

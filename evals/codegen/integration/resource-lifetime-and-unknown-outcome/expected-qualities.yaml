@@ -1,8 +1,8 @@
 id: "resource-lifetime-and-unknown-outcome"
 category: "integration"
-focus: ["stream and effect lifetime", "unknown external operation outcome and host identity"]
+focus: ["stream, query, render, and transfer boundaries", "selected tool contracts, authority, and unknown outcomes"]
 route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
-expected_outcomes: ["Streaming resources survive reads and close exactly once on exit.", "Completed external effects are reconciled without repetition; host data and request identities retain their distinct boundaries."]
-required_qualities: ["Assert observable acquisition, read, cancellation, close, and provider-call traces.", "Exercise new module instances against retained storage, migration, and explicit uninstall policy."]
-forbidden_shortcuts: ["Closing the resource before the stream consumer finishes.", "Repeating a completed operation after timeout or sharing cached values across tenants."]
-evidence: ["Passing candidate assertions for streaming, effects, cache identity, unknown outcomes, and host lifecycle.", "Incomplete stream starter and isolated premature-close fault are rejected by the same assertions."]
+expected_outcomes: ["Resources and deferred reads stay inside their declared lifetimes; initial render and transferred values honor the selected boundary.", "Tool contract failures and unauthorized effects are rejected before dispatch; completed external effects are reconciled without repetition."]
+required_qualities: ["Assert observable resource/query/provider traces and independently derived result classifications.", "Exercise selected version/schema/audience boundaries, non-authoritative hints, initial render inputs, serialization, and direct server-action authority.", "Preserve restart, migration, tenant/locale cache isolation, and explicit uninstall policy."]
+forbidden_shortcuts: ["Premature release, escaped lazy evaluation, or a later effect hiding the initial render mismatch.", "Treating annotations or page visits as authority, business failures as success, or live objects as transferable data.", "Repeating a completed operation after timeout or sharing cached values across tenants."]
+evidence: ["Nineteen passing-candidate assertions for declared mechanisms; no real framework, database, or MCP runtime claim.", "Incomplete stream starter and ten single-mechanism faults are rejected by the same assertions."]

@@ -6,12 +6,12 @@ The fixture adapters satisfy their accepted contracts under direct function and 
 
 ## Scoring
 
-Assess read, cancel, normal completion, error cleanup, repeated effect cleanup, cache identity, outcome reconciliation, persistent migration, and host message identity.
+Assess resource and transaction event order, selected protocol/schema/audience/effect authority, distinct error outcomes, first-render input agreement, serialization boundaries, server-action authorization, cache identity, outcome reconciliation, persistent migration, and host message identity.
 
 ## Automatic Failure Conditions
 
-Closing the resource before the stream consumer finishes. Repeating a completed operation after timeout or sharing cached values across tenants.
+Fail premature release, deferred reads beyond the transaction, stale tool-schema use, mismatched token audience, permission derived from a read-only hint, business failure reported as success, later effects hiding hydration mismatch, unsupported transfer values, and server actions relying on page authorization. Repeating a completed operation or crossing tenant cache boundaries also fails.
 
 ## Reviewer Notes
 
-These local traces do not run React, ASGI, MCP, browser extensions, IDE hosts, media devices, or external providers. Static definitions and starter rejection do not replace a passing-candidate run.
+These local traces do not run React, Django, ASGI, an MCP client/server/SDK, browser extensions, IDE hosts, media devices, or external providers. The selected version/SDK sets, closed message shapes, fixed-offset render formats, and JSON-shaped transfer policy belong to this fixture; they are not universal platform rules. Static definitions and starter rejection do not replace a passing-candidate run.

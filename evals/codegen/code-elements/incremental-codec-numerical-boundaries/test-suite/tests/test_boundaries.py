@@ -1,4 +1,6 @@
 import importlib.util
+import copy
+from decimal import Decimal, localcontext
 import math
 import os
 import unittest
@@ -81,6 +83,87 @@ class BoundaryAssertions(unittest.TestCase):
                     self.assertEqual(result, candidate.allocate(total, [a, b]))
         with self.assertRaises(ValueError):
             candidate.allocate(10, [0, 0])
+
+    def test_rod_model_agrees_with_independent_analytic_dirichlet_solution(self):
+        candidate = subject()
+        for length, conductivity, count in ((1.0, 1.0, 3), (2.0, 3.0, 5), (4.0, 2.0, 9)):
+            problem = {"length_m": length, "conductivity": conductivity, "heat_source": 0.0,
+                       "left": {"kind": "temperature", "value": 300.0},
+                       "right": {"kind": "temperature", "value": 400.0}}
+            coordinates = [index * length / (count - 1) for index in range(count)]
+            analytic = [300.0 + (400.0 - 300.0) * coordinate / length for coordinate in coordinates]
+            with self.subTest(length=length, count=count):
+                result = candidate.rod_evidence(problem, analytic)
+                self.assertEqual(result, {"residual": 0.0, "numerical_pass": True,
+                                          "applicable": True, "boundary_pass": True, "accepted": True})
+
+    def test_zero_residual_cannot_validate_an_unsupported_source_or_wrong_boundary(self):
+        candidate = subject()
+        problem = {"length_m": 2.0, "conductivity": 3.0, "heat_source": 0.0,
+                   "left": {"kind": "temperature", "value": 300.0},
+                   "right": {"kind": "temperature", "value": 400.0}}
+        temperatures = [300.0, 325.0, 350.0, 375.0, 400.0]
+        sourced = copy.deepcopy(problem)
+        sourced["heat_source"] = 6.0
+        # Independent solution of k*T'' + q = 0 with these temperature endpoints.
+        coordinate = 1.0
+        true_midpoint = 350.0 + sourced["heat_source"] * coordinate * (2.0 - coordinate) / (2 * sourced["conductivity"])
+        self.assertEqual(true_midpoint, 351.0)
+        self.assertNotEqual(temperatures[2], true_midpoint)
+        wrong_boundary = copy.deepcopy(problem)
+        wrong_boundary["left"]["value"] = 310.0
+        unsupported_boundary = copy.deepcopy(problem)
+        unsupported_boundary["left"] = {"kind": "flux", "value": 0.0}
+        for name, actual, applicable in (("source", sourced, False), ("endpoint", wrong_boundary, True),
+                                          ("boundary-kind", unsupported_boundary, False)):
+            with self.subTest(problem=name):
+                result = candidate.rod_evidence(actual, temperatures)
+                self.assertEqual(result["residual"], 0.0)
+                self.assertTrue(result["numerical_pass"])
+                self.assertEqual(result["applicable"], applicable)
+                self.assertFalse(result["boundary_pass"])
+                self.assertFalse(result["accepted"])
+
+    def test_rod_numerical_error_and_invalid_physical_inputs_remain_rejected(self):
+        candidate = subject()
+        problem = {"length_m": 2.0, "conductivity": 3.0, "heat_source": 0.0,
+                   "left": {"kind": "temperature", "value": 300.0},
+                   "right": {"kind": "temperature", "value": 400.0}}
+        result = candidate.rod_evidence(problem, [300.0, 325.0, 351.0, 375.0, 400.0])
+        self.assertEqual(result["residual"], 24.0)
+        self.assertFalse(result["numerical_pass"])
+        self.assertTrue(result["applicable"])
+        self.assertTrue(result["boundary_pass"])
+        self.assertFalse(result["accepted"])
+        tiny = {"length_m": 1e-162, "conductivity": 5e-324, "heat_source": 0,
+                "left": {"kind": "temperature", "value": 300},
+                "right": {"kind": "temperature", "value": 300}}
+        with localcontext() as context:
+            context.prec = 80
+            # For [300, 300.125, 300], |second difference|=1/4 and dx=L/2.
+            independent = Decimal.from_float(tiny["conductivity"]) / Decimal.from_float(tiny["length_m"]) ** 2
+        self.assertGreater(independent, Decimal("4.9"))
+        self.assertLess(independent, Decimal("5.0"))
+        result = candidate.rod_evidence(tiny, [300, 300.125, 300])
+        self.assertAlmostEqual(result["residual"], float(independent), places=12)
+        self.assertFalse(result["numerical_pass"])
+        self.assertFalse(result["accepted"])
+        rounded = {**tiny, "length_m": 2}
+        result = candidate.rod_evidence(rounded, [300, 300.125, 300], residual_budget=0)
+        self.assertEqual(result["residual"], 0.0)
+        self.assertFalse(result["numerical_pass"], "rounded zero cannot satisfy an exact zero budget")
+        self.assertFalse(result["accepted"])
+        overflow = {**tiny, "length_m": 2, "conductivity": 1e308}
+        result = candidate.rod_evidence(overflow, [300, 302, 300])
+        self.assertEqual(result["residual"], math.inf)
+        self.assertFalse(result["numerical_pass"])
+        self.assertFalse(result["accepted"])
+        for key, value in (("length_m", 0), ("length_m", math.ulp(0.0)), ("conductivity", -1),
+                           ("heat_source", math.inf), ("heat_source", 10 ** 1000)):
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "invalid rod evidence"):
+                candidate.rod_evidence({**problem, key: value}, [300.0, 350.0, 400.0])
+        with self.assertRaisesRegex(ValueError, "invalid rod evidence"):
+            candidate.rod_evidence(problem, [300.0, 400.0])
 
 
 if __name__ == "__main__":

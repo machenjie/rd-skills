@@ -479,9 +479,10 @@ current validator reports source, detector, binding, or contract drift, then
 rerun the Core formal gate. These fixed attestations do not prove that the final
 local formal gate passed.
 
-Readability compact schema 2 uses the manifest-v2 digest as its sole source
-authority and one review-unit-binding-v3 digest per minimum target or finding
-unit. Unit bindings cover identity and local manifest authority, never votes or
+Readability compact schema 2 uses the
+`readability-complete-normalized-binding-manifest-v4` digest as its sole source
+authority and one `readability-normalized-review-unit-binding-v5` digest per
+minimum target or finding unit. Unit bindings cover identity and local manifest authority, never votes or
 outcomes. `review_artifacts` retains the packet, three voter-keyed ballots, and
 decision content SHA-256 values. Generation and promotion authenticate
 conclusions by exact decision reprojection; direct parsing is not a replacement

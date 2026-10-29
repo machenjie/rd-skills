@@ -1,4 +1,6 @@
 import importlib.util
+import copy
+import json
 import os
 import unittest
 from pathlib import Path
@@ -31,6 +33,44 @@ class Resource:
             raise AssertionError("double release")
         self.closed = True
         self.events.append("close")
+
+
+class Transaction:
+    def __init__(self, events):
+        self.events, self.active = events, False
+    def __enter__(self):
+        self.active = True
+        self.events.append("transaction-open")
+        return self
+    def __exit__(self, *exception):
+        self.active = False
+        self.events.append("transaction-close")
+
+
+class LazyQuery:
+    def __init__(self, transaction, rows):
+        self.transaction, self.rows = transaction, rows
+        transaction.events.append("query-construct")
+    def __iter__(self):
+        self.transaction.events.append("query-read")
+        if not self.transaction.active:
+            raise RuntimeError("query outside transaction")
+        return iter(self.rows)
+
+
+def mcp_inputs():
+    contract = {"protocol_version": "fixture-mcp-1", "client_versions": ["fixture-mcp-1"],
+                "server_versions": ["fixture-mcp-1"], "sdk_versions": ["fixture-mcp-1"],
+                "resource": "fixture://tools", "action": "write"}
+    discovery = {"name": "increment", "input_schema": {"amount": "integer"},
+                 "output_schema": {"value": "integer"}, "annotations": {"readOnlyHint": False}}
+    invocation = {"id": "request-1", "name": "increment", "input_schema": {"amount": "integer"},
+                  "arguments": {"amount": 2}}
+    return contract, discovery, invocation, {"aud": "fixture://tools"}, {("fixture://tools", "increment", "write")}
+
+
+def mcp_response(result):
+    return {"jsonrpc": "2.0", "id": "request-1", "result": result}
 
 
 class ResourceAssertions(unittest.TestCase):
@@ -125,6 +165,187 @@ class ResourceAssertions(unittest.TestCase):
         self.assertTrue(candidate.message_allowed({"origin": "host", "context": "extension"}, "host", "extension"))
         for message in ({"origin": "page", "context": "extension"}, {"origin": "host", "context": "page"}, {}):
             self.assertFalse(candidate.message_allowed(message, "host", "extension"))
+
+    def test_lazy_values_materialize_before_transaction_exit_and_serialization(self):
+        events, candidate = [], subject()
+        transaction = Transaction(events)
+        values = candidate.transaction_values(transaction, lambda: LazyQuery(transaction, [{"id": 1}, {"id": 2}]), 2)
+        self.assertEqual(events, ["transaction-open", "query-construct", "query-read", "transaction-close"])
+        self.assertIsInstance(values, list)
+        events.append("serialize")
+        self.assertEqual(json.dumps(values, sort_keys=True), '[{"id": 1}, {"id": 2}]')
+        self.assertEqual(events.count("query-read"), 1)
+        self.assertFalse(transaction.active)
+
+    def test_query_construction_is_lazy_and_late_consumers_expose_the_boundary(self):
+        events = []
+        transaction = Transaction(events)
+        with transaction:
+            query = LazyQuery(transaction, [{"id": 1}])
+            self.assertEqual(events, ["transaction-open", "query-construct"])
+        for consume in (lambda: list(query), lambda: json.dumps(list(query))):
+            with self.assertRaisesRegex(RuntimeError, "outside transaction"):
+                consume()
+        self.assertEqual(events, ["transaction-open", "query-construct", "transaction-close", "query-read", "query-read"])
+
+    def test_materialization_bound_rejects_oversized_results_and_closes_transaction(self):
+        events, candidate = [], subject()
+        transaction = Transaction(events)
+        with self.assertRaisesRegex(ValueError, "materialization bound"):
+            candidate.transaction_values(transaction, lambda: LazyQuery(transaction, [1, 2, 3]), 2)
+        self.assertEqual(events, ["transaction-open", "query-construct", "query-read", "transaction-close"])
+        self.assertFalse(transaction.active)
+
+    def test_mcp_selected_contract_success_and_version_intersection(self):
+        candidate, calls = subject(), []
+        def send(name, arguments):
+            calls.append((name, arguments))
+            return mcp_response({"isError": False, "structuredContent": {"value": 7}})
+        self.assertEqual(candidate.mcp_call(*mcp_inputs(), send), {"kind": "success", "data": {"value": 7}})
+        self.assertEqual(calls, [("increment", {"amount": 2})])
+        for side in ("client", "server", "sdk"):
+            inputs = list(mcp_inputs())
+            inputs[0][side + "_versions"] = ["fixture-mcp-older"]
+            calls.clear()
+            with self.subTest(side=side):
+                with self.assertRaisesRegex(ValueError, "unsupported-contract"):
+                    candidate.mcp_call(*inputs, send)
+                self.assertEqual(calls, [])
+
+    def test_mcp_discovery_schema_drift_and_arguments_are_checked_before_dispatch(self):
+        candidate, calls = subject(), []
+        def send(name, arguments):
+            calls.append((name, arguments))
+            return mcp_response({"isError": False, "structuredContent": {"value": 7}})
+        inputs = list(mcp_inputs())
+        inputs[1]["input_schema"]["amount"] = "number"
+        with self.assertRaisesRegex(ValueError, "schema-drift"):
+            candidate.mcp_call(*inputs, send)
+        self.assertEqual(calls, [])
+        inputs[2]["input_schema"] = copy.deepcopy(inputs[1]["input_schema"])
+        inputs[2]["arguments"]["amount"] = 2.5
+        self.assertEqual(candidate.mcp_call(*inputs, send)["kind"], "success")
+        calls.clear()
+        for arguments in ({"amount": "2.5"}, {"amount": True}, {}, {"amount": 2, "extra": 1},
+                          {"amount": float("inf")}, {"amount": 10 ** 1000}):
+            inputs[2]["arguments"] = arguments
+            with self.subTest(arguments=arguments), self.assertRaisesRegex(ValueError, "invalid-arguments"):
+                candidate.mcp_call(*inputs, send)
+            self.assertEqual(calls, [])
+
+    def test_mcp_token_audience_and_annotation_do_not_grant_effect_authority(self):
+        candidate, calls = subject(), []
+        def send(name, arguments):
+            calls.append("write")
+            return mcp_response({"isError": False, "structuredContent": {"value": 7}})
+        inputs = list(mcp_inputs())
+        inputs[3]["aud"] = "fixture://another-resource"
+        with self.assertRaisesRegex(PermissionError, "token-audience"):
+            candidate.mcp_call(*inputs, send)
+        self.assertEqual(calls, [])
+        inputs = list(mcp_inputs())
+        inputs[1]["annotations"]["readOnlyHint"] = True
+        inputs[4] = set()
+        with self.assertRaisesRegex(PermissionError, "tool-authority"):
+            candidate.mcp_call(*inputs, send)
+        self.assertEqual(calls, [])
+        inputs[4] = {("fixture://tools", "increment", "write")}
+        self.assertEqual(candidate.mcp_call(*inputs, send)["kind"], "success")
+        self.assertEqual(calls, ["write"])
+
+    def test_mcp_business_failure_protocol_error_and_invalid_result_are_distinct(self):
+        candidate = subject()
+        business = mcp_response({"isError": True, "content": [{"type": "text", "text": "insufficient credit"}]})
+        self.assertEqual(candidate.mcp_call(*mcp_inputs(), lambda *args: business),
+                         {"kind": "business-error", "message": "insufficient credit"})
+        protocol = {"jsonrpc": "2.0", "id": "request-1", "error": {"code": -32602, "message": "invalid params"}}
+        self.assertEqual(candidate.mcp_call(*mcp_inputs(), lambda *args: protocol), {"kind": "protocol-error", "code": -32602})
+        for result in ({"isError": False, "structuredContent": {"value": "7"}}, {"isError": "false"}, {"value": 7}):
+            with self.subTest(result=result), self.assertRaisesRegex(ValueError, "invalid-tool-result"):
+                candidate.mcp_call(*mcp_inputs(), lambda *args: mcp_response(result))
+        for request_id in (1, "1"):
+            inputs = list(mcp_inputs())
+            inputs[2]["id"] = request_id
+            response = {"jsonrpc": "2.0", "id": request_id,
+                        "result": {"isError": False, "structuredContent": {"value": 7}}}
+            with self.subTest(valid_id=request_id):
+                self.assertEqual(candidate.mcp_call(*inputs, lambda *args: response)["kind"], "success")
+        for request_id, response_id in ((1, True), (0, False), (1, 1.0), ("1", 1)):
+            inputs = list(mcp_inputs())
+            inputs[2]["id"] = request_id
+            response = {"jsonrpc": "2.0", "id": response_id,
+                        "result": {"isError": False, "structuredContent": {"value": 7}}}
+            with self.subTest(request_id=request_id, response_id=response_id):
+                with self.assertRaisesRegex(ValueError, "protocol-envelope"):
+                    candidate.mcp_call(*inputs, lambda *args: response)
+        for invalid_id in (True, False, None, 1.0, []):
+            inputs, calls = list(mcp_inputs()), []
+            inputs[2]["id"] = invalid_id
+            with self.subTest(invalid_id=invalid_id):
+                with self.assertRaisesRegex(ValueError, "protocol-request-id"):
+                    candidate.mcp_call(*inputs, lambda *args: calls.append("send"))
+                self.assertEqual(calls, [])
+        protocol["id"] = "another-request"
+        with self.assertRaisesRegex(ValueError, "protocol-envelope"):
+            candidate.mcp_call(*mcp_inputs(), lambda *args: protocol)
+
+    def test_hydration_uses_shared_initial_inputs_not_a_later_effect(self):
+        candidate = subject()
+        server = {"epoch_seconds": 1704067200, "offset_minutes": 0, "locale": "en"}
+        self.assertEqual(candidate.render_hydration(server, [dict(server)]),
+                         {"server_markup": "en:2024-01-01 00:00", "initial_markup": "en:2024-01-01 00:00", "matches": True})
+        for field, value, expected in (("epoch_seconds", 1704070800, "en:2024-01-01 01:00"),
+                                        ("offset_minutes", 60, "en:2024-01-01 01:00"),
+                                        ("locale", "fr", "fr:01/01/2024 00:00")):
+            initial = {**server, field: value}
+            with self.subTest(field=field):
+                result = candidate.render_hydration(server, [initial, dict(server)])
+                self.assertFalse(result["matches"])
+                self.assertEqual(result["initial_markup"], expected)
+                self.assertEqual(result["server_markup"], "en:2024-01-01 00:00")
+
+    def test_transfer_copies_declared_values_without_shared_identity(self):
+        candidate = subject()
+        shared = [1, "two", None, True, 1.5]
+        value = {"left": shared, "right": shared}
+        copied = candidate.serialize_transfer(value)
+        self.assertEqual(copied, value)
+        copied["left"].append(3)
+        self.assertEqual(value["left"], [1, "two", None, True, 1.5])
+        self.assertEqual(copied["right"], [1, "two", None, True, 1.5])
+
+    def test_transfer_rejects_live_or_cyclic_objects_without_invoking_them(self):
+        candidate = subject()
+        cycle = []
+        cycle.append(cycle)
+        events = []
+        resource = Resource(events)
+        for invalid in (resource, lambda: events.append("called"), cycle, b"raw", (1, 2), float("nan"), {1: "key"}):
+            with self.subTest(kind=type(invalid).__name__), self.assertRaises(ValueError):
+                candidate.serialize_transfer({"nested": invalid})
+        self.assertEqual(events, ["acquire"])
+
+    def test_server_action_checks_its_own_input_and_authority_without_page_visit(self):
+        candidate, events = subject(), []
+        def authorize(principal, resource):
+            events.append(("authorize", principal, resource))
+            return principal == "owner"
+        def perform(resource, amount):
+            events.append(("write", resource, amount))
+            return "updated"
+        request = {"resource": "account-1", "amount": 2, "page_authorized": False}
+        self.assertEqual(candidate.server_action("owner", request, authorize, perform), "updated")
+        self.assertEqual(events, [("authorize", "owner", "account-1"), ("write", "account-1", 2)])
+        events.clear()
+        request["page_authorized"] = True
+        with self.assertRaisesRegex(PermissionError, "action-authority"):
+            candidate.server_action("stranger", request, authorize, perform)
+        self.assertEqual(events, [("authorize", "stranger", "account-1")])
+        events.clear()
+        request["amount"] = -1
+        with self.assertRaisesRegex(ValueError, "invalid action input"):
+            candidate.server_action("owner", request, authorize, perform)
+        self.assertEqual(events, [])
 
 
 if __name__ == "__main__":
