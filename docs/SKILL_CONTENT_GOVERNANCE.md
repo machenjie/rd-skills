@@ -602,8 +602,16 @@ References. The selector accepts exact inline-code Skill IDs only in imperative
 route or handoff sentences and routing, owner, risk-gate, verification, or
 handoff table cells. It excludes frontmatter, fenced code, example, history,
 background, and generated Layer 3 sections. Unknown and self relationships
-fail closed. The current per-target and catalog limits are 57 and 4083. Each
-required candidate carries canonical selection reasons. A
+fail closed. Current selector v3 derives each target's bound from its required
+union plus 13 retrieval slots, capped at the other catalog packages.
+The union includes every bound Registry relation, source relation, and recomputed
+negative-route conflict. The 13 slots preserve Top 5 plus Top 2 for four signals.
+The Registry graph is reconstructed from both sides of bound responsibility contracts.
+An embedded declaration cannot grant itself authority.
+The formula is fingerprinted; observed fan-out is not a global review contract.
+The catalog bound remains `floor(3500 * package_count / 162)`, currently 4385.
+Historical selector v2 retains its 57-target limit and prior fingerprints.
+Each required candidate carries canonical selection reasons. A
 reviewer may request another ranked candidate only after inspecting the
 discovery capsule. The immutable candidate request records its discovery reason,
 exact ranking evidence, and candidate-material fingerprint; an empty request is

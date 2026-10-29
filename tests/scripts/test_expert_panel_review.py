@@ -502,6 +502,100 @@ def _semantic_ballot(
 
 
 class ExpertPanelReviewTests(unittest.TestCase):
+    def test_current_adjacency_formula_preserves_required_graph_and_total_bound(self) -> None:
+        packet = professional_support._bootstrap_packet()
+        targets = PANEL._professional_v3_base_targets(packet["professional_targets"])
+        limits = PANEL._professional_adjacency_target_limits(targets)
+        graph = PANEL._professional_registry_adjacency(targets)
+        contract = PANEL._professional_adjacency_selection_contract()
+        self.assertEqual(13, contract["per_target_budget"]["retrieval_allowance"])
+        self.assertNotIn("maximum_required_candidates_per_target", contract)
+        for target in targets:
+            adjacency = target["routing_adjacency"]
+            required = {row["skill_id"] for row in adjacency["required_candidates"]}
+            mandatory = graph[target["skill_id"]] | set(adjacency["source_declared_skills"]) | {
+                row["skill_id"] for row in adjacency["full_catalog_ranking"]
+                if row["signals"]["negative-route-conflict"]["count"]
+            }
+            self.assertLessEqual(mandatory, required)
+            self.assertEqual(min(len(targets) - 1, len(mandatory) + 13), limits[target["skill_id"]])
+        self.assertGreater(limits["engineering-change-analysis"], 57)
+        PANEL._enforce_professional_adjacency_candidate_budget(targets)
+        excessive = copy.deepcopy(targets)
+        excessive[0]["routing_adjacency"]["required_candidates"] = [{}] * (limits[excessive[0]["skill_id"]] + 1)
+        with self.assertRaisesRegex(PANEL.PanelReviewError, "per-target budget exceeded"):
+            PANEL._enforce_professional_adjacency_candidate_budget(excessive)
+        # A denser, reciprocal registry graph fits every local formula but
+        # exceeds the unchanged catalog ceiling. This isolates that guard.
+        professionals = [target["skill_id"] for target in excessive if target["layer"] == "professional"]
+        modifiers = [target["skill_id"] for target in excessive if target["layer"] != "professional"]
+        count = PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_TOTAL // len(excessive) + 1
+        for target in excessive:
+            responsibility = target["registry"]["responsibility_contract"]
+            responsibility["layer3_candidates"] = modifiers if target["layer"] == "professional" else []
+            responsibility["used_by"] = [] if target["layer"] == "professional" else professionals
+            target["routing_adjacency"]["required_candidates"] = [{}] * count
+        self.assertTrue(all(count <= limit for limit in PANEL._professional_adjacency_target_limits(excessive).values()))
+        with self.assertRaisesRegex(PANEL.PanelReviewError, "catalog budget exceeded"):
+            PANEL._enforce_professional_adjacency_candidate_budget(excessive)
+
+    def test_current_adjacency_rejects_coherent_embedded_graph_and_selection_forgery(self) -> None:
+        packet = professional_support._bootstrap_packet()
+        for kind in ("declared-edge", "missing", "duplicate", "fake-conflict", "ranking-conflict"):
+            with self.subTest(kind=kind):
+                projected = PANEL._professional_v2_projection_from_v3(copy.deepcopy(packet))
+                selection = projected["panel_contract"]["adjacency_contract"]["required_candidate_selection"]
+                projected["panel_contract"]["adjacency_contract"]["required_candidate_selection"] = PANEL._ProfessionalSchema3RegisteredSelection(selection)
+                target = projected["professional_targets"][0]
+                adjacency = target["routing_adjacency"]
+                if kind == "declared-edge":
+                    candidate = next(row["skill_id"] for row in adjacency["full_catalog_ranking"] if row["skill_id"] not in adjacency["declared_skills"])
+                    adjacency["registry_declared_skills"] = sorted([*adjacency["registry_declared_skills"], candidate])
+                    adjacency["declared_skills"] = sorted(set(adjacency["registry_declared_skills"]) | set(adjacency["source_declared_skills"]))
+                    adjacency["required_candidates"] = PANEL._professional_required_adjacency_candidates(
+                        adjacency["full_catalog_ranking"], registry_declared_skills=adjacency["registry_declared_skills"], source_declared_skills=adjacency["source_declared_skills"],
+                    )
+                elif kind == "missing":
+                    adjacency["required_candidates"].pop()
+                elif kind == "duplicate":
+                    adjacency["required_candidates"].append(copy.deepcopy(adjacency["required_candidates"][0]))
+                elif kind == "fake-conflict":
+                    adjacency["required_candidates"][0]["selection_reasons"].append("negative-route-conflict")
+                else:
+                    adjacency["full_catalog_ranking"][0]["signals"]["negative-route-conflict"]["count"] += 1
+                target["package_fingerprint"] = PANEL._canonical_json_sha256(PANEL.professional_carry.professional_candidate_material_binding(target))
+                projected["source_fingerprints"]["professional_packages"] = PANEL._canonical_json_sha256(projected["professional_targets"])
+                with self.assertRaises(PANEL.PanelReviewError):
+                    PANEL._validate_professional_completeness_packet_v2(projected, negative_route_match_version=PANEL.PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION)
+
+    def test_current_adjacency_formula_and_old_contract_cannot_be_interchanged(self) -> None:
+        packet = professional_support._bootstrap_packet()
+        for kind in ("extra-retrieval", "historical-policy", "historical-fingerprint"):
+            with self.subTest(kind=kind):
+                changed = copy.deepcopy(packet)
+                if kind == "historical-fingerprint":
+                    changed["review_contract_fingerprint"] = PANEL.PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT
+                else:
+                    selection = changed["panel_contract"]["adjacency_contract"]["required_candidate_selection"]
+                    if kind == "extra-retrieval":
+                        selection["per_target_budget"]["retrieval_allowance"] = 14
+                    else:
+                        selection.clear()
+                        selection.update(PANEL._professional_adjacency_selection_contract_v2())
+                    for target in changed["professional_targets"]:
+                        target["routing_adjacency"]["required_candidate_selection"] = copy.deepcopy(selection)
+                with self.assertRaises(PANEL.PanelReviewError):
+                    PANEL._validate_professional_completeness_packet_v3(changed)
+        fingerprint = PANEL.panel_contracts.professional_review_contract_fingerprint()
+        targets = PANEL._professional_v3_base_targets(packet["professional_targets"])
+        target = targets[0]
+        graph = PANEL._professional_registry_adjacency(targets)
+        other = next(row["skill_id"] for row in targets if row["skill_id"] != target["skill_id"] and row["skill_id"] not in graph[target["skill_id"]])
+        target["registry"]["responsibility_contract"]["layer3_candidates"].append(other)
+        PANEL._professional_adjacency_target_limits(targets)
+        self.assertEqual(fingerprint, PANEL.panel_contracts.professional_review_contract_fingerprint())
+        self.assertNotEqual(fingerprint, PANEL.PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT)
+
     def test_attestation_reviewer_projection_accepts_native_expertise_order(self) -> None:
         voter = {
             "voter_id": "domain-reviewer",
@@ -730,7 +824,7 @@ class ExpertPanelReviewTests(unittest.TestCase):
             3500,
             PANEL.PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL,
         )
-        self.assertEqual(188, PANEL.PROFESSIONAL_PACKAGE_COUNT)
+        self.assertEqual(sum(PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS.values()), PANEL.PROFESSIONAL_PACKAGE_COUNT)
         for target_count, expected in ((188, 4061), (189, 4083), (190, 4104)):
             with self.subTest(target_count=target_count):
                 self.assertEqual(
@@ -755,12 +849,12 @@ class ExpertPanelReviewTests(unittest.TestCase):
                 "rounding": "floor",
                 "baseline_target_count": 162,
                 "baseline_maximum_required_candidates_total": 3500,
-                "current_target_count": 188,
-                "derived_maximum_required_candidates_total": 4061,
+                "current_target_count": PANEL.PROFESSIONAL_PACKAGE_COUNT,
+                "derived_maximum_required_candidates_total": PANEL._professional_adjacency_max_required_candidates_total(PANEL.PROFESSIONAL_PACKAGE_COUNT),
             },
             contract["maximum_required_candidates_total_derivation"],
         )
-        self.assertEqual(4061, contract["maximum_required_candidates_total"])
+        self.assertEqual(PANEL._professional_adjacency_max_required_candidates_total(PANEL.PROFESSIONAL_PACKAGE_COUNT), contract["maximum_required_candidates_total"])
         current_fingerprint = PANEL._canonical_json_sha256(
             PANEL._professional_completeness_panel_contract()
         )
@@ -785,24 +879,24 @@ class ExpertPanelReviewTests(unittest.TestCase):
         actual_budget = [21] * 101 + [20] * 88
         self.assertEqual(3881, sum(actual_budget))
         PANEL._enforce_professional_adjacency_candidate_budget(
-            synthetic_targets(actual_budget)
+            synthetic_targets(actual_budget), historical=True
         )
         PANEL._enforce_professional_adjacency_candidate_budget(
-            synthetic_targets([57] + [0] * 188)
+            synthetic_targets([57] + [0] * 188), historical=True
         )
         with self.assertRaisesRegex(
             PANEL.PanelReviewError,
             "catalog budget exceeded",
         ):
             PANEL._enforce_professional_adjacency_candidate_budget(
-                synthetic_targets([22] * 115 + [21] * 74)
+                synthetic_targets([57] * (PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_TOTAL // 57 + 1)), historical=True
             )
         with self.assertRaisesRegex(
             PANEL.PanelReviewError,
             "per-target budget exceeded",
         ):
             PANEL._enforce_professional_adjacency_candidate_budget(
-                synthetic_targets([58] + [0] * 188)
+                synthetic_targets([58] + [0] * 188), historical=True
             )
 
     def test_professional_declared_adjacency_is_exact_registry_field_graph(
@@ -1074,7 +1168,7 @@ Route current work to `candidate-a`.
             PANEL.PROFESSIONAL_ADJACENCY_ALGORITHM,
         )
         self.assertEqual(
-            "layered-required-candidates-v2",
+            "layered-required-candidates-v3",
             PANEL.PROFESSIONAL_ADJACENCY_SELECTION_VERSION,
         )
         self.assertEqual(5, PANEL.PROFESSIONAL_ADJACENCY_TOP_K)
@@ -1086,13 +1180,13 @@ Route current work to `candidate-a`.
         self.assertEqual(
             "a24d605c00e5477f0ea09b4b2eb2aefc32426389980c93efa397fd1c1b41bd4a",
             PANEL._canonical_json_sha256(
-                PANEL._professional_adjacency_selection_contract()
+                PANEL._professional_adjacency_selection_contract_v2(target_count=188)
             ),
         )
         self.assertEqual(
             "47a7df83b5fa63559c82a52e94a9e374507bbf72a5bff520b1f3e53f193fdd9c",
             PANEL._canonical_json_sha256(
-                PANEL._professional_completeness_panel_contract()
+                PANEL._professional_completeness_panel_contract(target_count=188)
             ),
         )
 
@@ -1162,20 +1256,18 @@ Route current work to `candidate-a`.
                     ),
                     candidate["declared"],
                 )
-            self.assertEqual(187, adjacency["full_catalog_count"])
+            self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT - 1, adjacency["full_catalog_count"])
             self.assertEqual(
-                list(range(1, 188)),
+                list(range(1, PANEL.PROFESSIONAL_PACKAGE_COUNT)),
                 [candidate["rank"] for candidate in ranking],
             )
             self.assertEqual(
-                187,
+                PANEL.PROFESSIONAL_PACKAGE_COUNT - 1,
                 len({candidate["skill_id"] for candidate in ranking}),
             )
             self.assertNotIn("full_catalog_ranking_fingerprint", adjacency)
-        self.assertLessEqual(
-            max(required_counts.values()),
-            PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
-        )
+        limits = PANEL._professional_adjacency_target_limits(targets)
+        self.assertTrue(all(count <= limits[name] for name, count in required_counts.items()))
 
         PANEL._professional_package_targets(root=ROOT)
 
@@ -1773,7 +1865,7 @@ Route current work to `candidate-a`.
         packet = professional_support._bootstrap_packet()
         PANEL.validate_packet(packet)
         self.assertEqual(3, packet["schema_version"])
-        self.assertEqual(188, len(packet["professional_targets"]))
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(packet["professional_targets"]))
         self.assertTrue(
             all(
                 [row["path"] for row in target["indexed_references"]]
@@ -1784,7 +1876,7 @@ Route current work to `candidate-a`.
             )
         )
         self.assertEqual(
-            {"professional": 25, "foundation": 150, "domain": 13},
+            PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS,
             {
                 layer: sum(
                     target["layer"] == layer
@@ -1813,7 +1905,7 @@ Route current work to `candidate-a`.
                 PANEL._professional_adjacency_selection_contract(),
                 adjacency["required_candidate_selection"],
             )
-            self.assertEqual(187, len(adjacency["full_catalog_ranking"]))
+            self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT - 1, len(adjacency["full_catalog_ranking"]))
             for ranking_item in adjacency["full_catalog_ranking"]:
                 self.assertEqual(
                     set(PANEL.PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS),
@@ -1849,10 +1941,11 @@ Route current work to `candidate-a`.
             sum(required_candidate_counts),
             PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_TOTAL,
         )
-        self.assertLessEqual(
-            max(required_candidate_counts),
-            PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
-        )
+        limits = PANEL._professional_adjacency_target_limits(packet["professional_targets"])
+        self.assertTrue(all(
+            len(target["routing_adjacency"]["required_candidates"]) <= limits[target["skill_id"]]
+            for target in packet["professional_targets"]
+        ))
 
         reference_target = next(
             target for target in packet["professional_targets"]
@@ -2409,7 +2502,7 @@ Route current work to `candidate-a`.
             prior_decision_dependencies=None,
             review_contract_fingerprint=PANEL._professional_evidence_review_contract_fingerprint(),
         )
-        self.assertEqual(188, len(plan["fresh_target_ids"]))
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(plan["fresh_target_ids"]))
         self.assertEqual([], plan["carry_target_ids"])
         unsupported = copy.deepcopy(packet)
         unsupported["review_contract_fingerprint"] = "0" * 64
@@ -2452,7 +2545,7 @@ Route current work to `candidate-a`.
             PANEL.PanelReviewError, "per-target budget exceeded"
         ):
             PANEL._enforce_professional_adjacency_candidate_budget(
-                per_target_over_budget
+                per_target_over_budget, historical=True
             )
 
         full_targets, remainder = divmod(
@@ -2486,7 +2579,7 @@ Route current work to `candidate-a`.
             PANEL.PanelReviewError, "catalog budget exceeded"
         ):
             PANEL._enforce_professional_adjacency_candidate_budget(
-                catalog_over_budget
+                catalog_over_budget, historical=True
             )
 
     def test_professional_packet_rejects_missing_duplicate_and_stale_targets(self) -> None:
@@ -2494,7 +2587,7 @@ Route current work to `candidate-a`.
             (
                 "missing",
                 lambda packet: packet["professional_targets"].pop(),
-                "exactly 188",
+                f"exactly {PANEL.PROFESSIONAL_PACKAGE_COUNT}",
             ),
             (
                 "duplicate",

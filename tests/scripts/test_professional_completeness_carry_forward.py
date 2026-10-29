@@ -1899,6 +1899,18 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
 
 
 class ProfessionalPacketCompatibilityTests(unittest.TestCase):
+    def test_phase2_schema2_retains_budget_derivation_but_is_not_current(self) -> None:
+        with (
+            mock.patch.object(PANEL, "PROFESSIONAL_PACKAGE_COUNT", 188),
+            mock.patch.object(PANEL, "PROFESSIONAL_CURRENT_LAYER_COUNTS", PANEL.PROFESSIONAL_PHASE2_LAYER_COUNTS),
+        ):
+            packet = professional_support._historical_schema2_packet()
+        selection = packet["panel_contract"]["adjacency_contract"]["required_candidate_selection"]
+        self.assertEqual(188, selection["maximum_required_candidates_total_derivation"]["current_target_count"])
+        PANEL._validate_professional_completeness_packet_v2(packet, validation_mode=PANEL.VALIDATION_MODE_HISTORICAL)
+        with self.assertRaises(PANEL.PanelReviewError):
+            PANEL._validate_professional_completeness_packet_v2(packet, validation_mode=PANEL.VALIDATION_MODE_CURRENT)
+
     def test_phase2_schema1_packet_stays_auditable_without_current_inventory_identity(self) -> None:
         packet = _historical_schema1_packet(layer_counts=PANEL.PROFESSIONAL_PHASE2_LAYER_COUNTS)
         PANEL._validate_professional_completeness_packet_v1(packet)
@@ -2090,13 +2102,15 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             packet,
         )
         self.assertEqual(_sha(packet), _sha(adapted))
-        self.assertEqual(
-            PANEL._professional_v3_panel_contract(
-                target_count=162,
-                include_selection_derivation=False,
-            ),
-            adapted["panel_contract"],
+        historical_contract = PANEL._professional_v3_panel_contract(
+            target_count=162, include_selection_derivation=False,
         )
+        historical_contract["adjacency_contract"]["required_candidate_selection"] = (
+            PANEL._professional_adjacency_selection_contract_v2(
+                target_count=162, include_derivation=False,
+            )
+        )
+        self.assertEqual(historical_contract, adapted["panel_contract"])
 
         mutations = (
             (
@@ -2174,10 +2188,15 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             packet,
         )
         self.assertEqual(_sha(packet), _sha(adapted))
-        self.assertEqual(
-            PANEL._professional_v3_panel_contract(target_count=188),
-            adapted["panel_contract"],
+        historical_contract = PANEL._professional_v3_panel_contract(
+            target_count=188, include_selection_derivation=True,
         )
+        historical_contract["adjacency_contract"]["required_candidate_selection"] = (
+            PANEL._professional_adjacency_selection_contract_v2(
+                target_count=188, include_derivation=True,
+            )
+        )
+        self.assertEqual(historical_contract, adapted["panel_contract"])
         self.assertEqual(
             "declared_skills",
             next(

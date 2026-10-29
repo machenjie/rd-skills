@@ -232,6 +232,7 @@ def _historical_schema2_packet() -> dict:
             ranking, registry_declared_skills=[], source_declared_skills=[]
         )
         target["routing_adjacency"].update(
+            required_candidate_selection=PANEL._professional_adjacency_selection_contract_v2(),
             document_frequency_filter=copy.deepcopy(document_filter),
             full_catalog_ranking=ranking,
             full_catalog_ranking_fingerprint=_sha(ranking),
@@ -241,7 +242,7 @@ def _historical_schema2_packet() -> dict:
         target.pop("registry_authority")
         target.pop("reference_authority")
         target["package_fingerprint"] = _sha(target)
-    PANEL._enforce_professional_adjacency_candidate_budget(targets)
+    PANEL._enforce_professional_adjacency_candidate_budget(targets, historical=True)
     with mock.patch.object(
         PANEL, "_professional_package_targets", return_value=targets
     ):

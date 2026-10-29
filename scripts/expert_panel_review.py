@@ -173,6 +173,9 @@ PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT = (
 PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT = (
     "da14d27a602cc1bc26cd200d2cf9f4093800600a82a25cf64189a28f3c2c5daf"
 )
+PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT = (
+    "9943ec77eb92175c55350d8ddfdf673f089b54bbcd692e2c39876069317e9e3d"
+)
 PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION = "phrase-aware-v1"
 PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT = (
     panel_contracts.PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT
@@ -1775,7 +1778,7 @@ def _professional_catalog_rankings(
     }
 
 
-def _professional_adjacency_selection_contract(
+def _professional_adjacency_selection_contract_v2(
     *,
     target_count: int | None = None,
     include_derivation: bool = True,
@@ -1788,7 +1791,7 @@ def _professional_adjacency_selection_contract(
         target_count
     )
     contract = {
-        "version": PROFESSIONAL_ADJACENCY_SELECTION_VERSION,
+        "version": "layered-required-candidates-v2",
         "overall_top_k": PROFESSIONAL_ADJACENCY_TOP_K,
         "per_signal_top_k": PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K,
         "layered_signals": list(PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS),
@@ -1833,6 +1836,21 @@ def _professional_adjacency_selection_contract(
     return contract
 
 
+def _professional_adjacency_selection_contract(
+    *, target_count: int | None = None, include_derivation: bool = True,
+) -> dict[str, Any]:
+    """Bind the current formula without fingerprinting observed owner fan-out."""
+    contract = _professional_adjacency_selection_contract_v2(
+        target_count=target_count, include_derivation=include_derivation,
+    )
+    contract["version"] = PROFESSIONAL_ADJACENCY_SELECTION_VERSION
+    contract.pop("maximum_required_candidates_per_target")
+    contract["per_target_budget"] = copy.deepcopy(
+        panel_contracts.PROFESSIONAL_ADJACENCY_TARGET_BUDGET_FORMULA
+    )
+    return contract
+
+
 def _professional_adjacency_selection_contract_v1(
     *,
     target_count: int,
@@ -1841,7 +1859,7 @@ def _professional_adjacency_selection_contract_v1(
 ) -> dict[str, Any]:
     """Reconstruct the exact predecessor contract for bound historical packets."""
 
-    contract = _professional_adjacency_selection_contract(
+    contract = _professional_adjacency_selection_contract_v2(
         target_count=target_count,
         include_derivation=include_derivation,
     )
@@ -1923,7 +1941,7 @@ def _professional_completeness_panel_contract(
         "adjacency_contract": {
             "algorithm": PROFESSIONAL_ADJACENCY_ALGORITHM,
             "required_candidate_selection": (
-                _professional_adjacency_selection_contract(
+                _professional_adjacency_selection_contract_v2(
                     target_count=target_count,
                     include_derivation=include_selection_derivation,
                 )
@@ -2012,16 +2030,59 @@ def _professional_required_adjacency_candidates(
     ]
 
 
-def _enforce_professional_adjacency_candidate_budget(
+def _professional_registry_adjacency(
     targets: list[dict[str, Any]],
+) -> dict[str, set[str]]:
+    """Reconstruct both directions from bound responsibility contracts."""
+    graph = {target["skill_id"]: set() for target in targets}
+    for target in targets:
+        name = target["skill_id"]
+        responsibility = target["registry"]["responsibility_contract"]
+        for field in ("layer3_candidates", "used_by"):
+            for adjacent in _string_list(responsibility[field], label=f"{name}.{field}"):
+                if adjacent not in graph or adjacent == name:
+                    raise PanelReviewError(f"{name}.{field} names unknown or self package: {adjacent}")
+                graph[name].add(adjacent)
+                graph[adjacent].add(name)
+    return graph
+
+
+def _professional_adjacency_target_limits(
+    targets: list[dict[str, Any]],
+) -> dict[str, int]:
+    """Use bound declarations and already-validated canonical rankings."""
+    graph = _professional_registry_adjacency(targets)
+    known = set(graph)
+    allowance = PROFESSIONAL_ADJACENCY_TOP_K + (
+        PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K * len(PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS)
+    )
+    limits = {}
+    for target in targets:
+        name = target["skill_id"]
+        mandatory = graph[name] | set(_professional_source_declared_skill_ids(target, known_skill_ids=known))
+        mandatory |= {
+            row["skill_id"]
+            for row in target["routing_adjacency"]["full_catalog_ranking"]
+            if row["signals"]["negative-route-conflict"]["count"] > 0
+        }
+        limits[name] = min(len(known) - 1, len(mandatory) + allowance)
+    return limits
+
+
+def _enforce_professional_adjacency_candidate_budget(
+    targets: list[dict[str, Any]], *, historical: bool = False,
 ) -> None:
     counts = [
         len(target["routing_adjacency"]["required_candidates"])
         for target in targets
     ]
-    if counts and max(counts) > (
-        PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET
-    ):
+    limits = (
+        [PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET] * len(targets)
+        if historical else [
+            limit for _name, limit in _professional_adjacency_target_limits(targets).items()
+        ]
+    )
+    if any(count > limit for count, limit in zip(counts, limits, strict=True)):
         raise PanelReviewError(
             "professional adjacency required-candidate per-target budget exceeded"
         )
@@ -2065,21 +2126,6 @@ def _professional_package_targets(
             f"{PROFESSIONAL_PACKAGE_COUNT} non-Control Skill packages; "
             f"found {len(registry_rows)}"
         )
-
-    direct_relationships: dict[str, set[str]] = {
-        str(row["name"]): set() for _layer, _relative, row in registry_rows
-    }
-    for layer, _relative, row in registry_rows:
-        name = str(row["name"])
-        for field in ("layer3_candidates", "used_by"):
-            values = row.get(field, [])
-            for adjacent in _string_list(values, label=f"{name}.{field}"):
-                if adjacent not in seen_names:
-                    raise PanelReviewError(
-                        f"{name}.{field} names unknown professional package: {adjacent}"
-                    )
-                direct_relationships[name].add(adjacent)
-                direct_relationships[adjacent].add(name)
 
     targets: list[dict[str, Any]] = []
     for layer, registry_relative, row in registry_rows:
@@ -2198,6 +2244,7 @@ def _professional_package_targets(
                 ) from exc
         targets.append(target)
     targets.sort(key=lambda item: item["skill_id"])
+    direct_relationships = _professional_registry_adjacency(targets)
     negative_route_match_version = (
         PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
         if historical_schema2
@@ -2236,7 +2283,8 @@ def _professional_package_targets(
             "registry_declared_skills": registry_declared_skills,
             "source_declared_skills": source_declared_skills,
             "required_candidate_selection": (
-                _professional_adjacency_selection_contract()
+                _professional_adjacency_selection_contract_v2()
+                if historical_schema2 else _professional_adjacency_selection_contract()
             ),
             "required_candidates": required_candidates,
             "full_catalog_count": len(ranking),
@@ -2250,7 +2298,10 @@ def _professional_package_targets(
                 _canonical_json_sha256(ranking)
             )
             target["package_fingerprint"] = _canonical_json_sha256(target)
-    _enforce_professional_adjacency_candidate_budget(targets)
+    if historical_schema2:
+        _enforce_professional_adjacency_candidate_budget(targets, historical=True)
+    else:
+        _enforce_professional_adjacency_candidate_budget(targets)
     return targets
 
 
@@ -5434,7 +5485,9 @@ def _professional_package_profile(
     if target_count == PROFESSIONAL_PACKAGE_COUNT:
         return PROFESSIONAL_CURRENT_LAYER_COUNTS, False
     if validation_mode == VALIDATION_MODE_HISTORICAL and target_count == PROFESSIONAL_PHASE2_PACKAGE_COUNT:
-        return PROFESSIONAL_PHASE2_LAYER_COUNTS, True
+        # Phase 2 already carried the catalog-budget derivation. Only the
+        # older 162-package format omitted that field.
+        return PROFESSIONAL_PHASE2_LAYER_COUNTS, False
     if (
         validation_mode == VALIDATION_MODE_HISTORICAL
         and target_count == PROFESSIONAL_LEGACY_PACKAGE_COUNT
@@ -5665,6 +5718,11 @@ def _validate_professional_completeness_packet_v2(
         )
 
     target_names = set(skill_ids)
+    current_formula = (
+        isinstance(packet_selection, _ProfessionalSchema3RegisteredSelection)
+        and packet_selection.get("version") == PROFESSIONAL_ADJACENCY_SELECTION_VERSION
+    )
+    registry_graph = _professional_registry_adjacency(targets) if current_formula else {}
     historical_aliases = all(
         "entry_fingerprint" in target["registry"] for target in targets
     ) and all(
@@ -5746,6 +5804,8 @@ def _validate_professional_completeness_packet_v2(
             raise PanelReviewError(
                 f"{label} declarations must be sorted, unique, and exclude self"
             )
+        if current_formula and registry_declared != sorted(registry_graph[target["skill_id"]]):
+            raise PanelReviewError(f"{label}.registry_declared_skills differs from bound responsibility graph")
         declared_union = sorted(
             set(registry_declared) | set(source_declared)
         )
@@ -5846,7 +5906,7 @@ def _validate_professional_completeness_packet_v2(
                         f"{ranking_label}.signals.{signal_name} is invalid"
                     )
 
-    _enforce_professional_adjacency_candidate_budget(targets)
+    _enforce_professional_adjacency_candidate_budget(targets, historical=not current_formula)
     historical_budget = expected_contract["adjacency_contract"][
         "required_candidate_selection"
     ]["maximum_required_candidates_total"]
@@ -9062,7 +9122,7 @@ def _professional_v3_historical_cap50_view(
             PROFESSIONAL_HISTORICAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET
         ),
     )
-    expected_current_selection = _professional_adjacency_selection_contract(
+    expected_current_selection = _professional_adjacency_selection_contract_v2(
         target_count=PROFESSIONAL_HISTORICAL_CAP50_TARGET_COUNT,
         include_derivation=False,
     )
@@ -9167,7 +9227,7 @@ def _professional_v3_historical_v1_view(
         include_derivation=True,
         maximum_required_candidates_per_target=52,
     )
-    expected_current_selection = _professional_adjacency_selection_contract(
+    expected_current_selection = _professional_adjacency_selection_contract_v2(
         target_count=PROFESSIONAL_PHASE2_PACKAGE_COUNT,
         include_derivation=True,
     )
@@ -10159,6 +10219,11 @@ def _professional_v3_panel_contract(
             include_selection_derivation=include_selection_derivation,
         )
     )
+    contract["adjacency_contract"]["required_candidate_selection"] = (
+        _professional_adjacency_selection_contract(
+            target_count=target_count, include_derivation=include_selection_derivation,
+        )
+    )
     contract["decision_method"] = (
         PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
     )
@@ -10262,19 +10327,18 @@ def _professional_v2_projection_from_v3(
         target_count=len(base_targets),
         include_selection_derivation=not legacy_selection,
     )
-    if validation_mode == VALIDATION_MODE_HISTORICAL:
-        historical_selection = (
-            packet.get("panel_contract", {})
-            .get("adjacency_contract", {})
-            .get("required_candidate_selection")
+    historical_selection = (
+        packet.get("panel_contract", {})
+        .get("adjacency_contract", {})
+        .get("required_candidate_selection")
+    )
+    if not isinstance(historical_selection, dict):
+        raise PanelReviewError(
+            "historical schema-3 selection contract is invalid"
         )
-        if not isinstance(historical_selection, dict):
-            raise PanelReviewError(
-                "historical schema-3 selection contract is invalid"
-            )
-        panel_contract["adjacency_contract"][
-            "required_candidate_selection"
-        ] = copy.deepcopy(historical_selection)
+    panel_contract["adjacency_contract"][
+        "required_candidate_selection"
+    ] = copy.deepcopy(historical_selection)
     projected_targets = []
     for target in base_targets:
         projected = copy.deepcopy(target)
@@ -11208,6 +11272,7 @@ def _professional_v3_packet_state(
             raise PanelReviewError(
                 "professional completeness schema-3 panel contract is invalid"
             )
+        registered_schema3_selection = True
     else:
         current_registered_contract = (
             panel_contracts.professional_review_contract_fingerprint()
@@ -11215,6 +11280,7 @@ def _professional_v3_packet_state(
         registered_contracts = {
             current_registered_contract,
             PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+                PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
@@ -11237,11 +11303,14 @@ def _professional_v3_packet_state(
         if packet_contract_fingerprint in {
             current_registered_contract,
             PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
             PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
         }:
             registered_schema3_selection = True
             expected_historical_selection = (
-                _professional_adjacency_selection_contract(
+                (_professional_adjacency_selection_contract
+                 if packet_contract_fingerprint == current_registered_contract
+                 else _professional_adjacency_selection_contract_v2)(
                     target_count=target_count,
                     include_derivation=not legacy_selection,
                 )
@@ -11272,8 +11341,10 @@ def _professional_v3_packet_state(
         validation_mode=validation_mode,
         negative_route_match_version=(
             PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
-            if packet_contract_fingerprint
-            == panel_contracts.professional_review_contract_fingerprint()
+            if packet_contract_fingerprint in {
+                panel_contracts.professional_review_contract_fingerprint(),
+                PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
+            }
             else PROFESSIONAL_HISTORICAL_NEGATIVE_ROUTE_MATCH_VERSION
         ),
     )
@@ -11287,6 +11358,7 @@ def _professional_v3_packet_state(
             not in {
                 panel_contracts.professional_review_contract_fingerprint(),
                 PROFESSIONAL_HISTORICAL_ORDERLESS_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_BOUNDED_REVIEW_CONTRACT_FINGERPRINT,
             }
         ),
     )

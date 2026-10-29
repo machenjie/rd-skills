@@ -462,7 +462,7 @@ PROFESSIONAL_ADJACENCY_DISPOSITIONS = {
 }
 
 PROFESSIONAL_ADJACENCY_ALGORITHM = "catalog-semantic-overlap-v3"
-PROFESSIONAL_ADJACENCY_SELECTION_VERSION = "layered-required-candidates-v2"
+PROFESSIONAL_ADJACENCY_SELECTION_VERSION = "layered-required-candidates-v3"
 PROFESSIONAL_SOURCE_DECLARED_SELECTION_VERSION = (
     "directional-decision-bearing-code-span-v1"
 )
@@ -479,6 +479,7 @@ PROFESSIONAL_SOURCE_DECLARED_EXCLUDED_SURFACES = (
 PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION = "contiguous-phrase-v2"
 PROFESSIONAL_ADJACENCY_TOP_K = 5
 PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K = 2
+# Immutable historical v2 ceiling. Current v3 binds the formula below.
 PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET = 57
 PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT = 162
 PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL = 3500
@@ -494,6 +495,18 @@ PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS = {
 PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS = tuple(
     sorted(set(PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS) - {"negative-route-conflict"})
 )
+PROFESSIONAL_ADJACENCY_TARGET_BUDGET_FORMULA = {
+    "formula": "min(catalog-size-minus-one, mandatory-union-size-plus-retrieval-allowance)",
+    "mandatory_union": ["registry-declared", "source-declared", "negative-route-conflict"],
+    "registry_authority": "bidirectional-bound-responsibility-contracts",
+    "source_authority": "re-extracted-decision-bearing-source-ids",
+    "conflict_authority": "recomputed-canonical-catalog-ranking",
+    "retrieval_allowance": (
+        PROFESSIONAL_ADJACENCY_TOP_K
+        + PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K * len(PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS)
+    ),
+    "retrieval_derivation": "overall-top-k-plus-per-signal-top-k-times-layered-signal-count",
+}
 PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS = frozenset(
     {
         "actual",
@@ -1686,9 +1699,7 @@ def _semantic_contract_projection() -> dict[str, Any]:
             "negative_route_gaps": "generic-or-short-token-and-line-boundary",
             "negative_route_exact_single": "one-significant-token-in-whole-entry",
             "require_all_negative_route_conflicts": True,
-            "maximum_required_candidates_per_target": (
-                PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET
-            ),
+            "per_target_budget": copy.deepcopy(PROFESSIONAL_ADJACENCY_TARGET_BUDGET_FORMULA),
             "total_budget_derivation": {
                 "rounding": "floor",
                 "baseline_target_count": (
