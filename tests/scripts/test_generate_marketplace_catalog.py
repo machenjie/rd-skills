@@ -31,8 +31,21 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
         cls.rendered = cls.module.render_catalog(cls.payload)
 
     def test_catalog_is_derived_from_v3_exported_indexes(self) -> None:
-        self.assertEqual(len(self.payload["index"]["items"]), 189)
-        self.assertEqual(len(self.payload["items"]), 189)
+        self.assertEqual(len(self.payload["index"]["items"]), 204)
+        self.assertEqual(len(self.payload["items"]), 204)
+        source_names = {
+            path.parent.name
+            for relative in (
+                "src/control-skills", "src/professional-skills",
+                "src/foundation/capabilities", "src/domain-extensions",
+            )
+            for path in (ROOT / relative).glob("*/SKILL.md")
+            if not path.parent.name.startswith("_")
+        }
+        self.assertEqual(source_names, set(self.payload["items"]))
+        self.assertEqual(
+            source_names, {item["name"] for item in self.payload["index"]["items"]}
+        )
         self.assertEqual(
             self.payload["index"]["schema_version"],
             3,
@@ -55,7 +68,7 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
             "## Browse By Runtime Delivery",
         ):
             self.assertIn(section, self.rendered)
-        self.assertIn("| `recommended` | 26 | 154 | 9 |", self.rendered)
+        self.assertIn("| `recommended` | 27 | 168 | 9 |", self.rendered)
         self.assertNotIn("| `full` |", self.rendered)
         self.assertNotIn("| `dev` |", self.rendered)
         self.assertIn("### `engineering-control-plane`", self.rendered)

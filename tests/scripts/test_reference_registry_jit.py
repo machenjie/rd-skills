@@ -233,7 +233,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             ("foundation-skills.yaml", "foundation_skills"),
             ("domain-skills.yaml", "domain_skills"),
         )
-        checked = 0
+        checked_paths: set[Path] = set()
         for filename, key in specs:
             registry = load_yaml_file(ROOT / "src" / "registry" / filename)
             for entry in registry[key]:
@@ -251,8 +251,21 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     ),
                     source_path,
                 )
-                checked += 1
-        self.assertEqual(189, checked)
+                self.assertNotIn(source_path, checked_paths)
+                checked_paths.add(source_path)
+        self.assertEqual(204, len(checked_paths))
+        self.assertEqual(
+            {
+                path
+                for relative in (
+                    "src/control-skills", "src/professional-skills",
+                    "src/foundation/capabilities", "src/domain-extensions",
+                )
+                for path in (ROOT / relative).glob("*/SKILL.md")
+                if not path.parent.name.startswith("_")
+            },
+            checked_paths,
+        )
 
     def test_security_evidence_index_preserves_privacy_only_load_boundary(self) -> None:
         registry = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
@@ -1983,7 +1996,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         self,
     ) -> None:
         registry = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
-        self.assertEqual(25, len(registry["professional_skills"]))
+        self.assertEqual(26, len(registry["professional_skills"]))
         checked: list[str] = []
         violations: list[tuple[str, str, int]] = []
         for entry in registry["professional_skills"]:
@@ -2361,7 +2374,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         self,
     ) -> None:
         registry = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
-        self.assertEqual(150, len(registry["foundation_skills"]))
+        self.assertEqual(157, len(registry["foundation_skills"]))
         checked: list[str] = []
         violations: list[tuple[str, str, int]] = []
         for entry in registry["foundation_skills"]:

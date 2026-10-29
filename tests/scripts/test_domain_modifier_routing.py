@@ -117,6 +117,9 @@ EXPECTED_RECIPROCITY = {
         "frontend-change-builder",
         "installed-client-change-builder",
         "integration-change-builder",
+        "library-tool-product-builder",
+        "platform-infrastructure-change-builder",
+        "reliability-observability-gate",
         "security-privacy-gate",
     },
     "android-platform-extension": {
@@ -185,6 +188,46 @@ EXPECTED_RECIPROCITY = {
         "domain-impact-modeler",
         "engineering-change-analysis",
         "installed-client-change-builder",
+    },
+    "saas-product-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "data-middleware-change-builder", "domain-impact-modeler",
+        "engineering-change-analysis", "integration-change-builder",
+        "quality-test-gate",
+    },
+    "hosted-app-extension": {
+        "ai-code-review-refactor", "engineering-change-analysis",
+        "installed-client-change-builder", "integration-change-builder",
+        "quality-test-gate", "security-privacy-gate",
+    },
+    "commerce-fulfillment-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "data-middleware-change-builder", "domain-impact-modeler",
+        "engineering-change-analysis", "integration-change-builder",
+        "quality-test-gate",
+    },
+    "realtime-media-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "engineering-change-analysis", "frontend-change-builder",
+        "installed-client-change-builder", "integration-change-builder",
+        "library-tool-product-builder", "quality-test-gate",
+    },
+    "game-simulation-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "engineering-change-analysis", "frontend-change-builder",
+        "installed-client-change-builder", "library-tool-product-builder",
+        "quality-test-gate",
+    },
+    "graphics-compute-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "engineering-change-analysis", "frontend-change-builder",
+        "installed-client-change-builder", "library-tool-product-builder",
+        "quality-test-gate",
+    },
+    "scientific-computing-extension": {
+        "ai-code-review-refactor", "backend-change-builder",
+        "engineering-change-analysis", "library-tool-product-builder",
+        "quality-test-gate",
     },
 }
 DOMAIN_EVIDENCE_MATRIX = {
@@ -293,7 +336,14 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
     def test_all_domains_are_modifier_only_with_exact_reciprocal_edges(self) -> None:
         domains = _domain_registry()["domain_skills"]
         professionals = _professional_registry()["professional_skills"]
-        self.assertEqual(13, len(domains))
+        self.assertEqual(20, len(domains))
+        self.assertEqual(
+            {
+                path.parent.name
+                for path in (ROOT / "src/domain-extensions").glob("*/SKILL.md")
+            },
+            set(EXPECTED_RECIPROCITY),
+        )
         self.assertTrue(
             all(row.get("routing_mode") == "modifier-only" for row in domains)
         )
@@ -514,7 +564,7 @@ class DomainModifierClassifierTests(unittest.TestCase):
         if not callable(classifier):
             return
         rows = classifier("Implement an accepted backend service behavior change.")
-        self.assertEqual(set(DOMAIN_EVIDENCE_MATRIX), {
+        self.assertEqual(set(EXPECTED_RECIPROCITY), {
             row["skill"] for row in rows
         })
         self.assertTrue(all(set(row) == CLASSIFIER_FIELDS for row in rows))
@@ -2116,7 +2166,7 @@ class DomainModifierRouteTests(unittest.TestCase):
 class DomainModifierCorpusContractTests(unittest.TestCase):
     def test_corpus_counts_remain_exact(self) -> None:
         self.assertEqual(
-            249,
+            307,
             len(load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]),
         )
         self.assertEqual(

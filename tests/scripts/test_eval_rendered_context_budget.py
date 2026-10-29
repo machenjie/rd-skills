@@ -103,7 +103,7 @@ def _build_runtime_subject(subject: Path) -> None:
         ),
     ):
         result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
-    if result["top_level_count"] != 26 or result["agent_profile_count"] != 4:
+    if result["top_level_count"] != 27 or result["agent_profile_count"] != 4:
         raise AssertionError(f"temporary Runtime build is incomplete: {result}")
 
 
@@ -2584,7 +2584,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 temporary_root, projection_errors
             )
             self.assertEqual([], projection_errors)
-            self.assertEqual(163, proof["projected_count"])
+            self.assertEqual(177, proof["projected_count"])
             projection_root = temporary_root / "expanded-layer3-validation"
             components = [
                 EVAL._file_component(

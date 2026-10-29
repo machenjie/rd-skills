@@ -588,17 +588,36 @@ Own one bounded decision.
                     manifest_path.read_text(encoding="utf-8")
                 )
                 self.assertEqual("recommended", result["profile"])
-                self.assertEqual(26, result["top_level_count"])
+                self.assertEqual(27, result["top_level_count"])
                 self.assertEqual("recommended", manifest["profile"])
                 self.assertEqual(
                     "changeforge.authoritative_build_inputs",
                     manifest["authoritative_build_inputs"]["kind"],
                 )
-                self.assertEqual(26, len(manifest["top_level_skills"]))
+                self.assertEqual(27, len(manifest["top_level_skills"]))
                 self.assertEqual(1, len(manifest["control_skills"]))
-                self.assertEqual(25, len(manifest["professional_skills"]))
-                self.assertEqual(150, len(manifest["foundation_skills"]))
-                self.assertEqual(13, len(manifest["domain_skills"]))
+                self.assertEqual(26, len(manifest["professional_skills"]))
+                self.assertEqual(157, len(manifest["foundation_skills"]))
+                self.assertEqual(20, len(manifest["domain_skills"]))
+                source_names = {
+                    layer: {
+                        path.parent.name
+                        for path in (root / relative).glob("*/SKILL.md")
+                        if not path.parent.name.startswith("_")
+                    }
+                    for layer, relative in (
+                        ("control", "src/control-skills"),
+                        ("professional", "src/professional-skills"),
+                        ("foundation", "src/foundation/capabilities"),
+                        ("domain", "src/domain-extensions"),
+                    )
+                }
+                for layer, names in source_names.items():
+                    self.assertEqual(names, set(manifest[f"{layer}_skills"]), layer)
+                self.assertEqual(
+                    source_names["control"] | source_names["professional"],
+                    set(manifest["top_level_skills"]),
+                )
                 self.assertEqual("targeted-product-references", manifest["foundation_mode"])
                 self.assertEqual("targeted-references", manifest["domain_mode"])
                 self.assertEqual(4, len(manifest["agent_profiles"]))
@@ -756,7 +775,7 @@ Own one bounded decision.
                     self.assertEqual(b"preserve", sentinel.read_bytes())
                 runtime = dist / "universal/skills/recommended"
                 self.assertEqual(
-                    26,
+                    27,
                     len(
                         [
                             path

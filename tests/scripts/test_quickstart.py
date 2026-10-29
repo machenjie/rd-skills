@@ -47,7 +47,7 @@ class QuickstartPlanTests(unittest.TestCase):
             1,
             sum(command[:2] == ("python3", "scripts/build.py") for command in plan.commands),
         )
-        self.assertEqual(26, plan.expected_skill_count)
+        self.assertEqual(27, plan.expected_skill_count)
         command_text = " ".join(" ".join(command) for command in plan.commands)
         self.assertNotIn("--profile", command_text)
 
@@ -327,7 +327,7 @@ class QuickstartPlanTests(unittest.TestCase):
                 output = stdout.getvalue()
                 self.assertIn("quickstart: command plan", output)
                 self.assertIn("python3 scripts/build.py", output)
-                self.assertIn("expected standard Skills: 26", output)
+                self.assertIn("expected standard Skills: 27", output)
 
     def test_public_help_and_parser_reject_obsolete_profile_before_execution(self) -> None:
         help_result = subprocess.run(

@@ -627,7 +627,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
         )
         self.assertEqual(context, passed)
 
-    def test_default_full_checks_control_and_all_packages_but_affected_full_checks_189_only(self) -> None:
+    def test_default_full_checks_control_but_affected_full_checks_non_control_only(self) -> None:
         entries = [
             ("control", {"name": "control", "path": "control"}),
             ("professional", {"name": "professional", "path": "professional"}),
@@ -959,7 +959,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
             ["transitive", "unaffected"], plan["unevaluated_target_ids"]
         )
 
-    def test_current_full_impact_still_evaluates_all_189_without_stale_baseline_mode(self) -> None:
+    def test_current_full_impact_evaluates_all_packages_without_stale_baseline_mode(self) -> None:
         entries = EVALUATOR._load_entries()
         with mock.patch.dict(
             os.environ,
@@ -970,8 +970,20 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 entries,
                 release_review_config=EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
             )
-        self.assertEqual(188, len(selected_entries))
-        self.assertEqual(188, len(execution_scope["fresh_package_ids"]))
+        source_names = {
+            path.parent.name
+            for relative in (
+                "src/professional-skills", "src/foundation/capabilities",
+                "src/domain-extensions",
+            )
+            for path in (ROOT / relative).glob("*/SKILL.md")
+            if not path.parent.name.startswith("_")
+        }
+        self.assertEqual(203, len(source_names))
+        self.assertEqual(203, len(selected_entries))
+        self.assertEqual(203, len(execution_scope["fresh_package_ids"]))
+        self.assertEqual(source_names, {entry["name"] for _kind, entry in selected_entries})
+        self.assertEqual(source_names, set(execution_scope["fresh_package_ids"]))
         self.assertEqual([], execution_scope["carried_package_ids"])
         self.assertEqual([], execution_scope["unevaluated_package_ids"])
         self.assertFalse(execution_scope["baseline_stale_no_carry"])

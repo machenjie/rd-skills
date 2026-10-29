@@ -958,7 +958,22 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
             layer: BUILD._load_items(layer, rows)
             for layer, rows in registries.items()
         }
-        self.assertEqual(26, len(BUILD._top_level_items(items)))
+        self.assertEqual(27, len(BUILD._top_level_items(items)))
+        for layer, relative in (
+            ("control", "src/control-skills"),
+            ("professional", "src/professional-skills"),
+            ("foundation", "src/foundation/capabilities"),
+            ("domain", "src/domain-extensions"),
+        ):
+            self.assertEqual(
+                {
+                    path.parent.name
+                    for path in (ROOT / relative).glob("*/SKILL.md")
+                    if not path.parent.name.startswith("_")
+                },
+                {item.name for item in items[layer]},
+                layer,
+            )
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             professional = root / "repository-tooling-change-builder"
@@ -1022,7 +1037,7 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 any(row["type"] == "index" for row in partition["reference_records"])
             )
         self.assertEqual(
-            188,
+            203,
             sum(len(rows) for layer, rows in items.items() if layer != "control"),
         )
 

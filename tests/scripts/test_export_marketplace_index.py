@@ -69,16 +69,34 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
 
     def test_index_shape_and_layer_counts(self) -> None:
         payload = self.payload
-        self.assertEqual(len(payload["items"]), 189)
+        self.assertEqual(len(payload["items"]), 204)
         self.assertEqual(
             Counter(item["type"] for item in payload["items"]),
             {
                 "control_skill": 1,
-                "professional_skill": 25,
-                "foundation_skill": 150,
-                "domain_skill": 13,
+                "professional_skill": 26,
+                "foundation_skill": 157,
+                "domain_skill": 20,
             },
         )
+        for layer, relative in (
+            ("control_skill", "src/control-skills"),
+            ("professional_skill", "src/professional-skills"),
+            ("foundation_skill", "src/foundation/capabilities"),
+            ("domain_skill", "src/domain-extensions"),
+        ):
+            self.assertEqual(
+                {
+                    (path.parent.name, path.parent.relative_to(ROOT).as_posix())
+                    for path in (ROOT / relative).glob("*/SKILL.md")
+                    if not path.parent.name.startswith("_")
+                },
+                {
+                    (item["name"], item["source_path"])
+                    for item in payload["items"] if item["type"] == layer
+                },
+                layer,
+            )
         for item in payload["items"]:
             self.assertEqual(set(item), REQUIRED_ITEM_FIELDS)
 
@@ -91,12 +109,12 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
             item["profile_delivery"]["mode"]
             for item in self.payload["items"]
         )
-        self.assertEqual(top_level, 26)
+        self.assertEqual(top_level, 27)
         self.assertEqual(
             modes,
             {
-                "top_level_skill": 26,
-                "targeted_reference": 154,
+                "top_level_skill": 27,
+                "targeted_reference": 168,
                 "routing_index_only": 9,
             },
         )
@@ -109,7 +127,7 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         ]
         self.assertEqual(
             Counter(item["type"] for item in top_level),
-            {"control_skill": 1, "professional_skill": 25},
+            {"control_skill": 1, "professional_skill": 26},
         )
         self.assertTrue(
             all(
@@ -166,7 +184,7 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         ]
         self.assertEqual(
             Counter(item["delivery_scope"] for item in foundations),
-            {"product": 141, "authoring-only": 1, "internal-only": 8},
+            {"product": 148, "authoring-only": 1, "internal-only": 8},
         )
         self.assertEqual(
             _by_name(self.payload, "skill-authoring-expert")[
@@ -192,9 +210,9 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
             entry["name"]: entry["used_by"]
             for entry in entries["domain_skill"]
         }
-        self.assertEqual(len(domain_used_by), 13)
+        self.assertEqual(len(domain_used_by), 20)
         self.assertTrue(all(domain_used_by.values()))
-        self.assertEqual(sum(map(len, domain_used_by.values())), 48)
+        self.assertEqual(sum(map(len, domain_used_by.values())), 102)
 
         foundations = [
             item
@@ -211,8 +229,8 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
             for item in self.payload["items"]
             if item["type"] == "domain_skill"
         ]
-        self.assertEqual(len(foundations), 150)
-        self.assertEqual(sum(bool(item["used_by"]) for item in foundations), 141)
+        self.assertEqual(len(foundations), 157)
+        self.assertEqual(sum(bool(item["used_by"]) for item in foundations), 148)
         self.assertEqual(sum(not item["used_by"] for item in foundations), 9)
         self.assertTrue(all(item["used_by"] == [] for item in non_layer3))
         self.assertTrue(

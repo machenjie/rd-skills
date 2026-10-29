@@ -49,6 +49,7 @@ AUTOMATIC_FAMILIES = {
     "data-middleware",
     "integration",
     "repository-tooling",
+    "library-tool-product",
     "platform-infrastructure",
     "test-validation",
     "logging",
@@ -60,6 +61,7 @@ AUTOMATIC_NAMES = {
     "data-middleware-change-builder",
     "integration-change-builder",
     "repository-tooling-change-builder",
+    "library-tool-product-builder",
     "platform-infrastructure-change-builder",
     "quality-test-gate",
     "logging-design-gate",
@@ -293,9 +295,16 @@ class ProfessionalRegistryRoutingContractTests(unittest.TestCase):
         self.assertEqual(5, data["schema_version"])
         self.assertEqual(EXPECTED_POLICY, data["automatic_routing_policy"])
         rows = data["professional_skills"]
-        self.assertEqual(25, len(rows))
+        self.assertEqual(26, len(rows))
+        self.assertEqual(
+            {
+                path.parent.name
+                for path in (ROOT / "src/professional-skills").glob("*/SKILL.md")
+            },
+            {row["name"] for row in rows},
+        )
         modes = [row.get("routing_mode") for row in rows]
-        self.assertEqual(9, modes.count("automatic"))
+        self.assertEqual(10, modes.count("automatic"))
         self.assertEqual(16, modes.count("evidence-only"))
         self.assertEqual(0, modes.count("not-automatic"))
         automatic = {
@@ -1646,16 +1655,21 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "[canonical-fixture] Wave1A fixture-count drift; "
                 f"expected=30; actual={len(wave1a_rows)}"
             )
-        if len(document["cases"]) != 249:
+        if len(document["cases"]) != 307:
             mismatches.append(
                 "[canonical-fixture] total case-count drift; "
-                f"expected=249; actual={len(document['cases'])}"
+                f"expected=307; actual={len(document['cases'])}"
             )
-        if len(document["cases"]) - len(wave1a_rows) != 219:
+        predecessor_rows = [
+            row for row in document["cases"]
+            if not str(row.get("id", "")).startswith(
+                ("wave1a-", "daily-", "expansion-")
+            )
+        ]
+        if len(predecessor_rows) != 219:
             mismatches.append(
                 "[canonical-fixture] predecessor case-count drift; "
-                "expected=219; actual="
-                f"{len(document['cases']) - len(wave1a_rows)}"
+                f"expected=219; actual={len(predecessor_rows)}"
             )
         if len(canonical_rows) != 1:
             mismatches.append(
@@ -2578,7 +2592,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         self.assertIn("reachable", proved_trigger)
 
         document = load_yaml_file(ROOT / "evals" / "routing" / "cases.yaml")
-        self.assertEqual(249, len(document["cases"]))
+        self.assertEqual(307, len(document["cases"]))
         fixtures = {row["id"]: row for row in document["cases"]}
         for case_id, locked in LOCKED_ROUTING_FIXTURES.items():
             with self.subTest(fixture=case_id):

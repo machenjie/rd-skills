@@ -76,8 +76,8 @@ def _build_runtime_subject(subject: Path) -> Path:
         result = build.build_profile(build.RUNTIME_PROFILE)
 
     if (
-        result["top_level_count"] != 26
-        or result["compiled_layer3_reference_count"] != 154
+        result["top_level_count"] != 27
+        or result["compiled_layer3_reference_count"] != 168
         or result["agent_profile_count"] != 4
     ):
         raise AssertionError(f"temporary Runtime build is incomplete: {result}")
@@ -87,7 +87,7 @@ def _build_runtime_subject(subject: Path) -> Path:
         (runtime_root / VALIDATOR.BUILD_MANIFEST_NAME).read_text(encoding="utf-8")
     )
     if (
-        len(manifest["top_level_skills"]) != 26
+        len(manifest["top_level_skills"]) != 27
         or sum(
             scope != "product"
             for scope in manifest["foundation_delivery_scopes"].values()
@@ -840,7 +840,7 @@ class CompleteLayer3TemporaryProjectionTests(unittest.TestCase):
     def test_projects_all_layer3_sources_once_in_cleaned_temporary_storage(self) -> None:
         self.assertTrue(
             hasattr(VALIDATOR, "_validate_complete_layer3_temporary_projection"),
-            "the dev-independent 163-item temporary projection proof is missing",
+            "the dev-independent 177-item temporary projection proof is missing",
         )
         dist_before = self._tree_digest(ROOT / "dist")
         created_roots: list[Path] = []
@@ -860,13 +860,21 @@ class CompleteLayer3TemporaryProjectionTests(unittest.TestCase):
             result = VALIDATOR._validate_complete_layer3_temporary_projection(errors)
 
         self.assertEqual([], errors)
-        self.assertEqual(163, result["projected_count"])
-        self.assertEqual(150, result["foundation_count"])
-        self.assertEqual(13, result["domain_count"])
-        self.assertEqual(154, result["runtime_jit_count"])
+        self.assertEqual(177, result["projected_count"])
+        self.assertEqual(157, result["foundation_count"])
+        self.assertEqual(20, result["domain_count"])
+        self.assertEqual(168, result["runtime_jit_count"])
         self.assertEqual(9, result["non_runtime_count"])
-        self.assertEqual(163, len(result["projected_names"]))
-        self.assertEqual(163, len(set(result["projected_names"])))
+        self.assertEqual(177, len(result["projected_names"]))
+        self.assertEqual(
+            {
+                path.parent.name
+                for relative in ("src/foundation/capabilities", "src/domain-extensions")
+                for path in (SOURCE_ROOT / relative).glob("*/SKILL.md")
+                if not path.parent.name.startswith("_")
+            },
+            set(result["projected_names"]),
+        )
         self.assertTrue(created_roots)
         self.assertTrue(all(not path.exists() for path in created_roots))
         self.assertEqual(dist_before, self._tree_digest(ROOT / "dist"))
