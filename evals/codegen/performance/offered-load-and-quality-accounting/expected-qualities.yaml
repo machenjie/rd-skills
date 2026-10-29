@@ -1,0 +1,8 @@
+id: "offered-load-and-quality-accounting"
+category: "performance"
+focus: ["planned versus actual arrivals", "quality and deployment-specific evidence"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
+expected_outcomes: ["Ten planned arrivals with four actual starts retain six unsent requests and queue delay.", "A throughput improvement cannot override supplied quality, tail-latency, cost, or deployment-evidence constraints."]
+required_qualities: ["Calculate outcomes from independent schedules and observed terminal records.", "Keep hosted accounting separate from a bounded self-hosted device-memory model."]
+forbidden_shortcuts: ["Discarding unsent arrivals or measuring latency only after actual start.", "Approving higher throughput despite violated quality, tail-latency, or cost constraints."]
+evidence: ["Passing candidate assertions for fixed schedules, five outcome classes, and policy-bound decisions.", "Incomplete accounting starter and isolated dropped-unsent fault are rejected by the same assertions."]
