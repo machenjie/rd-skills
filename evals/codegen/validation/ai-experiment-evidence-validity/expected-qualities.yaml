@@ -1,0 +1,34 @@
+id: ai-experiment-evidence-validity
+category: validation
+focus:
+  - "evidence validity"
+  - "RAG stage separation"
+  - "training leakage"
+  - "experimental decision rules"
+route_hints:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills:
+    - unit-testing
+  review_skill: null
+expected_outcomes:
+  - "Retrieval misses differ from answer omissions and unsupported certainty."
+  - "Actual terminal states, uncertainty, and explicit budgets govern trial acceptance."
+  - "Training checks distinguish future targets from unavailable features or immature labels."
+  - "Experiment checks reject SRM, unit mismatch, invalid peeking, and undeclared multiplicity."
+required_qualities:
+  - "Derive conclusions from observed sets, time cutoffs, identity bindings, and arithmetic."
+  - "Keep legitimate abstention and planned sequential monitoring as positive neighbors."
+  - "Use supplied sample and error budgets without universal thresholds."
+  - "Preserve fixed-record proof limits."
+forbidden_shortcuts:
+  - "Treating a success statement as an actual successful terminal state."
+  - "Rejecting every future prediction target as leakage."
+  - "Fitting preprocessing or tuning on final heldout samples."
+  - "Accepting a sequential label without the declared plan constraints."
+evidence:
+  - "Eight executable assertion methods compare paired valid and invalid records."
+  - "An independent Pearson calculation exposes sample-ratio mismatch."
+  - "A single-mechanism control suppresses only future-feature detection."
+  - "Passing, incomplete starter, and faulty control are run separately."

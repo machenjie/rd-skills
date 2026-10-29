@@ -1,0 +1,34 @@
+id: commerce-saas-repeated-events
+category: backend
+focus:
+  - "resource conservation"
+  - "subscription effective time"
+  - "identity and replay"
+  - "constraint-preserving shrinking"
+route_hints:
+  work_path: direct-task
+  agent_profile: task-agent
+  primary_skill: quality-test-gate
+  layer3_skills:
+    - unit-testing
+  review_skill: null
+expected_outcomes:
+  - "Expired reservations cannot be silently fulfilled by late payment."
+  - "Repeated cancellation preserves inventory and partial returns preserve conservation."
+  - "SaaS entitlement follows the explicit grace, downgrade, refund, seat, and usage policies."
+  - "Shrinking retains reservation preconditions and replays a minimal duplicate-cancellation counterexample."
+required_qualities:
+  - "Separate financial, order, fulfillment, and entitlement facts."
+  - "Use exact event and usage-version identities."
+  - "Test both sides of effective-time and explicit-policy boundaries."
+  - "Derive oracles from arithmetic and ordered facts, independently from candidate helpers."
+forbidden_shortcuts:
+  - "Treating payment as proof of allocation or fulfillment."
+  - "Incrementing inventory for a replayed cancellation."
+  - "Hardcoding a SaaS grace, refund, quota, or seat policy."
+  - "Accepting invalid shrinks as product defects."
+evidence:
+  - "Seven executable assertion methods cover arithmetic, time, identity, and policy."
+  - "Twenty bounded generated quantity/replay combinations challenge conservation."
+  - "A stored three-event counterexample is minimized and replayed."
+  - "Passing, incomplete starter, and duplicate-release control are run separately."
