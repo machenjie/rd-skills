@@ -25,6 +25,7 @@ from validation_utils import (
 from routing_scenarios import (
     authoring_router_contract,
     authoring_router_markdown_errors,
+    authoring_router_rows,
     contains_contract_atom as _contains_contract_atom,
     load_release_routing_scenarios,
     release_routing_scenario_errors,
@@ -57,11 +58,9 @@ def _release_routing_projection_errors(
 ) -> list[str]:
     errors: list[str] = []
     router_rows: dict[str, list[str]] = {}
-    for line in router_text.splitlines():
-        if line.startswith("|") and not line.startswith("| ---") and "Task signal" not in line:
-            cells = [cell.strip() for cell in line.strip("|").split("|")]
-            if len(cells) == 4:
-                router_rows[cells[0]] = cells
+    for row in authoring_router_rows(router_text):
+        if len(row) == 4:
+            router_rows[row[0]] = list(row)
     for row in rows:
         label = str(row["id"])
         router = row["router"]
@@ -455,12 +454,13 @@ def main() -> int:
     for phrase in ("implementation requests start", "primary professional", "needed layer 3", "positive", "anti-trigger", "expertise", "catalog"):
         if phrase not in folded:
             errors.append(f"router missing {phrase!r}")
-    router_rows: list[list[str]] = []
-    for line in text.splitlines():
-        if not line.startswith("|") or line.startswith("| ---") or "Task signal" in line or "Active mechanism" in line:
-            continue
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        router_rows.append(cells)
+    try:
+        router_rows = [list(row) for row in authoring_router_rows(text)]
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return fail_many("validate-skill-routing", errors)
+    for cells in router_rows:
+        line = "| " + " | ".join(cells) + " |"
         if len(cells) == 2:
             if cells[1] not in domain_by_name:
                 errors.append(f"router modifier row selects unknown Domain: {line}")

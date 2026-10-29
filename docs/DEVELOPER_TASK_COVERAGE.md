@@ -177,6 +177,32 @@ The refreshed collector reports readability hard-gate ready, no router-contract
 errors and no oversized targeted References. Semantic candidates remain pending
 independent disposition review; this audit still exits 1 and is not release evidence.
 
+The semantic round on `aa12dbf2` received three independent complete manifests.
+Each covered all 149 targets; exact bytes, SHA-256, record counts and target order
+were verified before official materialization, validation, aggregation and attestation.
+The derived majority was 124 contextual rules and 25 false positives.
+One dissent identified a real design-system variant restriction conflicting with
+the root's role, emphasis and density axes. The Reference now permits evidenced
+reusable semantic intent and still rejects unsupported screen-specific forks.
+The Methods review's disclosed exposure to historical audit metadata remains in
+its original limitations; it did not read current peer votes.
+
+A later code review found hidden Primary rows could pass inside HTML comments.
+Behavioral negative tests reproduced that defect, an unclosed Domain comment,
+a raw HTML hiding container, and a missing table delimiter before the repair.
+The collector, release projection and routing validator now consume actual
+top-level Markdown table tokens with fixed parser versions. Raw HTML containers
+are rejected; ordinary comments outside required rows remain valid.
+Twenty-two focused tests, the routing validator and Core contract checks passed.
+The 60-line ordinary Reference bound and 14-line router prose allowance are unchanged.
+Parser declarations and dependency changes participate in affected selection and
+semantic detector freshness. This changes the review binding, so the `aa12dbf2`
+round remains historical and is not promoted to the repaired source tree.
+The repaired tree requires a fresh full Semantic Disposition round.
+Its refreshed collector still exits 1 for unresolved semantic dispositions and
+the stale fixed semantic detector binding. Router-contract errors remain zero;
+the other two fixed panel attestations are unchanged.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.

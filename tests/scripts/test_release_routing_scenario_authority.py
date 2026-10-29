@@ -1,7 +1,10 @@
 from __future__ import annotations
 import copy
+import contextlib
 import importlib.util
+import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -29,6 +32,23 @@ class ReleaseRoutingScenarioAuthorityTests(unittest.TestCase):
     def test_wrong_primary_cannot_match_current_router(self):
         self.rows[0]['router']['expected']['primary'] = 'frontend-change-builder'
         self.assertTrue(ROUTING._release_routing_projection_errors(self.rows, ROUTING.ROUTER.read_text()))
+
+    def test_hidden_primary_cannot_satisfy_projection_or_routing_gate(self):
+        text = ROUTING.ROUTER.read_text()
+        hidden = (
+            text.replace('| Task signal |', '<!--\n| Task signal |', 1)
+            .replace('## Domain Modifiers', '-->\n## Domain Modifiers', 1)
+            .replace('\n\n| Active mechanism', '\n| Active mechanism', 1)
+        )
+        self.assertEqual(78, len(hidden.splitlines()))
+        self.assertEqual(len(self.rows), len(ROUTING._release_routing_projection_errors(self.rows, hidden)))
+        with tempfile.TemporaryDirectory() as directory:
+            router = Path(directory) / 'router.md'
+            router.write_text(hidden)
+            output = io.StringIO()
+            with patch.object(ROUTING, 'ROUTER', router), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                self.assertEqual(1, ROUTING.main())
+            self.assertIn('missing declared rows', output.getvalue())
 
     def test_codegen_identity_is_existing_unique_nonempty_text(self):
         for value in ('', [], 'missing/case', self.rows[1]['codegen_case_id']):

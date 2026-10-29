@@ -51904,7 +51904,7 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "c20c1df617df872737355dbab08a405d2fd1134b344c280c66868f6474e8697b",
+        "content_fingerprint": "8cdb618a9e33a0c0d8cc5126138800809b22ad4d8339951a0175ed9ee51e8fcf",
         "document_context": {
           "line_count": 28,
           "line_offset": 0,
@@ -51939,7 +51939,7 @@
             },
             {
               "line": 8,
-              "text": "2. **Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag."
+              "text": "2. **Variants:** add an axis for evidenced reusable semantic intent, such as role, emphasis, density, state, motion, or interaction. Reject screen names and one-off style flags without a shared semantic contract."
             },
             {
               "line": 9,
@@ -52022,8 +52022,8 @@
               "text": "Route feature/page ownership to `page-component-decomposition`, interaction states to `interaction-state-modeling`, translated/time/money behavior to `i18n-timezone-money-safety`, implementation to `frontend-change-builder`, and executable behavior/accessibility proof to `frontend-testing` or `quality-test-gate`."
             }
           ],
-          "sha256": "c20c1df617df872737355dbab08a405d2fd1134b344c280c66868f6474e8697b",
-          "text": "# Design System Rules Benchmarks And Patterns\n\nLoad this reference when a shared component, variant, token, interaction, responsive behavior, or accessibility contract is being selected or changed. Do not load it for feature-local layout that neither changes nor challenges the shared system.\n\n## Decision Checklist\n\n1. **Reuse:** inspect current components and compositions; keep behavior feature-local when no shared semantic contract exists.\n2. **Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag.\n3. **Tokens:** use owned color, typography, spacing, radius, elevation, density, and motion tokens, with missing-token ownership recorded instead of embedding a raw value.\n4. **Semantics:** choose native elements or an established accessible pattern with correct name, role, value, and state exposed by any custom role.\n5. **Keyboard:** define keys, activation, escape/cancel, disabled behavior, and composite-widget navigation from the applicable platform/APG convention.\n6. **Focus:** define entry, visible focus, order, trapping when justified, restoration, and focus after async success or failure.\n7. **Color:** status, selection, and error meaning must have a non-color cue in every applicable theme.\n8. **Contrast:** prove the project\u2019s current accessibility target for text, controls, icons, focus, and themes from policy rather than a remembered threshold.\n9. **Motion:** name the purpose, interruption/cancellation behavior, and reduced-motion alternative when animation affects understanding or comfort.\n10. **Responsive behavior:** prove primary actions, reading order, overflow, touch/keyboard operation, and data/form behavior at the supported viewports.\n11. **Internationalization:** check wrapping, expansion, bidirectionality, number/date formats, and truncation for the supported locale set.\n12. **State matrix:** cover applicable default, hover, active, focus, selected, disabled, loading, empty, error, success, and partial states without inventing impossible combinations.\n13. **Manual proof:** supplement automation with keyboard, focus, semantic, screen-reader, responsive, color/motion, and content review wherever the tool cannot observe behavior or meaning.\n14. **Owner and lifecycle:** name component/API/token owner, current consumers, stories/tests/docs, rollout, migration, deprecation, and the trigger for revisiting a local composition.\n\n## Proof Limits And Routes\n\nAutomated scans catch only a subset of accessibility failures; snapshots do not prove interaction, responsive task completion, assistive output, or consumer compatibility. Platform libraries and published ratios are evidence inputs, not substitutes for the repository\u2019s declared target and current component behavior.\n\nReject speculative shared components, feature vocabulary in shared APIs, arbitrary variant combinations, and raw style values that bypass tokens. Also reject color-only state, invisible focus, automation-only accessibility claims, desktop-only proof, and animation without a current need and reduced-motion behavior.\n\nRoute feature/page ownership to `page-component-decomposition`, interaction states to `interaction-state-modeling`, translated/time/money behavior to `i18n-timezone-money-safety`, implementation to `frontend-change-builder`, and executable behavior/accessibility proof to `frontend-testing` or `quality-test-gate`.\n"
+          "sha256": "8cdb618a9e33a0c0d8cc5126138800809b22ad4d8339951a0175ed9ee51e8fcf",
+          "text": "# Design System Rules Benchmarks And Patterns\n\nLoad this reference when a shared component, variant, token, interaction, responsive behavior, or accessibility contract is being selected or changed. Do not load it for feature-local layout that neither changes nor challenges the shared system.\n\n## Decision Checklist\n\n1. **Reuse:** inspect current components and compositions; keep behavior feature-local when no shared semantic contract exists.\n2. **Variants:** add an axis for evidenced reusable semantic intent, such as role, emphasis, density, state, motion, or interaction. Reject screen names and one-off style flags without a shared semantic contract.\n3. **Tokens:** use owned color, typography, spacing, radius, elevation, density, and motion tokens, with missing-token ownership recorded instead of embedding a raw value.\n4. **Semantics:** choose native elements or an established accessible pattern with correct name, role, value, and state exposed by any custom role.\n5. **Keyboard:** define keys, activation, escape/cancel, disabled behavior, and composite-widget navigation from the applicable platform/APG convention.\n6. **Focus:** define entry, visible focus, order, trapping when justified, restoration, and focus after async success or failure.\n7. **Color:** status, selection, and error meaning must have a non-color cue in every applicable theme.\n8. **Contrast:** prove the project\u2019s current accessibility target for text, controls, icons, focus, and themes from policy rather than a remembered threshold.\n9. **Motion:** name the purpose, interruption/cancellation behavior, and reduced-motion alternative when animation affects understanding or comfort.\n10. **Responsive behavior:** prove primary actions, reading order, overflow, touch/keyboard operation, and data/form behavior at the supported viewports.\n11. **Internationalization:** check wrapping, expansion, bidirectionality, number/date formats, and truncation for the supported locale set.\n12. **State matrix:** cover applicable default, hover, active, focus, selected, disabled, loading, empty, error, success, and partial states without inventing impossible combinations.\n13. **Manual proof:** supplement automation with keyboard, focus, semantic, screen-reader, responsive, color/motion, and content review wherever the tool cannot observe behavior or meaning.\n14. **Owner and lifecycle:** name component/API/token owner, current consumers, stories/tests/docs, rollout, migration, deprecation, and the trigger for revisiting a local composition.\n\n## Proof Limits And Routes\n\nAutomated scans catch only a subset of accessibility failures; snapshots do not prove interaction, responsive task completion, assistive output, or consumer compatibility. Platform libraries and published ratios are evidence inputs, not substitutes for the repository\u2019s declared target and current component behavior.\n\nReject speculative shared components, feature vocabulary in shared APIs, arbitrary variant combinations, and raw style values that bypass tokens. Also reject color-only state, invisible focus, automation-only accessibility claims, desktop-only proof, and animation without a current need and reduced-motion behavior.\n\nRoute feature/page ownership to `page-component-decomposition`, interaction states to `interaction-state-modeling`, translated/time/money behavior to `i18n-timezone-money-safety`, implementation to `frontend-change-builder`, and executable behavior/accessibility proof to `frontend-testing` or `quality-test-gate`.\n"
         },
         "document_id": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md#reference",
         "document_part": "reference",
@@ -168144,7 +168144,7 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 1077,
-      "value": "02e449086693e2c9e5893c86ab21fb3881a22af508149baddc162374115b6fa3"
+      "value": "1017c41c74341680f843637571d27580c125323c4a016bcbc81eeaa8683eeb37"
     },
     "summary": {
       "advisory_documents": 339,
@@ -168345,7 +168345,7 @@
           "existing_indexed": 114,
           "indexed": 114,
           "indexed_lines": 3687,
-          "indexed_tokens": 73605,
+          "indexed_tokens": 73620,
           "structural_advisory_references": 0
         },
         "decision-checklist": {
@@ -168418,7 +168418,7 @@
           "existing_indexed": 411,
           "indexed": 411,
           "indexed_lines": 11362,
-          "indexed_tokens": 211383,
+          "indexed_tokens": 211398,
           "missing": 0,
           "orphan": 0,
           "physical": 412,
@@ -168464,7 +168464,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 1050,
-        "value": "ce4596f963172ae89a891ac6c4e36edd0fa1bcb1f10c1a9fef88d8294db3b466"
+        "value": "bffea79fbe20bbef897e48ea9e0a9027ceee64740eacc7baba8582d10d350f53"
       },
       "source_precedence": [
         "local",
@@ -199195,7 +199195,7 @@
         "owner": "design-system-rules",
         "path": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
         "reference_type": null,
-        "token_count": 644
+        "token_count": 659
       },
       {
         "advisory_kind": "decision-checklist",
@@ -281019,73 +281019,17 @@
         },
         {
           "candidate_id": "7d8ba7507647180bafbb9a6a23fd0ad3d9911a532959a84ccf678fdd0eee7797",
-          "content_fingerprint": "6b24c7010090afe4d83c5935d008f84b9a54fc424da7d6c747fc59a16187bc83",
+          "content_fingerprint": "aea55223a8715496a34bc2a7dae79240dad40af59838de70b32c1df6bf41003e",
           "detector_status": "candidate",
-          "disposition": "valid-contextual-rule",
-          "disposition_record": {
-            "authority_or_condition": "p-g01-architecture: The design-system checklist bounds reuse by shared semantics and derives contrast targets from current project accessibility policy. | p-g01-domain-a: The current design-system semantic contract and applicable accessibility/theme targets. | p-g01-domain-b: The accepted design-system semantics and current accessibility target govern variants and perceivable meaning.",
-            "candidate_id": "7d8ba7507647180bafbb9a6a23fd0ad3d9911a532959a84ccf678fdd0eee7797",
-            "decision_owner": "p-g01-architecture: p-g01-architecture | p-g01-domain-a: Design-system owner with the accessibility owner | p-g01-domain-b: design-system-rules",
-            "disposition": "valid-contextual-rule",
-            "evidence": {
-              "content_fingerprint": "6b24c7010090afe4d83c5935d008f84b9a54fc424da7d6c747fc59a16187bc83",
-              "fingerprint": "747bc0122a6074012c1d5a8c63a490e19a3cb69d2abb8d06a73d16155df68b85",
-              "rationale": "panel=semantic-20260909-d3dadc55-full; decision_sha256=6063b5bae40c3cc35acac6c8e8e40626561ebbe4e6b624206aee0fc3ac8633a6; target_id=reference:7d8ba7507647180bafbb9a6a23fd0ad3d9911a532959a84ccf678fdd0eee7797; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=p-g01-architecture,p-g01-domain-a,p-g01-domain-b; dissenting_voters=none; supporting_rationales=p-g01-architecture: Variant axes require a real product distinction, and non-color meaning must survive each applicable theme rather than depending solely on hue. | p-g01-domain-a: Variant axes require an actual product state or interaction distinction, and status/error meaning needs a non-color cue across applicable themes. These are semantic component and accessibility conditions, not arbitrary counts or a prescribed visual style. | p-g01-domain-b: Variants require a real product or interaction distinction, and non-color cues preserve status, selection and error meaning in applicable themes. The checklist limits states, locales and viewports to supported or applicable combinations.; dissenting_rationales=none"
-            },
-            "finding": "unconditional_absolute_candidate",
-            "mitigation": "p-g01-architecture: No temporary exception is requested. Retain the stated source context and conditions; reassess this disposition if the candidate meaning, occurrence membership, or authority materially changes. | p-g01-domain-a: Keep feature-local behavior when no shared contract exists and prove the current policy target instead of a remembered contrast threshold. | p-g01-domain-b: Verify meaningful cues across applicable themes without inventing impossible state combinations.",
-            "path": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
-            "priority": "P1",
-            "reason": "p-g01-architecture: Variant axes require a real product distinction, and non-color meaning must survive each applicable theme rather than depending solely on hue. | p-g01-domain-a: Variant axes require an actual product state or interaction distinction, and status/error meaning needs a non-color cue across applicable themes. These are semantic component and accessibility conditions, not arbitrary counts or a prescribed visual style. | p-g01-domain-b: Variants require a real product or interaction distinction, and non-color cues preserve status, selection and error meaning in applicable themes. The checklist limits states, locales and viewports to supported or applicable combinations.",
-            "record_fingerprint": "d97f4ca97e1224e7a9a8ba996bb196c8aa7b94467c6794b2c0bb7f7483ad1bc0",
-            "review_after": null,
-            "skill_owner": "design-system-rules",
-            "source_selector": {
-              "finding": "unconditional_absolute_candidate",
-              "owner": "design-system-rules",
-              "path": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
-              "rule_identity": "unconditional_absolute_candidate",
-              "selector_kind": "source-rule",
-              "selector_version": "reference-semantic-source-selector-v2",
-              "semantic_section": [
-                "heading:decision checklist",
-                "reference-kind:benchmark-pattern",
-                "unit-kind:list-item"
-              ]
-            }
-          },
-          "downgrade_reasons": [
-            "scoped_only_restriction"
-          ],
-          "evidence_fingerprint": "747bc0122a6074012c1d5a8c63a490e19a3cb69d2abb8d06a73d16155df68b85",
+          "disposition": null,
+          "disposition_record": null,
+          "evidence_fingerprint": "c7b022248d86e3df42ff8173c0ab06bc25196f71e7df3cbae0fa05949ec329ba",
           "finding": "unconditional_absolute_candidate",
-          "fingerprint": "43fe99119e0c66efe26a3bcd4e5222214f90545319beb72602d9fedd2c285b72",
-          "governance_status": "resolved-valid-contextual-rule",
+          "fingerprint": "3ede42c85bb8fba23da5c9f67cccf1c32e8112b5472a47ccf76aa1daa91f620e",
+          "governance_status": "needs-confirmation",
           "layer": "foundation",
-          "occurrence_count": 2,
+          "occurrence_count": 1,
           "occurrences": [
-            {
-              "content_fingerprint": "b92097325651fb1529209daae4932eedd893d435e8ee64c0641cc0db6a74a9c4",
-              "detector_status": "downgraded",
-              "downgrade_reason": "scoped_only_restriction",
-              "layer": "foundation",
-              "lines": {
-                "end": 8,
-                "start": 8
-              },
-              "owner": "design-system-rules",
-              "path": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
-              "preview": "**Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag.",
-              "semantic_contexts": [
-                "heading:decision checklist",
-                "reference-kind:benchmark-pattern",
-                "unit-kind:list-item"
-              ],
-              "signals": [
-                "only"
-              ],
-              "tokens": 26
-            },
             {
               "content_fingerprint": "6a2f976537f8c298af8e6cc85549ab34ec19cb53b4657157f28380749b3252c0",
               "detector_status": "candidate",
@@ -281111,14 +281055,13 @@
           ],
           "owner": "design-system-rules",
           "path": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
-          "preview": "**Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag.",
+          "preview": "**Color:** status, selection, and error meaning must have a non-color cue in every applicable theme.",
           "priority": "P1",
-          "resolved": true,
+          "resolved": false,
           "scope": "src/foundation/capabilities/design-system-rules/references/benchmarks-and-patterns.md",
           "signals": [
             "every",
-            "must",
-            "only"
+            "must"
           ],
           "skill_owner": "design-system-rules",
           "source_selector": {
@@ -281134,9 +281077,9 @@
               "unit-kind:list-item"
             ]
           },
-          "tokens": 26,
-          "total_tokens": 47,
-          "unresolved": false
+          "tokens": 21,
+          "total_tokens": 21,
+          "unresolved": true
         },
         {
           "candidate_id": "7dd89df01fa70d9de020b54964b1764f5c721529ad92ed3b1d1281496195b609",
@@ -310341,10 +310284,10 @@
       "detector_contract": {
         "algorithm": "sha256-canonical-json-v1",
         "contract_version": "reference-semantic-detector-contract-v1",
-        "value": "cc1ab84eb8fb1bfd70eecc5f4e67c67e8eb79253a828189a2cbc27259d0fcd66"
+        "value": "ac0ecd406832afb9af809d2a07159abe0307840cfebedc1b8b54f012fa10de79"
       },
       "disposition_contract": {
-        "applied_count": 89,
+        "applied_count": 88,
         "common_errors": [],
         "configured_count": 91,
         "entries": [
@@ -313315,17 +313258,17 @@
           "unconditional_absolute_candidate": {
             "detector_downgraded": 647,
             "false_positive": 17,
-            "needs_confirmation": 0,
+            "needs_confirmation": 1,
             "p0_unresolved": 0,
-            "p1_unresolved": 8,
+            "p1_unresolved": 9,
             "p2_unresolved": 0,
             "raw": 739,
-            "resolved": 84,
+            "resolved": 83,
             "rewrite": 0,
             "time_bounded_exception": 0,
-            "unresolved": 8,
+            "unresolved": 9,
             "untriaged": 8,
-            "valid_contextual_rule": 67
+            "valid_contextual_rule": 66
           }
         },
         "detector_downgraded_candidates": 647,
@@ -313342,23 +313285,23 @@
             "tokens": 528
           }
         },
-        "needs_confirmation_candidates": 2,
+        "needs_confirmation_candidates": 3,
         "p0_unresolved_candidates": 0,
-        "p1_unresolved_candidates": 10,
+        "p1_unresolved_candidates": 11,
         "p2_unresolved_candidates": 1,
         "raw_candidates": 747,
-        "resolved_candidates": 89,
+        "resolved_candidates": 88,
         "rewrite_candidates": 0,
         "strict_unresolved": {
           "fixed_number_candidates": 0,
           "p2_rewrite_advisories": 0,
           "templated_block_groups": 2,
-          "unconditional_absolute_p0_p1_candidates": 8
+          "unconditional_absolute_p0_p1_candidates": 9
         },
         "time_bounded_exception_candidates": 0,
-        "unresolved_candidates": 11,
+        "unresolved_candidates": 12,
         "untriaged_candidates": 9,
-        "valid_contextual_rule_candidates": 68
+        "valid_contextual_rule_candidates": 67
       }
     },
     "summary": {
@@ -313376,7 +313319,7 @@
       "existing_indexed_references": 659,
       "indexed_lines": 17560,
       "indexed_reference_entries": 659,
-      "indexed_tokens": 296085,
+      "indexed_tokens": 296100,
       "indexed_unique_paths": 659,
       "load_when_prefaces": 58,
       "missing_effective_do_not_load_when": 0,
@@ -313395,19 +313338,19 @@
       "physical_markdown_references": 660,
       "reference_type_prefaces": 22,
       "references_with_empty_headings": 0,
-      "semantic_absolute_p0_p1_unresolved": 8,
+      "semantic_absolute_p0_p1_unresolved": 9,
       "semantic_detector_downgraded_candidates": 647,
-      "semantic_disposition_applied": 89,
+      "semantic_disposition_applied": 88,
       "semantic_disposition_configured": 91,
       "semantic_disposition_errors": 0,
       "semantic_fixed_number_unresolved": 0,
-      "semantic_needs_confirmation_candidates": 2,
+      "semantic_needs_confirmation_candidates": 3,
       "semantic_p2_rewrite_advisories": 0,
       "semantic_raw_candidates": 747,
-      "semantic_resolved_candidates": 89,
+      "semantic_resolved_candidates": 88,
       "semantic_rewrite_candidates": 0,
       "semantic_templated_group_unresolved": 2,
-      "semantic_unresolved_candidates": 11,
+      "semantic_unresolved_candidates": 12,
       "semantic_untriaged_candidates": 9,
       "structural_advisory_references": 0,
       "targeted_over_60_lines": 0,
@@ -313447,19 +313390,19 @@
           "status": "fail"
         },
         "foundation": {
-          "disposition_applied_count": 53,
+          "disposition_applied_count": 52,
           "disposition_configured_count": 55,
           "errors": [
             "unresolved templated-block semantic group(s): 2",
-            "unresolved P0/P1 unconditional-absolute semantic candidate(s): 1"
+            "unresolved P0/P1 unconditional-absolute semantic candidate(s): 2"
           ],
           "existing_reference_count": 411,
           "indexed_reference_count": 411,
-          "semantic_absolute_p0_p1_unresolved_count": 1,
+          "semantic_absolute_p0_p1_unresolved_count": 2,
           "semantic_candidate_count": 437,
           "semantic_fixed_number_unresolved_count": 0,
           "semantic_templated_group_unresolved_count": 2,
-          "semantic_unresolved_count": 3,
+          "semantic_unresolved_count": 4,
           "status": "fail"
         },
         "professional": {
@@ -328168,10 +328111,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "0b5d56ea825331df008aae740542f4caf94ce6cb2bafdbedce981bed2d712be3"
+      "value": "520ed7725d5050e933547ac182209f508af971a6d5bb89dfecf10f510d4997ab"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "0b5d56ea825331df008aae740542f4caf94ce6cb2bafdbedce981bed2d712be3",
+      "aggregate_source_digest": "520ed7725d5050e933547ac182209f508af971a6d5bb89dfecf10f510d4997ab",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -328239,7 +328182,7 @@
         },
         {
           "path": "scripts/routing_scenarios.py",
-          "sha256": "c7629038d0a58841b6358913aa243a96bc5e21a2e08e4a0c3488917b4d818996"
+          "sha256": "7e8663fc83407cd96a6611ee4ed7c9edc09c0c8fea06cd05e5bb6ddce50b171b"
         }
       ]
     },

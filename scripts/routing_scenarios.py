@@ -1,15 +1,19 @@
 """Source-owned expertise examples shared by routing and code-generation validation."""
 from collections import Counter
+from importlib import metadata as importlib_metadata
 from pathlib import Path
 import re
 from typing import Any
 from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
 from validation_utils import (
     ValidationProblem,
-    _is_markdown_fence_closer,
-    _markdown_fence_opener,
     load_yaml_file,
 )
+
+try:
+    from markdown_it import MarkdownIt
+except ImportError:
+    MarkdownIt = None
 
 EXPECTED_CODEGEN_CASE_IDS = {f"{category}/{case}" for category, cases in EXPECTED_BENCHMARKS.items() for case in cases}
 
@@ -228,19 +232,40 @@ def load_authoring_router_contract(root: Path) -> dict[str, Any]:
     )
 
 
-def authoring_router_markdown_errors(text: str, contract: dict[str, Any]) -> list[str]:
-    """Reject undeclared, missing, duplicate, or fenced rows before budgeting prose."""
+ROUTER_MARKDOWN_VERSIONS = {"markdown-it-py": "4.2.0", "mdurl": "0.1.2"}
+
+
+def authoring_router_rows(text: str) -> list[tuple[str, ...]]:
+    """Read only top-level Markdown table rows with their exact authored cells."""
+    for distribution, expected in ROUTER_MARKDOWN_VERSIONS.items():
+        try:
+            actual = importlib_metadata.version(distribution)
+        except importlib_metadata.PackageNotFoundError as exc:
+            raise ValidationProblem(f"authoring router requires {distribution}=={expected}") from exc
+        if actual != expected:
+            raise ValidationProblem(f"authoring router requires {distribution}=={expected}; found {actual}")
+    if MarkdownIt is None:
+        raise ValidationProblem("authoring router requires markdown-it-py==4.2.0")
+    tokens = MarkdownIt(
+        "commonmark", {"html": True, "linkify": False, "typographer": False, "breaks": False}
+    ).enable("table").parse(text)
+    # A raw HTML container can hide a later table even across blank lines. The
+    # closed router uses Markdown tables; only complete HTML comments are allowed.
+    for token in tokens:
+        for part in (token, *(token.children or [])):
+            if part.type in {"html_block", "html_inline"} and re.sub(
+                r"<!--.*?-->", "", part.content, flags=re.DOTALL
+            ).strip():
+                raise ValidationProblem("authoring router permits HTML only as complete comments")
+    lines = text.splitlines()
     rows = []
-    fence = None
-    for line in text.splitlines():
-        if fence is not None:
-            if _is_markdown_fence_closer(line, *fence):
-                fence = None
+    for token in tokens:
+        if token.type != "tr_open" or token.level != 2 or token.map is None:
             continue
-        opener = _markdown_fence_opener(line)
-        if opener is not None:
-            fence = opener
+        start, end = token.map
+        if end != start + 1:
             continue
+        line = lines[start]
         if not line.startswith("|"):
             continue
         cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
@@ -250,6 +275,15 @@ def authoring_router_markdown_errors(text: str, contract: dict[str, Any]) -> lis
         ) or all(re.fullmatch(r":?-+:?", cell) for cell in cells):
             continue
         rows.append(cells)
+    return rows
+
+
+def authoring_router_markdown_errors(text: str, contract: dict[str, Any]) -> list[str]:
+    """Reject undeclared, missing, duplicate, or hidden rows before budgeting prose."""
+    try:
+        rows = authoring_router_rows(text)
+    except ValidationProblem as exc:
+        return [str(exc)]
     expected = Counter((*contract["primary_rows"], *contract["domain_rows"]))
     observed = Counter(rows)
     errors = []

@@ -7,6 +7,7 @@ import io
 import json
 import sys
 import tempfile
+import tomllib
 import unittest
 from copy import deepcopy
 from datetime import date, timedelta
@@ -105,30 +106,80 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         self.assertTrue(any(row["path"] == path and row["limit"] == 60 for row in content["advisories"]["targeted_over_60_lines"]))
         self.assertTrue(any(path in error for error in content["surface_validation"]["surfaces"]["professional"]["errors"]))
 
+    def test_router_declarations_require_visible_markdown_tables(self) -> None:
+        import routing_scenarios as authority
+
+        contract = authority.load_authoring_router_contract(ROOT)
+        text = (ROOT / authority.ROUTER_PATH).read_text()
+        hidden_primary = (
+            text.replace("| Task signal |", "<!--\n| Task signal |", 1)
+            .replace("## Domain Modifiers", "-->\n## Domain Modifiers", 1)
+            .replace("\n\n| Active mechanism", "\n| Active mechanism", 1)
+        )
+        self.assertEqual(78, len(hidden_primary.splitlines()))
+        hidden_domain = text.replace("| Active mechanism |", "<!--\n| Active mechanism |", 1)
+        raw_container = "<div hidden>\n\n" + text.replace("\n\n", "\n", 1)
+        variants = {
+            "commented-primary-within-budget": hidden_primary,
+            "unclosed-commented-domain-within-budget": hidden_domain,
+            "raw-html-container-with-visible-table-tokens": raw_container,
+            "missing-table-delimiter": text.replace("| --- | --- | --- | --- |", "", 1),
+            "fenced-table": "```markdown\n" + text + "```\n",
+            "indented-code": "\n".join("    " + line for line in text.splitlines()),
+            "quoted-table": "\n".join("> " + line for line in text.splitlines()),
+        }
+        for name, changed in variants.items():
+            with self.subTest(name=name):
+                self.assertTrue(authority.authoring_router_markdown_errors(changed, contract))
+        harmless_comment = text.replace(
+            "# Professional Skill Router", "# Professional Skill Router <!-- authoring note -->", 1
+        )
+        self.assertEqual([], authority.authoring_router_markdown_errors(harmless_comment, contract))
+
+    def test_router_markdown_dependencies_are_pinned_and_fail_closed(self) -> None:
+        import routing_scenarios as authority
+
+        dependencies = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["dependencies"]
+        for distribution, version in authority.ROUTER_MARKDOWN_VERSIONS.items():
+            self.assertIn(f"{distribution}=={version}", dependencies)
+        contract = authority.load_authoring_router_contract(ROOT)
+        text = (ROOT / authority.ROUTER_PATH).read_text()
+        with mock.patch.object(authority.importlib_metadata, "version", return_value="unsupported"):
+            self.assertIn("requires markdown-it-py==", authority.authoring_router_markdown_errors(text, contract)[0])
+        with mock.patch.object(authority, "MarkdownIt", None):
+            self.assertIn("requires markdown-it-py==", authority.authoring_router_markdown_errors(text, contract)[0])
+
     def test_reference_detector_binds_router_declaration_and_formula_sources(self) -> None:
         baseline = self.module._reference_semantic_detector_fingerprint()
         source_reader = self.module._detector_repository_source_text
+        for before, after in (
+            ("ROUTER_NON_DATA_LINE_BUDGET = 14", "ROUTER_NON_DATA_LINE_BUDGET = 15"),
+            ('"html": True', '"html": False'),
+            ('"markdown-it-py": "4.2.0"', '"markdown-it-py": "4.3.0"'),
+        ):
+            def changed(path: Path) -> str:
+                source = source_reader(path)
+                if path.name == "routing_scenarios.py":
+                    self.assertIn(before, source)
+                    return source.replace(before, after)
+                return source
 
-        def changed(path: Path) -> str:
-            source = source_reader(path)
-            if path.name == "routing_scenarios.py":
-                return source.replace("ROUTER_NON_DATA_LINE_BUDGET = 14", "ROUTER_NON_DATA_LINE_BUDGET = 15")
-            return source
-
-        with mock.patch.object(self.module, "_detector_repository_source_text", side_effect=changed):
-            self.assertNotEqual(baseline, self.module._reference_semantic_detector_fingerprint())
+            with self.subTest(source=before), mock.patch.object(self.module, "_detector_repository_source_text", side_effect=changed):
+                self.assertNotEqual(baseline, self.module._reference_semantic_detector_fingerprint())
 
     def test_router_authority_changes_select_its_consumers_and_stale_semantic_evidence(self) -> None:
         import impact_graph
 
         core = json.loads((ROOT / "src/control-model/core-contracts.json").read_text())
-        result = impact_graph.resolve_entries(
-            core, [("M", "scripts/routing_scenarios.py")],
-            base_sha="a" * 40, head_sha="b" * 40,
-        )
-        self.assertTrue({"audit-skill-content", "validate-reference-content", "validate-skill-routing"} <= set(result["selected_producer_ids"]))
-        self.assertEqual(["semantic-disposition"], result["expert_panel_evidence"]["affected_axes"])
-        self.assertEqual("soft-stale", result["expert_panel_evidence"]["status"])
+        for path in ("scripts/routing_scenarios.py", "pyproject.toml"):
+            with self.subTest(path=path):
+                result = impact_graph.resolve_entries(
+                    core, [("M", path)], base_sha="a" * 40, head_sha="b" * 40,
+                )
+                self.assertTrue({"audit-skill-content", "validate-reference-content", "validate-skill-routing"} <= set(result["selected_producer_ids"]))
+                self.assertIn("tests/scripts/test_release_routing_scenario_authority.py", result["selected_test_modules"])
+                self.assertEqual(["semantic-disposition"], result["expert_panel_evidence"]["affected_axes"])
+                self.assertEqual("soft-stale", result["expert_panel_evidence"]["status"])
 
     def test_current_root_schema_domains_exclude_lifecycle(self) -> None:
         self.assertEqual(8, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)

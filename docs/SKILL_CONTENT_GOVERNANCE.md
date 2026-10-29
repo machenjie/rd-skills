@@ -484,7 +484,11 @@ Current declarations permit 38 Primary and 26 Domain rows: 78 lines total.
 `routing_scenarios.py` owns the non-release examples and exact Domain family groups.
 Release examples retain their registry authority. Registry and oracle atoms,
 family membership, anti-triggers and Markdown rows must agree exactly.
-Extra, duplicate, missing or fenced rows cannot raise the budget.
+Only top-level rendered Markdown tables supply those rows. Commented, fenced,
+indented or quoted content cannot satisfy declarations. Raw HTML containers are
+excluded because they can hide otherwise parsed tables; complete comments outside
+the required rows remain allowed. Extra, duplicate or missing rows cannot raise
+the budget. The collector and routing projections share this pinned parser.
 Mode-contract References permit 80 lines, and Gate,
 Checklist, or Decision headings permit 15 items. Missing effective reference
 type, load condition, and do-not-load condition are also strict gates; literal

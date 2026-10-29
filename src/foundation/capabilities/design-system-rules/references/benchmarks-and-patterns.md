@@ -5,7 +5,7 @@ Load this reference when a shared component, variant, token, interaction, respon
 ## Decision Checklist
 
 1. **Reuse:** inspect current components and compositions; keep behavior feature-local when no shared semantic contract exists.
-2. **Variants:** add an axis only for a real product state or interaction distinction, not a screen name or one-off style flag.
+2. **Variants:** add an axis for evidenced reusable semantic intent, such as role, emphasis, density, state, motion, or interaction. Reject screen names and one-off style flags without a shared semantic contract.
 3. **Tokens:** use owned color, typography, spacing, radius, elevation, density, and motion tokens, with missing-token ownership recorded instead of embedding a raw value.
 4. **Semantics:** choose native elements or an established accessible pattern with correct name, role, value, and state exposed by any custom role.
 5. **Keyboard:** define keys, activation, escape/cancel, disabled behavior, and composite-widget navigation from the applicable platform/APG convention.
