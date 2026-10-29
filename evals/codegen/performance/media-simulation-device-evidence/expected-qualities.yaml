@@ -1,0 +1,8 @@
+id: "media-simulation-device-evidence"
+category: "performance"
+focus: ["exact media timing and seek evidence", "fixed simulation and replay evidence", "device completion and artifact identity"]
+route_hints: {"work_path": "direct-task", "agent_profile": "task-agent", "primary_skill": "quality-test-gate", "layer3_skills": ["unit-testing"], "review_skill": null}
+expected_outcomes: ["Media records preserve exact presentation semantics and supplied timing policies.", "Simulation traces conserve active time and event effects within a declared replay scope.", "Device traces prove completion, visibility, epoch, and exact artifact identity separately."]
+required_qualities: ["Use independent rational times, step counts, event order, and identity assertions.", "Keep three small validators and state real runtime limits."]
+forbidden_shortcuts: ["Treating upload, connection, enqueue, or submission as completed work.", "Using broad interface type or matching seed alone as sufficient evidence."]
+evidence: ["Passing candidate executes fixed records and non-trigger boundaries.", "Incomplete starter and four single-mechanism controls are rejected."]
