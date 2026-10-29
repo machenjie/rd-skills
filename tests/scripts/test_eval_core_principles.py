@@ -87,6 +87,27 @@ def assert_core_producer_outcomes_passed(
 
 
 class CorePrinciplesOutcomeTests(unittest.TestCase):
+    def test_formal_counts_bind_authored_inventory_and_panel_contract(self) -> None:
+        from validation_utils import source_skill_inventory, validate_core_contracts
+        import expert_panel_contracts
+
+        contract = json.loads((ROOT / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_text())
+        packages = sum(len(names) for layer, names in source_skill_inventory().items() if layer != "control")
+        expected = {
+            "required_target_count": packages,
+            "effective_vote_count": packages * expert_panel_contracts.PROFESSIONAL_PANEL_SIZE,
+            "effective_criterion_result_count": packages * expert_panel_contracts.PROFESSIONAL_PANEL_SIZE * len(expert_panel_contracts.PROFESSIONAL_CRITERIA),
+        }
+        self.assertFalse(validate_core_contracts(contract))
+        for suffix, count in expected.items():
+            with self.subTest(pointer=suffix):
+                modified = copy.deepcopy(contract)
+                predicates = [p for row in modified["principle_acceptance_contract"]["outcomes"] for p in row["predicates"] if p.get("pointer", "").endswith("/" + suffix)]
+                self.assertTrue(predicates)
+                self.assertTrue(all(p["expected"] == count for p in predicates))
+                predicates[0]["expected"] = count - 1
+                self.assertTrue(any("formal inventory predicate" in error for error in validate_core_contracts(modified)))
+
     def test_single_runtime_build_and_expanded_layer3_proof_are_core_bound(self) -> None:
         acceptance = json.loads(
             (ROOT / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_text(encoding="utf-8")

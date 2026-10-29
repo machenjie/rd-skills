@@ -15,6 +15,7 @@ import sys
 import json
 import tokenize
 import unicodedata
+import expert_panel_contracts as panel_contracts
 from fnmatch import fnmatchcase
 from functools import lru_cache
 from itertools import combinations
@@ -29,6 +30,31 @@ except Exception:  # pragma: no cover - depends on local environment
 
 
 ROOT = Path(__file__).resolve().parents[1]
+def source_skill_inventory(root: Path = ROOT) -> dict[str, tuple[str, ...]]:
+    """Return physical authored identities independently of registry entries."""
+
+    locations = {
+        "control": "src/control-skills",
+        "professional": "src/professional-skills",
+        "foundation": "src/foundation/capabilities",
+        "domain": "src/domain-extensions",
+    }
+    return {
+        layer: tuple(sorted(
+            path.parent.name
+            for path in (root / location).glob("*/SKILL.md")
+            if not path.parent.name.startswith("_")
+        ))
+        for layer, location in locations.items()
+    }
+
+
+SOURCE_SKILL_INVENTORY = source_skill_inventory()
+EXPECTED_PROFESSIONAL_SKILL_COUNT = len(SOURCE_SKILL_INVENTORY["professional"])
+EXPECTED_CONTROL_SKILL_COUNT = 1
+EXPECTED_FOUNDATION_CAPABILITY_COUNT = len(SOURCE_SKILL_INVENTORY["foundation"])
+EXPECTED_DOMAIN_EXTENSION_COUNT = len(SOURCE_SKILL_INVENTORY["domain"])
+
 AFFECTED_CONTEXT_ENV = "CHANGEFORGE_AFFECTED_CONTEXT"
 AFFECTED_SOURCE_REPOSITORY_ENV = "CHANGEFORGE_AFFECTED_SOURCE_REPOSITORY"
 FOUNDATION_DECISION_CARD_MODEL = "foundation-decision-card-v1"
@@ -3631,6 +3657,31 @@ def validate_core_contracts(
             "authoritative control model must use changeforge.core_contracts schema 1"
         )
 
+    package_count = sum(
+        len(names) for layer, names in source_skill_inventory(root).items()
+        if layer != "control"
+    )
+    vote_count = package_count * panel_contracts.PROFESSIONAL_PANEL_SIZE
+    criterion_count = vote_count * len(panel_contracts.PROFESSIONAL_CRITERIA)
+    formal_counts = {
+        "/content_readiness/expert/professional_completeness/qualification_summary/covered_target_count": package_count,
+        "/content_readiness/expert/professional_completeness/required_target_count": package_count,
+        "/content_readiness/expert/professional_completeness/applied_target_count": package_count,
+        "/content_readiness/expert/professional_completeness/accepted_current_count": package_count,
+        "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/case_count": package_count,
+        "/content_readiness/expert/professional_completeness/review_cost/effective_vote_count": vote_count,
+        "/content_readiness/expert/professional_completeness/review_cost/effective_criterion_result_count": criterion_count,
+        "/content_readiness/expert/professional_completeness/evidence_summary/criterion_result_count": criterion_count,
+    }
+    for outcome in data.get("principle_acceptance_contract", {}).get("outcomes", []):
+        for predicate in outcome.get("predicates", []):
+            pointer = predicate.get("pointer", "")
+            if pointer in formal_counts and predicate.get("expected") != formal_counts[pointer]:
+                errors.append(
+                    f"formal inventory predicate {pointer} must equal {formal_counts[pointer]} "
+                    f"for all {package_count} authored non-Control packages"
+                )
+
     errors.extend(validate_principle_acceptance_contract(data, root))
     errors.extend(validate_impact_graph_contract(data, root))
     errors.extend(decision_eval_contract_errors(data, root))
@@ -4442,7 +4493,7 @@ def validate_core_contracts(
                 or thresholds["maximum_mean_input_ratio_ppm"]
                 > thresholds["maximum_input_ratio_ppm"]
                 or thresholds["maximum_input_ratio_ppm"] > 1_000_000
-                or thresholds["maximum_fresh_target_count"] > 188
+                or thresholds["maximum_fresh_target_count"] > sum(len(names) for layer, names in source_skill_inventory(root).items() if layer != "control")
             ):
                 valid_thresholds = False
                 errors.append(
@@ -6487,30 +6538,6 @@ _REFERENCE_BROKEN_CONDITION_RES = (
     re.compile(r"^(?:(?:patterns|checklist|evidence):\s*)?or\b", re.IGNORECASE),
 )
 FRONTMATTER_DELIMITER = "---"
-def source_skill_inventory(root: Path = ROOT) -> dict[str, tuple[str, ...]]:
-    """Return physical authored identities independently of registry entries."""
-
-    locations = {
-        "control": "src/control-skills",
-        "professional": "src/professional-skills",
-        "foundation": "src/foundation/capabilities",
-        "domain": "src/domain-extensions",
-    }
-    return {
-        layer: tuple(sorted(
-            path.parent.name
-            for path in (root / location).glob("*/SKILL.md")
-            if not path.parent.name.startswith("_")
-        ))
-        for layer, location in locations.items()
-    }
-
-
-SOURCE_SKILL_INVENTORY = source_skill_inventory()
-EXPECTED_PROFESSIONAL_SKILL_COUNT = len(SOURCE_SKILL_INVENTORY["professional"])
-EXPECTED_CONTROL_SKILL_COUNT = 1
-EXPECTED_FOUNDATION_CAPABILITY_COUNT = len(SOURCE_SKILL_INVENTORY["foundation"])
-EXPECTED_DOMAIN_EXTENSION_COUNT = len(SOURCE_SKILL_INVENTORY["domain"])
 MARKETPLACE_SCHEMA_VERSION = 3
 COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
 REGISTRY_SCHEMA_VERSIONS = {

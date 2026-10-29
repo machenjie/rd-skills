@@ -25,9 +25,9 @@ Protect PHP value semantics, class resolution, error handling, and request or pr
 
 - Bind coercion and comparison behavior to the target PHP version and boundary types.
 - Distinguish missing values, null, false, zero, and empty strings where the contract distinguishes them.
-- Resolve the actual entrypoint, autoloader order, class identity, and case-sensitive deployment behavior.
+- Inspect the actual entrypoint, autoloader order, class identity, and case-sensitive deployment behavior.
 - Preserve intended handling for exceptions, engine errors, and cleanup failures.
-- Assign state lifetime from the actual process model, including static variables and retained objects.
+- Define state lifetime from the actual process model, including static variables and retained objects.
 - Release resources through explicit owner paths, including exceptional exits and repeated work.
 - Verify affected behavior through the deployed SAPI or long-running execution model.
 

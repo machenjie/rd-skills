@@ -20,6 +20,8 @@ from itertools import combinations
 from pathlib import Path, PurePosixPath
 from typing import Any
 from validation_utils import (
+    EXPECTED_CONTROL_SKILL_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
     BEHAVIOR_EVAL_MODEL,
     COMPILED_LAYER3_FORMAT,
     CONTEXT_BUDGET_MODEL,
@@ -519,14 +521,14 @@ def _load_runtime_manifest(errors: list[str]) -> dict[str, Any] | None:
         return None
     expected_top_level = [*control, *professional]
     if (
-        len(top_level) != 26
+        len(top_level) != EXPECTED_CONTROL_SKILL_COUNT + EXPECTED_PROFESSIONAL_SKILL_COUNT
         or len(top_level) != len(set(top_level))
         or set(top_level) != set(expected_top_level)
         or set(top_level) & (set(foundation) | set(domain))
     ):
         errors.append(
             f"{_relative(path)} Runtime discovery must contain exactly one Control "
-            "and 25 Professional Skills with no Foundation or Domain top-level Skill"
+            f"and {EXPECTED_PROFESSIONAL_SKILL_COUNT} Professional Skills with no Foundation or Domain top-level Skill"
         )
         return None
     return value

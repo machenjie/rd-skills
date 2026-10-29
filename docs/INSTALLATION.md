@@ -37,7 +37,7 @@ Codex `admin` writes below `/etc/codex`; preview it first and use only an approv
 python3 scripts/build.py
 ```
 
-The build creates the fixed current Runtime under `dist/`. It contains 26 top-level Skills and the supported host-specific outputs. The internal `recommended` directory and manifest identity remain for compatibility; they are not a CLI choice. [Runtime build](BUILD_PROFILES.md) owns the full composition and generated manifest contract.
+The build creates the fixed current Runtime under `dist/`. It contains 27 top-level Skills and the supported host-specific outputs. The internal `recommended` directory and manifest identity remain for compatibility; they are not a CLI choice. [Runtime build](BUILD_PROFILES.md) owns the full composition and generated manifest contract.
 
 Every installer validates the built source and manifest before changing a target. Never hand-edit generated build manifests.
 
@@ -134,7 +134,7 @@ python3 scripts/package.py
 python3 installers/install.py --agent openai-api
 ```
 
-Build and package write 26 zip files under `dist/openai-api/zips/recommended/`. Each zip contains one matching top-level Skill folder with a root `SKILL.md`. The installer command validates local bundles; it does not upload them or install them into a live API service.
+Build and package write 27 zip files under `dist/openai-api/zips/recommended/`. Each zip contains one matching top-level Skill folder with a root `SKILL.md`. The installer command validates local bundles; it does not upload them or install them into a live API service.
 
 These files are not evidence of marketplace publication, provider behavior, or a loaded integration.
 

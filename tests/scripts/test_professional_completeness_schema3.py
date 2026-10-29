@@ -2218,7 +2218,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             )
             self.assertEqual(0, plan["plan_lineage_depth"])
             self.assertEqual([], plan["carried_targets"])
-            self.assertEqual(188, len(plan["fresh_targets"]))
+            self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(plan["fresh_targets"]))
             self.assertTrue(
                 all(
                     row["reason_codes"] == ["review-contract-changed"]
@@ -3985,7 +3985,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             baseline_state=_baseline_state(packet, depth=8),
         )
         self.assertEqual(0, plan["plan_lineage_depth"])
-        self.assertEqual(188, len(plan["fresh_targets"]))
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(plan["fresh_targets"]))
         self.assertEqual([], plan["carried_targets"])
         self.assertTrue(
             all(

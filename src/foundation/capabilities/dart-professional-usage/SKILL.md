@@ -23,8 +23,8 @@ Protect Dart value validity, asynchronous ownership, stream contracts, and isola
 
 ## High-Value Rules
 
-- Check dynamic values, null assertions, and late initialization at their actual runtime boundaries.
-- Bind Future completion and error observation to the owning operation.
+- Validate dynamic values, null assertions, and late initialization at their actual runtime boundaries.
+- Define the operation that owns Future completion and error observation.
 - Distinguish single-subscription and broadcast streams before changing listeners or delivery expectations.
 - Await cancellation cleanup when later resource use depends on subscription shutdown.
 - Preserve error, done, cancellation, and backpressure behavior through stream transformations.

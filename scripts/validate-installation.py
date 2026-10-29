@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -535,6 +536,10 @@ def _validate_legacy_profile_upgrades(
         errors.append("legacy migration smoke: build inventories are incomplete")
         return 0
 
+    sys.path.insert(0, str(ROOT / "installers"))
+    from changeforge_install import PHASE2_LAYER_INVENTORIES
+    current_inventory = inventories
+    inventories = {layer: set(names) for layer, names in PHASE2_LAYER_INVENTORIES.items()}
     passed = 0
     historical_professional = (
         inventories["professional"] | HISTORICAL_RETIRED_PROFESSIONAL_SKILLS
@@ -572,6 +577,8 @@ def _validate_legacy_profile_upgrades(
             legacy_layer3 |= inventories["domain"]
         if legacy_profile == "dev":
             legacy_layer3 |= inventories["foundation"]
+        for name in sorted(current_inventory["professional"] - inventories["professional"]):
+            shutil.rmtree(skills / name)
         retired_skills = legacy_layer3 | HISTORICAL_RETIRED_PROFESSIONAL_SKILLS
         for name in sorted(retired_skills):
             legacy_skill = skills / name

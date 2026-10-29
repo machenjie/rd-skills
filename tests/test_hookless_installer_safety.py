@@ -111,9 +111,9 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
 
     def test_installer_has_one_runtime_and_bounded_legacy_input_counts(self) -> None:
         self.assertEqual("recommended", self.helper.RUNTIME_PROFILE)
-        self.assertEqual(26, self.helper.RUNTIME_SKILL_COUNT)
+        self.assertEqual(len(self.helper.SOURCE_SKILL_INVENTORY["professional"]) + 1, self.helper.RUNTIME_SKILL_COUNT)
         self.assertEqual(
-            {"recommended": 26},
+            {"recommended": self.helper.RUNTIME_SKILL_COUNT},
             self.helper.CURRENT_RUNTIME_PROFILE_COUNTS,
         )
         self.assertEqual(
@@ -297,7 +297,9 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
         agent: str = "codex",
     ) -> tuple[Path, Path | None, dict]:
         skills, profiles = self._install_current_project_for(agent, project)
-        layers = self._authoritative_layer_names()
+        layers = {layer: set(names) for layer, names in self.helper.PHASE2_LAYER_INVENTORIES.items()}
+        for name in self._authoritative_layer_names()["professional"] - layers["professional"]:
+            shutil.rmtree(skills / name)
         self.assertEqual(
             layers["professional"] | {"routing-quality-review"},
             HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS,
@@ -379,7 +381,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
         return skills, profiles, manifest
 
     def test_coherent_current_layer_full_and_dev_are_not_supported_generations(self) -> None:
-        for profile, expected_count in (("full", 39), ("dev", 189)):
+        for profile, expected_count in (("full", sum(len(self.helper.SOURCE_SKILL_INVENTORY[k]) for k in ("control", "professional", "domain"))), ("dev", sum(map(len, self.helper.SOURCE_SKILL_INVENTORY.values())))):
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as raw:
                 project = Path(raw) / "project"
                 skills, profiles, manifest = (
@@ -547,15 +549,64 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.assertEqual(before, self._tree_snapshot(project))
             self.assertIn("upgrade: dry run", stdout.getvalue())
 
-    def test_historical_bridge_fails_closed_when_an_unchanged_layer_fingerprint_drifts(self) -> None:
-        layers = self._authoritative_layer_names()
-        layers["domain"] = set(layers["domain"]) | {"future-domain-skill"}
+    def test_historical_bridge_fails_closed_when_frozen_identity_drifts(self) -> None:
+        current = self._authoritative_layer_names()
+        historical = self.helper._historical_runtime_27_skill_inventories(current)
+        self.assertEqual({"recommended": 27, "full": 40, "dev": 190}, {
+            name: len(values) for name, values in historical["profiles"].items()
+        })
+        self.assertNotIn("numerical-correctness", historical["layers"]["foundation"])
+        corrupted = set(self.helper.PHASE2_LAYER_INVENTORIES["domain"]) | {"future-domain-skill"}
+        with mock.patch.dict(self.helper.PHASE2_LAYER_INVENTORIES, {"domain": corrupted}):
+            with self.assertRaisesRegex(self.helper.InstallError, "historical Runtime inventory bridge is stale for the domain Registry"):
+                self.helper._historical_runtime_27_skill_inventories(current)
 
-        with self.assertRaisesRegex(
-            self.helper.InstallError,
-            "historical Runtime inventory bridge is stale for the domain Registry",
-        ):
-            self.helper._historical_runtime_27_skill_inventories(layers)
+    def test_phase2_recommended_is_exact_historical_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            skills, profiles = self._install_current_project(project)
+            manifest = json.loads((skills / self.helper.MANIFEST_NAME).read_text())
+            layers = self.helper.PHASE2_LAYER_INVENTORIES
+            manifest["installed_professional_skills"] = sorted(layers["professional"])
+            manifest["installed_skills"] = sorted(layers["professional"] | layers["control"])
+            targets = self.helper.InstallTargets(skills=skills, profiles=profiles)
+            result = self.helper.classify_installed_manifest(manifest, agent="codex", scope="project", targets=targets)
+            self.assertEqual("runtime-26", result.inventory_generation)
+            self.assertTrue(result.migration_required)
+            manifest["installed_skills"].append("unknown-package")
+            with self.assertRaises(self.helper.InstallError):
+                self.helper.classify_installed_manifest(manifest, agent="codex", scope="project", targets=targets)
+
+    def test_phase2_upgrade_preserves_unowned_content_and_rejects_snapshot_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            skills, profiles = self._install_current_project(project)
+            manifest_path = skills / self.helper.MANIFEST_NAME
+            manifest = json.loads(manifest_path.read_text())
+            layers = self.helper.PHASE2_LAYER_INVENTORIES
+            for name in set(manifest["installed_professional_skills"]) - layers["professional"]:
+                shutil.rmtree(skills / name)
+            manifest["installed_professional_skills"] = sorted(layers["professional"])
+            manifest["installed_skills"] = sorted(layers["professional"] | layers["control"])
+            manifest_path.write_text(json.dumps(manifest))
+            unowned = skills / "user-skill"
+            unowned.mkdir()
+            (unowned / "SKILL.md").write_bytes(b"user owned\n")
+            targets = self.helper.InstallTargets(skills=skills, profiles=profiles)
+            corrupted = set(layers["professional"]) | {"unknown-package"}
+            with mock.patch.dict(layers, {"professional": corrupted}):
+                with self.assertRaisesRegex(self.helper.InstallError, "Phase 2 Runtime inventory bridge is stale"):
+                    self.helper.classify_installed_manifest(manifest, agent="codex", scope="project", targets=targets)
+            with (
+                mock.patch.object(sys, "argv", ["upgrade.py", "--agent", "codex", "--scope", "project", "--target", str(project)]),
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(0, self.upgrade_cli.main())
+            upgraded = json.loads(manifest_path.read_text())
+            classified = self.helper.classify_installed_manifest(upgraded, agent="codex", scope="project", targets=targets)
+            self.assertEqual(self.helper.CURRENT_INVENTORY_GENERATION, classified.inventory_generation)
+            self.assertIn("library-tool-product-builder", classified.skill_names)
+            self.assertEqual(b"user owned\n", (unowned / "SKILL.md").read_bytes())
 
     def test_historical_recommended_dry_run_reports_retired_skill_without_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -631,7 +682,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 (skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
             )
             backup = Path(installed["backup_path"])
-            self.assertEqual(26, len(installed["installed_skills"]))
+            self.assertEqual(self.helper.RUNTIME_SKILL_COUNT, len(installed["installed_skills"]))
             self.assertNotIn("routing-quality-review", installed["installed_skills"])
             self.assertFalse(retired.exists())
             self.assertEqual(
@@ -756,7 +807,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     )
                     self.assertEqual("recommended", installed["profile"])
                     self.assertEqual(runtime, set(installed["installed_skills"]))
-                    self.assertEqual(26, len(installed["installed_skills"]))
+                    self.assertEqual(self.helper.RUNTIME_SKILL_COUNT, len(installed["installed_skills"]))
                     self.assertEqual(4, len(installed["installed_agent_profiles"]))
                     backup = Path(installed["backup_path"])
                     self.assertEqual(
@@ -1123,7 +1174,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 ).read_text(encoding="utf-8")
             )
             self.assertEqual("recommended", manifest["profile"])
-            self.assertEqual(26, len(manifest["installed_skills"]))
+            self.assertEqual(self.helper.RUNTIME_SKILL_COUNT, len(manifest["installed_skills"]))
             self.assertEqual([], manifest["installed_agent_profiles"])
             self.assertEqual([], manifest["installed_agent_profile_files"])
 
@@ -1398,10 +1449,10 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     result = BUILD.build_profile("recommended")
                 if result != {
                     "profile": "recommended",
-                    "top_level_count": 26,
-                    "compiled_layer3_reference_count": 154,
+                    "top_level_count": cls.helper.RUNTIME_SKILL_COUNT,
+                    "compiled_layer3_reference_count": len(cls.helper.SOURCE_SKILL_INVENTORY["foundation"]) + len(cls.helper.SOURCE_SKILL_INVENTORY["domain"]) - 9,
                     "agent_profile_count": 4,
-                    "zip_count": 26,
+                    "zip_count": cls.helper.RUNTIME_SKILL_COUNT,
                 }:
                     raise AssertionError(
                         f"unexpected canonical Runtime build result: {result}"

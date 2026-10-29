@@ -7259,7 +7259,7 @@ def _release_gate(
                 "Completeness round with exact package carry-forward, current "
                 "review contract, plan, bindings, provenance, chain head, and "
                 "review-cost evidence; every fresh Skill needs two qualified "
-                "domain reviewers and one architecture reviewer, and all 188 "
+                f"domain reviewers and one architecture reviewer, and all {expert_panel.PROFESSIONAL_PACKAGE_COUNT} "
                 "effective packages need source evidence, no required corrections, "
                 "and no unresolved domain-critical disagreement; "
                 f"status={status}; applied_target_count={coverage}; "

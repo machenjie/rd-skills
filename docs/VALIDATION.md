@@ -92,15 +92,15 @@ must not replay a Core-owned producer merely to count a second pass.
 ### Single Runtime Completeness Responsibilities
 
 Retiring the development Runtime changes delivery, not proof scope. The source
-authority remains 1 Control, 25 Professional, 150 Foundation, and 13 Domain
-Skills. The fixed Runtime has 26 top-level Skills and 154 JIT Layer 3 entries;
+authority remains 1 Control, 26 Professional, 157 Foundation, and 20 Domain
+Skills. The fixed Runtime has 27 top-level Skills and 168 JIT Layer 3 entries;
 9 authoring/internal Foundation entries remain source-valid but non-Runtime.
 
 The deterministic owner checks cover:
 
 - source and four-registry completeness and uniqueness;
 - Professional selector completeness and exact Foundation/Domain ownership;
-- complete compact projection of all 163 Layer 3 sources;
+- complete compact projection of all 177 Layer 3 sources;
 - nested Reference, asset, example, local-link, and symlink containment;
 - routing regression, including Domain positive, neighboring negative,
   transition-positive, and unchanged-paraphrase controls;
@@ -110,10 +110,10 @@ The deterministic owner checks cover:
 - code-generation definition, harness, and negative-control evidence.
 
 When all Foundation and Domain sources must be expanded, the owning validator
-creates the 163-item projection once in a cleaned temporary directory outside
+creates the 177-item projection once in a cleaned temporary directory outside
 the repository, `dist/`, packages, and Host discovery. It compares registry and
 source inventories, validates every compact projection and nested link, proves
-154 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
+168 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
 temporary tree. No development build is created.
 
 ### AI Selector Delivery
@@ -183,7 +183,7 @@ lists count only their named bodies. An unresolved body selection produces an
 incomplete-context error; index tokens cannot certify the later body budget.
 
 `test_built_professional_root_projection.py` checks actual generated files for
-all 25 Professionals and every Profile, including exact authorization sets,
+all 26 Professionals and every Profile, including exact authorization sets,
 positive/negative signal groups, Domain boundaries, and selection replay.
 `validate-built-skill-reference-links.py` compares the AI closure with the current
 source projection before using source authority to validate Reference reachability.
@@ -255,7 +255,7 @@ applies `2x`. `TEST_TIMEOUT_CLASS` must be declared at most once as a top-level
 static string literal from the closed set `standard` and `source-validation`.
 Duplicate, nested, dynamic, or unknown declarations fail selection. Worker
 timeout owners are checked explicitly. The schema-3 Professional validation
-module uses `source-validation` for its complete 188-package bindings,
+module uses `source-validation` for its complete 203-package bindings,
 capsule materials, CLI chain, and ballot aggregation checks. Its protocol and
 CLI fixtures still use bounded synthetic content. With `--timeout 900`, this
 module has an effective 1800-second deadline; the base timeout is unchanged.
@@ -392,11 +392,11 @@ or consume the tracked ordinary producer reports.
 | Core Principles | `src/control-model/core-contracts.json` and `eval-core-principles.py` | Selected gate passes with all required producer outcomes current. |
 | Root, Reference, and expert-review lifecycle | [Skill content governance](SKILL_CONTENT_GOVERNANCE.md) | Strict source validators and required independent decisions are current; no blocking disposition remains. |
 | Documentation | `validate-docs-consistency.py` and local-link checks | Required docs, managed Core projections and markers, commands, and links match current source; ordinary prose is not whole-document hash-bound. |
-| Routing and professional quality | Registries, deterministic fixtures, and professionalism producers | Fresh actual routes cover 249 canonical entries and 62 capability entries. The 457 admissions are 105 Professional, 304 Foundation, and 48 Domain. The Foundation projection covers 141 unique Foundation Skills in the 163-entry Layer 3 catalog. Required coverage and professional obligations pass without forbidden behavior. |
+| Routing and professional quality | Registries, deterministic fixtures, and professionalism producers | Fresh actual routes cover 249 canonical entries and 62 capability entries. The 457 admissions are 105 Professional, 304 Foundation, and 48 Domain. The Foundation projection covers 141 unique Foundation Skills in the 177-entry Layer 3 catalog. Required coverage and professional obligations pass without forbidden behavior. |
 | Agent behavior comparison | `src/control-model/core-contracts.json#/behavior_eval_contract` and `eval-agent-behavior.py` | Captured handoffs retain their deterministic oracle. The optional blind OLD/NEW mode validates physically separated packet/oracle/observations/caller-supplied-capture/reveal artifacts, opaque agent-visible identifiers, exact same-run bindings, capture byte/provenance integrity, Core-derived routing and Review metrics, and Main-owned pre-dispatch zero-review gates with an explicit decision actor, review candidate, zero dispatch count, and `reviewer_executed=false`. Caller-supplied captures have no Host/verifier-owned receipt trust channel, so effective live evidence remains `not_collected`; behavior improvement, host execution, and elapsed time are never inferred. |
 | Implementation and repair behavior | `eval-agent-lightweight.py` | Adjacent positive and negative traces distinguish bounded discovery from important unresolved decisions, optional review from ceremony, reachable effects from keywords, justified structure from speculation, and fresh validation from stale or contradicted proof. Owner fixtures grade source-backed search, candidate rejection, binding/generator authority, multiple enforcement points, unresolved conflicts and minimum impact closure against an evaluator-only oracle; reading every file cannot excuse a wrong owner. Fixture-source execution and binding/input mutations check the oracle. Read/search budgets and ordinary no-Analysis/no-Review controls bound structural overhead. Selected reviewers need actual current diff and source. These are simulated fixtures, not live model quality, token usage or Host performance evidence. |
 | Capability coverage | `evals/capability-coverage/matrix.yaml` and deterministic coverage validators | All 125 entries classify as 81 covered, 39 partial, 0 missing, and 5 intentionally unsupported; covered means catalog/routing evidence, not Professional Completeness. |
-| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 26 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
+| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 27 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
 | Code generation | [Benchmarks](BENCHMARKS.md) | Definitions, harnesses, and starter negative controls pass; candidate claims require an explicit candidate input. |
 | Open-source publication | [Open-source readiness](OPEN_SOURCE_READINESS.md) | Root license, metadata, contribution, security, and publication checks pass together. |
 
@@ -462,7 +462,7 @@ commit that records the fixed artifact may be `P` while the authenticated
 origin remains `C`. Currentness and Formal Release validate that preserved
 origin authority and do not require `origin_commit == P`.
 
-The Phase 2 inventory is current and final, so the formal target is all 188
+The Phase 2 inventory is current and final, so the formal target is all 203
 non-Control packages. The tracked Expert Panel inventory is exactly
 `evals/expert-panel/readability.json`,
 `evals/expert-panel/semantic-disposition.json`, and
@@ -471,7 +471,7 @@ current compact attestation and is replaced rather than appended. Full runtime
 packets, templates, ballots, capsules, and decisions remain only under the
 ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact.
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 188
+config, select Expert Panel evidence; the formal target remains all 203
 non-Control packages. A current Semantic Disposition application binds the
 exact fixed-attestation bytes. Replace an attestation only when its strict
 current validator reports source, detector, binding, or contract drift, then

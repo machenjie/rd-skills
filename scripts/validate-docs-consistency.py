@@ -37,6 +37,8 @@ from changeforge_install import (  # noqa: E402
 
 from validation_utils import (  # noqa: E402
     AUTHORITATIVE_BUILD_INPUT_EXCLUDED_PATHS,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
     ValidationProblem,
     context_budget_docs_projection_block,
     derived_context_budget_limits,
@@ -1945,7 +1947,7 @@ def _required_content_errors(root: Path) -> list[str]:
             "stable, independent Primary Route",
         ),
         "docs/VALIDATION.md": (
-            "163-item projection once in a cleaned temporary directory",
+            f"{EXPECTED_FOUNDATION_CAPABILITY_COUNT + EXPECTED_DOMAIN_EXTENSION_COUNT}-item projection once in a cleaned temporary directory",
             "Route Once behavior",
             *TEST_TIMEOUT_GUIDANCE_FACTS,
         ),
@@ -2182,7 +2184,7 @@ def validate_docs_consistency(
         if phrase.casefold() not in subagent_model.casefold():
             errors.append(f"docs/SUBAGENT_MODEL.md: missing {phrase}")
     authority_requirements = {
-        "docs/BUILD_PROFILES.md": ("26", "163", "Runtime", "manifest"),
+        "docs/BUILD_PROFILES.md": (str(RUNTIME_SKILL_COUNT), str(EXPECTED_FOUNDATION_CAPABILITY_COUNT + EXPECTED_DOMAIN_EXTENSION_COUNT), "Runtime", "manifest"),
         "docs/INSTALLATION.md": ("scripts/build.py", "doctor", "manifest"),
         "docs/RELEASE.md": ("scripts/package.py", "Runtime build", "manifest"),
     }

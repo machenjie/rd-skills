@@ -1040,13 +1040,13 @@ def _synthetic_schema3_professional_targets(
     }
     target_specs = sorted(
         (f"synthetic-professional-{index:03d}", "professional")
-        for index in range(25)
+        for index in range(PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS["professional"])
     ) + sorted(
         (f"synthetic-foundation-{index:03d}", "foundation")
-        for index in range(150)
+        for index in range(PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS["foundation"])
     ) + sorted(
         (f"synthetic-domain-{index:03d}", "domain")
-        for index in range(13)
+        for index in range(PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS["domain"])
     )
     target_specs = (
         package_identities

@@ -583,7 +583,7 @@ canonical sentence to its logical document-part context and exact source span.
 Ballots decide every finding exactly once; any nested tightening derives each reviewer
 document disposition before the document two-of-three majority. Professional
 completeness schema-3 evidence binds
-all 188 non-Control Skill packages, including complete root and indexed
+all 203 non-Control Skill packages, including complete root and indexed
 Reference content, Registry responsibility and expertise contracts, source
 anchors, examined failure and omission candidates, independently derived
 adjacency evidence, and proof limits. Adjacency evidence embeds the complete
@@ -622,7 +622,7 @@ Schema-2 ranking and registered earlier schema-3 contracts retain their
 `phrase-aware-v1` token-set comparison for historical audit. The preceding
 schema-3 contract also retains its conservative material bindings. Its old
 contract fingerprint cannot authorize current evidence, carry, or Formal
-Release. Changing the negative-route contract requires all 188 packages fresh.
+Release. Changing the negative-route contract requires all 203 packages fresh.
 Relabeling old ranking metadata as the new version fails validation.
 
 Schema-3 source grounding is stricter than the historical schema-2 structural
@@ -669,7 +669,7 @@ Formal readiness requires current contract/plan/bindings/provenance and recomput
 cost. Formal readiness requires zero `tracked-tightening`, unresolved
 `detector-false-positive`, or `rewrite-required` readability decisions, zero
 professional corrections, and zero unresolved professional disagreements
-across 188 packages. Static qualification claims prove declared tag coverage,
+across 203 packages. Static qualification claims prove declared tag coverage,
 not real-world identity, credentials, or experience.
 
 Professional currentness is built by `professional_review_bindings()` from two
@@ -763,7 +763,7 @@ Compact storage keeps one top-level
 dependency IDs, votes, result, expertise, and direct-origin provenance. It has
 no `source_fingerprints`, per-finding dependency map, or duplicated origin
 material. The tool derives these projections, validates closed fields, and
-requires all 188 packages fresh whenever the Professional review contract
+requires all 203 packages fresh whenever the Professional review contract
 changes.
 
 Professional compact schema-2 bytes use the physical
@@ -827,7 +827,7 @@ professionalism readiness authority and is derived evidence; it does not own or
 override the cost contract.
 The measured fixture must satisfy every current ceiling independently of an
 accepted panel verdict. A non-current fixture keeps the Professional release
-blocker even when all 188 package findings are current and accepted. This
+blocker even when all 203 package findings are current and accepted. This
 static cost result does not replace the final Core formal gate.
 
 Compact carry planning keeps target eligibility separate from the authenticated
@@ -1033,7 +1033,7 @@ independent disclosures and do not redefine the authoring gate. Formal release
 requires both axes and the exact Semantic application binding to be current.
 Readability covers every current
 `REVIEW_DENSITY`, `TIGHTEN_BODY`, and readability advisory target. Professional
-completeness covers all 188 non-Control packages. Neither panel can override an
+completeness covers all 203 non-Control packages. Neither panel can override an
 authoring blocker. The complete release check is
 `python3 scripts/eval-core-principles.py --gate formal-release`; its aggregate
 `professionalism-formal-release-ready` outcome requires the producer process to
@@ -1050,7 +1050,7 @@ bound to the captured `HEAD` and validated locally; Markdown is not a readiness
 authority, and Core authoring refreshes only tracked ordinary JSON.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 188
+config, select Expert Panel evidence; the formal target remains all 203
 non-Control packages. Formal release requires a current Semantic application
 bound to the exact fixed-attestation bytes. Reuse all three compact attestations
 while their strict current validators pass; replace an axis only after source,

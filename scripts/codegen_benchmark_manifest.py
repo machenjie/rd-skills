@@ -5,6 +5,7 @@ from __future__ import annotations
 
 EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     "backend": (
+        "commerce-saas-repeated-events",
         "idempotent-payment-create",
         "method-vs-service-vs-helper",
         "object-auth-order-read",
@@ -25,6 +26,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "ssrf-url-allowlist",
     ),
     "integration": (
+        "resource-lifetime-and-unknown-outcome",
         "webhook-hmac-raw-body",
     ),
     "data-middleware": (
@@ -62,6 +64,8 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "use-after-free-sanitizer",
     ),
     "code-elements": (
+        "symbol-aware-api-migration",
+        "incremental-codec-numerical-boundaries",
         "js-nullish-default-bug",
         "python-mutable-default-argument",
         "cpp-uninitialized-variable",
@@ -91,6 +95,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "repair-rereview-required",
     ),
     "validation": (
+        "ai-experiment-evidence-validity",
         "stale-validation-after-edit",
     ),
     "structure": (
@@ -118,6 +123,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "side-effect-boundary",
     ),
     "performance": (
+        "offered-load-and-quality-accounting",
         "event-loop-blocking-async-path",
         "lock-held-across-io",
         "per-operation-client-construction",

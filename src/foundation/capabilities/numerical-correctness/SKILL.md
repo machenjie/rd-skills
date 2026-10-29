@@ -24,10 +24,10 @@ Protect numerical meaning across input domains, algorithms, representations, and
 ## High-Value Rules
 
 - Bind inputs to units, dimensions, shape, valid ranges, and finite-value policy.
-- Allocate the error budget across input uncertainty, approximation, rounding, and accumulation.
+- Define error-budget allocation across input uncertainty, approximation, rounding, and accumulation.
 - Distinguish ill-conditioned problems from unstable algorithms before selecting a repair.
 - Choose absolute and relative tolerances from scale and the reference value, including behavior near zero.
-- Trace overflow, underflow, cancellation, and precision conversions through intermediate values.
+- Inspect overflow, underflow, cancellation, and precision conversions through intermediate values.
 - Preserve required invariants across reduction order, parallel execution, and mixed precision.
 - Compare against an independent reference, analytic solution, or justified metamorphic relation.
 - Bound reproducibility claims by seeds, algorithms, devices, versions, and nondeterministic execution.

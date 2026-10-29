@@ -102,11 +102,11 @@ gates every indexed Reference's effective type, load, and do-not-load contract.
 
 ## Built Content Rules
 
-The source inventory is 1 Control, 25 Professional, 150 Foundation, and 13
-Domain Skills: 189 total and 188 non-Control. Built Skills must be emitted into
+The source inventory is 1 Control, 26 Professional, 157 Foundation, and 20
+Domain Skills: 204 total and 203 non-Control. Built Skills must be emitted into
 `dist/`, and every installed Skill folder must contain `SKILL.md` at its root.
-The single Runtime exposes 26 top-level Skills: 1 Control and 25 Professional.
-Its delivery is 26/154/9 top-level/targeted/routing-only. The internal
+The single Runtime exposes 27 top-level Skills: 1 Control and 26 Professional.
+Its delivery is 27/168/9 top-level/targeted/routing-only. The internal
 `recommended` directory and manifest identity is retained only for
 compatibility; `full` and `dev` are retired build, install, package, doctor, and
 discovery surfaces. All supported Codex, Claude, and Copilot builds contain the
@@ -121,7 +121,7 @@ Foundation/Domain catalog.
 
 Retiring the development Runtime does not retire its validation obligations.
 Source/registry/selector/projection/nested-link completeness, routing and
-context-budget regression, and expanded all-163 Layer 3 stress validation run
+context-budget regression, and expanded all-177 Layer 3 stress validation run
 through internal validators and tests. Any complete Layer 3 projection must be
 created only in cleaned temporary storage outside the repository, `dist/`,
 installation packages, and Host discovery.
@@ -188,7 +188,7 @@ non-defect adjacency rationale needs one from each package. The schema-3-only
 phrase matcher cannot bridge generic tokens, lines, or anchors. Relaxed defect
 and uniform-template guards are fingerprinted review contracts;
 schema 1 and schema 2 semantics remain unchanged. Formal release also
-requires all 188 non-Control Skill packages to be accepted with zero
+requires all 203 non-Control Skill packages to be accepted with zero
 professional corrections and zero unresolved professional disagreements.
 Qualification claims are static declarations and do not prove reviewer identity,
 credentials, or experience. Professional schema 1 and schema 2 remain
@@ -212,10 +212,10 @@ every mode.
 Formal Release additionally requires every fixed attestation to be byte-equal to
 `HEAD` and clean; Git history is the audit trail for replaced attestations.
 Runtime plan lineage is capped at eight rounds before a full-fresh checkpoint. A
-review-contract change forces all 188 packages fresh; a local binding change
+review-contract change forces all 203 packages fresh; a local binding change
 reopens only the package and its machine-derived affected dependencies.
 
-The Phase 2 inventory is the current and final inventory. Formal Release requires
+The authorized expansion replaces the Phase 2 inventory baseline. Current counts are validated against physical source identities and registry declarations; they are not fixed ceilings. Formal Release requires
 each canonical fixed attestation to be current to its selected sources and
 review contracts, byte-equal to `HEAD`, and clean. Stale evidence cannot satisfy
 Formal Release and must be replaced in place after a fresh review. The

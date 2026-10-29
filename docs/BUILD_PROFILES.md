@@ -3,23 +3,23 @@
 rd-skills has one Runtime build. This filename is retained for link
 compatibility; it does not define a selectable Profile dimension.
 
-The source inventory is 1 Control, 25 Professional, 150 Foundation, and 13
-Domain Skills: 189 total and 188 non-Control. The Runtime exposes 26 top-level
-Skills: 1 Control and 25 Professional. Foundation and Domain Skills never enter
+The source inventory is 1 Control, 26 Professional, 157 Foundation, and 20
+Domain Skills: 204 total and 203 non-Control. The Runtime exposes 27 top-level
+Skills: 1 Control and 26 Professional. Foundation and Domain Skills never enter
 Host top-level discovery.
 
 | Runtime surface | Count | Delivery |
 | --- | ---: | --- |
 | Control | 1 | top-level Skill |
-| Professional | 25 | top-level Skill and Primary Route owner |
-| Product Foundation | 141 | capability modifiers compiled behind Professional selectors |
-| Domain | 13 | `modifier-only` Layer 3 items compiled behind Professional selectors |
+| Professional | 26 | top-level Skill and Primary Route owner |
+| Product Foundation | 148 | capability modifiers compiled behind Professional selectors |
+| Domain | 20 | `modifier-only` Layer 3 items compiled behind Professional selectors |
 | Authoring/internal Foundation | 9 | source and routing-validation inventory only |
 
-The resulting Runtime delivery is 26/154/9
+The resulting Runtime delivery is 27/168/9
 top-level/targeted/routing-only entries. The source Layer 3 catalog contains
-163 entries. Nothing is deleted to reduce Host-visible Skill count: all 150
-Foundation and 13 Domain sources remain governed and validated.
+177 entries. Nothing is deleted to reduce Host-visible Skill count: all 157
+Foundation and 20 Domain sources remain governed and validated.
 
 The fixed request path is:
 
@@ -42,7 +42,7 @@ or runtime-discovery choice. New `full` or `dev` output is rejected, and a build
 removes only preflighted retired output directories inside its managed roots.
 
 The build manifest records the complete Foundation and Domain source inventory,
-Foundation scopes, the 154 compiled candidates, 9 routing-only entries,
+Foundation scopes, the 168 compiled candidates, 9 routing-only entries,
 Professional ownership, and `compiled_layer3_format: ai-consumption-v1`.
 Manifests also include the authoritative host matrix and an
 `authoritative_build_inputs` snapshot. That snapshot binds the complete `src/`
@@ -72,11 +72,11 @@ physical Markdown files. Exactly 1 physical Reference is unindexed: the
 Foundation authoring template Reference.
 
 Retiring the development Runtime does not retire its proof obligations.
-`scripts/validate-built-skill-reference-links.py` projects all 163 Foundation
+`scripts/validate-built-skill-reference-links.py` projects all 177 Foundation
 and Domain sources once into a cleaned temporary directory outside the
 repository and `dist/`. It checks source/registry agreement, compact projection
 shape, selector ownership and reachability, nested files and links, symlink
-containment, the 154 Runtime JIT entries, and the 9 non-Runtime authoring entries.
+containment, the 168 Runtime JIT entries, and the 9 non-Runtime authoring entries.
 
 ## Preserved Routing Semantics
 

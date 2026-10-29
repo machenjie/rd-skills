@@ -169,9 +169,9 @@ def _prior_artifacts(
 
 
 
-def _historical_schema1_packet() -> dict:
+def _historical_schema1_packet(*, layer_counts: dict | None = None) -> dict:
     packet = copy.deepcopy(_legacy_schema1_packet())
-    remaining = copy.deepcopy(PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS)
+    remaining = copy.deepcopy(layer_counts or PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS)
     targets = []
     for target in packet["professional_targets"]:
         layer = target["layer"]
@@ -240,10 +240,16 @@ def _historical_schema3_adapter_fixture(*, cap50: bool) -> tuple[dict, dict, dic
         review_id = PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_ID
         review_contract = PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT
         packet_sha = PANEL.PROFESSIONAL_HISTORICAL_V1_PACKET_SHA256
-        target_count = PANEL.PROFESSIONAL_PACKAGE_COUNT
+        target_count = PANEL.PROFESSIONAL_PHASE2_PACKAGE_COUNT
         include_derivation = True
         maximum = 52
-        targets = packet["professional_targets"]
+        remaining = copy.deepcopy(PANEL.PROFESSIONAL_PHASE2_LAYER_COUNTS)
+        targets = []
+        for target in packet["professional_targets"]:
+            layer = target["layer"]
+            if remaining[layer] > 0:
+                targets.append(target)
+                remaining[layer] -= 1
     if len(targets) != target_count:
         raise AssertionError("historical adapter fixture target count is stale")
     historical_selection = PANEL._professional_adjacency_selection_contract_v1(
@@ -1893,6 +1899,16 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
 
 
 class ProfessionalPacketCompatibilityTests(unittest.TestCase):
+    def test_phase2_schema1_packet_stays_auditable_without_current_inventory_identity(self) -> None:
+        packet = _historical_schema1_packet(layer_counts=PANEL.PROFESSIONAL_PHASE2_LAYER_COUNTS)
+        PANEL._validate_professional_completeness_packet_v1(packet)
+        self.assertEqual(188, len(packet["professional_targets"]))
+        self.assertNotEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(packet["professional_targets"]))
+        current = copy.deepcopy(_legacy_schema1_packet())
+        current["panel_contract"]["required_target_count"] = 188
+        with self.assertRaises(PANEL.PanelReviewError):
+            PANEL._validate_professional_completeness_packet_v1(current)
+
     def test_schema1_inventory_count_is_a_strict_closed_integer_set(self) -> None:
         historical = _historical_schema1_packet()
         current = copy.deepcopy(_legacy_schema1_packet())
@@ -1903,7 +1919,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS,
         )
         self.assertEqual(
-            {"professional": 25, "foundation": 150, "domain": 13},
+            {layer: len(names) for layer, names in PANEL.SOURCE_SKILL_INVENTORY.items() if layer != "control"},
             PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS,
         )
         self.assertTrue(
@@ -2000,7 +2016,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             packet["professional_targets"]
         )
         after = CARRY.canonical_json_bytes(packet)
-        self.assertEqual(188, len(bindings))
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(bindings))
         self.assertEqual(before, after)
         self.assertEqual(
             after,

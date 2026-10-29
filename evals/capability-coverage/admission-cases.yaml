@@ -3495,3 +3495,423 @@ cases:
     case_kind: simple
     prompt: "Implement an accepted backend response label correction."
     expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-numerical-correctness-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-numerical-correctness-selected"}
+    layer: "foundation"
+    skill: "numerical-correctness"
+    case_kind: "selected"
+    prompt: "Implement a standalone Python library numerical error tolerance repair with unchanged public API."
+    expected: {"selected": true, "primary_skill": "library-tool-product-builder"}
+  - id: capcov-admission-foundation-numerical-correctness-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-numerical-correctness-domain-owned"}
+    layer: "foundation"
+    skill: "numerical-correctness"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-numerical-correctness-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-numerical-correctness-adjacent"}
+    layer: "foundation"
+    skill: "numerical-correctness"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-numerical-correctness-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-numerical-correctness-simple"}
+    layer: "foundation"
+    skill: "numerical-correctness"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; numerical error tolerance remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-php-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-php-professional-usage-selected"}
+    layer: "foundation"
+    skill: "php-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement a backend PHP worker state cleanup repair."
+    expected: {"selected": true, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-php-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-php-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "php-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-php-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-php-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "php-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-php-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-php-professional-usage-simple"}
+    layer: "foundation"
+    skill: "php-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; PHP autoload and worker state remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-ruby-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-ruby-professional-usage-selected"}
+    layer: "foundation"
+    skill: "ruby-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement a backend Ruby exception ensure cleanup repair."
+    expected: {"selected": true, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-ruby-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-ruby-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "ruby-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-ruby-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-ruby-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "ruby-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-ruby-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-ruby-professional-usage-simple"}
+    layer: "foundation"
+    skill: "ruby-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; Ruby exception and ensure cleanup remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-dart-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-dart-professional-usage-selected"}
+    layer: "foundation"
+    skill: "dart-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement an accepted Android application Dart Future completion handler."
+    expected: {"selected": true, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-dart-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-dart-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "dart-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-dart-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-dart-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "dart-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-dart-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-dart-professional-usage-simple"}
+    layer: "foundation"
+    skill: "dart-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; Dart Future and stream subscription cancellation remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-beam-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-beam-professional-usage-selected"}
+    layer: "foundation"
+    skill: "beam-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement a backend Elixir supervisor restart and mailbox pressure repair."
+    expected: {"selected": true, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-beam-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-beam-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "beam-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-beam-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-beam-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "beam-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-beam-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-beam-professional-usage-simple"}
+    layer: "foundation"
+    skill: "beam-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; Elixir supervisor restart and mailbox pressure remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-r-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-r-professional-usage-selected"}
+    layer: "foundation"
+    skill: "r-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement a standalone R library missingness and vectorization shape repair with unchanged public API."
+    expected: {"selected": true, "primary_skill": "library-tool-product-builder"}
+  - id: capcov-admission-foundation-r-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-r-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "r-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-r-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-r-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "r-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-r-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-r-professional-usage-simple"}
+    layer: "foundation"
+    skill: "r-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; R missingness and vectorization shape remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-julia-professional-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-julia-professional-usage-selected"}
+    layer: "foundation"
+    skill: "julia-professional-usage"
+    case_kind: "selected"
+    prompt: "Implement a standalone Julia library broadcast aliasing repair with unchanged public API."
+    expected: {"selected": true, "primary_skill": "library-tool-product-builder"}
+  - id: capcov-admission-foundation-julia-professional-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-julia-professional-usage-domain-owned"}
+    layer: "foundation"
+    skill: "julia-professional-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-julia-professional-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-julia-professional-usage-adjacent"}
+    layer: "foundation"
+    skill: "julia-professional-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-julia-professional-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-julia-professional-usage-simple"}
+    layer: "foundation"
+    skill: "julia-professional-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; Julia broadcast and aliasing remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-hosted-app-extension-explicit
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-explicit"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "explicit"
+    prompt: "Implement browser extension background lifetime recovery."
+    expected: {"selected": true, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-domain-hosted-app-extension-unknown
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-unknown"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "unknown"
+    prompt: "Prepare an installed-client lifecycle change whose target platform is unknown."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-domain-hosted-app-extension-non-target
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-non-target"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "non-target"
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-hosted-app-extension-cross-platform
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-cross-platform"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "cross-platform"
+    prompt: "Implement browser extension and IDE extension host permission revocation handling."
+    expected: {"selected": true, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-domain-hosted-app-extension-language-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-language-negative"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "language-negative"
+    prompt: "Implement a backend TypeScript runtime validation correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-hosted-app-extension-release-framework-mismatch
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-hosted-app-extension-release-framework-mismatch"}
+    layer: "domain"
+    skill: "hosted-app-extension"
+    case_kind: "release-framework-mismatch"
+    prompt: "Implement browser extension background lifetime recovery. The release packaging is unchanged."
+    expected: {"selected": true, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-domain-realtime-media-extension-explicit
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-explicit"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "explicit"
+    prompt: "Fix a frontend component WebRTC jitter clock and packet loss recovery."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-realtime-media-extension-unknown
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-unknown"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "unknown"
+    prompt: "Prepare an installed-client lifecycle change whose target platform is unknown."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-domain-realtime-media-extension-non-target
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-non-target"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "non-target"
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-realtime-media-extension-cross-platform
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-cross-platform"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "cross-platform"
+    prompt: "Fix a frontend component WebRTC jitter clock synchronization across browsers."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-realtime-media-extension-language-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-language-negative"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "language-negative"
+    prompt: "Implement a backend TypeScript runtime validation correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-realtime-media-extension-release-framework-mismatch
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-realtime-media-extension-release-framework-mismatch"}
+    layer: "domain"
+    skill: "realtime-media-extension"
+    case_kind: "release-framework-mismatch"
+    prompt: "Fix a frontend component WebRTC jitter clock and packet loss recovery. The release packaging is unchanged."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-game-simulation-extension-explicit
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-explicit"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "explicit"
+    prompt: "Fix a frontend component game simulation fixed timestep replay."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-game-simulation-extension-unknown
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-unknown"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "unknown"
+    prompt: "Prepare an installed-client lifecycle change whose target platform is unknown."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-domain-game-simulation-extension-non-target
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-non-target"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "non-target"
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-game-simulation-extension-cross-platform
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-cross-platform"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "cross-platform"
+    prompt: "Fix a frontend component game simulation fixed timestep replay across browsers."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-game-simulation-extension-language-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-language-negative"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "language-negative"
+    prompt: "Implement a backend TypeScript runtime validation correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-game-simulation-extension-release-framework-mismatch
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-game-simulation-extension-release-framework-mismatch"}
+    layer: "domain"
+    skill: "game-simulation-extension"
+    case_kind: "release-framework-mismatch"
+    prompt: "Fix a frontend component game simulation fixed timestep replay. The release packaging is unchanged."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-graphics-compute-extension-explicit
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-explicit"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "explicit"
+    prompt: "Fix a frontend component WebGPU shader buffer layout synchronization."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-graphics-compute-extension-unknown
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-unknown"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "unknown"
+    prompt: "Prepare an installed-client lifecycle change whose target platform is unknown."
+    expected: {"selected": false, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-domain-graphics-compute-extension-non-target
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-non-target"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "non-target"
+    prompt: "Implement an accepted backend response label correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-graphics-compute-extension-cross-platform
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-cross-platform"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "cross-platform"
+    prompt: "Fix a frontend component WebGPU shader buffer layout synchronization across supported adapters."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-domain-graphics-compute-extension-language-negative
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-language-negative"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "language-negative"
+    prompt: "Implement a backend TypeScript runtime validation correction."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-domain-graphics-compute-extension-release-framework-mismatch
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-domain-graphics-compute-extension-release-framework-mismatch"}
+    layer: "domain"
+    skill: "graphics-compute-extension"
+    case_kind: "release-framework-mismatch"
+    prompt: "Fix a frontend component WebGPU shader buffer layout synchronization. The release packaging is unchanged."
+    expected: {"selected": true, "primary_skill": "frontend-change-builder"}
+  - id: capcov-admission-foundation-data-format-contract-usage-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-data-format-contract-usage-selected"}
+    layer: "foundation"
+    skill: "data-format-contract-usage"
+    case_kind: "selected"
+    prompt: "Implement a standalone TypeScript library incremental decoder truncated frame repair with unchanged public API."
+    expected: {"selected": true, "primary_skill": "library-tool-product-builder"}
+  - id: capcov-admission-foundation-data-format-contract-usage-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-data-format-contract-usage-domain-owned"}
+    layer: "foundation"
+    skill: "data-format-contract-usage"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-data-format-contract-usage-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-data-format-contract-usage-adjacent"}
+    layer: "foundation"
+    skill: "data-format-contract-usage"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-data-format-contract-usage-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-data-format-contract-usage-simple"}
+    layer: "foundation"
+    skill: "data-format-contract-usage"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; incremental decoder truncated frame behavior remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}
+  - id: capcov-admission-foundation-search-analytics-design-selected
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-search-analytics-design-selected"}
+    layer: "foundation"
+    skill: "search-analytics-design"
+    case_kind: "selected"
+    prompt: "Using repository source evidence explain the experiment randomization confidence interval decision."
+    expected: {"selected": true, "primary_skill": "engineering-change-analysis"}
+  - id: capcov-admission-foundation-search-analytics-design-domain-owned
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-search-analytics-design-domain-owned"}
+    layer: "foundation"
+    skill: "search-analytics-design"
+    case_kind: "domain-owned"
+    prompt: "Implement an accepted Android application lifecycle restoration fix."
+    expected: {"selected": false, "primary_skill": "installed-client-change-builder"}
+  - id: capcov-admission-foundation-search-analytics-design-adjacent
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-search-analytics-design-adjacent"}
+    layer: "foundation"
+    skill: "search-analytics-design"
+    case_kind: "adjacent"
+    prompt: "Implement a repository build graph change."
+    expected: {"selected": false, "primary_skill": "repository-tooling-change-builder"}
+  - id: capcov-admission-foundation-search-analytics-design-simple
+    main_execution: {"producer": "main-control-agent", "task_id": "capcov-admission-foundation-search-analytics-design-simple"}
+    layer: "foundation"
+    skill: "search-analytics-design"
+    case_kind: "simple"
+    prompt: "Implement an accepted backend label correction; experiment randomization and confidence intervals remain unchanged."
+    expected: {"selected": false, "primary_skill": "backend-change-builder"}

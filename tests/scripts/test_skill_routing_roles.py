@@ -76,6 +76,10 @@ class SkillRoutingRoleTests(unittest.TestCase):
 
     def test_task_modifiers_use_active_scope_evidence(self) -> None:
         cases = [
+            ("Implement a backend PHP repair with autoload comparison behavior.", ["php-professional-usage"]),
+            ("Implement a backend PHP repair with autoload comparison behavior with build graph unchanged.", ["php-professional-usage"]),
+            ("Implement a backend Dart Future cancellation handler.", ["dart-professional-usage"]),
+            ("Implement a backend label correction with Dart Future cancellation unchanged.", []),
             ("Implement an accepted backend label correction with the initialization contract, build graph, and dependency graph unchanged.", []),
             ("Implement a backend label correction with no structural refactor.", []),
             ("Implement a backend dependency graph compatibility change while build configuration remains unchanged.", ["package-dependency-management"]),
@@ -90,6 +94,21 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 self.assertEqual("backend-change-builder", actual["primary_skill"])
                 self.assertEqual(expected, actual["layer3_skills"])
                 self.assertIsNone(actual["review_skill"])
+
+    def test_mixed_mechanism_clauses_preserve_active_with_and_unchanged_tail(self) -> None:
+        cases = [
+            ("Implement a backend numerical repair with floating point error tolerance with codec behavior unchanged.", "backend-change-builder", ["numerical-correctness"]),
+            ("Implement a backend label repair with floating point error tolerance unchanged.", "backend-change-builder", []),
+            ("Implement a backend incremental codec repair with a partial varint prefix and maximum frame length with floating point arithmetic unchanged.", "backend-change-builder", ["data-format-contract-usage"]),
+            ("Implement a backend label repair with the incremental codec and partial varint prefix behavior unchanged.", "backend-change-builder", []),
+            ("Using repository source evidence explain the experiment with sequential peeking and confidence interval corrections with codec behavior unchanged.", "engineering-change-analysis", ["search-analytics-design"]),
+            ("Using repository source evidence explain an experiment with sequential peeking and confidence interval rules unchanged.", "engineering-change-analysis", ["repository-context-map"]),
+        ]
+        for index, (prompt, primary, expected) in enumerate(cases):
+            with self.subTest(prompt=prompt):
+                actual = _route(prompt, task_id=f"mixed-mechanism-{index}")
+                self.assertEqual(primary, actual["primary_skill"])
+                self.assertEqual(expected, actual["layer3_skills"])
 
     def test_daily_development_modes_preserve_implementation_ownership(self) -> None:
         cases = load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]

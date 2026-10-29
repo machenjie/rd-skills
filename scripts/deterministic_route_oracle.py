@@ -1273,7 +1273,7 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                 ),
                 "boundary_atoms": ("delegated authority", "consequential"),
             },
-            'retrieval-quality': {'trigger_atoms': ('rag', 'retrieval', 'embedding'),
+            'retrieval-quality': {'trigger_atoms': ('rag',),
              'domain_signals': ('rag', 'retrieval', 'embedding'),
              'boundary_signals': ('chunking',
                                   'reranking',
@@ -1287,7 +1287,7 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                                 'grounded answer',
                                 'retrieval quality',
                                 'citation')},
-            'inference-performance': {'trigger_atoms': ('llm', 'model inference'),
+            'inference-performance': {'trigger_atoms': ('llm',),
              'domain_signals': ('llm', 'model inference'),
              'boundary_signals': ('prefill',
                                   'decode',
@@ -9038,7 +9038,7 @@ def _classify_professional_families(
                 projected_statement = candidate
                 projected_changed_scopes.append(candidate)
         effect_scopes: list[str] = []
-        for _scope_id, scope in _bounded_effect_scopes(projected_statement):
+        for scope in _active_knowledge_scopes(projected_statement):
             if not _scope_is_unchanged(scope):
                 effect_scopes.append(scope)
                 continue
@@ -9143,7 +9143,7 @@ def _classify_professional_families(
                 re.search(
                     r"\b(?:backend|service|worker)\b[^.;!?]{0,100}"
                     r"\bbehavior\b[^.;!?]{0,40}\bunchanged\b",
-                    value,
+                    effect_value,
                 )
             )
             or "retry idempotency" in value
@@ -9213,7 +9213,7 @@ def _classify_professional_families(
                     r"\b(?:android|ios|ipados|installed[- ]client|macos|"
                     r"windows|linux\s+desktop)\b[^.;!?]{0,100}"
                     r"\bbehavior\b[^.;!?]{0,40}\bunchanged\b",
-                    value,
+                    effect_value,
                 )
             )
             or any(
@@ -9817,16 +9817,22 @@ def _active_knowledge_scopes(text: str) -> tuple[str, ...]:
         # Keep qualified lists together until their effect is known. Splitting
         # commas first turns "X, Y and Z unchanged" into false positive X/Y.
         clauses = re.split(
-            r"\b(without|with)\b|\band\s+(?=(?:keep|leave|preserve)\b)",
+            r"\b(without)\b|\band\s+(?=(?:keep|leave|preserve)\b)",
             statement,
         )
         qualifier = ""
         for clause in clauses:
             if clause is None:
                 continue
-            if clause in {"with", "without"}:
+            if clause == "without":
                 qualifier = clause
                 continue
+            # "with" connects active language and mechanism evidence. Cut only
+            # a proven unchanged suffix, from the innermost qualifier outward.
+            for match in reversed(list(re.finditer(r"\bwith\b", clause))):
+                suffix = _normalize_effect_scope(clause[match.end():])
+                if _scope_is_unchanged(suffix):
+                    clause = clause[:match.start()]
             value = _normalize_effect_scope(clause)
             if qualifier == "without":
                 value = "without " + value

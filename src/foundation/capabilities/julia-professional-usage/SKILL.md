@@ -23,8 +23,8 @@ Protect Julia dispatch, array meaning, aliasing, missing-value handling, and rep
 
 ## High-Value Rules
 
-- Bind dispatch and conversion to actual argument types, including abstract or mixed element types.
-- Distinguish matrix operations from broadcasted element operations.
+- Validate dispatch and conversion against actual argument types, including abstract or mixed element types.
+- Classify matrix operations separately from broadcasted element operations.
 - Validate axes and singleton expansion against the intended physical or statistical shape.
 - Trace views and aliases before in-place mutation.
 - Define how `missing`, NaN, and invalid values affect predicates, reductions, and accepted results.

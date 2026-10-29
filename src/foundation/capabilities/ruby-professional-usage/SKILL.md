@@ -24,12 +24,12 @@ Protect Ruby control flow, dynamic calls, resource cleanup, and concurrent conte
 ## High-Value Rules
 
 - Trace the real receiver, method lookup, visibility, and missing-method behavior before changing dynamic calls.
-- Distinguish blocks, ordinary Procs, and lambdas for arguments, return, break, and escaping lifetime.
+- Classify blocks, ordinary Procs, and lambdas for arguments, return, break, and escaping lifetime.
 - Inspect lazy enumeration and repeated traversal before moving side effects across iteration boundaries.
 - Match rescue scope to the intended exception family and preserve cleanup through `ensure`.
-- Separate shared object state, thread variables, and fiber-local context.
+- Define separate ownership for shared object state, thread variables, and fiber-local context.
 - Observe thread failures and completion through the actual concurrency owner.
-- Bind runtime-specific scheduling assumptions to the selected Ruby engine and version.
+- Validate runtime-specific scheduling assumptions against the selected Ruby engine and version.
 
 ## Anti-Patterns
 

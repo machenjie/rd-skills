@@ -23,7 +23,7 @@ and release authority.
 
 ## High-Value Rules
 
-- Bind the review to its latest diff or fixed snapshot, inspected paths, questions, and reachable consumers.
+- Define review scope from its latest diff or fixed snapshot, inspected paths, questions, and reachable consumers.
 - Trace consequential input, authority, mutation, effect, failure, cleanup, and output paths.
 - Verify source APIs and assumptions.
 - Match evidence to the failure mechanism and classify `current-task`, `scope-blocker`, or `adjacent` before severity.

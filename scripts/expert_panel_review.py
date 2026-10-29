@@ -23,6 +23,7 @@ from typing import Any, Callable, Iterable
 try:
     from validation_utils import (
         SKILL_EXPERTISE_TAGS,
+        SOURCE_SKILL_INVENTORY,
         ValidationProblem,
         load_yaml_file,
         reference_contracts,
@@ -31,6 +32,7 @@ except ModuleNotFoundError:  # Support direct importlib loading in isolated test
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from validation_utils import (
         SKILL_EXPERTISE_TAGS,
+        SOURCE_SKILL_INVENTORY,
         ValidationProblem,
         load_yaml_file,
         reference_contracts,
@@ -117,13 +119,13 @@ PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION = (
 PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH = (
     panel_contracts.PROFESSIONAL_MAXIMUM_PLAN_LINEAGE_DEPTH
 )
-PROFESSIONAL_PACKAGE_COUNT = 188
+PROFESSIONAL_PACKAGE_COUNT = sum(len(names) for layer, names in SOURCE_SKILL_INVENTORY.items() if layer != "control")
 PROFESSIONAL_LEGACY_PACKAGE_COUNT = 162
 PROFESSIONAL_CURRENT_LAYER_COUNTS = {
-    "professional": 25,
-    "foundation": 150,
-    "domain": 13,
+    layer: len(names) for layer, names in SOURCE_SKILL_INVENTORY.items() if layer != "control"
 }
+PROFESSIONAL_PHASE2_PACKAGE_COUNT = 188
+PROFESSIONAL_PHASE2_LAYER_COUNTS = {"professional": 25, "foundation": 150, "domain": 13}
 PROFESSIONAL_LEGACY_LAYER_COUNTS = {
     "professional": 22,
     "foundation": 133,
@@ -5191,6 +5193,7 @@ def _validate_professional_completeness_packet_v1(packet: dict[str, Any]) -> Non
     )
     if type(target_count) is not int or target_count not in {
         PROFESSIONAL_LEGACY_PACKAGE_COUNT,
+        PROFESSIONAL_PHASE2_PACKAGE_COUNT,
         PROFESSIONAL_PACKAGE_COUNT,
     }:
         raise PanelReviewError(
@@ -5349,6 +5352,8 @@ def _validate_professional_completeness_packet_v1(packet: dict[str, Any]) -> Non
     expected_layer_counts = (
         PROFESSIONAL_LEGACY_LAYER_COUNTS
         if target_count == PROFESSIONAL_LEGACY_PACKAGE_COUNT
+        else PROFESSIONAL_PHASE2_LAYER_COUNTS
+        if target_count == PROFESSIONAL_PHASE2_PACKAGE_COUNT
         else PROFESSIONAL_CURRENT_LAYER_COUNTS
     )
     if (
@@ -5428,6 +5433,8 @@ def _professional_package_profile(
     validation_mode = _closed_validation_mode(validation_mode)
     if target_count == PROFESSIONAL_PACKAGE_COUNT:
         return PROFESSIONAL_CURRENT_LAYER_COUNTS, False
+    if validation_mode == VALIDATION_MODE_HISTORICAL and target_count == PROFESSIONAL_PHASE2_PACKAGE_COUNT:
+        return PROFESSIONAL_PHASE2_LAYER_COUNTS, True
     if (
         validation_mode == VALIDATION_MODE_HISTORICAL
         and target_count == PROFESSIONAL_LEGACY_PACKAGE_COUNT
@@ -9150,18 +9157,18 @@ def _professional_v3_historical_v1_view(
             "historical schema-3 v1 packet binding is stale"
         )
     targets = packet.get("professional_targets")
-    if not isinstance(targets, list) or len(targets) != PROFESSIONAL_PACKAGE_COUNT:
+    if not isinstance(targets, list) or len(targets) != PROFESSIONAL_PHASE2_PACKAGE_COUNT:
         raise PanelReviewError(
             "historical schema-3 v1 target binding is stale"
         )
     adapted = copy.deepcopy(packet)
     expected_historical_selection = _professional_adjacency_selection_contract_v1(
-        target_count=PROFESSIONAL_PACKAGE_COUNT,
+        target_count=PROFESSIONAL_PHASE2_PACKAGE_COUNT,
         include_derivation=True,
         maximum_required_candidates_per_target=52,
     )
     expected_current_selection = _professional_adjacency_selection_contract(
-        target_count=PROFESSIONAL_PACKAGE_COUNT,
+        target_count=PROFESSIONAL_PHASE2_PACKAGE_COUNT,
         include_derivation=True,
     )
     selections = [

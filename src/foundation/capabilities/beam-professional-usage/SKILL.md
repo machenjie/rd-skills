@@ -24,13 +24,13 @@ Protect process identity, message correlation, supervision semantics, and distri
 ## High-Value Rules
 
 - Give process state and external effects separate recovery contracts.
-- Distinguish linked exit propagation from monitor notifications.
-- Correlate replies with operation references and current process generations.
+- Classify linked exit propagation separately from monitor notifications.
+- Map replies to operation references and current process generations.
 - Bound mailbox growth and inspect selective receives that leave unrelated messages behind.
 - Choose supervision strategy and restart limits from actual child dependencies.
 - Treat timeout and node disconnection as possible unknown outcomes.
 - Verify cancellation, retry, and deduplication at the external effect owner.
-- Bind OTP behavior and version assumptions to the deployed runtime.
+- Validate OTP behavior and version assumptions against the deployed runtime.
 
 ## Anti-Patterns
 

@@ -19,6 +19,10 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+# Current ownership is authored independently from install manifests.
+sys.path.insert(0, str(ROOT / "scripts"))
+from validation_utils import SOURCE_SKILL_INVENTORY
+
 MANIFEST_NAME = ".changeforge-install-manifest.json"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
 COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
@@ -29,10 +33,11 @@ HOST_PRODUCT_SURFACES_SOURCE = (
 CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 RUNTIME_PROFILE = "recommended"
-RUNTIME_SKILL_COUNT = 26
-CURRENT_RUNTIME_PROFILE_COUNTS = {"recommended": 26}
+RUNTIME_SKILL_COUNT = len(SOURCE_SKILL_INVENTORY["control"]) + len(SOURCE_SKILL_INVENTORY["professional"])
+CURRENT_RUNTIME_PROFILE_COUNTS = {"recommended": RUNTIME_SKILL_COUNT}
 HISTORICAL_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
-CURRENT_INVENTORY_GENERATION = "runtime-26"
+CURRENT_INVENTORY_GENERATION = "runtime-coverage-v1"
+PHASE2_INVENTORY_GENERATION = "runtime-26"
 HISTORICAL_INVENTORY_GENERATION = "runtime-27"
 HISTORICAL_UNCHANGED_LAYER_SHA256 = {
     "control": "46f66196a4887257b390bbd6302c1160dab50b6c078b4afacac520b8ee3c04e4",
@@ -69,6 +74,18 @@ HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS = frozenset(
         "task-dag-planner",
     }
 )
+# Exact Phase 2 source identities at 1b0892b2b19d2f150aa068128685f0840be11660.
+PHASE2_LAYER_INVENTORIES = {
+    'control': frozenset(['engineering-control-plane']),
+    'professional': frozenset(['acceptance-criteria-builder', 'ai-code-review-refactor', 'architecture-impact-reviewer', 'backend-change-builder', 'change-documentation-gate', 'change-intake-compiler', 'data-api-contract-changer', 'data-middleware-change-builder', 'delivery-release-gate', 'domain-impact-modeler', 'engineering-artifact-review', 'engineering-change-analysis', 'experience-impact-modeler', 'frontend-change-builder', 'high-risk-design-review', 'incident-response-coordinator', 'installed-client-change-builder', 'integration-change-builder', 'logging-design-gate', 'platform-infrastructure-change-builder', 'quality-test-gate', 'reliability-observability-gate', 'repository-tooling-change-builder', 'security-privacy-gate', 'task-dag-planner']),
+    'foundation': frozenset(['acceptance-standard-definition', 'accessibility-inclusive-design', 'agent-execution-discipline', 'agent-tool-permission-sandbox', 'algorithm-data-structure-selection', 'api-contract-design', 'architecture-enforcement-tooling', 'architecture-style-selection', 'architecture-tradeoff-analysis', 'async-job-design', 'audit-evidence-integrity', 'authentication-authorization', 'authentication-security', 'backup-recovery', 'build-tool-professional-usage', 'business-invariant-analysis', 'business-rule-extraction', 'cache-design', 'ci-cd', 'cleanup-deletion-governance', 'cli-daemon-interface-design', 'client-application-testing', 'client-lifecycle-state-restoration', 'code-clarity-maintainability', 'code-element-professionalism', 'code-review', 'concurrency-control', 'configuration-runtime-policy', 'consumer-impact-analysis', 'containerization', 'contract-testing', 'controller-api-implementation', 'cpp-professional-usage', 'cryptography-key-lifecycle', 'csharp-dotnet-professional-usage', 'data-format-contract-usage', 'data-migration-design', 'data-model-design', 'data-side-effect-flow-tracing', 'degradation-circuit-breaking', 'dependency-vulnerability-scanning', 'dependency-wiring-lifecycle', 'design-pattern-selection', 'design-system-rules', 'distributed-workflow-consistency', 'documentation-generation', 'domain-event-modeling', 'domain-logic-implementation', 'domain-object-identification', 'dto-schema-design', 'e2e-testing', 'error-code-design', 'event-driven-architecture', 'extensibility-design', 'failure-contract-design', 'failure-diagnosis', 'file-storage-processing', 'filesystem-process-safety', 'form-validation-design', 'frontend-api-integration', 'frontend-testing', 'git-professional-usage', 'go-professional-usage', 'i18n-timezone-money-safety', 'idempotency-retry-design', 'implementation-structure-design', 'indexing-query-optimization', 'information-architecture', 'infrastructure-as-code-safety', 'input-validation', 'integration-testing', 'interaction-state-modeling', 'java-jvm-professional-usage', 'kotlin-professional-usage', 'kubernetes-gateway', 'language-idiom-enforcement', 'language-performance-safety', 'language-runtime-selection', 'language-testing-strategy', 'layered-architecture-design', 'linux-systems-professional-usage', 'logging-error-handling', 'message-queue-design', 'microservice-splitting', 'minimal-correct-implementation', 'model-boundary-mapping', 'module-boundary-design', 'network-protocol-gateway-usage', 'nodejs-runtime-professional-usage', 'non-goal-boundary-definition', 'nosql-database', 'observability', 'observable-action-sequence-analysis', 'offline-sync-conflict-resolution', 'package-dependency-management', 'page-component-decomposition', 'performance-budgeting', 'permission-boundary-modeling', 'plan-execution-consistency', 'powershell-professional-usage', 'privacy-data-lifecycle', 'profiling', 'project-initialization', 'prototype-description', 'python-professional-usage', 'refactoring', 'regression-testing', 'relational-database', 'release-rollback', 'repeat-failure-analysis', 'repository-context-map', 'repository-impact-inspection', 'repository-persistence', 'requirement-clarification', 'requirement-structuring', 'routing-navigation-design', 'rust-professional-usage', 'scenario-decomposition', 'sdk-library-contract-design', 'search-analytics-design', 'secret-configuration-security', 'senior-programming-judgment-core', 'service-business-logic', 'shell-cli-professional-usage', 'skill-authoring-expert', 'skill-efficacy-benchmark', 'solution-optimality-evaluation', 'sql-professional-usage', 'state-machine-modeling', 'state-management-design', 'swift-professional-usage', 'targeted-validation-selection', 'task-context-selection', 'task-dag-decomposition', 'task-handoff-context', 'technology-stack-selection', 'tenant-isolation', 'test-data-management', 'test-strategy', 'testability-seam-design', 'threat-modeling', 'transaction-consistency', 'typescript-professional-usage', 'unit-testing', 'use-case-modeling', 'user-flow-modeling', 'user-role-identification', 'version-compatibility', 'web-platform-professional-usage', 'web-security']),
+    'domain': frozenset(['ai-product-extension', 'android-platform-extension', 'bigdata-product-extension', 'cloud-platform-extension', 'cross-platform-client-extension', 'ios-ipados-platform-extension', 'iot-embedded-extension', 'linux-desktop-platform-extension', 'low-level-systems-extension', 'macos-platform-extension', 'payment-trading-extension', 'web3-product-extension', 'windows-platform-extension']),
+}
+PHASE2_LAYER_SHA256 = {
+    **HISTORICAL_UNCHANGED_LAYER_SHA256,
+    "professional": "f5fdc194ab6db5b1a357681e261194663ba863c62c2c873a11876ce796611f44",
+}
+
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -789,7 +806,7 @@ def validate_runtime_asset_bundles(
     bindings = metadata.get("runtime_asset_bindings")
     if (
         not isinstance(professionals, list)
-        or len(professionals) != 25
+        or set(professionals) != set(SOURCE_SKILL_INVENTORY["professional"])
         or any(not isinstance(name, str) or not _valid_skill_name(name) for name in professionals)
         or len(set(professionals)) != len(professionals)
         or not isinstance(bindings, dict)
@@ -1196,12 +1213,7 @@ def _authoritative_current_skill_inventories() -> dict[str, Any]:
         registries = module._load_registries()
     except Exception as exc:
         raise InstallError(f"cannot load authoritative Skill registries: {exc}") from exc
-    expected_counts = {
-        "control": 1,
-        "professional": 25,
-        "foundation": 150,
-        "domain": 13,
-    }
+    expected_counts = {layer: len(names) for layer, names in SOURCE_SKILL_INVENTORY.items()}
     layers: dict[str, set[str]] = {}
     all_names: set[str] = set()
     for layer, expected_count in expected_counts.items():
@@ -1219,6 +1231,12 @@ def _authoritative_current_skill_inventories() -> dict[str, Any]:
             raise InstallError(
                 f"authoritative {layer} registry must contain exactly "
                 f"{expected_count} unique Skills"
+            )
+        expected_names = set(SOURCE_SKILL_INVENTORY[layer])
+        if layer_names != expected_names:
+            raise InstallError(
+                f"authoritative {layer} identities differ; "
+                f"missing={sorted(expected_names - layer_names)}; extra={sorted(layer_names - expected_names)}"
             )
         overlap = all_names & layer_names
         if overlap:
@@ -1241,33 +1259,33 @@ def _authoritative_current_skill_inventories() -> dict[str, Any]:
 def _historical_runtime_27_skill_inventories(
     current_layers: dict[str, set[str]],
 ) -> dict[str, Any]:
-    """Return the closed 27-Skill predecessor generation without Git history.
-
-    Control, Foundation, and Domain were unchanged in the 27-to-26 transition.
-    Their exact sorted-name fingerprints bind that fact and fail closed if a
-    future Registry generation drifts. The historical Professional set is
-    explicit because it owns the retired top-level Skill.
-    """
+    """Return exact predecessor ownership; current additions do not expand it."""
 
     for layer, expected_digest in HISTORICAL_UNCHANGED_LAYER_SHA256.items():
-        observed = current_layers.get(layer)
-        if not isinstance(observed, set) or _inventory_sha256(observed) != expected_digest:
-            raise InstallError(
-                "historical Runtime inventory bridge is stale for "
-                f"the {layer} Registry"
-            )
-    layers = {
-        "control": set(current_layers["control"]),
-        "professional": set(HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS),
-        "foundation": set(current_layers["foundation"]),
-        "domain": set(current_layers["domain"]),
-    }
+        observed = set(PHASE2_LAYER_INVENTORIES[layer])
+        if _inventory_sha256(observed) != expected_digest:
+            raise InstallError(f"historical Runtime inventory bridge is stale for the {layer} Registry")
+    layers = {layer: set(names) for layer, names in PHASE2_LAYER_INVENTORIES.items()}
+    layers["professional"] = set(HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS)
     profiles = _profile_skill_inventories(layers)
     if {
         profile: len(names) for profile, names in profiles.items()
     } != HISTORICAL_PROFILE_COUNTS:
         raise InstallError("historical Runtime inventory bridge has invalid counts")
     return {"layers": layers, "profiles": profiles}
+
+
+def _phase2_runtime_26_skill_inventories() -> dict[str, Any]:
+    """Bind the retired Phase 2 Runtime to its exact source snapshot."""
+
+    layers = {layer: set(names) for layer, names in PHASE2_LAYER_INVENTORIES.items()}
+    for layer, expected_digest in PHASE2_LAYER_SHA256.items():
+        if _inventory_sha256(layers[layer]) != expected_digest:
+            raise InstallError(f"Phase 2 Runtime inventory bridge is stale for the {layer} Registry")
+    return {
+        "layers": layers,
+        "profiles": {RUNTIME_PROFILE: layers["control"] | layers["professional"]},
+    }
 
 
 def _expected_manifest_inventory_fields(
@@ -1367,6 +1385,11 @@ def classify_installed_manifest(
     if current_fields is not None and observed_fields == current_fields:
         generation = CURRENT_INVENTORY_GENERATION
         expected_skills = current_profiles[profile]
+    elif profile == RUNTIME_PROFILE and observed_fields == _expected_manifest_inventory_fields(
+        **_phase2_runtime_26_skill_inventories(), profile=profile,
+    ):
+        generation = PHASE2_INVENTORY_GENERATION
+        expected_skills = set(PHASE2_LAYER_INVENTORIES["control"] | PHASE2_LAYER_INVENTORIES["professional"])
     else:
         historical = _historical_runtime_27_skill_inventories(current_layers)
         historical_layers = historical["layers"]
