@@ -19,25 +19,25 @@ description: "Analyze candidate task nodes, dependencies, collisions, and critic
 
 ## Skill Role
 
-Analyze candidate nodes and edges as a pre-DAG candidate graph. Produce advisory graph evidence that a consumer accepts or rejects. This Skill does not emit the final Task DAG or schedule execution.
+Analyze nodes and edges as advisory pre-DAG candidate graph evidence that a consumer accepts or rejects. This Skill does not emit the final Task DAG or schedule execution.
 
 ## Inputs
 
 - acceptance outcomes and candidate produced outputs;
 - current evidence for producer-consumer relationships, contracts, and order constraints;
 - candidate read, write, shared-resource, and collision surfaces;
-- known uncertainty about nodes, edges, ownership, or resources.
+- available duration estimates, units, sources, and uncertainty about nodes, edges, ownership, resources, or timing.
 
 ## High-Value Rules
 
 1. Propose a candidate node only when it owns an acceptance-linked outcome and produced output.
 2. Classify every proposed dependency as a data edge, control edge, contract edge, or order edge.
-3. For the proposed graph, pair an edge with current evidence and its downstream blocker before accepting it.
-4. Record rejected edges with evidence showing that preference, proximity, or chronology is nonblocking.
-5. Map collision surfaces, shared-write surfaces, and resource surfaces across files, generated outputs, contracts, schemas, fixtures, stores, queues, and external resources.
-6. Derive graph conclusions from supported edges: the candidate critical path and parallel opportunities only where no supported path dependency exists, while retaining collision evidence for the consumer.
-7. Detect cycles and ambiguous output ownership. Preserve unresolved facts as uncertainty.
-8. State proof limits and residual risk for every material graph conclusion.
+3. Pair each proposed edge with current evidence and its downstream blocker before accepting it.
+4. Record rejected edges with evidence that preference, proximity, or chronology is nonblocking.
+5. Map collision, shared-write, and resource surfaces across files, generated outputs, contracts, schemas, fixtures, stores, queues, and external resources.
+6. Derive the candidate critical path from supported edges and evidence-backed durations in one time unit. Without duration evidence, report dependency order and mark timing unknown.
+7. Identify parallel opportunity only where no supported path dependency exists. Retain collision and resource evidence for the consumer.
+8. Detect cycles and ambiguous output ownership; record unresolved facts as uncertainty. State proof limits and residual risk for every material graph conclusion.
 
 ## Anti-Patterns
 
@@ -52,7 +52,7 @@ Analyze candidate nodes and edges as a pre-DAG candidate graph. Produce advisory
 2. Classify and source every proposed edge.
 3. Record rejected edges and cycles.
 4. Map collision, shared-write, and resource surfaces.
-5. Derive the candidate critical path and parallel opportunity.
+5. Record duration evidence or timing unknown. Identify parallel opportunity separately.
 6. Return uncertainty, proof limits, and residual risk for consumer acceptance or rejection.
 
 ## Stop Conditions
@@ -63,10 +63,10 @@ Analyze candidate nodes and edges as a pre-DAG candidate graph. Produce advisory
 
 ## Output Contract
 
-- candidate-graph evidence with acceptance-linked nodes, produced outputs, evidence-backed data/control/contract/order edges, rejected edges, collision/shared-write/resource surfaces, candidate critical path, parallel opportunity, cycles, uncertainty, proof limits, and residual risk for consumer acceptance or rejection
+- candidate-graph evidence with acceptance-linked nodes, produced outputs, evidence-backed data/control/contract/order edges, rejected edges, and collision/shared-write/resource surfaces. Include a candidate critical path with duration evidence or timing unknown, parallel opportunity, cycles, uncertainty, proof limits, and residual risk for consumer acceptance or rejection
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [candidate graph evidence](references/candidate-graph-evidence.md) | evidence-pattern | candidate nodes edges collisions cycles critical path or parallel opportunity need source-backed comparison | one candidate graph has accepted node-output bindings and every edge is supported or rejected | analysis-agent | evidence-record, proof-limit, residual-risk |
+| [candidate graph evidence](references/candidate-graph-evidence.md) | evidence-pattern | candidate nodes edges collisions cycles critical path or parallel opportunity need source-backed comparison | candidate graph evidence and requested timing or parallel-opportunity conclusions are resolved with proof limits | analysis-agent | evidence-record, proof-limit, residual-risk |

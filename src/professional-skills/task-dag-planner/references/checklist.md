@@ -11,4 +11,6 @@
 - Keep each task reviewable on its own.
 - Add independent review only when explicitly requested or justified by a concrete semantic question; task count does not require it.
 - If review is needed, state its question, actual scope, source evidence, and the consumer that depends on the answer.
-- Record topological-sort or acyclicity proof, critical path, collision scan, validation artifact, freshness, plan-execution consistency, and residual risk owner.
+- Record topological-sort or acyclicity proof and the collision scan.
+- Qualify critical-path and parallel-time estimates with duration evidence, resource limits, and overhead, or mark timing unknown.
+- Record the validation artifact, freshness, plan-execution consistency, and residual risk owner.

@@ -15,11 +15,12 @@ Content review judges the professional method. None substitutes for another.
 
 These checks do not prove real framework or language execution, real Host startup,
 model quality, GPU behavior, production capacity, or every user environment.
-The fixed Readability and Professional Completeness attestations remain unchanged.
-Their stale or pending state cannot authorize current carry or establish
-`formal-release-ready`. The fresh Semantic Disposition round below covers all
-149 current targets and resolves the three application bindings invalidated by
-the readability repairs.
+The panel rounds below are historical evidence for their bound source trees.
+The current handoff is engineering fixes and complete engineering regression,
+as explicitly authorized by the user. Formal professional review and the Core
+formal gate are deferred and have not passed for this handoff. Partial reviews
+cannot authorize carry, and stale fixed evidence cannot establish
+`formal-release-ready`. Future Formal Release requirements remain unchanged.
 
 ## Engineering Work
 
@@ -175,10 +176,11 @@ reproduced the reviewed failure, and passed the repaired historical validator.
 Current validation still rejects that 188-package packet; its bytes were unchanged.
 
 Final clean-head Development Affected and the complete Full Regression are still
-pending the final material tree. Their commands, selected head, results, repairs,
-and the required final Core formal gate will be recorded here after execution.
-Stale panel evidence must be replaced by actual independent review before that
-formal gate can establish release readiness.
+pending the final material tree. Their commands, selected head, results, and
+repairs will be recorded here after execution. The Core formal gate is outside
+this user-authorized engineering handoff and remains unpassed. Stale panel
+evidence must be replaced by actual independent review before a future formal
+gate can establish release readiness.
 All final commands use `/tmp/rd-skills-validation-venv/bin/python3` through `PATH`.
 The interpreter is Python 3.14.6. Its fixed dependencies are markdown-it-py 4.2.0,
 mdurl 0.1.2, jsonschema 4.26.0, and tiktoken 0.14.0.
@@ -530,3 +532,41 @@ Observed on the integrated source tree:
 
 These checks do not satisfy final Affected, Full Regression, or Formal Release.
 The three fixed expert attestations remain unchanged; their currentness must be reported honestly.
+
+## Engineering Convergence Handoff
+
+The user selected engineering repair and complete engineering regression, with
+Formal professional review deferred. The incomplete Professional round and all
+original reviewer records remain retained in ignored review storage. They are
+not a complete decision, a carry baseline, or accepted release evidence.
+
+The bounded repair covers four packages. DAG decomposition and planning now
+require sourced duration weights for timing claims and separate a dependency
+lower bound from feasible completion under resource limits and overhead.
+Missing estimates leave timing unknown without hiding dependency order or
+parallel opportunities. Side-effect tracing distinguishes stale refill before
+commit from speculative cache publication followed by failed persistence.
+Microservice extraction admits a controlled full cutover when interruption,
+in-flight work, compatibility, state, recovery, and retirement evidence support it.
+
+The initial targeted checks exposed two DAG formatting regressions: a 516-word
+compact root and a 37-word output sentence. Concise wording and sentence
+separation restored the existing limits without exceptions. The same capability
+scan found that the `profiling` registry omitted an output bullet already present
+in the base Skill. The registry now repeats that exact existing bullet; the
+profiling Skill body is unchanged. Six focused DAG and Reference-projection
+tests passed, content budgets passed, and the final capability scan passed all
+157 Foundation Skills. These checks do not substitute for the final Full run.
+
+| Delivery evidence | State at this source-repair checkpoint |
+| --- | --- |
+| Four-package repair and corresponding registry/test contracts | Implemented; six focused tests, content budgets, and all 157 capability checks passed; independent diff review pending |
+| Fourteen-command local Full Regression | Pending the reviewed final material tree |
+| Two Development Affected selectors | Pending the clean final commit against the selected original base |
+| Three fixed panel attestations | Original bytes retained; source-currentness checks pending after these edits |
+| Formal professional review and Core formal gate | Deferred by user authorization; not passed |
+
+No future Formal gate, review criterion, qualification requirement, or voting
+rule is weakened. The engineering checks still provide only static contracts,
+deterministic fixtures, builds, and simulated installation evidence; they do not
+prove real Host startup, production behavior, or installed user experience.

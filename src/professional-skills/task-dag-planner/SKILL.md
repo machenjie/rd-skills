@@ -29,17 +29,19 @@ Inspect decisions, semantic boundaries, blocking edges and workspace safety befo
 
 - Accepted source-backed decisions, observable acceptance, candidate scopes,
   shared resources, validation, rollback, and isolation; include review only when justified.
+- Available task-duration estimates with units, sources, and uncertainty when timing is claimed.
 
 ## Professional Decision Rules
 
 - Preserve established acceptance and start with a reversible, verifiable slice that unresolved decisions cannot invalidate.
-- Inspect candidate-graph evidence for nodes, edges, blockers, critical path,
+- Inspect candidate-graph evidence for nodes, edges, blockers, duration evidence,
   shared-resource collisions, and uncertainty.
-- Derive splitting, dependencies, parallel safety, critical path, ownership, and
+- Derive splitting, dependencies, parallel safety, ownership, and
   remaining tasks from the accepted decisions.
+- Report a duration critical path only from evidence-backed weights in one time unit. Otherwise report dependency order and timing unknown.
 - Do not silently modify acceptance, non-goals, ownership, invariants,
   placement, contract semantics, or rollback.
-- Connect tasks by blocking facts; parallelize when it shortens the critical path.
+- Connect tasks by blocking facts. Compare feasible schedules for the same scope before claiming faster parallel completion.
 - Require collision-free shared resources for defect-discovery parallelism.
 - With shared or unknown workspace, serialize writes.
 - Reject parallel writes sharing files, contracts, schemas, migrations, outputs, fixtures, lockfiles, or production resources.
@@ -74,7 +76,8 @@ Inspect decisions, semantic boundaries, blocking edges and workspace safety befo
 
 - Task DAG preserving the accepted decisions
 - necessary tasks and evidence-backed dependency edges
-- critical path and safe parallel groups
+- duration critical path with evidence or timing unknown
+- safe parallel groups with supported schedule comparisons or unquantified opportunities
 - integration, conflict-resolution, validation, rollback, and any justified review
 - material uncertainty and proof limits
 - the next executable change when no DAG is useful

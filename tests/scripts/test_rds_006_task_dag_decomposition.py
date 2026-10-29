@@ -35,8 +35,9 @@ EXAMPLE_FILE = SKILL_DIR / "examples/example-output.md"
 
 EXPECTED_OUTPUT = (
     "candidate-graph evidence with acceptance-linked nodes, produced outputs, "
-    "evidence-backed data/control/contract/order edges, rejected edges, "
-    "collision/shared-write/resource surfaces, candidate critical path, "
+    "evidence-backed data/control/contract/order edges, rejected edges, and "
+    "collision/shared-write/resource surfaces. Include a candidate critical path with "
+    "duration evidence or timing unknown, "
     "parallel opportunity, cycles, uncertainty, proof limits, and residual "
     "risk for consumer acceptance or rejection"
 )
@@ -156,7 +157,7 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
         }
         for rule in (
             "Preserve established acceptance and start with a reversible, verifiable slice that unresolved decisions cannot invalidate.",
-            "Inspect candidate-graph evidence for nodes, edges, blockers, critical path, shared-resource collisions, and uncertainty.",
+            "Inspect candidate-graph evidence for nodes, edges, blockers, duration evidence, shared-resource collisions, and uncertainty.",
             "Do not silently modify acceptance, non-goals, ownership, invariants, placement, contract semantics, or rollback.",
             "Do not use file, layer, test, or edit-step differences as task boundaries.",
             "With shared or unknown workspace, serialize writes.",

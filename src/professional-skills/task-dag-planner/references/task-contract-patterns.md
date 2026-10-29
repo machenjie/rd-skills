@@ -29,7 +29,8 @@ mutation, or machine-managed task state.
 - Review and risk boundaries do not redefine the Task boundary.
 - Each DAG edge requires a concrete downstream blocker. Blockers may arise from required artifacts, accepted contracts, schema or data availability, shared resources, validation results, or release order. Exclude nonblocking sequence preferences.
 - Preserve an established next implementable task. Otherwise recommend the earliest safe, reversible, verifiable node that unresolved
-  analysis cannot invalidate. Name the critical path and parallel value.
+  analysis cannot invalidate.
+- Qualify a duration critical path and parallel time saving with the timing evidence and feasible-schedule comparison in `planning-evidence-patterns.md`. When evidence is insufficient, keep dependency order and safe opportunities explicit and mark timing unknown.
 - With shared or unknown workspace isolation, serialize the write tasks in that workspace. Even with isolation, do not parallelize tasks that share files, schemas, public contracts, migrations, generated outputs, fixtures, lockfiles, external systems, or later integration assumptions.
 - Name integration ownership and cross-task validation where consumers require them.
 - Independent review needs an explicit request or a concrete semantic question that benefits from independent judgment. Task count and dependency edges do not require review.

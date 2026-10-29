@@ -2609,7 +2609,7 @@ foundation_skills:
     trigger_signals: ["profile CPU memory IO database network rendering cloud cost unit economics and bottlenecks"]
     anti_trigger_signals: ["no task-local profiling decision is required"]
     required_inputs: ["current task contract", "selected primary Professional Skill", "task-local trigger evidence"]
-    output_contract: ["profiling evidence with symptom and hypothesis, representative comparable workload, measured bottleneck and re-profile, resource/cost transfer, overhead boundary, correctness guard, and owned sensitive-artifact lifecycle"]
+    output_contract: ["profiling evidence with symptom and hypothesis, representative comparable workload, measured bottleneck and re-profile, resource/cost transfer, overhead boundary, correctness guard, and owned sensitive-artifact lifecycle", "Report when the dominant constraint moves."]
     escalation_signals: ["Guessing at bottlenecks or cost drivers wastes effort and can worsen real constraints"]
     reference_index:
       - path: "references/benchmarks-and-patterns.md"
@@ -2948,15 +2948,15 @@ foundation_skills:
     role_support: ["analysis-agent"]
     trigger_signals: ["candidate work units need evidence-backed analysis of nodes dependency edges collisions cycles critical path or parallel opportunity before a consumer accepts a final graph"]
     anti_trigger_signals: ["one acceptance outcome and produced output cannot be separated into useful candidate nodes", "an authoritative graph has already been accepted"]
-    required_inputs: ["acceptance outcomes and candidate produced outputs", "current evidence for producer-consumer relationships contracts and order constraints", "candidate read write shared-resource and collision surfaces", "known uncertainty about nodes edges ownership or resources"]
+    required_inputs: ["acceptance outcomes and candidate produced outputs", "current evidence for producer-consumer relationships contracts and order constraints", "candidate read write shared-resource and collision surfaces", "available duration estimates units sources and uncertainty about nodes edges ownership resources or timing"]
     output_contract:
-      - "candidate-graph evidence with acceptance-linked nodes, produced outputs, evidence-backed data/control/contract/order edges, rejected edges, collision/shared-write/resource surfaces, candidate critical path, parallel opportunity, cycles, uncertainty, proof limits, and residual risk for consumer acceptance or rejection"
+      - "candidate-graph evidence with acceptance-linked nodes, produced outputs, evidence-backed data/control/contract/order edges, rejected edges, and collision/shared-write/resource surfaces. Include a candidate critical path with duration evidence or timing unknown, parallel opportunity, cycles, uncertainty, proof limits, and residual risk for consumer acceptance or rejection"
     escalation_signals: ["candidate output ownership edge evidence collision identity or cycle resolution remains uncertain"]
     reference_index:
       - path: "references/candidate-graph-evidence.md"
         type: evidence-pattern
         load_when: "candidate nodes edges collisions cycles critical path or parallel opportunity need source-backed comparison"
-        do_not_load_when: "one candidate graph has accepted node-output bindings and every edge is supported or rejected"
+        do_not_load_when: "candidate graph evidence and requested timing or parallel-opportunity conclusions are resolved with proof limits"
         required_by: ["analysis-agent"]
         required_output: ["evidence-record", "proof-limit", "residual-risk"]
     used_by: ["task-dag-planner"]

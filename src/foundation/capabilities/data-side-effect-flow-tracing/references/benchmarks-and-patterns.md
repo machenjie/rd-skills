@@ -39,10 +39,13 @@ Use the actual local order. Deviations are allowed only when the owner states th
 | --- | --- | --- |
 | Mapper writes to repository. | Pure-looking code mutates state and evades tests. | Move effect to service/repository/job boundary or document framework exception. |
 | Event before commit. | Consumers observe rolled-back state. | Publish after commit or use outbox. |
-| Cache invalidated before failed persistence. | Fresh cache hides missing durable state. | Tie cache order to commit and source of truth. |
+| Cache invalidated, then refilled from the old committed value before a new value commits, with no later invalidation. | Cache remains stale after authoritative state advances. | Trace the refill/commit interleaving and the owner's invalidation or version check. |
+| Cache populated with a changed, uncommitted value, then persistence fails without commit and the cached value survives. | Speculative cache state is ahead of durable state. | Bind cache publication and failure cleanup to proven commit status and the source of truth. |
 | Retry repeats non-idempotent write. | Duplicate charge, event, file, or provider action. | Define idempotency key and duplicate response. |
 | Logger callback overrides an error or drops required audit evidence. | Diagnostics change the business result or protected audit obligations are lost. | Keep diagnostic exporter failure non-authoritative; preserve the accepted audit owner's failure and durability policy. |
 | Stale prior evidence proves flow safety. | Current wrappers or generated clients drifted. | Re-read current source, tests, graph, and validation output. |
+
+Invalidation followed by a failed write does not itself corrupt the cache. Reloading the unchanged committed value is consistent. Trace the actual refill source and commit interleaving before identifying a defect. When commit status is unknown, preserve that uncertainty and reconcile with the authoritative store before repair or replay.
 
 ## Handoff Boundaries
 

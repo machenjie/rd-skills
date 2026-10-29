@@ -28,6 +28,7 @@ Use this reference when `microservice-splitting` needs deeper split-force calibr
 | Branch by abstraction | When this pattern prepares a runtime split, decouple internal code before activating the split | Adapter seam, feature flag, old/new behavior parity, cleanup owner |
 | Parallel run or shadow traffic | New service can compare outputs safely before serving users | Divergence metric, sample scope, cost owner, privacy boundary, stop condition |
 | Expand-contract migration | Schema/API compatibility is required during split | Old/new schema support, backfill, dual-read/write decision, cleanup plan |
+| Controlled full cutover | Stateless extraction fits an accepted stop-traffic window and needs no persistent-state migration | In-flight drain, compatibility tests, proven non-overlap, reversible traffic routing, recovery rehearsal, and retirement criteria |
 | Merge or recombine | Independence never materialized or cost exceeds isolation value | Deployment coupling evidence, owner agreement, migration/rollback plan |
 
 ## Distributed Consistency Patterns
@@ -54,7 +55,7 @@ Before production approval, inventory the risks introduced by the independently 
 | Shared database after extraction | Keeps release and data coupling while adding network and operational cost |
 | New service lacks accountable production owners or a required runbook | Leaves incident responsibility or required recovery instructions unproven |
 | Synchronous chain violates accepted latency, availability, or failure-isolation limits | Leaves latency or dependency failure outside the accepted budget |
-| Big-bang cutover | Removes rollback and hides mixed-version incompatibility until release |
+| Full cutover without evidence for compatibility, in-flight handling, acceptance of any required interruption, or recovery | Uncontrolled overlap, unaccepted downtime, or unproved recovery can break consumers |
 | Contract exposes ORM models | Future persistence refactors become breaking API changes |
 | Strangler with no retirement trigger | Legacy and new service run forever |
 | prior task evidence copied into an ADR without source confirmation | Stale assumptions can approve a split whose forces disappeared |
