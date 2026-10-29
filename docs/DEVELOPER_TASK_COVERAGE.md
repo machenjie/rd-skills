@@ -227,6 +227,26 @@ against the clean configuration commit. The refreshed collector passes authoring
 with zero blockers and reports the Semantic application as current. The Methods
 historical-exposure limitation remains in its original reviewer result.
 
+The second Full Regression attempt used material commit `13791c4f`.
+Core reported `validate-src-invariants` and `validate-agent-profiles` exit 1.
+The earlier sentence split left 20, 21, 21 and 19 instruction bullets in the
+four Profiles, exceeding the existing 4–16 rule contract. The source-only
+validator and its existing rule-count test reproduced the same failure.
+The known-failing Core run and its owned rendered-context child were stopped;
+Core exited 143 and no owned process remained. Commands 2–14 did not run.
+This attempt is failed and incomplete, not final Full Regression evidence.
+
+Adjacent short sentences now share bullets within the same responsibility.
+Every Profile has 16 rules. Joining the ordered original and repaired bullet
+bodies with spaces produces exactly equal text for all four Profiles; words,
+sentence order, permissions, loading and cancellation semantics are unchanged.
+The existing rule-count boundary and overflow test changed from failing to
+passing. Source-only Profile validation and actual readability checks pass.
+The refreshed collector passes authoring with zero blockers and reports no
+Profile hard-readability or compound-bullet findings. Its canonical Semantic
+application remains current for all 149 targets. All three fixed attestation
+files retain their original bytes; the repair changes no Semantic binding.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.
