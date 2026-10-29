@@ -1,6 +1,6 @@
 ---
 name: installed-client-change-builder
-description: "`task-agent`: installed-client implementation; skip browser/PWA, backend, infrastructure, planning, release, and review."
+description: "`task-agent`: installed or hosted-client implementation; skip ordinary browser/PWA, backend, infrastructure, planning, release, and review."
 ---
 
 # installed-client-change-builder
@@ -12,12 +12,13 @@ Support `task-agent` inside the accepted installed-client boundary.
 ## When To Use
 
 - installed client implementation
+- hosted-client implementation for browser extension IDE extension or mini-program lifecycle and capability contracts
 - Android iOS iPadOS Windows macOS or Linux desktop application change
 - Flutter React Native Electron Tauri Qt .NET MAUI or Kotlin Multiplatform client change
 
 ## Do Not Use
 
-- browser or PWA-only change
+- ordinary browser or PWA-only change without an extension host contract
 - backend or infrastructure change
 - documentation-only change or multi-task planning
 - production release store approval rollback approval or independent review
@@ -28,6 +29,8 @@ Support `task-agent` inside the accepted installed-client boundary.
 
 ## Professional Decision Rules
 
+- Select installed-client or hosted-client mode from the actual product contract.
+- Hosted-client mode binds manifest, execution contexts, grants, messages, lifecycle, and host versions.
 - Preserve the accepted scope and target behavior through the affected platform and framework boundaries.
 - Inspect owner, consumers, tests, and target/package facts before the smallest complete change.
 - Record target checks, unavailable evidence, proof limits, and residual risk.

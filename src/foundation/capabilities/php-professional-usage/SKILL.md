@@ -38,6 +38,16 @@ Protect PHP value semantics, class resolution, error handling, and request or pr
 - A worker assumes request teardown resets globals, caches, transactions, or subscriptions.
 - Destructor timing is used as the sole proof that an external resource closed correctly.
 
+## Stop Conditions
+
+- Resolve target PHP/SAPI behavior before relying on coercion, autoloading, or request cleanup.
+
+## Output Contract
+
+- Return conversion, dispatch, error, process-state, and cleanup decisions with target-runtime evidence.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [values errors and worker lifetime](references/values-errors-and-worker-lifetime.md) | targeted | PHP coercion, autoload, exception, or retained-worker behavior | package-manager commands without a PHP execution decision | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan |

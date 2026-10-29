@@ -13,7 +13,9 @@
 - Preserve parser state and unconsumed bytes across reads. Distinguish a completed item, need-more-input, and invalid input.
 - Carry text-decoder state across multibyte boundaries. Decoding each chunk independently can corrupt a valid split character.
 - Validate declared lengths before allocation or indexing. Account for arithmetic overflow, remaining input, permitted nesting, and cumulative output.
-- Bound varint length and accumulation according to the selected encoding. A missing terminator differs from a valid value awaiting more bytes.
+- Bound varint length and accumulation according to the selected encoding.
+- An incomplete prefix before EOF needs more input; EOF inside it means truncation.
+- Reject an over-limit varint without waiting for a terminator.
 - Distinguish clean EOF at a permitted terminal state from truncation inside a field, character, compressed member, or frame.
 - Resume partial writes from the acknowledged offset. Replaying an entire buffer can duplicate a prefix already accepted by the sink.
 - Select termination or resynchronization from the protocol contract. Arbitrary byte skipping can invent valid-looking messages after corruption.

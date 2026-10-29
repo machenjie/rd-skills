@@ -38,6 +38,16 @@ Protect Dart value validity, asynchronous ownership, stream contracts, and isola
 - A second listener is attached to a single-subscription stream.
 - A resource is reused or removed before asynchronous cancellation finishes.
 
+## Stop Conditions
+
+- Resolve Future, subscription, and isolate ownership before accepting completion or cancellation behavior.
+
+## Output Contract
+
+- Return nullability, asynchronous error, transfer, and resource-end decisions with outstanding-work evidence.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [async streams and isolates](references/async-streams-and-isolates.md) | targeted | Future failures, stream ownership, isolate ordering, or asynchronous cleanup | styling and platform configuration that preserve Dart runtime behavior | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan |

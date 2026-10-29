@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for graphics or GPU execution
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply device execution, memory visibility, and rendering constraints to graphics and GPU computation.
 
 ## When To Use
@@ -30,6 +32,8 @@ Apply device execution, memory visibility, and rendering constraints to graphics
 - Distinguish command submission from execution completion and host-visible results.
 - Match synchronization and memory visibility to actual producer/consumer dependencies.
 - Validate layouts, strides, alignment, formats, and shader interfaces against the selected API.
+- Bind shader/kernel content, asset data, compile options, and interface versions when artifact compatibility changes.
+- Invalidate affected pipelines and caches on content or layout changes, including hot reload.
 - Keep coordinate, color-space, depth, and numerical-error assumptions explicit.
 - Recreate invalid resources through the device-loss recovery contract.
 - Compare image or numerical correctness before accepting performance changes.
@@ -56,4 +60,9 @@ Apply device execution, memory visibility, and rendering constraints to graphics
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [cuda hip execution and memory](references/cuda-hip-execution-and-memory.md) | targeted | CUDA or HIP kernels, device memory, streams, events, asynchronous copies, or synchronization | CPU-only C/C++ and graphics-only paths without CUDA or HIP execution | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, proof-limit |
+| [metal resource synchronization](references/metal-resource-synchronization.md) | targeted | Metal resource ownership, command dependencies, CPU/GPU visibility, or completion handling | non-Metal paths and changes without Metal resource or execution semantics | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, proof-limit |
+| [vulkan synchronization and layouts](references/vulkan-synchronization-and-layouts.md) | targeted | Vulkan stage/access dependencies, queue ownership, resource layouts, or submission lifetime | non-Vulkan paths and GPU changes without Vulkan synchronization or layout decisions | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, proof-limit |
+| [webgpu device and render contracts](references/webgpu-device-and-render-contracts.md) | targeted | WebGPU resources, command submission, shader interfaces, rendering conventions, or device loss | other graphics APIs and CSS-only rendering | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, proof-limit |

@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for subscription, entitlement
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply SaaS lifecycle constraints to subscription, entitlement, and usage decisions within the existing Professional owner.
 
 ## When To Use
@@ -55,4 +57,7 @@ Apply SaaS lifecycle constraints to subscription, entitlement, and usage decisio
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [subscription entitlement timelines](references/subscription-entitlement-timelines.md) | targeted | trial, grace, plan changes, cancellation, restoration, or refund effects on access | ordinary tenant queries and one-time payments without subscription state | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |
+| [usage seats and corrections](references/usage-seats-and-corrections.md) | targeted | metered usage, quotas, seat changes, duplicate events, or usage correction | subscription wording and access changes that do not alter metering or capacity rules | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |

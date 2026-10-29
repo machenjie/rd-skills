@@ -6773,9 +6773,9 @@ def domain_registry_contract_errors(
     if not isinstance(entries, list):
         errors.append(f"{context}:domain_skills must be a list")
         return errors
-    if len(entries) != 13:
+    if len(entries) != EXPECTED_DOMAIN_EXTENSION_COUNT:
         errors.append(
-            f"{context}:domain_skills must contain exactly 13 rows, "
+            f"{context}:domain_skills must contain exactly {EXPECTED_DOMAIN_EXTENSION_COUNT} rows, "
             f"found {len(entries)}"
         )
     seen: set[str] = set()
@@ -6828,6 +6828,12 @@ def domain_registry_contract_errors(
                 f"{row_context}.role_support must contain unique supported "
                 "Agent Profile ids"
             )
+    expected = set(SOURCE_SKILL_INVENTORY["domain"])
+    if seen != expected:
+        errors.append(
+            f"{context}: Domain identities differ; "
+            f"missing={sorted(expected - seen)}; extra={sorted(seen - expected)}"
+        )
     return errors
 
 
@@ -6982,6 +6988,13 @@ SKILL_REFERENCE_ARCHITECTURE_TAG = "skill-reference-architecture"
 SKILL_EXPERTISE_TAGS = frozenset(
     {
         "domain-ai-product-extension",
+        "domain-saas-product-extension",
+        "domain-hosted-app-extension",
+        "domain-commerce-fulfillment-extension",
+        "domain-realtime-media-extension",
+        "domain-game-simulation-extension",
+        "domain-graphics-compute-extension",
+        "domain-scientific-computing-extension",
         "domain-bigdata-product-extension",
         "domain-iot-embedded-extension",
         "domain-low-level-systems-extension",
@@ -8891,6 +8904,7 @@ _LAYER3_SELECTOR_SOURCE_SYMBOLS = {
         "_build_route_candidates",
         "_implementation_owner_layer3",
         "_language_semantic_layers",
+        "_professional_mechanism_layers",
         "_review_risk_layer3",
     },
     "runtime-matcher": {"foundation_runtime_matcher_authority"},

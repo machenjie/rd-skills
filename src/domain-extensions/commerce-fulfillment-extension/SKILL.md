@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for finite-resource reservati
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply resource conservation and order-fulfillment state constraints without replacing financial or product-policy authority.
 
 ## When To Use
@@ -56,4 +58,6 @@ Apply resource conservation and order-fulfillment state constraints without repl
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [reservation fulfillment and return transitions](references/reservation-fulfillment-and-return-transitions.md) | targeted | finite-resource allocation, reservation expiry, fulfillment, cancellation, or returns | catalog display and payment-only integration without resource-state changes | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan |

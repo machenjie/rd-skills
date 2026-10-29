@@ -16,6 +16,9 @@ Skip other graphics APIs and CSS-only rendering.
 - Reject stale asynchronous completions associated with a lost or replaced device.
 - Compare rendered images or computed values against a defined oracle and error budget.
 
+- When artifacts change, pair shader/kernel identity with asset content, compile options, and interface/layout versions.
+- Invalidate affected cached pipelines or compiled artifacts using the actual API and hot-reload contract.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +28,8 @@ Skip other graphics APIs and CSS-only rendering.
 | Color-space or alpha convention changes | Image comparison detects the semantic difference |
 | Method returns before device work fails | Error observation prevents a false success claim |
 | Adapter limits differ from the development device | Unsupported capability follows an explicit path |
+
+| Old shader/kernel is paired with new asset content or layout | Incompatible or stale artifacts are rebuilt or rejected before their result is accepted |
 
 ## Proof Limits
 

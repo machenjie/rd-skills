@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path
 
 from validation_utils import (
+    SOURCE_SKILL_INVENTORY,
     COMPILED_LAYER3_FORMAT,
     CORE_CONTRACTS,
     CORE_CONTRACTS_PATH,
@@ -530,12 +531,7 @@ def _validate_legacy_profile_upgrades(
         "foundation": set(source_manifest.get("foundation_skills") or []),
         "domain": set(source_manifest.get("domain_skills") or []),
     }
-    if {name: len(values) for name, values in inventories.items()} != {
-        "control": 1,
-        "professional": 25,
-        "foundation": 150,
-        "domain": 13,
-    }:
+    if {name: len(values) for name, values in inventories.items()} != {layer: len(names) for layer, names in SOURCE_SKILL_INVENTORY.items()}:
         errors.append("legacy migration smoke: build inventories are incomplete")
         return 0
 

@@ -32,6 +32,7 @@ from typing import Any
 
 from capability_coverage import fixture_ids, validate_capability_coverage
 from validation_utils import (
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
     AFFECTED_CONTEXT_ENV,
     EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS,
     EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION,
@@ -687,12 +688,12 @@ def main(argv: list[str] | None = None) -> int:
     skill_report = reports["skill"]
     skill_results = [row for row in skill_report.get("results", []) if isinstance(row, dict)]
     professional = [row for row in skill_results if row.get("kind") == "professional"]
-    if len(professional) != 25:
+    if len(professional) != EXPECTED_PROFESSIONAL_SKILL_COUNT:
         blockers.append(
             Finding(
                 "professional-skill-count",
                 "skill-professionalism-eval.json",
-                f"expected 25 registered Professional Skills, found {len(professional)}",
+                f"expected {EXPECTED_PROFESSIONAL_SKILL_COUNT} registered Professional Skills, found {len(professional)}",
             )
         )
     for row in professional:

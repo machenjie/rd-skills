@@ -1,6 +1,6 @@
 # Code Review Checklist
 
-- Check changed behavior against requirements and contracts.
+- Check the scoped behavior against its requirements and contracts.
 - Check architecture boundaries and ownership rules.
 - Check security, permissions, input validation, and secret handling.
 - Check error handling, logging, and failure behavior.

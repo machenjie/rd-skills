@@ -12,7 +12,8 @@
 - Split by time, entity, group, or sample according to the dependency structure and intended prediction setting.
 - Check duplicate and related examples across splits. Row-level separation can still leak the same entity or future information.
 - Fit preprocessing on the training partition for the current split or fold. Apply the fitted transformation to held-out data.
-- Inspect label provenance, disagreement, missingness, and timing. A label unavailable at prediction time can encode leakage.
+- Inspect label provenance, disagreement, missingness, and availability at the training cutoff.
+- Future outcomes can be valid targets. Keep target-derived information out of prediction-time features.
 - Separate hyperparameter selection from final retained evaluation. Repeatedly optimizing against the final set converts it into development data.
 - Record data, code, configuration, environment, and randomness state needed to interpret or reproduce the experiment.
 - Compare model changes against the baseline on required product outcomes and cohorts. Lower training loss does not establish product value.

@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for game or simulation clocks
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply simulation-state, clock, replay, and asset-lifecycle constraints to game clients, authoritative workers, and reusable engines.
 
 ## When To Use
@@ -56,4 +58,7 @@ Apply simulation-state, clock, replay, and asset-lifecycle constraints to game c
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [scene assets and save migration](references/scene-assets-and-save-migration.md) | targeted | scene transitions, asset lifetime, asynchronous loading, save compatibility, or recovery | game changes that preserve scene, artifact, and persistent-state contracts | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, proof-limit |
+| [simulation clock authority and replay](references/simulation-clock-authority-and-replay.md) | targeted | timestep, input sampling, physics, pause, prediction, rollback, or replay decisions | cosmetic animation without simulation state or authoritative effects | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, proof-limit |

@@ -38,6 +38,16 @@ Protect Julia dispatch, array meaning, aliasing, missing-value handling, and rep
 - `missing` reaches a Boolean decision without an explicit policy.
 - The same seed is claimed to guarantee identical results across Julia releases.
 
+## Stop Conditions
+
+- Resolve dispatch, aliasing, broadcast shape, and execution-environment identity before accepting computed results.
+
+## Output Contract
+
+- Return type, dispatch, layout, task-state, and numerical verification decisions with reproducibility limits.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [arrays dispatch and randomness](references/arrays-dispatch-and-randomness.md) | targeted | Julia array axes, broadcasting, aliasing, dispatch, or random reproduction decisions | changes without these Julia runtime contracts | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |

@@ -38,6 +38,16 @@ Protect R shape, value, evaluation, and reproducibility contracts.
 - Missing values disappear through a default filter without a stated population rule.
 - A saved seed is presented as a complete cross-version reproduction contract.
 
+## Stop Conditions
+
+- Resolve vector shape, missing-value policy, random-stream ownership, and environment identity before accepting numerical results.
+
+## Output Contract
+
+- Return shape, missingness, recycling, random-state, and reproducibility evidence with numeric proof limits.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [shape missing values and reproducibility](references/shape-missing-values-and-reproducibility.md) | targeted | vector recycling, dimensions, missing-value policy, or reproducible R execution | generic pipeline decisions that preserve R semantics | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |

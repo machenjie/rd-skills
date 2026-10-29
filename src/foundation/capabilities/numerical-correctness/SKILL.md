@@ -39,6 +39,16 @@ Protect numerical meaning across input domains, algorithms, representations, and
 - Matching the implementation against itself substitutes correlation for an independent oracle.
 - A seed or one backend result is presented as portable bitwise reproducibility.
 
+## Stop Conditions
+
+- Stop numerical acceptance when units, input domain, error budget, or an independent oracle remains unresolved.
+
+## Output Contract
+
+- Return input-domain decisions, allocated error, oracle comparison, reproducibility limits, and unverified numerical cases.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [error budget and oracles](references/error-budget-and-oracles.md) | targeted | tolerance, conditioning, reduction, mixed-precision, or numerical-oracle decisions | ordinary decimal accounting and changes without numerical computation | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |

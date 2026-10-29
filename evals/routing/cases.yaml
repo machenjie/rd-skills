@@ -1238,3 +1238,195 @@ cases:
     prompt: "Explain this parser module using repository source evidence."
     excluded_skills: ["ai-code-review-refactor"]
     expected: {"path": "analyzed", "profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": ["repository-context-map"], "review_skill": null}
+  - id: expansion-php-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-php-mechanism"}
+    prompt: "Implement a backend PHP worker state cleanup repair."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["php-professional-usage"], "review_skill": null}
+  - id: expansion-ruby-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-ruby-mechanism"}
+    prompt: "Implement a backend Ruby exception ensure cleanup repair."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ruby-professional-usage"], "review_skill": null}
+  - id: expansion-dart-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-dart-mechanism"}
+    prompt: "Implement an accepted Android application Dart Future completion handler."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "installed-client-change-builder", "layer3_skills": ["dart-professional-usage"], "review_skill": null}
+  - id: expansion-beam-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-beam-mechanism"}
+    prompt: "Implement a backend Elixir supervisor restart and mailbox pressure repair."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["beam-professional-usage"], "review_skill": null}
+  - id: expansion-r-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-r-mechanism"}
+    prompt: "Implement a standalone R library missingness and vectorization shape repair with unchanged public API."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["r-professional-usage"], "review_skill": null}
+  - id: expansion-julia-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-julia-mechanism"}
+    prompt: "Implement a standalone Julia library broadcast aliasing repair with unchanged public API."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["julia-professional-usage"], "review_skill": null}
+  - id: expansion-scala-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-scala-mechanism"}
+    prompt: "Implement a backend Scala collection effect repair."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["java-jvm-professional-usage"], "review_skill": null}
+  - id: expansion-num-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-num-mechanism"}
+    prompt: "Implement a standalone Python library numerical error tolerance repair with unchanged public API."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["numerical-correctness"], "review_skill": null}
+  - id: expansion-codec-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-codec-mechanism"}
+    prompt: "Implement a standalone TypeScript library incremental decoder truncated frame repair with unchanged public API."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["data-format-contract-usage"], "review_skill": null}
+  - id: expansion-saas-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-saas-mechanism"}
+    prompt: "Implement an accepted backend subscription entitlement grace renewal correction with duplicate billing event reconciliation."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["saas-product-extension"], "review_skill": null}
+  - id: expansion-hosted-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-hosted-mechanism"}
+    prompt: "Implement browser extension background lifetime recovery."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "installed-client-change-builder", "layer3_skills": ["hosted-app-extension"], "review_skill": null}
+  - id: expansion-commerce-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-commerce-mechanism"}
+    prompt: "Implement a backend inventory reservation expiration compensation repair for duplicate fulfillment cancellation."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["commerce-fulfillment-extension"], "review_skill": null}
+  - id: expansion-media-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-media-mechanism"}
+    prompt: "Fix a frontend component WebRTC jitter clock and packet loss recovery."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["realtime-media-extension"], "review_skill": null}
+  - id: expansion-game-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-game-mechanism"}
+    prompt: "Fix a frontend component game simulation fixed timestep replay."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["game-simulation-extension"], "review_skill": null}
+  - id: expansion-gpu-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-gpu-mechanism"}
+    prompt: "Fix a frontend component WebGPU shader buffer layout synchronization."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["graphics-compute-extension"], "review_skill": null}
+  - id: expansion-sci-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-sci-mechanism"}
+    prompt: "Implement a standalone Python library scientific solver convergence repair with unchanged public API."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["scientific-computing-extension"], "review_skill": null}
+  - id: expansion-rag-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-rag-mechanism"}
+    prompt: "Implement a backend RAG retrieval quality reranking correction."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-inference-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-inference-mechanism"}
+    prompt: "Implement a Kubernetes manifest for LLM model inference continuous batching capacity."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "platform-infrastructure-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-ml-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-ml-mechanism"}
+    prompt: "Implement a backend ML training checkpoint recovery and distributed sampling repair."
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-stat-mechanism
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-stat-mechanism"}
+    prompt: "Using repository source evidence explain the experiment randomization confidence interval decision."
+    expected: {"path": "analyzed", "profile": "analysis-agent", "primary_skill": "engineering-change-analysis", "layer3_skills": ["search-analytics-design"], "review_skill": null}
+  - id: expansion-php-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-php-unchanged"}
+    prompt: "Implement an accepted backend label correction; PHP autoload and worker state remain unchanged."
+    excluded_skills: ["php-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-ruby-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-ruby-unchanged"}
+    prompt: "Implement an accepted backend label correction; Ruby exception and ensure cleanup remain unchanged."
+    excluded_skills: ["ruby-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-dart-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-dart-unchanged"}
+    prompt: "Implement an accepted backend label correction; Dart Future and stream subscription cancellation remain unchanged."
+    excluded_skills: ["dart-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-beam-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-beam-unchanged"}
+    prompt: "Implement an accepted backend label correction; Elixir supervisor restart and mailbox pressure remain unchanged."
+    excluded_skills: ["beam-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-r-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-r-unchanged"}
+    prompt: "Implement an accepted backend label correction; R missingness and vectorization shape remain unchanged."
+    excluded_skills: ["r-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-julia-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-julia-unchanged"}
+    prompt: "Implement an accepted backend label correction; Julia broadcast and aliasing remain unchanged."
+    excluded_skills: ["julia-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-scala-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-scala-unchanged"}
+    prompt: "Implement an accepted backend label correction; Scala collection effects remain unchanged."
+    excluded_skills: ["java-jvm-professional-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-num-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-num-unchanged"}
+    prompt: "Implement an accepted backend label correction; numerical error tolerance remain unchanged."
+    excluded_skills: ["numerical-correctness"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-codec-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-codec-unchanged"}
+    prompt: "Implement an accepted backend label correction; incremental decoder truncated frame behavior remain unchanged."
+    excluded_skills: ["data-format-contract-usage"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-saas-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-saas-unchanged"}
+    prompt: "Implement an accepted backend label correction; SaaS subscription entitlement grace renewal and billing events remain unchanged."
+    excluded_skills: ["saas-product-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-hosted-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-hosted-unchanged"}
+    prompt: "Implement an accepted backend label correction; browser extension manifest and background lifetime remain unchanged."
+    excluded_skills: ["hosted-app-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-commerce-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-commerce-unchanged"}
+    prompt: "Implement an accepted backend label correction; inventory reservation expiration and fulfillment compensation remain unchanged."
+    excluded_skills: ["commerce-fulfillment-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-media-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-media-unchanged"}
+    prompt: "Implement an accepted backend label correction; WebRTC jitter clock and packet loss remain unchanged."
+    excluded_skills: ["realtime-media-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-game-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-game-unchanged"}
+    prompt: "Implement an accepted backend label correction; game simulation fixed timestep and replay remain unchanged."
+    excluded_skills: ["game-simulation-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-gpu-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-gpu-unchanged"}
+    prompt: "Implement an accepted backend label correction; WebGPU shader buffer layout synchronization remain unchanged."
+    excluded_skills: ["graphics-compute-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-sci-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-sci-unchanged"}
+    prompt: "Implement an accepted backend label correction; scientific solver convergence remain unchanged."
+    excluded_skills: ["scientific-computing-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-rag-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-rag-unchanged"}
+    prompt: "Implement an accepted backend label correction; RAG retrieval quality and reranking remain unchanged."
+    excluded_skills: ["ai-product-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-inference-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-inference-unchanged"}
+    prompt: "Implement an accepted backend label correction; LLM model inference continuous batching capacity remain unchanged."
+    excluded_skills: ["ai-product-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-ml-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-ml-unchanged"}
+    prompt: "Implement an accepted backend label correction; ML training checkpoint recovery and distributed sampling remain unchanged."
+    excluded_skills: ["ai-product-extension"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-stat-unchanged
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-stat-unchanged"}
+    prompt: "Implement an accepted backend label correction; experiment randomization and confidence intervals remain unchanged."
+    excluded_skills: ["search-analytics-design"]
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
+  - id: expansion-php-review
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-php-review"}
+    prompt: "Review the actual diff for backend PHP autoload comparison behavior."
+    expected: {"path": "direct", "profile": "review-agent", "primary_skill": "ai-code-review-refactor", "layer3_skills": ["php-professional-usage"], "review_skill": "ai-code-review-refactor"}
+  - id: expansion-num-review
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-num-review"}
+    prompt: "Review the actual diff for numerical error tolerance."
+    expected: {"path": "direct", "profile": "review-agent", "primary_skill": "ai-code-review-refactor", "layer3_skills": ["numerical-correctness"], "review_skill": "ai-code-review-refactor"}
+  - id: expansion-codec-review
+    main_execution: {"producer": "main-control-agent", "task_id": "expansion-codec-review"}
+    prompt: "Review the actual diff for incremental decoder truncated frame behavior."
+    expected: {"path": "direct", "profile": "review-agent", "primary_skill": "ai-code-review-refactor", "layer3_skills": ["data-format-contract-usage"], "review_skill": "ai-code-review-refactor"}

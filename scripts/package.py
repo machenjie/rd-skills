@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 from validation_utils import (
+    SOURCE_SKILL_INVENTORY,
     NAME_RE,
     RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
     authoritative_build_input_snapshot_errors,
@@ -28,12 +29,7 @@ BUILT_SKILLS_ROOT = ROOT / "dist" / "universal" / "skills"
 ZIP_DIR = ROOT / "dist" / "openai-api" / "zips"
 RUNTIME_PROFILE = "recommended"
 RETIRED_PROFILES = ("full", "dev")
-EXPECTED_RUNTIME_COUNTS = {
-    "control": 1,
-    "professional": 25,
-    "foundation": 150,
-    "domain": 13,
-}
+EXPECTED_RUNTIME_COUNTS = {layer: len(names) for layer, names in SOURCE_SKILL_INVENTORY.items()}
 ZIP_TIMESTAMP = (2024, 1, 1, 0, 0, 0)
 MAX_ZIP_FILES = 500
 MAX_ZIP_BYTES = 5 * 1024 * 1024

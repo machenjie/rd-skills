@@ -88,6 +88,7 @@ _FOUNDATION_SOURCE_SYMBOLS = {
             "_build_route_candidates",
             "_implementation_owner_layer3",
             "_language_semantic_layers",
+            "_professional_mechanism_layers",
             "_review_risk_layer3",
         }
     ),
@@ -1272,6 +1273,52 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
                 ),
                 "boundary_atoms": ("delegated authority", "consequential"),
             },
+            'retrieval-quality': {'trigger_atoms': ('rag', 'retrieval', 'embedding'),
+             'domain_signals': ('rag', 'retrieval', 'embedding'),
+             'boundary_signals': ('chunking',
+                                  'reranking',
+                                  'recall',
+                                  'grounded answer',
+                                  'retrieval quality',
+                                  'citation'),
+             'boundary_atoms': ('chunking',
+                                'reranking',
+                                'recall',
+                                'grounded answer',
+                                'retrieval quality',
+                                'citation')},
+            'inference-performance': {'trigger_atoms': ('llm', 'model inference'),
+             'domain_signals': ('llm', 'model inference'),
+             'boundary_signals': ('prefill',
+                                  'decode',
+                                  'kv cache',
+                                  'continuous batching',
+                                  'ttft',
+                                  'time to first token',
+                                  'token latency'),
+             'boundary_atoms': ('prefill',
+                                'decode',
+                                'kv cache',
+                                'continuous batching',
+                                'ttft',
+                                'time to first token',
+                                'token latency')},
+            'ml-training': {'trigger_atoms': ('model training', 'ml training', 'training pipeline'),
+             'domain_signals': ('model training', 'ml training', 'training pipeline'),
+             'boundary_signals': ('data split',
+                                  'label leakage',
+                                  'checkpoint recovery',
+                                  'distributed sampling',
+                                  'gradient accumulation',
+                                  'mixed precision',
+                                  'resume'),
+             'boundary_atoms': ('data split',
+                                'label leakage',
+                                'checkpoint recovery',
+                                'distributed sampling',
+                                'gradient accumulation',
+                                'mixed precision',
+                                'resume')},
             "evaluation-evidence": {
                 "trigger_atoms": ("evaluation",),
                 "domain_signals": ("rag", "prompt", "model", "provider", "evaluation"),
@@ -1779,6 +1826,205 @@ _DOMAIN_ROUTE_SPEC_CATALOG: dict[str, dict[str, Any]] = {
             },
         },
     },
+    'saas-product-extension': {'anti_atoms': ('without a subscription lifecycle',),
+     'families': {'subscription-entitlement': {'trigger_atoms': ('saas subscription',
+                                                                 'entitlement',
+                                                                 'billing event',
+                                                                 'usage correction',
+                                                                 'seat limit'),
+                                               'domain_signals': ('saas subscription',
+                                                                  'entitlement',
+                                                                  'billing event',
+                                                                  'usage correction',
+                                                                  'seat limit'),
+                                               'boundary_signals': ('grace',
+                                                                    'renewal',
+                                                                    'cancellation',
+                                                                    'effective time',
+                                                                    'duplicate',
+                                                                    'reordered',
+                                                                    'plan change',
+                                                                    'reconciliation'),
+                                               'boundary_atoms': ('grace',
+                                                                  'renewal',
+                                                                  'cancellation',
+                                                                  'effective time',
+                                                                  'duplicate',
+                                                                  'reordered',
+                                                                  'plan change',
+                                                                  'reconciliation')}}},
+    'hosted-app-extension': {'anti_atoms': ('without an extension host contract',),
+     'families': {'host-lifecycle-capability': {'trigger_atoms': ('browser extension',
+                                                                  'ide extension',
+                                                                  'mini program',
+                                                                  'mini-program',
+                                                                  'hosted application'),
+                                                'domain_signals': ('browser extension',
+                                                                   'ide extension',
+                                                                   'mini program',
+                                                                   'mini-program',
+                                                                   'hosted application'),
+                                                'boundary_signals': ('manifest',
+                                                                     'message identity',
+                                                                     'background lifetime',
+                                                                     'host permission',
+                                                                     'activation',
+                                                                     'revocation',
+                                                                     'uninstall',
+                                                                     'host api'),
+                                                'boundary_atoms': ('manifest',
+                                                                   'message identity',
+                                                                   'background lifetime',
+                                                                   'host permission',
+                                                                   'activation',
+                                                                   'revocation',
+                                                                   'uninstall',
+                                                                   'host api')}}},
+    'commerce-fulfillment-extension': {'anti_atoms': ('without order or inventory state',),
+     'families': {'inventory-order-fulfillment': {'trigger_atoms': ('inventory reservation',
+                                                                    'fulfillment',
+                                                                    'fulfilment',
+                                                                    'shipment',
+                                                                    'return merchandise'),
+                                                  'domain_signals': ('inventory reservation',
+                                                                     'fulfillment',
+                                                                     'fulfilment',
+                                                                     'shipment',
+                                                                     'return merchandise'),
+                                                  'boundary_signals': ('reservation',
+                                                                       'oversell',
+                                                                       'expiration',
+                                                                       'compensation',
+                                                                       'partial',
+                                                                       'duplicate',
+                                                                       'reordered',
+                                                                       'return',
+                                                                       'reconciliation'),
+                                                  'boundary_atoms': ('reservation',
+                                                                     'oversell',
+                                                                     'expiration',
+                                                                     'compensation',
+                                                                     'partial',
+                                                                     'duplicate',
+                                                                     'reordered',
+                                                                     'return',
+                                                                     'reconciliation')}}},
+    'realtime-media-extension': {'anti_atoms': ('without media timing',),
+     'families': {'media-clock-quality': {'trigger_atoms': ('webrtc',
+                                                            'audio stream',
+                                                            'video stream',
+                                                            'media pipeline',
+                                                            'realtime media'),
+                                          'domain_signals': ('webrtc',
+                                                             'audio stream',
+                                                             'video stream',
+                                                             'media pipeline',
+                                                             'realtime media'),
+                                          'boundary_signals': ('jitter',
+                                                               'clock',
+                                                               'timestamp',
+                                                               'backpressure',
+                                                               'latency',
+                                                               'packet loss',
+                                                               'av sync',
+                                                               'a/v sync',
+                                                               'keyframe'),
+                                          'boundary_atoms': ('jitter',
+                                                             'clock',
+                                                             'timestamp',
+                                                             'backpressure',
+                                                             'latency',
+                                                             'packet loss',
+                                                             'av sync',
+                                                             'a/v sync',
+                                                             'keyframe')}}},
+    'game-simulation-extension': {'anti_atoms': ('without simulation state',),
+     'families': {'simulation-authority-time': {'trigger_atoms': ('game simulation',
+                                                                  'game loop',
+                                                                  'game server',
+                                                                  'simulation tick',
+                                                                  'physics simulation'),
+                                                'domain_signals': ('game simulation',
+                                                                   'game loop',
+                                                                   'game server',
+                                                                   'simulation tick',
+                                                                   'physics simulation'),
+                                                'boundary_signals': ('fixed timestep',
+                                                                     'authority',
+                                                                     'prediction',
+                                                                     'reconciliation',
+                                                                     'replay',
+                                                                     'rollback',
+                                                                     'deterministic',
+                                                                     'tick order'),
+                                                'boundary_atoms': ('fixed timestep',
+                                                                   'authority',
+                                                                   'prediction',
+                                                                   'reconciliation',
+                                                                   'replay',
+                                                                   'rollback',
+                                                                   'deterministic',
+                                                                   'tick order')}}},
+    'graphics-compute-extension': {'anti_atoms': ('cpu-only computation', 'css-only rendering'),
+     'families': {'device-resource-execution': {'trigger_atoms': ('webgpu',
+                                                                  'vulkan',
+                                                                  'metal',
+                                                                  'cuda',
+                                                                  'hip kernel',
+                                                                  'gpu',
+                                                                  'shader'),
+                                                'domain_signals': ('webgpu',
+                                                                   'vulkan',
+                                                                   'metal',
+                                                                   'cuda',
+                                                                   'hip kernel',
+                                                                   'gpu',
+                                                                   'shader'),
+                                                'boundary_signals': ('device loss',
+                                                                     'synchronization',
+                                                                     'buffer layout',
+                                                                     'shader interface',
+                                                                     'resource lifetime',
+                                                                     'compile options',
+                                                                     'pipeline cache',
+                                                                     'command submission',
+                                                                     'memory visibility'),
+                                                'boundary_atoms': ('device loss',
+                                                                   'synchronization',
+                                                                   'buffer layout',
+                                                                   'shader interface',
+                                                                   'resource lifetime',
+                                                                   'compile options',
+                                                                   'pipeline cache',
+                                                                   'command submission',
+                                                                   'memory visibility')}}},
+    'scientific-computing-extension': {'anti_atoms': ('without a scientific model',),
+     'families': {'scientific-model-evidence': {'trigger_atoms': ('scientific computation',
+                                                                  'scientific computing',
+                                                                  'scientific model',
+                                                                  'numerical simulation',
+                                                                  'scientific solver'),
+                                                'domain_signals': ('scientific computation',
+                                                                   'scientific computing',
+                                                                   'scientific model',
+                                                                   'numerical simulation',
+                                                                   'scientific solver'),
+                                                'boundary_signals': ('units',
+                                                                     'dimensions',
+                                                                     'conditioning',
+                                                                     'convergence',
+                                                                     'uncertainty',
+                                                                     'discretization',
+                                                                     'conservation',
+                                                                     'error oracle'),
+                                                'boundary_atoms': ('units',
+                                                                   'dimensions',
+                                                                   'conditioning',
+                                                                   'convergence',
+                                                                   'uncertainty',
+                                                                   'discretization',
+                                                                   'conservation',
+                                                                   'error oracle')}}},
 }
 
 
@@ -2427,6 +2673,7 @@ def _build_route_candidates(
         support_foundations = list(dict.fromkeys(support_foundations))
     support_foundations = list(dict.fromkeys([
         *support_foundations, *_language_semantic_layers(normalized_text),
+        *_professional_mechanism_layers(normalized_text),
     ]))
     support_rule_ids = [
         candidate["candidate_id"]
@@ -4461,7 +4708,12 @@ def _installed_client_scope_subject(scope: str) -> bool:
     """Recognize one independently changed installed-client scope."""
 
     normalized_scope = _normalize_effect_scope(scope)
-    return (
+    hosted = any(_contains_signal(normalized_scope, target) for target in (
+        "browser extension", "ide extension", "mini program", "hosted application",
+    )) and any(_contains_signal(normalized_scope, mechanism) for mechanism in (
+        "manifest", "message", "background", "host permission", "activation", "revocation", "uninstall", "host api",
+    ))
+    return hosted or (
         any(
             _contains_signal(
                 normalized_scope,
@@ -9044,7 +9296,7 @@ def _classify_professional_families(
         ),
         evidence=("integration-edge",),
     )
-    library_subject = any(signal in effect_value for signal in (
+    library_subject = bool(re.search(r"\b(?:standalone|independent|distributed)\s+(?:[a-z]+\s+){0,2}library\b", effect_value)) or any(signal in effect_value for signal in (
         "standalone library", "independent library", "distributed library",
         "python library", "typescript library", "public cli", "sdk internal",
         "developer tool product",
@@ -9504,16 +9756,22 @@ _LANGUAGE_CLI_RE = re.compile(
 def _language_semantic_layers(text: str) -> list[str]:
     """Share concrete language evidence between implementation, analysis and review."""
     patterns = (
-        ("python-professional-usage", r"\bpython\b", r"\b(?:import|reload|fork|spawn|async|cancellation|context propagation|resource lifetime|mutability|aliasing|serialization)\b"),
+        ("python-professional-usage", r"\b(?:python|django|sqlalchemy|asgi|fastapi)\b", r"\b(?:import|reload|fork|spawn|async|cancellation|context propagation|resource lifetime|mutability|aliasing|serialization|queryset|transaction|session|lazy loading|dependency cleanup|request lifetime)\b"),
         ("go-professional-usage", r"\b(?:go|golang)\b", r"\b(?:context|goroutine|channel|typed.nil|errors? (?:is|as|identity)|timer|ticker|slice|mutex|atomic)\b"),
         ("typescript-professional-usage", r"\btypescript\b", r"\b(?:runtime validation|structural typing|type erasure|type.only import|discriminant|promise|abortsignal|safe integer|bigint|esm|cjs|declaration)\b"),
         ("rust-professional-usage", r"\brust\b", r"\b(?:ownership|lifetimes?|borrow(?:ed|ing)?|drop|unsafe|ffi|panic|cancellation|send|sync|pinning)\b"),
         ("cpp-professional-usage", r"\bcplusplus\b|\bc source\b", r"\b(?:ownership|raii|borrow(?:ed|ing)?|lifetimes?|iterator|view|undefined behavior|bounds|overflow|aliasing|alignment|exception|abi|ffi|memory order)\b"),
         ("nodejs-runtime-professional-usage", r"\bnode(?:\.js|js|\s+js)\b", r"\b(?:event.loop|stream|backpressure|buffer|worker|async.context|module.cache|timer|cancellation|resource.handle|handles)\b"),
-        ("java-jvm-professional-usage", r"\b(?:java|jvm)\b", r"\b(?:classloader|interruptedexception|interruption|executor|virtual thread|thread.local|proxy|self.invocation|suppressed|generics|serialization)\b"),
+        ("java-jvm-professional-usage", r"\b(?:java|jvm|scala|spring)\b", r"\b(?:classloader|interruptedexception|interruption|executor|virtual thread|thread.local|proxy|self.invocation|suppressed|generics|serialization|bean|advice|implicit|given|opaque type|collection|effect)\b"),
         ("kotlin-professional-usage", r"\bkotlin\b", r"\b(?:coroutine|flow|stateflow|null|java interop|sealed|reified|delegated|dsl|compose|kotlin code)\b"),
         ("csharp-dotnet-professional-usage", r"\b(?:csharp|dotnet)\b", r"\b(?:async disposal|cancellationtoken|linq|nullable|di|trimming|aot behavior|assembly|com|ui dispatch)\b"),
         ("swift-professional-usage", r"\bswift\b", r"\b(?:arc|actor isolation|mainactor|sendable|cancellation|copy.on.write|optional|type erasure|objective.c|swiftui|module semantics)\b"),
+        ('php-professional-usage', '\\bphp\\b', '\\b(?:coercion|comparison|autoload|exception|resource lifetime|worker state|request lifetime)\\b'),
+        ('ruby-professional-usage', '\\bruby\\b', '\\b(?:method lookup|autoload|keyword argument|mutation|exception|ensure|fiber|resource lifetime)\\b'),
+        ('dart-professional-usage', '\\bdart\\b', '\\b(?:isolate|future|stream|cancellation|subscription|null safety|resource lifetime)\\b'),
+        ('beam-professional-usage', '\\b(?:beam|erlang|elixir)\\b', '\\b(?:mailbox|supervisor|supervision|process|monitor|message order|timeout|retry|restart)\\b'),
+        ('r-professional-usage', '\\br\\b', '\\b(?:recycling|missingness|na|nan|vectorization|shape|factor|random stream)\\b'),
+        ('julia-professional-usage', '\\bjulia\\b', '\\b(?:dispatch|type stability|broadcast|aliasing|array layout|task|random stream)\\b'),
     )
     # Preserve language identity before the shared effect tokenizer removes punctuation.
     text = text.casefold().replace("c++", "cplusplus").replace("c#", "csharp").replace(".net", "dotnet")
@@ -9528,7 +9786,7 @@ def _language_semantic_layers(text: str) -> list[str]:
             ):
                 selected.append(name)
             continue
-        for _scope_id, scope in _bounded_effect_scopes(text):
+        for scope in _active_knowledge_scopes(text):
             if _scope_is_unchanged(scope) or _documentation_only(scope) or re.search(
                 r"\b(?:only in (?:comments|documentation)|(?:build|package|signing|packaging)(?:[- ](?:policy|mechanics|configuration))? only)\b", scope
             ):
@@ -9551,6 +9809,57 @@ def _task_local_context(text: str) -> str:
     )
 
 
+def _active_knowledge_scopes(text: str) -> tuple[str, ...]:
+    """Keep local active mechanisms without inheriting unchanged list tails."""
+
+    active: list[str] = []
+    for statement in _EFFECT_STATEMENT_BOUNDARY_RE.split(text.casefold()):
+        # Keep qualified lists together until their effect is known. Splitting
+        # commas first turns "X, Y and Z unchanged" into false positive X/Y.
+        clauses = re.split(
+            r"\b(without|with)\b|\band\s+(?=(?:keep|leave|preserve)\b)",
+            statement,
+        )
+        qualifier = ""
+        for clause in clauses:
+            if clause is None:
+                continue
+            if clause in {"with", "without"}:
+                qualifier = clause
+                continue
+            value = _normalize_effect_scope(clause)
+            if qualifier == "without":
+                value = "without " + value
+            qualifier = ""
+            if not value or _scope_is_unchanged(value):
+                continue
+            for _scope_id, scope in _bounded_effect_scopes(value):
+                if not _scope_is_unchanged(scope):
+                    active.append(scope)
+    return tuple(active)
+
+
+def _professional_mechanism_layers(text: str) -> list[str]:
+    """Select transferable mechanisms only when the active scope needs them."""
+    selected: list[str] = []
+    for scope in _active_knowledge_scopes(text):
+        if _documentation_only(scope):
+            continue
+        if re.search(r"\b(?:numerical|floating point|mixed precision|reduction order)\b", scope) and re.search(
+            r"\b(?:error|precision|tolerance|conditioning|stability|overflow|underflow|cancellation|oracle|reproducibility)\b", scope
+        ):
+            selected.append("numerical-correctness")
+        if re.search(r"\b(?:codec|decoder|encoder|stream parser)\b", scope) and re.search(
+            r"\b(?:incremental|partial|truncated|varint|frame length|end of input|chunk boundary)\b", scope
+        ):
+            selected.append("data-format-contract-usage")
+        if re.search(r"\b(?:experiment|ab test|a b test)\b", scope) and re.search(
+            r"\b(?:sample ratio|randomization|randomisation|multiple comparison|confidence interval|sequential peeking|effect size)\b", scope
+        ):
+            selected.append("search-analytics-design")
+    return list(dict.fromkeys(selected))
+
+
 def _implementation_owner_layer3(
     family: str,
     text: str,
@@ -9564,6 +9873,7 @@ def _implementation_owner_layer3(
 
     configuration_risk = _configuration_runtime_policy_risk(text)
     dependency_risk = _dependency_package_risk(text)
+    active_text = " ; ".join(_active_knowledge_scopes(text))
     # Owner knowledge follows changed objects, never repository technology
     # inventory or a neighboring module mentioned as background.
     text = " ; ".join(
@@ -9723,7 +10033,7 @@ def _implementation_owner_layer3(
             selected.append("idempotency-retry-design")
     elif family == "repository-tooling":
         if any(
-            signal in text
+            signal in active_text
             for signal in ("generator", "compiler", "linter", "build")
         ):
             selected.append("build-tool-professional-usage")
@@ -9736,7 +10046,7 @@ def _implementation_owner_layer3(
         if filesystem_effect_state == EFFECT_CHANGED:
             selected.append("filesystem-process-safety")
         if any(
-            signal in text
+            signal in active_text
             for signal in (
                 "generator",
                 "compiler",
@@ -9828,19 +10138,19 @@ def _implementation_owner_layer3(
     ):
         selected.append("message-queue-design")
     if family in {"repository-tooling", "backend", "frontend", "installed-client", "library-tool-product"}:
-        if any(signal in text for signal in ("initialization contract", "bootstrap contract", "new repository layout")):
+        if any(signal in active_text for signal in ("initialization contract", "bootstrap contract", "new repository layout")):
             selected.append("project-initialization")
-        if any(signal in text for signal in ("rebase", "merge conflict", "history recovery", "branch recovery")):
+        if any(signal in active_text for signal in ("rebase", "merge conflict", "history recovery", "branch recovery", "pr review feedback", "review comment triage")):
             selected.append("git-professional-usage")
-        if any(signal in text for signal in ("build graph", "build configuration", "toolchain identity")):
+        if any(signal in active_text for signal in ("build graph", "build configuration", "toolchain identity")):
             selected.append("build-tool-professional-usage")
-        if any(signal in text for signal in ("dependency graph", "api migration", "codemod", "dependency compatibility", "package lifecycle")):
-            if "mechanical lockfile refresh" not in text:
+        if any(signal in active_text for signal in ("dependency graph", "api migration", "codemod", "dependency compatibility", "package lifecycle")):
+            if "mechanical lockfile refresh" not in active_text:
                 selected.append("package-dependency-management")
-        if any(signal in text for signal in ("structural refactor", "behavior-preserving refactor", "behaviour-preserving refactor")):
-            if not any(signal in text for signal in ("simple rename", "formatting only", "owner is unresolved")):
+        if any(signal in active_text for signal in ("structural refactor", "behavior preserving refactor", "behaviour preserving refactor")):
+            if not any(signal in active_text for signal in ("simple rename", "formatting only", "owner is unresolved")):
                 selected.append("refactoring")
-        if any(signal in text for signal in ("local ci mismatch", "local passes but ci fails", "environment differential")):
+        if any(signal in active_text for signal in ("local ci mismatch", "local passes but ci fails", "environment differential")):
             selected.append("failure-diagnosis")
         languages = _language_semantic_layers(text)
         if family == "frontend":
@@ -9850,6 +10160,12 @@ def _implementation_owner_layer3(
                 "python-professional-usage", "go-professional-usage", "java-jvm-professional-usage",
             }]
         selected.extend(languages)
+    mechanism_owners = {
+        "numerical-correctness": {"backend", "frontend", "installed-client", "library-tool-product", "test-validation"},
+        "data-format-contract-usage": {"backend", "integration", "library-tool-product", "data-api-contract"},
+        "search-analytics-design": {"test-validation", "data-middleware"},
+    }
+    selected.extend(name for name in _professional_mechanism_layers(text) if family in mechanism_owners[name])
     return list(dict.fromkeys(selected))
 
 
@@ -16293,7 +16609,7 @@ def _route_impl(
     if "repository source evidence" in text and any(
         signal in text for signal in ("explain", "question")
     ):
-        language_layers = _language_semantic_layers(text)
+        language_layers = list(dict.fromkeys([*_language_semantic_layers(text), *_professional_mechanism_layers(text)]))
         if language_layers:
             add_candidate(
                 "analyzed", "analysis-agent", "engineering-change-analysis",

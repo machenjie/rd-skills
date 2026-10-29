@@ -16,6 +16,10 @@ Skip ordinary websites, PWAs, and changes without a browser extension target.
 - Release subscriptions, ports, and native-process resources according to their owners.
 - Test permission revocation and late responses without reviving denied operations.
 
+- Separate unload from uninstall using the target host contract; do not assume an uninstall callback exists.
+- Define uninstall cleanup and retained durable state, external registrations, and grants according to their actual owners.
+- Verify reinstall recovery against that retention policy, including externally retained registrations.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +29,8 @@ Skip ordinary websites, PWAs, and changes without a browser extension target.
 | Extension upgrades with old stored data | Migration preserves accepted state or reports recovery failure |
 | Native messaging disconnects after a request | Outcome is reconciled before repeating an external effect |
 | Permission is revoked before a late reply | Late completion cannot restore revoked capability |
+
+| Uninstall then reinstall with retained external state | Cleanup and recovery follow the target host policy without duplicate registrations or revived grants |
 
 ## Proof Limits
 

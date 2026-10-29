@@ -16,6 +16,10 @@ Skip internal repository plugins without an IDE host lifecycle or capability con
 - Preserve supported configuration and stored-state migration across extension upgrades.
 - Check that remote paths, credentials, and process results are not confused with local equivalents.
 
+- Separate unload from uninstall using the target host contract; do not assume an uninstall callback exists.
+- Define uninstall cleanup and retained durable state, external registrations, and grants according to their actual owners.
+- Verify reinstall recovery against that retention policy, including externally retained registrations.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +29,8 @@ Skip internal repository plugins without an IDE host lifecycle or capability con
 | Host restarts with pending work | State and registrations recover without duplicate effects |
 | Contribution activates on another supported version | Activation matches that version contribution contract |
 | Webview sends a forged message | Receiver validates message identity and permitted operation |
+
+| Uninstall then reinstall with retained external state | Cleanup and recovery follow the target host policy without duplicate registrations or revived grants |
 
 ## Proof Limits
 

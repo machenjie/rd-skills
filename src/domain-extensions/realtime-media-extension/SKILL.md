@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for media timing, codec, play
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply timing, playback, and media-resource constraints to clients, media workers, and reusable media components.
 
 ## When To Use
@@ -56,4 +58,7 @@ Apply timing, playback, and media-resource constraints to clients, media workers
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [media processing completeness and seek](references/media-processing-completeness-and-seek.md) | targeted | codec/container changes, transcoding, clipping, media completion, or seek behavior | uploads that preserve an opaque artifact without making playback claims | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |
+| [timing buffering and track lifecycle](references/timing-buffering-and-track-lifecycle.md) | targeted | live capture, clock mapping, jitter, bitrate adaptation, tracks, or reconnect behavior | opaque file transfer and connections without media timing decisions | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |

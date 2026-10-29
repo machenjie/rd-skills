@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for scientific model, solver,
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply model-validity and solver-evidence constraints while reusing established numerical error and representation methods.
 
 ## When To Use
@@ -56,4 +58,6 @@ Apply model-validity and solver-evidence constraints while reusing established n
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [solver validity and reproducibility](references/solver-validity-and-reproducibility.md) | targeted | model assumptions, solver applicability, convergence, conserved quantities, or stochastic scientific claims | numeric formatting and calculations without a scientific model or solver decision | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit |

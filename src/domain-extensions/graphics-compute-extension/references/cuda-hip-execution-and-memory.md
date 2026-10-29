@@ -18,6 +18,9 @@ Skip CPU-only C/C++ and graphics-only paths without CUDA or HIP execution.
 - Bound memory use and cleanup across cancellation, failure, and device recovery.
 - Measure transfer, launch, kernel, and synchronization costs separately when identifying the actual bottleneck.
 
+- When artifacts change, pair shader/kernel identity with asset content, compile options, and interface/layout versions.
+- Invalidate affected cached pipelines or compiled artifacts using the actual API and hot-reload contract.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -28,6 +31,8 @@ Skip CPU-only C/C++ and graphics-only paths without CUDA or HIP execution.
 | Launch returns before a device error appears | Completion observation prevents false success |
 | Optimized reduction changes accumulation order | Independent numeric oracle evaluates error before speedup acceptance |
 | Port moves from CUDA to HIP | Target-specific defaults and supported behavior are revalidated |
+
+| Old shader/kernel is paired with new asset content or layout | Incompatible or stale artifacts are rebuilt or rejected before their result is accepted |
 
 ## Proof Limits
 

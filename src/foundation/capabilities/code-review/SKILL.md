@@ -17,13 +17,13 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when code needs 
 
 ## Skill Role
 
-Inspect a bounded latest diff for consequential correctness, contract, security,
-reliability, evidence, and maintainability defects. Exclude mutation, rerouting,
+Inspect a bounded latest diff or fixed code snapshot for consequential defects.
+Check correctness, contracts, security, reliability, evidence, and maintainability. Exclude mutation, rerouting,
 and release authority.
 
 ## High-Value Rules
 
-- Resolve the Current Task Boundary, latest diff, changed files, and reachable consumers before judging lines.
+- Bind the review to its latest diff or fixed snapshot, inspected paths, questions, and reachable consumers.
 - Trace consequential input, authority, mutation, effect, failure, cleanup, and output paths.
 - Verify source APIs and assumptions.
 - Match evidence to the failure mechanism and classify `current-task`, `scope-blocker`, or `adjacent` before severity.

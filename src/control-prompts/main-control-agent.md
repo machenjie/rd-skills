@@ -17,14 +17,40 @@ Do not add a level, risk score, mode, severity ladder, or state machine to choos
 
 ## Professional Routing
 
-Use references/professional-skill-router.md once to select expertise. Select exactly one Primary Professional Skill and authorized Layer 3 Skills for the current engineering need as defined by the Core selection contract. Its selector owns JIT Layer 3 selection. Preserve positive and anti-trigger routing, Domain authorization, and necessary professional References. In each analysis-agent, task-agent, or review-agent assignment, direct it to apply the assigned Primary Professional Skill and selected Layer 3. Each assignment carries directly readable Host-resolved paths for Primary SKILL.md, selected Layer 3 bodies, and necessary Professional/Layer 3 Reference bodies. Reuse supplied content; read missing bodies at those paths when relevant. For unresolved References, carry owner partition Host paths and assign conditional reading. Exact Layer 3 skips only Layer 3 selection. Only exact References, including [], skip Reference selection. For unresolved References, read current Primary/selected Layer 3 owner partitions directly at their Host paths; match required_by/load_when/do_not_load_when/required_output and context_admissibility. Read needed record.path verbatim under that Professional Host root after safe relative-path validation. Project Skill names or calls do not replace the assigned Primary; reuse equivalent supplied content and use project knowledge only as a supplement. Never guess roots or infer Worker asset visibility from Main discovery. Return unavailable assets or selection-changing source evidence to Main before affected judgment; no rerouting or catalog preloading.
-Use routing assets supplied by the Host. If Main cannot read a required asset, delegate its exact Host-resolved path to analysis-agent with engineering-change-analysis and no Layer 3, solely to return the current asset text. This bootstrap reads only the named control router or selected Professional entrypoint/selector assets; it does not inspect target code, search other roots, select expertise, or grant Main read/execute tools. Main decides the route from the returned text.
+Use references/professional-skill-router.md once to select expertise.
+Select one Primary Professional Skill and authorized Layer 3 Skills under the Core selection contract.
+Its selector owns JIT Layer 3 selection.
+Preserve positive triggers, anti-triggers, Domain authorization, and necessary professional References.
+Direct every Analysis, Task, and Review recipient to apply its assigned Primary and selected Layer 3.
+
+Carry directly readable Host-resolved paths for Primary SKILL.md, selected Layer 3 bodies, and necessary Reference bodies.
+Reuse supplied content. Read missing bodies at those paths when relevant.
+For unresolved References, carry owner partition Host paths and assign conditional reading.
+Exact Layer 3 skips only Layer 3 selection.
+Only exact References, including [], skip Reference selection.
+For unresolved References, read current Primary and selected Layer 3 owner partitions at their Host paths.
+Match required_by, load_when, do_not_load_when, required_output, and context_admissibility.
+Validate each selected record.path as a safe relative path.
+Read it verbatim under that Professional Host root.
+Project Skill names or calls do not replace the assigned Primary.
+Reuse equivalent supplied content. Treat project knowledge as a supplement.
+Never guess roots or infer Worker visibility from Main discovery.
+Return unavailable assets or selection-changing evidence to Main before affected judgment.
+Do not reroute or preload catalogs.
+
+Use Host-supplied routing assets.
+If Main cannot read one, delegate its exact Host-resolved path to analysis-agent with engineering-change-analysis and no Layer 3.
+Request only the named control router or selected Professional entrypoint/selector text.
+Do not inspect target code, search other roots, select expertise, or grant Main read/execute tools during this bootstrap.
+Main decides the route from the returned text.
 Core Runtime Asset Resolution binds the selected Professional root to its built assets. Preserve build/package freshness and integrity checks; do not ask agents to compute runtime digests.
 The router answers what expertise is needed. It does not impose Analysis, Brief, DAG, independent Review, or a fixed validation process. Select a Review Skill only when review is actually justified.
 
 ## Analysis and Coordination
 
-Think deeper when the user asks or current source evidence identifies a decision that could change implementation: competing owners; unclear behavior or invariants; unknown shared contracts or consumers; concurrency, transaction, recovery, migration, authority, or integration semantics.
+Think deeper when requested or when current source evidence exposes an implementation-changing decision.
+Resolve competing owners, unclear behavior, invariants, shared contracts, or consumers.
+Address material concurrency, transaction, recovery, migration, authority, and integration semantics.
 The task-agent first resolves local questions through bounded inspection. Send a concrete unresolved question to analysis-agent with that assignment's Host-resolved Primary Professional Skill locator only when deeper analysis is useful. Do not repeat analysis or redesign without new decision-relevant evidence. Carry small questions into implementation.
 Create an Engineering Brief only when complex cross-agent work needs stable engineering decisions; references/engineering-brief-template.md is optional. Keep Goal, important constraints/invariants, key decisions, validation, and unresolved issues. Decompose only for real dependencies or independently useful work; use a DAG only when it helps coordinate them.
 Ordinary single-agent changes need no formal Task Contract, Completion Contract, Signature, Fingerprint, readiness proof, ceremonial evidence fields, or Handoff. Formalize only when a real consumer or hard boundary needs it.
@@ -57,7 +83,9 @@ Reuse existing authorization. Ask only for a missing user-owned decision or genu
 Task agents inspect current owner, relevant tests and minimum affected consumers; reuse existing structure and respect dependency direction before editing. Shared state, concurrency, transactions, public/shared contracts, external consumers, migrations, financial invariants, authority changes, multi-owner dependencies, and integration boundaries require enough depth to implement and validate correctly.
 Do not introduce an abstraction, protocol, contract, validator, extension point, factory, adapter, safety layer, or dependency without current requirements or repository evidence. Future extensibility, robustness, consistency, safety, or possible reuse alone do not justify structure. Real variation, multiple implementations, genuine boundaries, and existing architecture can justify it.
 Ordinary work follows inspect -> edit -> self-check -> targeted validation -> done. After the final material edit, require fresh validation of changed behavior. Preserve normal, invalid, boundary, forbidden and regression outcomes where relevant. For reproducible defects, prove the cause, scan for the same pattern, and establish a failing behavior test before repair.
-If a defect cannot currently be reproduced safely, retain verified cause and the same-pattern scan, run available targeted checks after the final edit, and report the unavailable reproduction and unverified behavior. Setup/import/syntax failures unrelated to the defect are not behavioral RED; limited checks do not prove the unavailable behavior fixed.
+If safe reproduction is unavailable, retain the verified cause and same-pattern scan.
+Run available targeted checks after the final edit.
+Report unavailable reproduction and unverified behavior. Setup/import/syntax failures unrelated to the defect are not behavioral RED; limited checks do not prove the unavailable behavior fixed.
 The current policy bounds repeated retries at two same-path failures. After that point, retry only with a changed hypothesis, material, gap, or transition; otherwise report the concrete blocker. Do not reset the retry by renaming the task or repeating unchanged analysis.
 
 ## Review and Repair

@@ -16,6 +16,10 @@ Skip browser-only applications and unconfirmed mini-program targets.
 - Recover necessary page state after background eviction or a supported application upgrade.
 - Compare developer-tool behavior with real-device lifecycle, network, permissions, and rendering.
 
+- Separate unload from uninstall using the target host contract; do not assume an uninstall callback exists.
+- Define uninstall cleanup and retained durable state, external registrations, and grants according to their actual owners.
+- Verify reinstall recovery against that retention policy, including externally retained registrations.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +29,8 @@ Skip browser-only applications and unconfirmed mini-program targets.
 | Bridge rejects or normalizes a value | Logic and rendered state remain consistent |
 | Login expires or permission is revoked | Recovery does not reuse obsolete authority |
 | Background process is evicted during work | Required state reconstructs on the actual device |
+
+| Uninstall then reinstall with retained external state | Cleanup and recovery follow the target host policy without duplicate registrations or revived grants |
 
 ## Proof Limits
 

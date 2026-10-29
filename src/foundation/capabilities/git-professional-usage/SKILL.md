@@ -9,6 +9,8 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when merges, reb
 
 **Use when**
 
+- PR review feedback needs current-commit triage, even when Git history remains unchanged.
+
 - git merge rebase cherry-pick conflict worktree index branch upstream reflog reset revert stash force-with-lease tag signed tag release tag submodule sparse checkout generated file conflict dirty worktree
 - generated-output, source-authority, ours, theirs, merge-base, conflict-marker, unrelated-staged-changes, unstaged-diff, staged-diff, user-changes, overwrite, rollback, ref, protected-branch, history-rewrite, backup-branch, branch-naming, commit-message, commit-splitting, bisect, failure-isolation
 

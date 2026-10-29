@@ -74,6 +74,24 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
         self.assertTrue(VALIDATION.professional_automatic_routing_contract_errors(duplicate))
         self.assertEqual(inventory, VALIDATION.source_skill_inventory(ROOT))
 
+    def test_domain_inventory_rejects_omitted_duplicate_and_wrong_layer_identities(self) -> None:
+        document = load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+        self.assertEqual(VALIDATION.domain_registry_contract_errors(document), [])
+        for mutation in ("omitted", "duplicate", "wrong-layer"):
+            broken = copy.deepcopy(document)
+            rows = broken["domain_skills"]
+            if mutation == "omitted":
+                rows.pop()
+            elif mutation == "duplicate":
+                rows[-1]["name"] = rows[0]["name"]
+            else:
+                rows[-1]["name"] = "numerical-correctness"
+            with self.subTest(mutation=mutation):
+                errors = VALIDATION.domain_registry_contract_errors(broken)
+                self.assertTrue(any("identities differ" in error for error in errors))
+                if mutation == "duplicate":
+                    self.assertTrue(any("duplicates" in error for error in errors))
+
     def test_current_scope_counts_and_reciprocity_pass(self) -> None:
         self.assertEqual(
             Counter(entry["delivery_scope"] for entry in self.foundation),
@@ -85,7 +103,7 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
         )
         self.assertEqual(
             Counter(entry["content_class"] for entry in self.foundation),
-            {"compact": 128, "complex": 22},
+            {"compact": len(VALIDATION.SOURCE_SKILL_INVENTORY["foundation"]) - 22, "complex": 22},
         )
         self.assertEqual(
             [

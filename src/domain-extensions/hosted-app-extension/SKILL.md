@@ -7,6 +7,8 @@ description: "For analysis/task/review agents: use for browser, IDE, or mini-pro
 
 ## Role
 
+Focused Layer 3 Domain Skill: `analysis-agent` resolves rules; `task-agent` implements; `review-agent` checks evidence.
+
 Apply host lifecycle, capability, execution-context, and upgrade constraints to an extension or hosted application.
 
 ## When To Use
@@ -29,7 +31,7 @@ Apply host lifecycle, capability, execution-context, and upgrade constraints to 
 - Bind each capability to its declared permission and actual runtime grant.
 - Validate message sender, destination, context, and payload before privileged effects.
 - Place state according to host lifetime rather than assuming a persistent background process.
-- Treat installation, activation, update, unload, and permission revocation as separate transitions.
+- Treat installation, activation, update, unload, uninstall, and permission revocation as separate transitions.
 - Preserve migration and recovery behavior across supported host versions.
 - Verify each host independently; browser, IDE, and mini-program evidence is not interchangeable.
 
@@ -55,4 +57,8 @@ Apply host lifecycle, capability, execution-context, and upgrade constraints to 
 
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [browser extension lifecycle and messaging](references/browser-extension-lifecycle-and-messaging.md) | targeted | browser extension manifests, execution contexts, background recovery, or messaging | ordinary websites, PWAs, and changes without a browser extension target | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, proof-limit |
+| [ide extension host and workspace](references/ide-extension-host-and-workspace.md) | targeted | IDE activation, workspace trust, remote execution, host processes, or extension upgrades | internal repository plugins without an IDE host lifecycle or capability contract | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, proof-limit |
+| [mini program lifecycle and bridge](references/mini-program-lifecycle-and-bridge.md) | targeted | mini-program page lifetime, view/logic communication, login, permissions, or device behavior | browser-only applications and unconfirmed mini-program targets | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, proof-limit |

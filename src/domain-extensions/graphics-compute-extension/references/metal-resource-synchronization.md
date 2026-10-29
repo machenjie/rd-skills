@@ -16,6 +16,9 @@ Skip non-Metal paths and changes without Metal resource or execution semantics.
 - Rebuild invalid rendering state using the application recovery policy after device or command failure.
 - Compare output correctness and error bounds before accepting lower frame time or higher throughput.
 
+- When artifacts change, pair shader/kernel identity with asset content, compile options, and interface/layout versions.
+- Invalidate affected cached pipelines or compiled artifacts using the actual API and hot-reload contract.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +28,8 @@ Skip non-Metal paths and changes without Metal resource or execution semantics.
 | Buffer region is reused while in flight | Ownership prevents overwrite of pending work |
 | Shader interface or texture format changes | Pipeline compatibility and image results are checked |
 | Command fails after submission | Application reports failure and does not publish incomplete output |
+
+| Old shader/kernel is paired with new asset content or layout | Incompatible or stale artifacts are rebuilt or rejected before their result is accepted |
 
 ## Proof Limits
 

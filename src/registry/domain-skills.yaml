@@ -99,26 +99,48 @@ domain_skills:
           sequenced_after: []
           must_co_trigger_with: []
   - name: ai-product-extension
-    routing_mode: modifier-only
-    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "quality-test-gate", "security-privacy-gate"]
+    routing_mode: "modifier-only"
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "library-tool-product-builder", "platform-infrastructure-change-builder", "quality-test-gate", "reliability-observability-gate", "security-privacy-gate"]
     required_expertise_tags: ["domain-ai-product-extension", "foundation-data-api-contracts", "foundation-quality-testing", "foundation-reliability-operations", "foundation-security-privacy"]
     path: "src/domain-extensions/ai-product-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
     trigger_signals: ["model", "prompt", "retrieval", "embedding", "evaluation", "AI data"]
     boundary_signals: ["permission", "model context", "delegated authority", "consequential", "judge calibration", "dataset contamination", "provider regression"]
-    anti_trigger_signals:
-      - "deterministic product behavior with no AI surface"
-      - "AI terminology, static algorithms, or ordinary search without a model decision"
+    anti_trigger_signals: ["deterministic product behavior with no AI surface", "AI terminology, static algorithms, or ordinary search without a model decision"]
     required_inputs: ["model and data contract, evaluation target, and safety boundary"]
     output_contract: ["AI-specific risks, evaluation, fallback, and observability obligations"]
     escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
     reference_index:
       - path: "references/checklist.md"
-        type: decision-checklist
+        type: "decision-checklist"
         load_when: "model prompt retrieval embedding tool or evaluation behavior crosses product surfaces"
         do_not_load_when: "AI terminology describes a static algorithm or ordinary search without a model decision"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
+      - path: "references/ai-evaluation-design-and-analysis.md"
+        type: "targeted"
+        load_when: "An AI product needs evaluation tasks, trial design, graders, or interpretation of a model or agent change."
+        do_not_load_when: "The task has no AI behavior comparison or concerns the repository's static Skill-validation machinery alone."
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+      - path: "references/llm-inference-performance.md"
+        type: "targeted"
+        load_when: "LLM serving needs a quality, latency, capacity, or cost decision under a defined workload."
+        do_not_load_when: "The task only connects an ordinary model API without an inference-performance decision."
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+      - path: "references/ml-training-and-experiment-engineering.md"
+        type: "targeted"
+        load_when: "Model training or fine-tuning changes data splits, experiments, checkpoints, or the deployable model package."
+        do_not_load_when: "The task only integrates a model API, ordinary RAG, or a data pipeline without model-training behavior."
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+      - path: "references/rag-quality-and-retrieval-design.md"
+        type: "targeted"
+        load_when: "Model-backed retrieval needs evidence selection, context assembly, or answer-quality decisions."
+        do_not_load_when: "The task is ordinary search without a model decision or changes no retrieval or answer-quality mechanism."
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
   - name: bigdata-product-extension
     routing_mode: modifier-only
     used_by: ["data-middleware-change-builder", "engineering-change-analysis", "quality-test-gate"]
@@ -1530,4 +1552,281 @@ domain_skills:
                   engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "engineering-brief.Key Decisions", "engineering-brief.Important Constraints and Invariants"]
                 review-agent:
                   engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "engineering-brief.Key Decisions", "engineering-brief.Important Constraints and Invariants", "review-handoff.Evidence", "review-handoff.Proof Limit"]
+          must_co_trigger_with: []
+  - name: saas-product-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-saas-product-extension"]
+    path: "src/domain-extensions/saas-product-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Trial, renewal, grace, cancellation, plan changes, refunds, or seat limits affect product access", "Usage corrections or asynchronous billing events can diverge from entitlement state"]
+    anti_trigger_signals: ["The task changes ordinary tenant lookup or one-time payment behavior without a subscription lifecycle", "A provider name appears without a SaaS state or policy decision"]
+    required_inputs: ["Product policy, organization/workspace identity, subscription and entitlement authorities, and effective-time rules", "Invoice/payment events, usage identity, seat/quota definitions, provider ordering, and retention policy"]
+    output_contract: ["Return state relationships, policy/effective-time decisions, reconciliation outcomes, temporal validation, and remaining policy ambiguity"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "domain-impact-modeler", "engineering-change-analysis", "integration-change-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/subscription-entitlement-timelines.md"
+        type: "targeted"
+        load_when: "trial, grace, plan changes, cancellation, restoration, or refund effects on access"
+        do_not_load_when: "ordinary tenant queries and one-time payments without subscription state"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "residual-risk"]
+      - path: "references/usage-seats-and-corrections.md"
+        type: "targeted"
+        load_when: "metered usage, quotas, seat changes, duplicate events, or usage correction"
+        do_not_load_when: "subscription wording and access changes that do not alter metering or capacity rules"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "residual-risk"]
+    boundary_signals: ["Model organization, subscription, invoice, payment, entitlement, and usage as distinct facts with explicit relationships", "Derive access from the product entitlement policy, not a single provider payment flag", "Separate event occurrence, receipt, and policy effective times", "Preserve pending plan changes until their contractual effective time", "Reconcile duplicate, late, corrected, and reordered usage or billing events", "Define how cancellation, restoration, refunds, and deletion affect rights and retained data"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/subscription-entitlement-timelines.md:
+          conflicts_with: []
+          decision_problem: "subscription-entitlement-timelines"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/usage-seats-and-corrections.md:
+          conflicts_with: []
+          decision_problem: "usage-seats-and-corrections"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: hosted-app-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-hosted-app-extension"]
+    path: "src/domain-extensions/hosted-app-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Manifest, host permissions, message identity, background lifetime, or host API behavior affects a hosted application", "Host versions, remote execution, upgrades, or revocation change available capabilities"]
+    anti_trigger_signals: ["The task is an ordinary webpage, PWA, or standalone application without an extension host contract", "Only a framework label changes, with no confirmed host target"]
+    required_inputs: ["Host and minimum version, manifest, contribution points, execution contexts, and actual permissions", "Message endpoints, persistent state, activation/recovery paths, upgrade format, and target-device evidence"]
+    output_contract: ["Return host/version scope, context and permission decisions, lifecycle recovery, per-host validation, and untested targets"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder", "integration-change-builder", "quality-test-gate", "security-privacy-gate"]
+    reference_index:
+      - path: "references/browser-extension-lifecycle-and-messaging.md"
+        type: "targeted"
+        load_when: "browser extension manifests, execution contexts, background recovery, or messaging"
+        do_not_load_when: "ordinary websites, PWAs, and changes without a browser extension target"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "proof-limit"]
+      - path: "references/ide-extension-host-and-workspace.md"
+        type: "targeted"
+        load_when: "IDE activation, workspace trust, remote execution, host processes, or extension upgrades"
+        do_not_load_when: "internal repository plugins without an IDE host lifecycle or capability contract"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "proof-limit"]
+      - path: "references/mini-program-lifecycle-and-bridge.md"
+        type: "targeted"
+        load_when: "mini-program page lifetime, view/logic communication, login, permissions, or device behavior"
+        do_not_load_when: "browser-only applications and unconfirmed mini-program targets"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "proof-limit"]
+    boundary_signals: ["Bind each capability to its declared permission and actual runtime grant", "Validate message sender, destination, context, and payload before privileged effects", "Place state according to host lifetime rather than assuming a persistent background process", "Treat installation, activation, update, unload, and permission revocation as separate transitions", "Preserve migration and recovery behavior across supported host versions", "Verify each host independently; browser, IDE, and mini-program evidence is not interchangeable"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/browser-extension-lifecycle-and-messaging.md:
+          conflicts_with: []
+          decision_problem: "browser-extension-lifecycle-and-messaging"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/ide-extension-host-and-workspace.md:
+          conflicts_with: []
+          decision_problem: "ide-extension-host-and-workspace"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/mini-program-lifecycle-and-bridge.md:
+          conflicts_with: []
+          decision_problem: "mini-program-lifecycle-and-bridge"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: commerce-fulfillment-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-commerce-fulfillment-extension"]
+    path: "src/domain-extensions/commerce-fulfillment-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Inventory, seats, time slots, or quotas move through reservation, confirmation, fulfillment, cancellation, or return", "Expiry, late payment, partial fulfillment, or multiple locations affect resource availability"]
+    anti_trigger_signals: ["Only catalog labels, prices for display, or payment transport change", "The workflow has no finite-resource or fulfillment state decision"]
+    required_inputs: ["Resource units and authority, reservation identity, order lines, effective prices, and channel/location scope", "Expiry, payment, fulfillment, cancellation, and return policies with their concurrency and reconciliation boundaries"]
+    output_contract: ["Return resource/state relationships, transition authority, race resolution, conservation evidence, and unresolved commercial policy"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "domain-impact-modeler", "engineering-change-analysis", "integration-change-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/reservation-fulfillment-and-return-transitions.md"
+        type: "targeted"
+        load_when: "finite-resource allocation, reservation expiry, fulfillment, cancellation, or returns"
+        do_not_load_when: "catalog display and payment-only integration without resource-state changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan"]
+    boundary_signals: ["Express conservation across available, reserved, fulfilled, returned, and retired resources using the product model", "Identify the transition that owns each allocation and release", "Make replayed cancellation or return incapable of releasing the same resource twice", "Resolve reservation expiry and late payment through explicit product policy", "Snapshot accepted price and promotion terms at the contractual point", "Keep payment, order, and fulfillment states distinct across partial outcomes", "Determine resale eligibility from the returned resource condition and location"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/reservation-fulfillment-and-return-transitions.md:
+          conflicts_with: []
+          decision_problem: "reservation-fulfillment-and-return-transitions"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: realtime-media-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-realtime-media-extension"]
+    path: "src/domain-extensions/realtime-media-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Capture, encode, container, transport, decode, playback, or seek behavior changes", "Clock mapping, jitter, latency, track changes, or transcoding resources determine acceptance"]
+    anti_trigger_signals: ["The task only uploads opaque files or establishes a connection without media behavior", "A media filename appears without a codec, timeline, playback, or resource decision"]
+    required_inputs: ["Media formats, codecs, containers, timestamps/timebases, track identities, and pipeline stages", "Latency/quality policy, target devices, transport behavior, queue limits, and playback acceptance"]
+    output_contract: ["Return pipeline and clock decisions, queue/drop behavior, track recovery, playable-output evidence, and target limitations"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "library-tool-product-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/media-processing-completeness-and-seek.md"
+        type: "targeted"
+        load_when: "codec/container changes, transcoding, clipping, media completion, or seek behavior"
+        do_not_load_when: "uploads that preserve an opaque artifact without making playback claims"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+      - path: "references/timing-buffering-and-track-lifecycle.md"
+        type: "targeted"
+        load_when: "live capture, clock mapping, jitter, bitrate adaptation, tracks, or reconnect behavior"
+        do_not_load_when: "opaque file transfer and connections without media timing decisions"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+    boundary_signals: ["Trace timestamp and timebase conversions across capture, processing, transport, and playback", "Keep audio/video synchronization tied to the chosen clock and discontinuity policy", "Bound buffering and define when stale frames are dropped rather than delivered late", "Separate transport success from decodability, playback, seek, and content completeness", "Assign track and device resources explicit stop, replacement, and reconnect behavior", "Validate bitrate adaptation against quality, latency, loss, and queue evidence", "Bound transcoding memory, work, temporary storage, and partial-output behavior"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/media-processing-completeness-and-seek.md:
+          conflicts_with: []
+          decision_problem: "media-processing-completeness-and-seek"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/timing-buffering-and-track-lifecycle.md:
+          conflicts_with: []
+          decision_problem: "timing-buffering-and-track-lifecycle"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: game-simulation-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-game-simulation-extension"]
+    path: "src/domain-extensions/game-simulation-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["Simulation steps, input sampling, physics, pause, catch-up, or frame budgets affect behavior", "Scene lifecycle, save migration, authority, prediction, rollback, or replay changes persistent or simulated state"]
+    anti_trigger_signals: ["The task is ordinary webpage animation without simulation state or game lifecycle", "Language or engine names appear without a simulation-specific decision"]
+    required_inputs: ["Simulation and render clocks, timestep policy, input identity, authoritative state, and target-device budget", "Physics assumptions, scene/asset ownership, save versions, replay records, and network recovery contract"]
+    output_contract: ["Return clock/authority rules, replay boundaries, migration behavior, state evidence, and determinism or device limits"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "library-tool-product-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/scene-assets-and-save-migration.md"
+        type: "targeted"
+        load_when: "scene transitions, asset lifetime, asynchronous loading, save compatibility, or recovery"
+        do_not_load_when: "game changes that preserve scene, artifact, and persistent-state contracts"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "proof-limit"]
+      - path: "references/simulation-clock-authority-and-replay.md"
+        type: "targeted"
+        load_when: "timestep, input sampling, physics, pause, prediction, rollback, or replay decisions"
+        do_not_load_when: "cosmetic animation without simulation state or authoritative effects"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "proof-limit"]
+    boundary_signals: ["Separate render frames from simulation steps and define the mapping from elapsed time to state updates", "Bound catch-up work while preserving the accepted simulation-time policy", "Specify input sampling and event identity across prediction, replay, and rollback", "Keep irreversible external effects outside replayable simulation steps or reconcile them by stable identity", "Define pause and slow-motion effects on simulation, audio, timers, and network state", "Preserve scene, asset, and save compatibility through load, unload, migration, and recovery", "Bound determinism claims by engine, numeric behavior, platform, concurrency, and input sequence"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/scene-assets-and-save-migration.md:
+          conflicts_with: []
+          decision_problem: "scene-assets-and-save-migration"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/simulation-clock-authority-and-replay.md:
+          conflicts_with: []
+          decision_problem: "simulation-clock-authority-and-replay"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: graphics-compute-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-graphics-compute-extension"]
+    path: "src/domain-extensions/graphics-compute-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["GPU resources, command submission, synchronization, shader interfaces, or device loss affect behavior", "Coordinates, color, depth, kernel execution, or device-memory layout determine accepted output"]
+    anti_trigger_signals: ["The task changes ordinary CSS, labels, or CPU-only computation", "A GPU vendor or API name appears without a device execution or resource decision"]
+    required_inputs: ["API/runtime and device versions, capabilities, queue/stream topology, resource ownership, and shader/kernel artifacts", "Buffer/image layouts, coordinate/color conventions, error bounds, target workload, and observable output"]
+    output_contract: ["Return ownership and synchronization decisions, artifact compatibility, output/error evidence, recovery behavior, and device limits"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "library-tool-product-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/cuda-hip-execution-and-memory.md"
+        type: "targeted"
+        load_when: "CUDA or HIP kernels, device memory, streams, events, asynchronous copies, or synchronization"
+        do_not_load_when: "CPU-only C/C++ and graphics-only paths without CUDA or HIP execution"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan", "proof-limit"]
+      - path: "references/metal-resource-synchronization.md"
+        type: "targeted"
+        load_when: "Metal resource ownership, command dependencies, CPU/GPU visibility, or completion handling"
+        do_not_load_when: "non-Metal paths and changes without Metal resource or execution semantics"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan", "proof-limit"]
+      - path: "references/vulkan-synchronization-and-layouts.md"
+        type: "targeted"
+        load_when: "Vulkan stage/access dependencies, queue ownership, resource layouts, or submission lifetime"
+        do_not_load_when: "non-Vulkan paths and GPU changes without Vulkan synchronization or layout decisions"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan", "proof-limit"]
+      - path: "references/webgpu-device-and-render-contracts.md"
+        type: "targeted"
+        load_when: "WebGPU resources, command submission, shader interfaces, rendering conventions, or device loss"
+        do_not_load_when: "other graphics APIs and CSS-only rendering"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan", "proof-limit"]
+    boundary_signals: ["Trace CPU and GPU ownership from allocation through final use and destruction", "Distinguish command submission from execution completion and host-visible results", "Match synchronization and memory visibility to actual producer/consumer dependencies", "Validate layouts, strides, alignment, formats, and shader interfaces against the selected API", "Keep coordinate, color-space, depth, and numerical-error assumptions explicit", "Recreate invalid resources through the device-loss recovery contract", "Compare image or numerical correctness before accepting performance changes"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/cuda-hip-execution-and-memory.md:
+          conflicts_with: []
+          decision_problem: "cuda-hip-execution-and-memory"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/metal-resource-synchronization.md:
+          conflicts_with: []
+          decision_problem: "metal-resource-synchronization"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/vulkan-synchronization-and-layouts.md:
+          conflicts_with: []
+          decision_problem: "vulkan-synchronization-and-layouts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/webgpu-device-and-render-contracts.md:
+          conflicts_with: []
+          decision_problem: "webgpu-device-and-render-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+  - name: scientific-computing-extension
+    routing_mode: "modifier-only"
+    required_expertise_tags: ["domain-scientific-computing-extension"]
+    path: "src/domain-extensions/scientific-computing-extension"
+    role_support: ["analysis-agent", "task-agent", "review-agent"]
+    trigger_signals: ["A scientific model, solver choice, convergence rule, or stochastic experiment determines accepted results", "Units, physical assumptions, conserved quantities, or reproducibility affect a scientific conclusion"]
+    anti_trigger_signals: ["The task only formats numbers or performs ordinary CRUD without scientific inference", "A numerical calculation has no model or solver-validity decision"]
+    required_inputs: ["Model assumptions, units, shape, boundary/initial conditions, solver applicability, and failure contract", "Error budget, trusted reference or invariants, data/parameter provenance, random design, and environment"]
+    output_contract: ["Return model/solver rationale, convergence and invariant evidence, reproducibility scope, uncertainty, and remaining validity limits"]
+    escalation_signals: ["Required target behavior, authority, or verification remains unresolved"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis", "library-tool-product-builder", "quality-test-gate"]
+    reference_index:
+      - path: "references/solver-validity-and-reproducibility.md"
+        type: "targeted"
+        load_when: "model assumptions, solver applicability, convergence, conserved quantities, or stochastic scientific claims"
+        do_not_load_when: "numeric formatting and calculations without a scientific model or solver decision"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit"]
+    boundary_signals: ["Validate the modeled question and assumptions before evaluating solver output", "Match solver preconditions to stiffness, constraints, smoothness, scale, and domain as applicable", "Separate numerical error from model mismatch and measurement uncertainty", "Treat convergence and termination reason as part of the result contract", "Compare against analytical limits, reference solutions, conservation laws, or justified refinements", "Record stochastic uncertainty using the actual sampling and dependence structure", "Preserve data, parameter, code, dependency, and execution context needed to reproduce the claim"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/solver-validity-and-reproducibility.md:
+          conflicts_with: []
+          decision_problem: "solver-validity-and-reproducibility"
+          sequenced_after: []
           must_co_trigger_with: []

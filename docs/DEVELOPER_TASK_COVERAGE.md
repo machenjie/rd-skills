@@ -94,3 +94,28 @@ has not been rerun on this checkpoint. Final Development Affected and Full
 Regression remain required after all slices are integrated. Fixed expert-panel
 attestations have not been refreshed and cannot establish release readiness for
 these changed sources.
+
+## Integrated Source Checkpoint
+
+The next checkpoint integrates 14 new Layer 3 packages and 39 References.
+The registry contains 1 Control, 26 Professional, 157 Foundation, and 20 Domain Skills.
+These are physical source identities compared with independent registry declarations.
+Missing, duplicate, and wrong-layer Domain identities fail validation.
+
+The source now includes F05–F08, A01–A10, and D01–D06 content and legal loading edges.
+Those rows remain pending complete acceptance until behavioral fixtures, admission coverage,
+final inventory consumers, and clean-head regression are integrated.
+
+Observed on the integrated source tree:
+
+- 43 new route cases passed: 20 mechanisms, 20 unchanged controls, and three independent Review paths.
+- Existing 15 daily route cases and seven active/unchanged modifier cases passed.
+- Domain inventory mutation tests and reciprocal Foundation ownership checks passed.
+- Registry and all 20 Domain source contracts passed.
+- Strict Reference validation passed with 659 indexed References and no missing effective contracts.
+- Source content-size and authored-link checks passed.
+- Build emitted 27 top-level Skills, 168 targeted Layer 3 bodies, four Profiles, and 27 API archives.
+- Profile projection checks and links in 177 temporary complete Layer 3 projections passed.
+
+These checks do not satisfy final Affected, Full Regression, or Formal Release.
+The three fixed expert attestations remain unchanged; their currentness must be reported honestly.

@@ -38,6 +38,16 @@ Protect Ruby control flow, dynamic calls, resource cleanup, and concurrent conte
 - Fiber-local state is assumed to follow every thread execution path.
 - A long-running worker retains request objects or silently loses a background failure.
 
+## Stop Conditions
+
+- Resolve receiver lookup, escaping block control, and concurrent-state ownership before changing their effects.
+
+## Output Contract
+
+- Return dispatch, block, exception, concurrency, and cleanup decisions with target-engine evidence.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [dispatch blocks and concurrency](references/dispatch-blocks-and-concurrency.md) | targeted | dynamic receiver, nonlocal block control flow, cleanup, or concurrent Ruby state | unchanged Ruby code and package configuration without runtime consequences | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan |

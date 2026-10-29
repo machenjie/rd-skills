@@ -39,6 +39,16 @@ Protect process identity, message correlation, supervision semantics, and distri
 - Repeated unmatched messages grow a mailbox while expected replies still arrive.
 - Node disconnection is interpreted as proof that a command never executed.
 
+## Stop Conditions
+
+- Resolve process authority, delivery outcome, and supervision policy before retrying effects or accepting recovery.
+
+## Output Contract
+
+- Return mailbox, failure, restart, identity, and distributed-outcome decisions with sequence evidence.
+
 ## Targeted References
 
-- No task-local Reference is indexed for this Skill.
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [process messages and supervision](references/process-messages-and-supervision.md) | targeted | BEAM link/monitor choices, mailbox pressure, restart dependencies, or distributed result uncertainty | service changes that preserve these process contracts | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan |

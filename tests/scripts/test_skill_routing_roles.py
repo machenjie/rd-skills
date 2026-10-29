@@ -66,6 +66,31 @@ class SkillRoutingRoleTests(unittest.TestCase):
         cls.routing = _load("validate-skill-routing.py", "validate_skill_routing")
         cls.trajectory = _load("eval-agent-lightweight.py", "eval_agent_lightweight")
 
+    def test_expanded_mechanisms_preserve_owner_and_anti_triggers(self) -> None:
+        cases = load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]
+        selected = [row for row in cases if row["id"].startswith("expansion-")]
+        self.assertEqual(len(selected), 43)
+        for row in selected:
+            with self.subTest(case=row["id"]):
+                self.assertEqual(_route(row["prompt"], task_id=row["id"]), row["expected"])
+
+    def test_task_modifiers_use_active_scope_evidence(self) -> None:
+        cases = [
+            ("Implement an accepted backend label correction with the initialization contract, build graph, and dependency graph unchanged.", []),
+            ("Implement a backend label correction with no structural refactor.", []),
+            ("Implement a backend dependency graph compatibility change while build configuration remains unchanged.", ["package-dependency-management"]),
+            ("Implement a backend label correction; initialization contract, build graph, and dependency graph remain unchanged.", []),
+            ("Implement a backend dependency graph compatibility change and keep the build configuration unchanged.", ["package-dependency-management"]),
+            ("Implement a backend repair from PR review feedback without changing Git history.", ["git-professional-usage"]),
+            ("Implement a backend label correction with no PR review feedback or Git history change.", []),
+        ]
+        for index, (prompt, expected) in enumerate(cases):
+            with self.subTest(prompt=prompt):
+                actual = _route(prompt, task_id=f"active-modifier-{index}")
+                self.assertEqual("backend-change-builder", actual["primary_skill"])
+                self.assertEqual(expected, actual["layer3_skills"])
+                self.assertIsNone(actual["review_skill"])
+
     def test_daily_development_modes_preserve_implementation_ownership(self) -> None:
         cases = load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]
         selected = [case for case in cases if case["id"].startswith("daily-")]

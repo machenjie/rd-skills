@@ -16,6 +16,9 @@ Skip non-Vulkan paths and GPU changes without Vulkan synchronization or layout d
 - Handle failed submission or device loss without treating affected output as complete.
 - Combine validation-layer evidence with captures and independent image or numeric comparisons.
 
+- When artifacts change, pair shader/kernel identity with asset content, compile options, and interface/layout versions.
+- Invalidate affected cached pipelines or compiled artifacts using the actual API and hot-reload contract.
+
 ## Failure Probes
 
 | Sequence or probe | Required observation |
@@ -25,6 +28,8 @@ Skip non-Vulkan paths and GPU changes without Vulkan synchronization or layout d
 | Host destroys a resource after enqueue | Lifetime extends through dependent device use |
 | Validation reports no errors but colors differ | Image oracle still determines correctness |
 | Device capability differs on another target | Feature and synchronization assumptions are checked independently |
+
+| Old shader/kernel is paired with new asset content or layout | Incompatible or stale artifacts are rebuilt or rejected before their result is accepted |
 
 ## Proof Limits
 
