@@ -6,6 +6,25 @@ This project uses a simple release history format with an `Unreleased` section u
 
 ## Unreleased
 
+### Developer coverage expansion
+
+- Expanded the source inventory to 1 Control, 26 Professional, 157 Foundation,
+  and 20 Domain Skills. Runtime delivery is 27/168/9 top-level/targeted/routing-only.
+- Added library and tool product ownership. Extended workspace, technical investigation,
+  snapshot audit, language, framework, numerical, AI, and domain decision methods.
+- Current routing has 307 canonical entries and 62 capability entries.
+  Its 530 admissions are 110 Professional, 348 Foundation, and 72 Domain.
+  The projection covers 148 unique Foundation Skills in the 177-entry Layer 3 catalog.
+- Added nine executable benchmark cases with passing and faulty controls.
+  These bounded assertions do not prove live framework or production behavior.
+- Preserved exact historical Runtime ownership during upgrades. The new current
+  generation uses `runtime-coverage-v1`; historical `runtime-26` and `runtime-27`
+  remain distinct. The earlier Phase 2 counts below describe the prior baseline.
+- Current Professional review bounds retain every declared relation and conflict.
+  A fingerprinted per-target formula permits the authorized inventory expansion.
+  Historical caps and the catalog ceiling remain enforced. Existing attestations
+  remain unchanged and cannot authorize current carry after contract drift.
+
 ### Added
 
 - Added the authoritative `main-control-agent` prompt with implementation-first

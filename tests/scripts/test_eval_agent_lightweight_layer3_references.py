@@ -16,6 +16,58 @@ class Layer3ReferenceTests(unittest.TestCase):
                     layer3_skills=['code-review'],
                     layer3_references=['references/layer3/code-review/references/finding-taxonomy.md'])
 
+    def test_expanded_references_reach_exact_owners_and_reject_unselected_or_wrong_roles(self):
+        # Independent assignments exercise role/owner authorization and Host paths.
+        # They prove legal delivery, not a model's conditional-loading judgment.
+        groups = {
+            "java-jvm-professional-usage": ("backend-change-builder", "spring-runtime-wiring-and-advice scala-types-collections-and-effects"),
+            "python-professional-usage": ("backend-change-builder", "asgi-request-resource-lifecycle django-orm-evaluation-and-transactions sqlalchemy-session-and-loading"),
+            "test-strategy": ("quality-test-gate", "load-model-and-capacity-evidence"),
+            "unit-testing": ("quality-test-gate", "generative-invariant-testing"),
+            "ai-product-extension": ("backend-change-builder", "ai-evaluation-design-and-analysis llm-inference-performance ml-training-and-experiment-engineering rag-quality-and-retrieval-design"),
+            "data-format-contract-usage": ("library-tool-product-builder", "incremental-stream-codecs"),
+            "search-analytics-design": ("quality-test-gate", "experiment-decision-validity"),
+            "commerce-fulfillment-extension": ("backend-change-builder", "reservation-fulfillment-and-return-transitions"),
+            "game-simulation-extension": ("installed-client-change-builder", "scene-assets-and-save-migration simulation-clock-authority-and-replay"),
+            "graphics-compute-extension": ("installed-client-change-builder", "cuda-hip-execution-and-memory metal-resource-synchronization vulkan-synchronization-and-layouts webgpu-device-and-render-contracts"),
+            "hosted-app-extension": ("installed-client-change-builder", "browser-extension-lifecycle-and-messaging ide-extension-host-and-workspace mini-program-lifecycle-and-bridge"),
+            "realtime-media-extension": ("installed-client-change-builder", "media-processing-completeness-and-seek timing-buffering-and-track-lifecycle"),
+            "saas-product-extension": ("backend-change-builder", "subscription-entitlement-timelines usage-seats-and-corrections"),
+            "scientific-computing-extension": ("library-tool-product-builder", "solver-validity-and-reproducibility"),
+            "beam-professional-usage": ("backend-change-builder", "process-messages-and-supervision"),
+            "dart-professional-usage": ("backend-change-builder", "async-streams-and-isolates"),
+            "julia-professional-usage": ("library-tool-product-builder", "arrays-dispatch-and-randomness"),
+            "numerical-correctness": ("library-tool-product-builder", "error-budget-and-oracles"),
+            "php-professional-usage": ("backend-change-builder", "values-errors-and-worker-lifetime"),
+            "r-professional-usage": ("library-tool-product-builder", "shape-missing-values-and-reproducibility"),
+            "ruby-professional-usage": ("backend-change-builder", "dispatch-blocks-and-concurrency"),
+        }
+        for owner, (task_primary, names) in groups.items():
+            for name in names.split():
+                reference = f"references/layer3/{owner}/references/{name}.md"
+                for role, primary in (
+                    ("task-agent", task_primary),
+                    ("analysis-agent", "quality-test-gate" if owner in {"unit-testing", "test-strategy"} else "engineering-change-analysis"),
+                    ("review-agent", "quality-test-gate" if owner in {"unit-testing", "test-strategy", "search-analytics-design"} else "ai-code-review-refactor"),
+                ):
+                    with self.subTest(reference=reference, role=role):
+                        step = dict(profile=role, primary_skill=primary, goal="Examine the assigned mechanism and its failure boundary.", layer3_skills=[owner], professional_references=[], layer3_references=[reference])
+                        text = validate_and_render_fixture_capsule(step)
+                        self.assertIn(str(FIXTURE_HOST_SKILLS_ROOT / primary / reference), text)
+                        step["layer3_skills"] = []
+                        with self.assertRaises(FixtureCapsuleError):
+                            validate_and_render_fixture_capsule(step)
+        for primary, names in {
+            "frontend-change-builder": "react-render-effects-and-identity server-client-rendering-contracts vue-reactivity-and-effect-lifetime",
+            "integration-change-builder": "mcp-protocol-contracts",
+        }.items():
+            for name in names.split():
+                step = dict(profile="task-agent", primary_skill=primary, goal="Implement the bounded framework or protocol behavior.", layer3_skills=[], professional_references=[f"references/{name}.md"], layer3_references=[])
+                self.assertIn(name, validate_and_render_fixture_capsule(step))
+                step["profile"] = "review-agent"
+                with self.assertRaises(FixtureCapsuleError):
+                    validate_and_render_fixture_capsule(step)
+
     def test_selected_current_reference_is_rendered(self):
         self.assertIn('finding-taxonomy.md', validate_and_render_fixture_capsule(self.step()))
 

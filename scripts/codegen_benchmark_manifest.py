@@ -76,6 +76,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "backend-event-before-commit",
     ),
     "devex": (
+        "environment-differential-and-feasibility-evidence",
         "bugfix-same-pattern-scan",
         "dependency-stdlib-native-ladder",
         "helper-reuse-search",
@@ -95,6 +96,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "repair-rereview-required",
     ),
     "validation": (
+        "review-feedback-currentness",
         "ai-experiment-evidence-validity",
         "stale-validation-after-edit",
     ),
@@ -123,6 +125,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "side-effect-boundary",
     ),
     "performance": (
+        "media-simulation-device-evidence",
         "offered-load-and-quality-accounting",
         "event-loop-blocking-async-path",
         "lock-held-across-io",

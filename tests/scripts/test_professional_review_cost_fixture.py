@@ -48,7 +48,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
 
         fixture = copy.deepcopy(_measured_current_cost_fixture())
         self.assertEqual(
-            188,
+            PANEL.PROFESSIONAL_PACKAGE_COUNT,
             fixture["review_contract_change"]["fresh_target_count"],
         )
 
@@ -207,7 +207,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         self.assertEqual(
             {
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 188,
+                "carried_forward_target_count": PANEL.PROFESSIONAL_PACKAGE_COUNT,
                 "input_ratio_ppm": 0,
             },
             fixture["unchanged"],
@@ -247,8 +247,8 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             },
             set(sensitivity),
         )
-        self.assertEqual(188, sensitivity["case_count"])
-        self.assertEqual(188, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, sensitivity["case_count"])
+        self.assertEqual(203, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
         within_ceilings = all((
             sensitivity["fresh_target_count"]["max"]
             <= thresholds["maximum_fresh_target_count"],

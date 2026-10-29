@@ -329,7 +329,7 @@ def _stale_contract_baseline_artifacts(
 
 @functools.lru_cache(maxsize=1)
 def _protocol_packet_cached() -> dict:
-    # Keep all 188 packages and real derived adjacency, with bounded source
+    # Keep all current packages and real derived adjacency, with bounded source
     # text for protocol, evidence, and tampering tests below.
     identities = [
         (target["skill_id"], target["layer"], target["required_expertise_tags"])
@@ -2864,7 +2864,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         self.assertLessEqual(capsule_bytes / full_bytes, 1.05)
         self.assertEqual(full_input_projection, capsule_projection)
         self.assertEqual(
-            188,
+            PANEL.PROFESSIONAL_PACKAGE_COUNT,
             len(capsule["review_projection"]["material_catalog"]),
         )
 
@@ -4011,7 +4011,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         )
         self.assertEqual(8, plan["plan_lineage_depth"])
         self.assertEqual([], plan["fresh_targets"])
-        self.assertEqual(188, len(plan["carried_targets"]))
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(plan["carried_targets"]))
 
     def test_raw_package_intermediate_change_does_not_override_binding(self) -> None:
         packet = _protocol_packet()

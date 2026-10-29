@@ -2,7 +2,7 @@
 
 Foundation Skills are focused source assets for rd-skills Professional Skills. They capture reusable expert judgment for one concrete engineering decision at a time.
 
-The library contains 150 implemented Foundation Skills plus `_template`. They are not language primers, framework walkthroughs, tool catalogs, or independently selected task owners. Selected entries are compiled into Professional Skill references for the single Runtime.
+The library contains 157 implemented Foundation Skills plus `_template`. They are not language primers, framework walkthroughs, tool catalogs, or independently selected task owners. Selected entries are compiled into Professional Skill references for the single Runtime.
 
 Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 

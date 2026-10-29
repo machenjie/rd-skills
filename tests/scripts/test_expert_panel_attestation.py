@@ -4175,6 +4175,7 @@ title: ignored metadata
                 )
 
     def test_representative_189_package_full_fresh_fixture_fits(self) -> None:
+        # Preserve the Phase 2 compact-storage regression and its measured bound.
         value = professional_fixture(review_mode="full-fresh")
         template = value["findings"][1]
         value["findings"] = [

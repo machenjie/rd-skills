@@ -79,7 +79,7 @@ Reuse existing authorization. Ask only for a missing user-owned decision or genu
 
 ## Implementation and Validation
 
-Task agents inspect current owner, relevant tests and minimum affected consumers; reuse existing structure and respect dependency direction before editing. Shared state, concurrency, transactions, public/shared contracts, external consumers, migrations, financial invariants, authority changes, multi-owner dependencies, and integration boundaries require enough depth to implement and validate correctly.
+Task agents inspect current owner, relevant tests and minimum affected consumers; reuse existing structure and respect dependency direction before editing. Inspect shared state, concurrency, transactions, public/shared contracts, external consumers, migrations and financial invariants. Resolve authority changes, multi-owner dependencies and integration boundaries before affected implementation. Validate their failure behavior.
 Add structure only for current requirements or repository evidence. Bind it to actual variation, boundaries, or existing architecture. Possible future reuse alone is insufficient.
 Ordinary work follows inspect -> edit -> self-check -> targeted validation -> done. After the final material edit, require fresh validation of changed behavior. Preserve normal, invalid, boundary, forbidden and regression outcomes where relevant. For reproducible defects, prove the cause, scan for the same pattern, and establish a failing behavior test before repair.
 If safe reproduction is unavailable, retain the verified cause and same-pattern scan.
@@ -90,11 +90,11 @@ After two same-path failures, change the hypothesis, evidence, or approach befor
 ## Review and Repair
 
 Independent review is optional. Use it for a user request or a material question needing independent judgment. Counts alone justify no review.
-When requested, provide the reviewer with its independently selected Review Primary Professional Skill locator and Layer 3, the current change or artifact, relevant source and fresh validation. The reviewer independently inspects the actual scope and reports concrete defects, evidence, reachable failure mechanisms, and required actions. No mandatory professional-risk matrix or finding metadata without a consumer.
-Repair findings directly within the current implementation direction. Redesign only when new evidence invalidates an important decision. Run fresh targeted validation after repair. Re-review only if the repair introduces a new question needing independent judgment or a required review remains unresolved; no review -> repair -> review loop without new evidence.
+When requested, provide the reviewer with its independently selected Review Primary Professional Skill locator and Layer 3. Include the current change or artifact, relevant source and fresh validation. The reviewer independently inspects the actual scope and reports concrete defects, evidence, reachable failure mechanisms, and required actions. No mandatory professional-risk matrix or finding metadata without a consumer.
+Repair findings directly within the current implementation direction. Redesign only when new evidence invalidates an important decision. Run fresh targeted validation after repair. Re-review only if the repair introduces a new question needing independent judgment or a required review remains unresolved. No review -> repair -> review loop without new evidence.
 
 ## Completion
 
-For multi-requirement work, require Task self-check to trace requirements to implementation for omissions, partial or conflicting behavior, and changes back to requirements for unsupported additions.
+For multi-requirement work, require Task self-check. Trace requirements to implementation for omissions and partial or conflicting behavior. Trace changes back to requirements for unsupported additions.
 Complete only when the requested result is satisfied and post-final-edit validation supports it. Report what changed, the checks actually run and their outcomes, skipped/unavailable/flaky or partial evidence, and material proof limits or residual risks.
 Use no daemon, database, private evidence storage, runtime task state engine, hidden protocol record, executable interception, or second workspace/sandbox manager.

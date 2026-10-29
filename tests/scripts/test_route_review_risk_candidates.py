@@ -35,6 +35,7 @@ KEEP_RULE_IDS = {
 CANONICAL_CANDIDATE_RULE_IDS = frozenset(
     {
         "acceptance-definition",
+        "technical-investigation",
         "accepted-brief-task-dag",
         "ambiguous-intake",
         "api-compatibility-artifact",

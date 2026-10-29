@@ -67,7 +67,7 @@ Reference is opened only by its explicit logical path. Compiled references do
 not change top-level Skill counts, and generated indexes are validation aids,
 not catalogs to preload.
 
-The Reference inventory contains 612 registry-indexed Markdown files and 613
+The Reference inventory contains 659 registry-indexed Markdown files and 660
 physical Markdown files. Exactly 1 physical Reference is unindexed: the
 Foundation authoring template Reference.
 

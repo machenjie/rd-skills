@@ -1,78 +1,165 @@
 # Developer Task Coverage
 
 rd-skills is written for AI agents. It combines an engineering control loop
-with professional skill injection. Main routes and coordinates. Analysis
-investigates. Task implements. Review independently examines bounded work.
+with professional skill injection. Main coordinates. Analysis investigates.
+Task implements. Review independently examines bounded work.
 
-## Evidence Contract
+## Evidence Boundaries
 
-A row is complete only when its content, legal role, conditional route, and
-failure evidence agree. A source change alone is not a passing validation.
-The deterministic route oracle is a fixture tool, not an installed runtime.
-Static checks do not prove live host startup, model accuracy, production
-capacity, or every user environment.
+`Extended` and `Added` describe implemented source and loading contracts.
+They do not mean a formal panel accepted the package.
+Route fixtures execute the existing deterministic oracle.
+Capsule tests execute role, selected-owner, exact-Reference, and Host-path checks.
+Behavior cases execute the same assertions against passing, incomplete, and faulty candidates.
+Content review judges the professional method. None substitutes for another.
+
+These checks do not prove real framework or language execution, real Host startup,
+model quality, GPU behavior, production capacity, or every user environment.
+The three fixed expert attestations remain unchanged. Their stale or pending state
+cannot authorize current carry or establish `formal-release-ready`.
 
 ## Engineering Work
 
 | Work | Primary / role | Conditional knowledge | Boundary |
 |---|---|---|---|
 | Understand code or diagnose a failure | engineering-change-analysis / Analysis | Repository or failure evidence | No implementation or invented cause |
-| Investigate technology or feasibility | engineering-change-analysis / Analysis | Technical investigation; experiment design | No required repository; mutating experiments go to Task |
+| Investigate technology or feasibility | engineering-change-analysis / Analysis | Technical investigation and experiment design | No required repository; mutating experiments go to Task |
 | Bootstrap, build, dependency, or Git work | repository-tooling-change-builder / Task | Initialization, build, dependency, Git | Existing feature tasks retain their implementation owner |
-| Web, service, or installed-client implementation | Corresponding implementation owner / Task | Active language, framework, refactor, and domain mechanisms | Repository technology inventory alone triggers nothing |
-| Distributed library or tool implementation | library-tool-product-builder / Task | Language, package, resource, consumer verification | Public contract changes remain with data-api-contract-changer |
-| Review current source | ai-code-review-refactor / Review | Diff review or snapshot audit | Bounded snapshot needs no invented diff |
-| Receive review feedback | Existing implementation owner / Task | Git review-feedback-triage | Triage does not authorize external replies or thread resolution |
-| Release, recovery, or infrastructure | Existing delivery, reliability, or infrastructure owner | Relevant operating contract | Local development changes imply no production authority |
+| Web, service, or installed-client implementation | Corresponding implementation owner / Task | Active language, framework, refactor, and domain mechanisms | Technology inventory alone triggers nothing |
+| Distributed library or tool implementation | library-tool-product-builder / Task | Language, packaging, resources, consumers | Public contract changes remain with data-api-contract-changer |
+| Review current source | ai-code-review-refactor / Review | Diff or bounded snapshot audit | A snapshot requires no invented diff |
+| Receive review feedback | Existing implementation owner / Task | Review feedback triage | Triage grants no reply or resolve authority |
+| Release, recovery, or infrastructure | Existing delivery, reliability, or infrastructure owner | Relevant operating contract | Local development grants no production authority |
 
-## Change Matrix
+## Executable Evidence Index
 
-`Implemented` means source and routing authority are present. Final validation
-and independent review are recorded separately after integration.
+All paths below are under `evals/codegen/`. The case prompt requests bounded
+validation or assertion code, so its fixture Primary is `quality-test-gate`.
+Product-owner routing is verified separately in `evals/routing/cases.yaml`.
 
-| ID | Disposition | Source placement | Primary / role | Validation / remaining boundary |
+| Key | Case | What its assertions establish |
+|---|---|---|
+| B1 | `code-elements/incremental-codec-numerical-boundaries` | All finite chunk partitions, UTF-8/frame boundaries, partial writes, EOF, size limits, unit/shape/tolerance, solver convergence, conservation |
+| B2 | `integration/resource-lifetime-and-unknown-outcome` | Stream/effect cleanup, tenant/locale cache identity, unknown-result reconciliation, host origin, restart/upgrade/unload/uninstall |
+| B3 | `backend/commerce-saas-repeated-events` | Reservation expiry, partial returns, duplicate-event conservation, bounded generation, shrinking/replay, entitlement/usage revision |
+| B4 | `validation/ai-experiment-evidence-validity` | Retrieval miss versus unused evidence, claim support, trial terminal state, leakage, full restore, randomization/SRM/stopping rules |
+| B5 | `performance/offered-load-and-quality-accounting` | Offered/sent/completed work, unsent arrivals, failures, quality/tail/cost criteria, hosted versus self-hosted evidence |
+| B6 | `code-elements/symbol-aware-api-migration` | Symbol identity, aliases, Unicode offsets, semantic defaults, shadowing/manual decisions, residual scan, idempotency |
+| B7 | `validation/review-feedback-currentness` | Reverification of older comments, obsolete/fixed/duplicate/conflicting feedback, reasoned dispositions, separate edit/reply/resolve authority |
+| B8 | `performance/media-simulation-device-evidence` | Rational presentation/seek times, track cleanup, pause/catch-up conservation, replay/save identity, completed device dependencies and artifact versions |
+| B9 | `devex/environment-differential-and-feasibility-evidence` | Reproduction identity, causal interventions, source/environment classification, falsifiable hypotheses, experiment budgets and applicability |
+
+B1–B9 each have a passing candidate and an incomplete starter.
+Eight have one isolated fault; B8 has four.
+The shared `_run_assertion_files` run passed all nine candidates.
+It rejected all nine starters and twelve single-mechanism faults.
+Every rejection contained an assertion failure, not a setup or import failure.
+Sixty-six positive test methods exist across these nine cases.
+That is not the repository's total test count.
+
+## 29-Item Matrix
+
+Source paths are relative to the named Skill. Foundation and Domain entries
+are conditional modifiers. `A/T/R` means Analysis, Task, and Review through an
+authorized Primary; it does not make every Primary legal.
+
+| ID | Disposition and placement | Primary / role | Trigger and skip | Evidence and remaining limit |
 |---|---|---|---|---|
-| P01 | Implemented | repository-tooling root; workspace-build-and-git-modes | repository-tooling / Task | daily-workspace-bootstrap, daily-git-collaboration; no production release authority |
-| P02 | Implemented | Five Foundation candidate, used_by, role, and Reference edges | Original implementation owner / Task | CI-only build, semantic dependency, refactor, rename, and existing-template fixtures |
-| P03 | Implemented | library-tool-product-builder | library-tool-product / Task | daily-library-*; external artifact consumer evidence remains task-specific |
-| P04 | Implemented | technical-investigation; feasibility-experiment-design | engineering-change-analysis / Analysis | daily-technical-investigation; mutation delegated |
-| P05 | Implemented | snapshot-audit | ai-code-review-refactor / Review | daily-snapshot-*; actual inspected scope bounds verdict |
-| F01 | Implemented | failure-diagnosis/development-environment-differential | Diagnosis or implementation owner | daily-environment-differential; environment cause needs reproduction |
-| F02 | Implemented | package-dependency-management/api-migration-and-codemod | Original implementation owner / Task | daily-frontend-migration; symbol identity, idempotency, runtime and residual controls |
-| F03 | Implemented | engineering-change-analysis/feasibility-experiment-design | engineering-change-analysis / Analysis | Falsifiable baseline, budget, stop, and proof-limit decisions |
-| F04 | Implemented | git-professional-usage/review-feedback-triage | Original implementation owner / Task | Comment validity and external action authority remain separate |
-| F05 | Integration pending | Incremental stream codec Reference | Contract or implementation owner | Cross-chunk, truncation, length, and resource cases required |
-| F06 | Integration pending | numerical-correctness | Numerical implementation owner | Units, conditioning, error budget, and oracle evidence required |
-| F07 | Integration pending | Language Foundations; Scala JVM Reference | Actual implementation owner | Per-language content, roles, triggers, and failure cases required |
-| F08 | Integration pending | Frontend, JVM, and Python framework References | Frontend/backend/client Task | Framework lifecycle cases required; ordinary CSS excluded |
-| A01 | Integration pending | AI RAG quality Reference | Data/backend/quality by outcome | Retrieval failure differs from answer-use failure |
-| A02 | Integration pending | AI evaluation Reference | Quality | Graders, trials, holdouts, uncertainty, and subgroup failures |
-| A03 | Integration pending | Integration protocol Reference | Integration | Protocol and connection lifecycle evidence required |
-| A04 | Integration pending | Frontend SSR Reference | Frontend | Server/client ownership and hydration cases required |
-| A05 | Integration pending | Generative and invariant testing Reference | Quality or implementation owner | Generator, oracle, shrinking, and replay cases required |
-| A06 | Integration pending | Test strategy capacity Reference | Quality | Intended arrivals differ from sent and completed work |
-| A07 | Integration pending | AI inference performance Reference | Reliability/platform/quality by outcome | Hosted and self-hosted details load separately |
-| A08 | Integration pending | SaaS Domain | Domain or implementation owner | Subscription, money, entitlement, and usage remain distinct |
-| A09 | Integration pending | AI training Reference | Actual training or quality owner | Leakage, full restore, and artifact compatibility cases |
-| A10 | Integration pending | Experiment decision Reference | Data/analysis/quality by outcome | Randomization unit, stopping, SRM, and uncertainty |
-| D01 | Integration pending | Hosted application Domain | Installed/hosted client owner | Host identity, recycling, upgrade, and permissions |
-| D02 | Integration pending | Commerce fulfillment Domain | Domain/backend owner | Quantity conservation, expiry, and partial fulfillment |
-| D03 | Integration pending | Realtime media Domain | Client/backend owner | Playback, timing, track lifetime, and recovery |
-| D04 | Integration pending | Game simulation Domain | Client/backend/library owner | Timestep, replay, save migration, and determinism limits |
-| D05 | Integration pending | Graphics compute Domain | Actual GPU implementation owner | Submission, visibility, lifetime, and device failure |
-| D06 | Integration pending | Scientific computing Domain | Library/backend/quality owner | Model validity, convergence, units, and invariants |
+| P01 | Extended repository-tooling root and `workspace-build-and-git-modes.md` | repository-tooling / T | Tool source, workspace/build/dependency, or Git work; skip product behavior and production release | Daily routes preserve backend, platform, and delivery neighbors; installation tests exercise exact ownership |
+| P02 | Extended five Foundation candidate/used_by/role/Reference edges | Existing implementation owner / T | Changed initialization, build, dependency, Git, or structural refactor; skip mechanical locks, rename, unchanged contracts | CI-only and lockfile fixtures; active/unchanged and mixed-clause tests; exact-role capsule checks |
+| P03 | Added library-tool-product-builder | library/tool product / T | Internal implementation of distributed library, SDK, CLI; skip changed public contracts and internal repo generators | Daily library/API/tooling boundary routes; actual downstream consumer proof remains task-specific |
+| P04 | Extended technical-investigation mode and `feasibility-experiment-design.md` | engineering-change-analysis / A | Unresolved technical question with constraints; skip accepted implementation without uncertainty | Source-free investigation route; Analysis remains read-only; experiment mutation belongs to Task |
+| P05 | Extended snapshot-audit and code-review method | ai-code-review-refactor / R | Fixed bounded snapshot or diff; skip ordinary module explanation | Snapshot/repository-question routes; Foundation and Reference accept both modes; inspected scope bounds findings |
+| F01 | Added failure-diagnosis `development-environment-differential.md` | Diagnosis or implementation owner / A/T/R | Actual environment divergence; skip unverified environment blame | Diagnosis route and method review; B9 rejects mismatch-as-cause and checks controlled causal records; no real environment reproduced |
+| F02 | Added package-dependency `api-migration-and-codemod.md` | Existing implementation owner / A/T/R | Changed API or runtime semantics; skip mechanical lock refresh | B6 proves bounded symbol identity, idempotency, changed defaults and residual scan; no arbitrary-language migration claim |
+| F03 | Added `feasibility-experiment-design.md` | engineering-change-analysis / A | Falsifiable uncertainty, baseline, budget and stop; skip routine accepted work | Investigation route and method review; B9 rejects non-falsifiable, over-budget or out-of-scope conclusions; no live feasibility experiment |
+| F04 | Added Git `review-feedback-triage.md` | Existing owner / A/T/R | Current review feedback requiring judgment; skip unchanged feedback and simple unrelated Git mentions | B7; feedback can load without Git mutation; external reply and resolve require separate authority |
+| F05 | Added data-format `incremental-stream-codecs.md` | Library/backend/integration/data contract / A/T/R | Incremental bytes, framing or resource bounds; skip ordinary scalar formatting | Expansion route and unchanged control, role capsules, B1; finite fixture domain only |
+| F06 | Added numerical-correctness and `error-budget-and-oracles.md` | Actual numerical owner / A/T/R | Error/precision/conditioning decisions; skip CRUD and unrelated money formatting | Numerical route and unchanged control, role capsules, B1; no universal epsilon or real numerical-library certification |
+| F07 | Added six language Foundations; Scala Reference on JVM | Actual implementation/analysis/review owner | Language semantics affect the task; skip inventory and unchanged mechanisms | Per-language table below; route, role, and content evidence; no installed language-runtime execution |
+| F08 | Added React, Vue, Spring, Django, SQLAlchemy, ASGI References | Frontend / T; JVM/Python owners / A/T/R | Actual render/effect, advice, ORM, or resource lifetime; skip CSS/copy/package-only work | Exact Reference role/owner checks; B2 validates abstract resource/effect traces; real framework behavior remains untested |
+| A01 | Added AI `rag-quality-and-retrieval-design.md` | Actual AI implementation or quality owner / A/T/R | Retrieval and answer-use quality; skip unrelated CRUD | RAG positive/unchanged routes, capsules, B4; fixture evidence does not measure a live model |
+| A02 | Added AI `ai-evaluation-design-and-analysis.md` | quality-test-gate / A/T/R | Dataset, graders, trials and decision uncertainty; skip unsupported score claims | Capsules and B4 trial/claim controls; no live grader or benchmark ranking claim |
+| A03 | Added integration `mcp-protocol-contracts.md` | integration / A/T | MCP negotiation, message/call lifecycle or authorization; skip arbitrary tool keywords | Legal Professional Reference, B2 timeout/reconciliation/origin traces; no real MCP server execution |
+| A04 | Added frontend `server-client-rendering-contracts.md` | frontend / T | SSR, hydration, streaming, server entrypoint; skip CSS/copy | Legal Reference and B2 lifetime/cache isolation; no actual hydration renderer executed |
+| A05 | Added unit-testing `generative-invariant-testing.md` | quality or implementation / A/T/R | Generators, state, metamorphic laws or shrinking; skip decorative randomness | B3 executes 20 bounded generated groups and valid three-event shrink/replay; B1 finite partitions |
+| A06 | Added test-strategy `load-model-and-capacity-evidence.md` | quality-test-gate / A/T/R | Arrival process and saturation evidence; skip throughput-only claims | B5 distinguishes intended arrivals, outcomes, errors and budgets; no production capacity claim |
+| A07 | Added AI `llm-inference-performance.md` | Reliability/platform/quality or implementation / A/T/R | Actual inference cost, quality and performance; skip AI name alone | Platform inference route, owner edges, B5; provider and device behavior remain untested |
+| A08 | Added SaaS Domain and two References | Backend/integration/domain/quality / A/T/R | Subscription, usage and entitlement transitions; skip billing vocabulary alone | Positive/unchanged routes, role capsules, B3 late corrections and policy-defined transitions |
+| A09 | Added AI `ml-training-and-experiment-engineering.md` | Actual training implementation or quality / A/T/R | Training/finetuning or experiment validity; skip ordinary inference | ML route, capsules, B4 distinguishes legitimate future targets from future feature/label-availability leakage and checks restore components |
+| A10 | Added search-analytics `experiment-decision-validity.md` | Data/engineering analysis/quality / A/T/R | Randomization, uncertainty or decision protocol; skip unchanged statistics | Experiment route and mixed-clause controls, quality Review capsule, B4 SRM/stopping/multiplicity |
+| D01 | Added hosted-app Domain and browser/IDE/mini-program References | Installed/hosted-client owner / A/T/R | Host-controlled lifecycle and bridge; skip ordinary PWA/browser frontend | Hosted/PWA neighbor routes, role capsules, B2 distinguishes unload from uninstall and durable state |
+| D02 | Added commerce-fulfillment Domain | Backend/integration/domain/quality / A/T/R | Reservation, fulfillment or returns; skip payment-only mechanics | Positive/unchanged routes, capsules, B3 expiry and quantity conservation |
+| D03 | Added realtime-media Domain and timing/processing References | Actual client/backend/library owner / A/T/R | Clock, buffering, track, seek or media processing; skip media nouns alone | Positive/unchanged routes, capsules, B8 recorded rational clock/seek and cleanup assertions; no actual playback or codec execution |
+| D04 | Added game-simulation Domain and clock/save References | Actual client/backend/library owner / A/T/R | Tick, replay, authority, assets or save evolution; skip game-themed CRUD | Positive/unchanged routes, capsules, B8 recorded fixed-step/pause/catch-up/save/replay assertions; no physical model or cross-environment determinism claim |
+| D05 | Added graphics-compute Domain and WebGPU/Vulkan/Metal/CUDA-HIP References | Actual GPU implementation owner / A/T/R | Submission, visibility, lifetime, failure or artifact compatibility; skip CSS rendering | Positive/unchanged routes, capsules, B8 recorded completion and artifact mismatch assertions; no live GPU or API-equivalence claim |
+| D06 | Added scientific-computing Domain | Library/backend/analysis/quality / A/T/R | Scientific model, solver or convergence; skip unrelated formula vocabulary | Positive/unchanged routes, capsules, B1 rejects unconverged results; no scientific result certification |
+
+## F07 Language Disposition
+
+| Language/runtime | Placement and method | Legal route and evidence | Limit |
+|---|---|---|---|
+| PHP | php-professional-usage; conversions, autoload, errors and worker lifetime | Backend/library/repository, ECA, AI Review; PHP positive/unchanged and active-with-autoload routes; role capsules | Target runtime and dependency semantics still require task evidence |
+| Ruby | ruby-professional-usage; lookup, blocks, exceptions, ensure and concurrency | Actual implementation, ECA, AI Review; Ruby positive/unchanged routes and role capsules | No Ruby interpreter run |
+| Dart | dart-professional-usage; Future/Stream cancellation, isolate and disposal | Installed client and actual Dart backend; backend Future positive/unchanged routes; role capsules | Platform discovery remains explicit; no assumed Flutter target |
+| Scala | java-jvm-professional-usage `scala-types-collections-and-effects.md` | JVM implementation, ECA, AI Review; Scala positive/unchanged routes and exact Reference | JVM sharing does not substitute for the selected effect library's semantics |
+| Elixir/Erlang | beam-professional-usage; mailbox, monitor/link, supervision and unknown outcomes | Actual implementation, ECA, AI Review; BEAM positive/unchanged routes and role capsules | No live distributed BEAM cluster |
+| R | r-professional-usage; shape/recycling, NA/NaN, dependency environment and randomness | Library/backend, ECA, AI Review; R positive/unchanged routes and role capsules | Numerical assertions in B1 are language-independent |
+| Julia | julia-professional-usage; dispatch, broadcasting, arrays, task randomness | Library/backend, ECA, AI Review; Julia positive/unchanged routes and role capsules | No Julia runtime or package environment instantiated |
+
+C/C++ remains in cpp-professional-usage. CUDA/HIP device semantics belong to D05.
+No language package creates a new Primary Professional.
 
 ## Control and Writing
 
 | Requirement | Placement | Observable boundary |
 |---|---|---|
-| AI reader; concise decisions | Content governance and authoring base standard | Short sentences; one decision per item; conditional depth |
-| Main controls only | Main prompt and four Agent Profiles | No target-code inspection, implementation, or self-review |
-| Context isolation | Main coordination rules | Each assignment carries only its objective and relevant evidence |
-| Parallel collaboration | Main coordination rules | Independent reads; isolated independent writes; one integration owner |
-| Efficient loading | Registry six-field Reference contracts | Explicit load/skip, legal role, and required output |
-| Strong feedback | Main User Feedback section | Current activity, findings, blocker, next uncertainty, and validation |
-| Open-ended AI judgment | Authoring base standard | Formal records only for an actual consumer or hard boundary |
+| AI reader and concise decisions | Main prompt, Profiles, authoring standard | Short action sentences; professional detail loads conditionally |
+| Main controls only | Main prompt and four Profiles | No target-code inspection, implementation, business execution or self-review |
+| Context isolation | Main coordination rules | Assignment contains its objective, evidence, constraints, paths and expected result |
+| Parallel collaboration | Main coordination rules | Parallel independent reads; isolated independent writes; serial shared writes; one integration owner |
+| Efficient professional loading | Registry six-column Reference contracts | Exact versus unresolved References, Host roots, load/skip, legal roles and outputs |
+| Strong feedback | Main User Feedback section | Intent, findings, current work, real blockers and fresh validation |
+| Open AI judgment | Authoring base standard | No mandatory ledger, DAG or ceremony without a real consumer or boundary |
+
+## Integration Evidence
+
+Selected base: `1b0892b2b19d2f150aa068128685f0840be11660`.
+Implementation checkpoints: `51542191`, `128a3120`, `8c60d079`, and `f8ab5ea3`.
+They are scoped review points, not final regression or release claims.
+
+Current source inventory is 1 Control, 26 Professional, 157 Foundation, and
+20 Domain Skills. Registry identities are compared with physical source identities.
+The observed build emitted 27 top-level Skills, 168 targeted Layer 3 bodies,
+9 routing-only entries, four Profiles and 27 API archives.
+The complete temporary Layer 3 projection has 177 entries.
+There are 659 indexed References and one unindexed authoring template.
+
+The current route/admission corpus contains 307 canonical route entries,
+62 capability entries and 530 admissions: 110 Professional, 348 Foundation,
+and 72 Domain. These are corpus sizes, not a claim that the final full suite passed.
+The codegen validator accepts 82 definitions, including 32 assertion-backed cases.
+
+The installer recognizes exact frozen historical `runtime-26` and `runtime-27`
+ownership. Current `runtime-coverage-v1` has a distinct identity despite sharing
+27 top-level entries with the older generation. Upgrade checks preserve user
+files and back up retired owned directories. Unknown, duplicate and misclassified
+manifest entries fail before mutation.
+
+The current Professional selector keeps every mandatory relation and conflict.
+Its formula permits the authorized expansion; historical caps remain unchanged.
+The current 203-package graph retains 2831 candidates, with a 4385 catalog ceiling.
+A real old producer's 188-package schema-2 packet passed the old validator,
+reproduced the reviewed failure, and passed the repaired historical validator.
+Current validation still rejects that 188-package packet; its bytes were unchanged.
+
+Final clean-head Development Affected and the complete Full Regression are still
+pending the final material tree. Their commands, selected head, results, repairs,
+and skipped formal gate will be recorded here after execution.
+All final commands use `/tmp/rd-skills-validation-venv/bin/python3` through `PATH`.
+The interpreter is Python 3.14.6. Its fixed dependencies are markdown-it-py 4.2.0,
+mdurl 0.1.2, jsonschema 4.26.0, and tiktoken 0.14.0.
+The temporary environment preserves the repository's declared dependency contract.
 
 ## First Slice Validation
 

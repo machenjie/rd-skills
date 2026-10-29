@@ -32,7 +32,7 @@ The deterministic corpus covers:
 - security work;
 - concurrency and consistency;
 - release and rollback.
-- paired positive and neighboring negative routes for all 13 Domain Skills;
+- paired positive and neighboring negative routes for all 20 Domain Skills;
 - capability-driven Utility no-edit with exact pre-observation, operation, and
   identical post-observation sequencing, including changed and unavailable
   workspace-state failures;

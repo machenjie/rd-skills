@@ -8,7 +8,7 @@ sources and emits standard artifacts into `dist/`. Installers consume `dist/`
 only. Build manifests, package provenance, and source-to-dist freshness prevent
 mixed or stale delivery; they are not per-task approval records.
 
-The Runtime exposes 1 Control and 25 Professional Skills. Foundation
+The Runtime exposes 1 Control and 26 Professional Skills. Foundation
 capabilities and modifier-only Domains remain JIT Layer 3 behind the selected
 Professional and never enter Host top-level discovery. There is no task state
 engine, private evidence store, executable interceptor, or second sandbox.

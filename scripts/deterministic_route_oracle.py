@@ -9037,27 +9037,7 @@ def _classify_professional_families(
             ):
                 projected_statement = candidate
                 projected_changed_scopes.append(candidate)
-        effect_scopes: list[str] = []
-        for scope in _active_knowledge_scopes(projected_statement):
-            if not _scope_is_unchanged(scope):
-                effect_scopes.append(scope)
-                continue
-            without_inline_anti = _normalize_effect_scope(
-                re.sub(
-                    r"\bwith\s+no\b[^.;!?]{0,80}?\bbehaviou?r\b"
-                    r"(?:\s+changes?)?",
-                    " ",
-                    scope,
-                )
-            )
-            remainder_intent = _task_action_intent(without_inline_anti)
-            if (
-                without_inline_anti != scope
-                and remainder_intent["implementation"]
-                and not remainder_intent["implementation_ambiguous"]
-                and not _scope_is_unchanged(without_inline_anti)
-            ):
-                effect_scopes.append(without_inline_anti)
+        effect_scopes = list(_active_knowledge_scopes(projected_statement))
         statement_intent = _task_action_intent(projected_statement)
         if effect_scopes and (statement_intent["implementation"] or statement_intent["preparation"]):
             effect_statements.append(" and ".join(effect_scopes))
@@ -9827,6 +9807,21 @@ def _active_knowledge_scopes(text: str) -> tuple[str, ...]:
             if clause == "without":
                 qualifier = clause
                 continue
+            # Preserve the existing inline anti-qualifier projection before
+            # evaluating a trailing "with" scope. A leading unrelated platform
+            # exclusion must not consume the later accepted task object.
+            without_inline_anti = _normalize_effect_scope(re.sub(
+                r"\bwith\s+no\b[^.;!?]{0,80}?\bbehaviou?r\b(?:\s+changes?)?",
+                " ", clause,
+            ))
+            remainder_intent = _task_action_intent(without_inline_anti)
+            if (
+                without_inline_anti != _normalize_effect_scope(clause)
+                and remainder_intent["implementation"]
+                and not remainder_intent["implementation_ambiguous"]
+                and not _scope_is_unchanged(without_inline_anti)
+            ):
+                clause = without_inline_anti
             # "with" connects active language and mechanism evidence. Cut only
             # a proven unchanged suffix, from the innermost qualifier outward.
             for match in reversed(list(re.finditer(r"\bwith\b", clause))):
@@ -9837,7 +9832,13 @@ def _active_knowledge_scopes(text: str) -> tuple[str, ...]:
             if qualifier == "without":
                 value = "without " + value
             qualifier = ""
-            if not value or _scope_is_unchanged(value):
+            # A coordinated positive action keeps its own scope even when a
+            # neighboring scope is unchanged. Unqualified unchanged lists stay
+            # together so earlier list items cannot become false positives.
+            if not value or (
+                _scope_is_unchanged(value)
+                and not _task_action_intent(value)["implementation"]
+            ):
                 continue
             for _scope_id, scope in _bounded_effect_scopes(value):
                 if not _scope_is_unchanged(scope):
