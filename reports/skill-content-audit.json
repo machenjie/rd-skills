@@ -310284,7 +310284,7 @@
       "detector_contract": {
         "algorithm": "sha256-canonical-json-v1",
         "contract_version": "reference-semantic-detector-contract-v1",
-        "value": "ac0ecd406832afb9af809d2a07159abe0307840cfebedc1b8b54f012fa10de79"
+        "value": "ee6e64b9060ecd97827b6172bea530455d4737538332ca08b52502a5a77c7770"
       },
       "disposition_contract": {
         "applied_count": 88,
@@ -328111,10 +328111,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "520ed7725d5050e933547ac182209f508af971a6d5bb89dfecf10f510d4997ab"
+      "value": "0cfe149f18475d4620f60f0c3d197b6cce6d8d4ea8c4e1b8a10057455e4658a0"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "520ed7725d5050e933547ac182209f508af971a6d5bb89dfecf10f510d4997ab",
+      "aggregate_source_digest": "0cfe149f18475d4620f60f0c3d197b6cce6d8d4ea8c4e1b8a10057455e4658a0",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -328182,7 +328182,7 @@
         },
         {
           "path": "scripts/routing_scenarios.py",
-          "sha256": "7e8663fc83407cd96a6611ee4ed7c9edc09c0c8fea06cd05e5bb6ddce50b171b"
+          "sha256": "4ccd6ba7ebd948eb6df04ba029f499cf6944392d5733039f70cfe8bcd1769773"
         }
       ]
     },

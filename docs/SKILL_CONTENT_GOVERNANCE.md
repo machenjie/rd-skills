@@ -489,6 +489,9 @@ indented or quoted content cannot satisfy declarations. Raw HTML containers are
 excluded because they can hide otherwise parsed tables; complete comments outside
 the required rows remain allowed. Extra, duplicate or missing rows cannot raise
 the budget. The collector and routing projections share this pinned parser.
+Each row must match its declared table header and actual rendered column count.
+Authored cells must equal the parser's cell projection; truncated or padded
+columns cannot supply route evidence.
 Mode-contract References permit 80 lines, and Gate,
 Checklist, or Decision headings permit 15 items. Missing effective reference
 type, load condition, and do-not-load condition are also strict gates; literal

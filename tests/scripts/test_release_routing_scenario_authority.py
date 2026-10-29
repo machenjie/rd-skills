@@ -50,6 +50,24 @@ class ReleaseRoutingScenarioAuthorityTests(unittest.TestCase):
                 self.assertEqual(1, ROUTING.main())
             self.assertIn('missing declared rows', output.getvalue())
 
+    def test_primary_fields_discarded_by_table_width_cannot_pass(self):
+        text = ROUTING.ROUTER.read_text()
+        changed = text.replace(
+            '| Task signal | Start profile | Primary Professional Skill | Review expertise when selected |\n| --- | --- | --- | --- |',
+            '| Active mechanism | Domain modifier |\n| --- | --- |', 1,
+        )
+        self.assertNotEqual(text, changed)
+        self.assertEqual(77, len(changed.splitlines()))
+        with self.assertRaisesRegex(ROUTING.ValidationProblem, 'rendered columns'):
+            ROUTING._release_routing_projection_errors(self.rows, changed)
+        with tempfile.TemporaryDirectory() as directory:
+            router = Path(directory) / 'router.md'
+            router.write_text(changed)
+            output = io.StringIO()
+            with patch.object(ROUTING, 'ROUTER', router), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                self.assertEqual(1, ROUTING.main())
+            self.assertIn('rendered columns', output.getvalue())
+
     def test_codegen_identity_is_existing_unique_nonempty_text(self):
         for value in ('', [], 'missing/case', self.rows[1]['codegen_case_id']):
             with self.subTest(value=value):

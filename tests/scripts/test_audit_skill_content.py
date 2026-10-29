@@ -149,6 +149,27 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         with mock.patch.object(authority, "MarkdownIt", None):
             self.assertIn("requires markdown-it-py==", authority.authoring_router_markdown_errors(text, contract)[0])
 
+    def test_router_headers_and_rendered_columns_match_declared_rows(self) -> None:
+        import routing_scenarios as authority
+
+        contract = authority.load_authoring_router_contract(ROOT)
+        text = (ROOT / authority.ROUTER_PATH).read_text()
+        primary_header = "| Task signal | Start profile | Primary Professional Skill | Review expertise when selected |\n| --- | --- | --- | --- |"
+        domain_header = "| Active mechanism | Domain modifier |\n| --- | --- |"
+        primary_row = "| " + " | ".join(contract["primary_rows"][0]) + " |"
+        variants = {
+            "primary-rendered-in-two-columns": text.replace(primary_header, domain_header, 1),
+            "domain-rendered-in-four-columns": text.replace(domain_header, primary_header, 1),
+            "reordered-primary-header": text.replace("| Start profile | Primary Professional Skill |", "| Primary Professional Skill | Start profile |", 1),
+            "dropped-extra-authored-cell": text.replace(primary_row, primary_row + " unrendered extra cell |", 1),
+            "padded-missing-authored-cell": text.replace(primary_row, "| " + " | ".join(contract["primary_rows"][0][:-1]) + " |", 1),
+        }
+        for name, changed in variants.items():
+            with self.subTest(name=name):
+                self.assertNotEqual(text, changed)
+                self.assertEqual(len(text.splitlines()), len(changed.splitlines()))
+                self.assertTrue(authority.authoring_router_markdown_errors(changed, contract))
+
     def test_reference_detector_binds_router_declaration_and_formula_sources(self) -> None:
         baseline = self.module._reference_semantic_detector_fingerprint()
         source_reader = self.module._detector_repository_source_text
@@ -156,6 +177,7 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             ("ROUTER_NON_DATA_LINE_BUDGET = 14", "ROUTER_NON_DATA_LINE_BUDGET = 15"),
             ('"html": True', '"html": False'),
             ('"markdown-it-py": "4.2.0"', '"markdown-it-py": "4.3.0"'),
+            ('"Start profile"', '"Unbound profile"'),
         ):
             def changed(path: Path) -> str:
                 source = source_reader(path)

@@ -203,6 +203,16 @@ Its refreshed collector still exits 1 for unresolved semantic dispositions and
 the stale fixed semantic detector binding. Router-contract errors remain zero;
 the other two fixed panel attestations are unchanged.
 
+The repair review then found that changed table headers could discard Primary
+columns or pad Domain columns while raw-source comparisons still passed.
+Two new regression tests reproduced that behavior before correction.
+Every accepted row now binds its declared table header, actual column width and
+cell projection; discarded or padded cells cannot satisfy route declarations.
+All three consumers share this projection. Eighteen focused tests and the actual
+routing validator passed, including the prior visibility and freshness guards.
+The prior semantic manifests remain unchanged; this detector repair requires the
+same fresh full Semantic Disposition round before evidence can be promoted.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.

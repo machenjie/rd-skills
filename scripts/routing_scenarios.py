@@ -233,10 +233,14 @@ def load_authoring_router_contract(root: Path) -> dict[str, Any]:
 
 
 ROUTER_MARKDOWN_VERSIONS = {"markdown-it-py": "4.2.0", "mdurl": "0.1.2"}
+ROUTER_TABLE_HEADERS = (
+    ("Task signal", "Start profile", "Primary Professional Skill", "Review expertise when selected"),
+    ("Active mechanism", "Domain modifier"),
+)
 
 
 def authoring_router_rows(text: str) -> list[tuple[str, ...]]:
-    """Read only top-level Markdown table rows with their exact authored cells."""
+    """Bind top-level rows to their header, rendered width, and authored cells."""
     for distribution, expected in ROUTER_MARKDOWN_VERSIONS.items():
         try:
             actual = importlib_metadata.version(distribution)
@@ -257,24 +261,44 @@ def authoring_router_rows(text: str) -> list[tuple[str, ...]]:
                 r"<!--.*?-->", "", part.content, flags=re.DOTALL
             ).strip():
                 raise ValidationProblem("authoring router permits HTML only as complete comments")
-    lines = text.splitlines()
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     rows = []
+    header = None
+    cells = None
+    row_map = None
     for token in tokens:
-        if token.type != "tr_open" or token.level != 2 or token.map is None:
+        if token.type == "table_open" and token.level == 0:
+            header = ()
             continue
-        start, end = token.map
-        if end != start + 1:
+        if token.type == "table_close" and token.level == 0:
+            header = None
+            cells = None
             continue
-        line = lines[start]
-        if not line.startswith("|"):
+        if header is None:
             continue
-        cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
-        if cells in (
-            ("Task signal", "Start profile", "Primary Professional Skill", "Review expertise when selected"),
-            ("Active mechanism", "Domain modifier"),
-        ) or all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+        if token.type == "tr_open" and token.level == 2:
+            cells = []
+            row_map = token.map
             continue
-        rows.append(cells)
+        if token.type == "inline" and token.level == 4 and cells is not None:
+            cells.append(token.content.strip())
+        if token.type != "tr_close" or token.level != 2 or cells is None:
+            continue
+        if row_map is None or row_map[1] != row_map[0] + 1 or not lines[row_map[0]].startswith("|"):
+            raise ValidationProblem("authoring router requires one physical pipe-delimited line per row")
+        authored = tuple(cell.strip() for cell in lines[row_map[0]].strip("|").split("|"))
+        projected = tuple(cells)
+        cells = None
+        if authored != projected:
+            raise ValidationProblem("authoring router authored cells differ from rendered columns")
+        if not header:
+            if projected not in ROUTER_TABLE_HEADERS:
+                raise ValidationProblem("authoring router table header is not declared")
+            header = projected
+        else:
+            if len(projected) != len(header):
+                raise ValidationProblem("authoring router row width differs from its declared header")
+            rows.append(projected)
     return rows
 
 
