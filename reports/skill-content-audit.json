@@ -329030,10 +329030,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "a8d448c3cf02d2e3470ece60d4d2c7f2ca4fad651e52eb28845d2a808b2adb2a"
+      "value": "7eda1a5a621aa227785bfcbd36b575f1fe33fadbd7347263096e956727dbbf03"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "a8d448c3cf02d2e3470ece60d4d2c7f2ca4fad651e52eb28845d2a808b2adb2a",
+      "aggregate_source_digest": "7eda1a5a621aa227785bfcbd36b575f1fe33fadbd7347263096e956727dbbf03",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -329097,7 +329097,7 @@
         },
         {
           "path": "scripts/validation_utils.py",
-          "sha256": "c4936c2a8d9ed13f4c74722c7b2cee7fef3aced8a422037309ad8591241fded2"
+          "sha256": "39ab4daebb28d4c3e9d25dddf55c07637781d873b8ec74cfaa3c933dd3a496c1"
         },
         {
           "path": "scripts/routing_scenarios.py",

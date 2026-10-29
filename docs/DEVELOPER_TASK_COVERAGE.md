@@ -322,6 +322,33 @@ audit has zero blockers, the four Semantic fingerprints are unchanged, and
 all 149 applications remain current. Full Regression is still pending at this
 material checkpoint.
 
+The fourth Full Regression attempt started from clean material commit
+`abbf700f`. Core regenerated the rendered-context report with `status: pass`,
+Task maximum 3,883 against 4,000, and all 8,831,535 Host mappings. It then
+reported a routing-producer failure: all 307 routes passed, including 99
+negative cases, but Decision Eval still froze the compatibility count at 249
+routing cases plus 62 capability cases. The 58 additional routing cases came
+from the authorized daily-engineering and conditional language/Domain
+expansions; no prior case was removed. The failed Core and its owned
+professionalism child were stopped with SIGTERM and no remaining owned
+processes. Commands 2–14 did not run. This attempt is not passing Full
+Regression evidence.
+
+The compatibility repair updates the current Core declaration and its strict
+schema-1 guard together to 307 routing cases plus 62 capability cases. All 249
+earlier routing identities remain; the expansion added 15 daily-engineering
+and 43 conditional-language/Domain cases. No fixture, expected route, or
+historical contract was changed by this repair. A new inventory test reproduced
+the 307-versus-249 mismatch before the fix. Seven Decision tests now pass,
+including unique fixture identities, missing or forged declaration rejection,
+and the existing required/excluded/empty-expectation controls. The failed
+routing producer was rerun as a diagnostic and passed all 307 cases, including
+99 negatives, in 251.831 seconds within its original 600-second limit. The
+fresh content audit has zero blockers; all four Semantic fingerprints remain
+equal to the current packet, all 149 applications are current, and the three
+fixed attestations retain their original bytes. A complete Full Regression on
+the repaired material tree remains required.
+
 ## First Slice Validation
 
 This checkpoint covers P01–P05, F01–F04, and the control/writing changes.
