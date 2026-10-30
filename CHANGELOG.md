@@ -12,7 +12,7 @@ This project uses a simple release history format with an `Unreleased` section u
   and 20 Domain Skills. Runtime delivery is 27/168/9 top-level/targeted/routing-only.
 - Added library and tool product ownership. Extended workspace, technical investigation,
   snapshot audit, language, framework, numerical, AI, and domain decision methods.
-- Current routing has 307 canonical entries and 62 capability entries.
+- Current routing has 324 canonical entries and 62 capability entries.
   Its 530 admissions are 110 Professional, 348 Foundation, and 72 Domain.
   The projection covers 148 unique Foundation Skills in the 177-entry Layer 3 catalog.
 - Added nine executable benchmark cases with passing and faulty controls.
