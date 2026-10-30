@@ -4895,11 +4895,14 @@ class CapabilityCoverageRedTests(unittest.TestCase):
             all(item.get("negative_passed") is True for item in report["results"])
         )
         self.assertEqual(sum(bool(row.get("excluded_skills")) for row in canonical_cases), report["negative_case_count"])
-        self.assertEqual(46, report["domain_family_case_count"])
-        self.assertEqual(26, report["domain_anti_case_count"])
-        self.assertEqual(13, report["domain_transition_case_count"])
-        self.assertEqual(14, report["domain_unchanged_case_count"])
-        self.assertEqual(3, report["max_layer3_per_case"])
+        self.assertEqual(66, report["domain_family_case_count"])
+        self.assertEqual(33, report["domain_anti_case_count"])
+        self.assertEqual(20, report["domain_transition_case_count"])
+        self.assertEqual(21, report["domain_unchanged_case_count"])
+        self.assertEqual(
+            max(len(row["expected"]["layer3_skills"]) for row in canonical_cases),
+            report["max_layer3_per_case"],
+        )
         self.assertEqual("full", report["candidate_coverage"])
         self.assertEqual("proven", report["route_once"])
         self.assertEqual(0, report["legacy_route_count"])

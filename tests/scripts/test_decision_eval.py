@@ -13,7 +13,7 @@ from validation_utils import decision_eval_contract_errors
 
 class DecisionTests(unittest.TestCase):
     def test_compatibility_inventory_matches_unique_current_fixture_ids(self):
-        expected = {'routing_cases': 307, 'capability_cases': 62}
+        expected = {'routing_cases': 324, 'capability_cases': 62}
         actual = {}
         for key, path in (('routing_cases', EVAL.CASES), ('capability_cases', EVAL.CAPABILITY_CASES)):
             with self.subTest(fixture=key):
@@ -27,11 +27,13 @@ class DecisionTests(unittest.TestCase):
 
     def test_compatibility_declaration_rejects_missing_or_forged_counts(self):
         for baseline in (
-            {}, {'routing_cases': 307}, {'capability_cases': 62},
+            {}, {'routing_cases': 324}, {'capability_cases': 62},
             {'routing_cases': 249, 'capability_cases': 62},
-            {'routing_cases': 308, 'capability_cases': 62},
-            {'routing_cases': 307, 'capability_cases': 61},
-            {'routing_cases': 307, 'capability_cases': 63},
+            {'routing_cases': 307, 'capability_cases': 62},
+            {'routing_cases': 323, 'capability_cases': 62},
+            {'routing_cases': 325, 'capability_cases': 62},
+            {'routing_cases': 324, 'capability_cases': 61},
+            {'routing_cases': 324, 'capability_cases': 63},
         ):
             with self.subTest(baseline=baseline):
                 data = copy.deepcopy(EVAL.CORE_CONTRACTS)

@@ -3005,7 +3005,15 @@ class SkillRoutingRoleTests(unittest.TestCase):
         registry = load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         modifiers = domain_route_specs(registry)
         self.assertEqual(set(DOMAIN_ROUTE_SPECS), set(modifiers))
-        self.assertEqual(13, len(modifiers))
+        self.assertEqual(20, len(modifiers))
+        self.assertEqual(
+            {row["name"] for row in registry["domain_skills"]},
+            set(modifiers),
+        )
+        self.assertEqual(
+            {path.parent.name for path in (ROOT / "src/domain-extensions").glob("*/SKILL.md")},
+            set(modifiers),
+        )
         self.assertTrue(
             all(
                 row["routing_mode"] == "modifier-only"

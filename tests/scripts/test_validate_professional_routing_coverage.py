@@ -281,7 +281,7 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
             for row in routing["results"]
         ]
         family_coverage = self.module._domain_family_coverage(results, domains)
-        self.assertEqual(22, len(family_coverage))
+        self.assertEqual(32, len(family_coverage))
         expected_family_case_ids = {
             ("ai-product-extension", "evaluation-evidence"): {
                 "canonical": ["t2b-preparation-ai"],
@@ -381,6 +381,46 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
                     "structure-deliberate-separate-owner-implementations"
                 ],
             },
+            ("saas-product-extension", "subscription-entitlement"): {
+                "canonical": ["expansion-saas-mechanism"],
+                "paraphrase": ["expansion-saas-paraphrase"],
+            },
+            ("hosted-app-extension", "host-lifecycle-capability"): {
+                "canonical": ["expansion-hosted-mechanism"],
+                "paraphrase": ["expansion-hosted-paraphrase"],
+            },
+            ("commerce-fulfillment-extension", "inventory-order-fulfillment"): {
+                "canonical": ["expansion-commerce-mechanism"],
+                "paraphrase": ["expansion-commerce-paraphrase"],
+            },
+            ("realtime-media-extension", "media-clock-quality"): {
+                "canonical": ["expansion-media-mechanism"],
+                "paraphrase": ["expansion-media-paraphrase"],
+            },
+            ("game-simulation-extension", "simulation-authority-time"): {
+                "canonical": ["expansion-game-mechanism"],
+                "paraphrase": ["expansion-game-paraphrase"],
+            },
+            ("graphics-compute-extension", "device-resource-execution"): {
+                "canonical": ["expansion-gpu-mechanism"],
+                "paraphrase": ["expansion-gpu-paraphrase"],
+            },
+            ("scientific-computing-extension", "scientific-model-evidence"): {
+                "canonical": ["expansion-sci-mechanism"],
+                "paraphrase": ["expansion-sci-paraphrase"],
+            },
+            ("ai-product-extension", "retrieval-quality"): {
+                "canonical": ["expansion-rag-mechanism"],
+                "paraphrase": ["expansion-rag-paraphrase"],
+            },
+            ("ai-product-extension", "inference-performance"): {
+                "canonical": ["expansion-inference-mechanism"],
+                "paraphrase": ["expansion-inference-paraphrase"],
+            },
+            ("ai-product-extension", "ml-training"): {
+                "canonical": ["expansion-ml-mechanism"],
+                "paraphrase": ["expansion-ml-paraphrase"],
+            },
         }
         self.assertEqual(
             expected_family_case_ids,
@@ -440,7 +480,15 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
             "windows-platform-extension": (
                 "structure-object-classification-method-placement"
             ),
+            "saas-product-extension": "expansion-saas-transition",
+            "hosted-app-extension": "expansion-hosted-transition",
+            "commerce-fulfillment-extension": "expansion-commerce-transition",
+            "realtime-media-extension": "expansion-media-transition",
+            "game-simulation-extension": "expansion-game-transition",
+            "graphics-compute-extension": "expansion-gpu-transition",
+            "scientific-computing-extension": "expansion-sci-transition",
         }
+        self.assertEqual(set(domains), set(expected_transition_case_ids))
         for domain, case_id in expected_transition_case_ids.items():
             with self.subTest(transition_domain=domain):
                 self.assertIn(case_id, transition[domain])
@@ -459,7 +507,15 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
             "payment-trading-extension": "payment-anti-unchanged-wallet-copy",
             "web3-product-extension": "web3-anti-unchanged-wallet-documentation",
             "windows-platform-extension": "validation",
+            "saas-product-extension": "expansion-saas-unchanged",
+            "hosted-app-extension": "expansion-hosted-unchanged",
+            "commerce-fulfillment-extension": "expansion-commerce-unchanged",
+            "realtime-media-extension": "expansion-media-unchanged",
+            "game-simulation-extension": "expansion-game-unchanged",
+            "graphics-compute-extension": "expansion-gpu-unchanged",
+            "scientific-computing-extension": "expansion-sci-unchanged",
         }
+        self.assertEqual(set(domains), set(expected_unchanged_case_ids))
         for domain, case_id in expected_unchanged_case_ids.items():
             with self.subTest(unchanged_domain=domain):
                 self.assertIn(case_id, unchanged[domain])

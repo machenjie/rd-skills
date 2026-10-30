@@ -409,6 +409,73 @@ class ProfessionalRegistryRoutingContractTests(unittest.TestCase):
 
 
 class ImplementationFamilyClassifierTests(unittest.TestCase):
+    def test_inference_kv_cache_preserves_independent_middleware_ownership(self) -> None:
+        fixture = next(
+            row for row in load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]
+            if row["id"] == "expansion-inference-paraphrase"
+        )
+        cases = (
+            (fixture["prompt"], {"platform-infrastructure"}),
+            ("Implement a backend LLM model inference KV cache capacity repair.", {"backend"}),
+            ("Implement a Redis cache expiration repair.", {"data-middleware"}),
+            ("Implement a KV cache expiration repair.", {"data-middleware"}),
+            (
+                "Implement a Kubernetes manifest for LLM prefill and bounded KV cache; "
+                "implement a Redis cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill and bounded KV cache "
+                "and implement a server cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill "
+                "and implement a Redis KV cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill "
+                "and implement a server KV cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill "
+                "and a Redis KV cache expiration policy.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill "
+                "and a server KV cache expiration policy.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill; "
+                "implement a KV cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Kubernetes manifest for LLM prefill "
+                "and implement a KV cache expiration repair.",
+                {"platform-infrastructure", "data-middleware"},
+            ),
+            (
+                "Implement a Redis cache expiration repair; "
+                "LLM model inference KV cache capacity remains unchanged.",
+                {"data-middleware"},
+            ),
+        )
+        for prompt, expected in cases:
+            with self.subTest(prompt=prompt):
+                self.assertEqual(
+                    expected,
+                    {row["routing_family"] for row in ORACLE.classify_professional_families(prompt)},
+                )
+        decision = _route(fixture["prompt"])["route_decision"]
+        self.assertEqual("direct", decision["path"])
+        self.assertEqual("platform-infrastructure-change-builder", decision["route_result"]["primary_skill"])
+        self.assertEqual(["ai-product-extension"], decision["route_result"]["layer3_skills"])
+
     def test_primary_tracks_production_owner_or_standalone_proof_goal(self) -> None:
         cases = {
             "Fix a backend return value bug and add a regression test.": "backend-change-builder",
@@ -1655,10 +1722,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "[canonical-fixture] Wave1A fixture-count drift; "
                 f"expected=30; actual={len(wave1a_rows)}"
             )
-        if len(document["cases"]) != 307:
+        if len(document["cases"]) != 324:
             mismatches.append(
                 "[canonical-fixture] total case-count drift; "
-                f"expected=307; actual={len(document['cases'])}"
+                f"expected=324; actual={len(document['cases'])}"
             )
         predecessor_rows = [
             row for row in document["cases"]
@@ -2592,7 +2659,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         self.assertIn("reachable", proved_trigger)
 
         document = load_yaml_file(ROOT / "evals" / "routing" / "cases.yaml")
-        self.assertEqual(307, len(document["cases"]))
+        self.assertEqual(324, len(document["cases"]))
         fixtures = {row["id"]: row for row in document["cases"]}
         for case_id, locked in LOCKED_ROUTING_FIXTURES.items():
             with self.subTest(fixture=case_id):

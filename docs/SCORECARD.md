@@ -10,7 +10,7 @@ producer output and the generated or captured artifacts indexed in
 | Registries | four registry validators | 1 Control, 26 Professional, 157 Foundation, and 20 Domain Skills: 204 total and 203 non-Control |
 | Runtime and Agent Profiles | build, Profile, and prompt validators | one Runtime with 27 top-level Skills, exactly four bounded Agent Profiles, and one authoritative control prompt |
 | Contracts | task-contract validator | Markdown Direct Task, Engineering Brief, Task DAG, and Review Handoff |
-| Routing | deterministic routing evaluator | one primary Professional Skill per task; 307 canonical entries and 62 capability entries; 530 admissions are 110 Professional, 348 Foundation, and 72 Domain; the Foundation projection covers 148 unique Foundation Skills in the 177-entry Layer 3 catalog |
+| Routing | deterministic routing evaluator | one primary Professional Skill per task; 324 canonical entries and 62 capability entries; 530 admissions are 110 Professional, 348 Foundation, and 72 Domain; the Foundation projection covers 148 unique Foundation Skills in the 177-entry Layer 3 catalog |
 | Capability coverage | 125-entry matrix and deterministic coverage validators | 125 entries classify as 81 covered, 39 partial, 0 missing, and 5 intentionally unsupported; covered is catalog/routing evidence, not Professional Completeness |
 | Content | link, size, audit, readability, and professionalism checks | no broken references, release-blocking readability disposition, or unresolved professional defect |
 | Tests | full unit suite | all applicable tests pass on the final material edit |

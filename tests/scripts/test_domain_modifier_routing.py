@@ -533,6 +533,32 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
 
 
 class DomainModifierClassifierTests(unittest.TestCase):
+    def test_training_label_leakage_is_not_a_copy_only_change(self) -> None:
+        fixture = next(
+            row for row in load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]
+            if row["id"] == "expansion-ml-paraphrase"
+        )
+        self.assertFalse(ORACLE._documentation_only(fixture["prompt"].casefold()))
+        self.assertEqual(
+            [("ai-product-extension", "ml-training")],
+            ORACLE.domain_route_families(fixture["prompt"]),
+        )
+        decision = ORACLE.route(fixture["prompt"], main_execution=fixture["main_execution"])
+        self.assertEqual("direct", decision["path"])
+        self.assertEqual("backend-change-builder", decision["route_result"]["primary_skill"])
+        self.assertEqual(["ai-product-extension"], decision["route_result"]["layer3_skills"])
+        for prompt in (
+            "Implement a frontend label correction.",
+            "Update model training label leakage documentation.",
+            "Update a frontend label with clearer wording; "
+            "ML training data split and gradient accumulation remain unchanged.",
+            "Implement a backend label correction; "
+            "model training label leakage behavior remains unchanged.",
+        ):
+            with self.subTest(prompt=prompt):
+                self.assertTrue(ORACLE._documentation_only(prompt.casefold()))
+                self.assertEqual([], ORACLE.domain_route_families(prompt))
+
     def test_catalog_is_semantic_only_and_classifier_shape_is_closed(self) -> None:
         catalog = ORACLE._DOMAIN_ROUTE_SPEC_CATALOG
         professional_ids = {
@@ -2166,7 +2192,7 @@ class DomainModifierRouteTests(unittest.TestCase):
 class DomainModifierCorpusContractTests(unittest.TestCase):
     def test_corpus_counts_remain_exact(self) -> None:
         self.assertEqual(
-            307,
+            324,
             len(load_yaml_file(ROOT / "evals/routing/cases.yaml")["cases"]),
         )
         self.assertEqual(

@@ -75,11 +75,11 @@ class HooklessEvaluationTests(unittest.TestCase):
             {
                 "schema_version": 6,
                 "status": "pass",
-                "negative_case_count": 67,
-                "domain_family_case_count": 46,
-                "domain_anti_case_count": 26,
-                "domain_transition_case_count": 13,
-                "domain_unchanged_case_count": 14,
+                "negative_case_count": 99,
+                "domain_family_case_count": 66,
+                "domain_anti_case_count": 33,
+                "domain_transition_case_count": 20,
+                "domain_unchanged_case_count": 21,
             },
         )
         self.assertEqual(report["case_count"], report["passed_count"])
@@ -189,7 +189,7 @@ class HooklessEvaluationTests(unittest.TestCase):
                 {"domain": family["domain"], "family": family["family"]},
                 row["matched_domain_family"],
             )
-        self.assertEqual(22, len(family_variants))
+        self.assertEqual(32, len(family_variants))
         self.assertTrue(
             all(
                 variants == {"canonical", "paraphrase"}
@@ -246,7 +246,7 @@ class HooklessEvaluationTests(unittest.TestCase):
         expected = {
             "schema_version": 6,
             "status": "pass",
-            "negative_case_count": 67,
+            "negative_case_count": 99,
         }
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

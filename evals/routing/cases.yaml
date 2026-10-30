@@ -1277,42 +1277,52 @@ cases:
   - id: expansion-saas-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-saas-mechanism"}
     prompt: "Implement an accepted backend subscription entitlement grace renewal correction with duplicate billing event reconciliation."
+    domain_family: {domain: saas-product-extension, family: subscription-entitlement, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["saas-product-extension"], "review_skill": null}
   - id: expansion-hosted-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-hosted-mechanism"}
     prompt: "Implement browser extension background lifetime recovery."
+    domain_family: {domain: hosted-app-extension, family: host-lifecycle-capability, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "installed-client-change-builder", "layer3_skills": ["hosted-app-extension"], "review_skill": null}
   - id: expansion-commerce-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-commerce-mechanism"}
     prompt: "Implement a backend inventory reservation expiration compensation repair for duplicate fulfillment cancellation."
+    domain_family: {domain: commerce-fulfillment-extension, family: inventory-order-fulfillment, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["commerce-fulfillment-extension"], "review_skill": null}
   - id: expansion-media-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-media-mechanism"}
     prompt: "Fix a frontend component WebRTC jitter clock and packet loss recovery."
+    domain_family: {domain: realtime-media-extension, family: media-clock-quality, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["realtime-media-extension"], "review_skill": null}
   - id: expansion-game-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-game-mechanism"}
     prompt: "Fix a frontend component game simulation fixed timestep replay."
+    domain_family: {domain: game-simulation-extension, family: simulation-authority-time, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["game-simulation-extension"], "review_skill": null}
   - id: expansion-gpu-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-gpu-mechanism"}
     prompt: "Fix a frontend component WebGPU shader buffer layout synchronization."
+    domain_family: {domain: graphics-compute-extension, family: device-resource-execution, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["graphics-compute-extension"], "review_skill": null}
   - id: expansion-sci-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-sci-mechanism"}
     prompt: "Implement a standalone Python library scientific solver convergence repair with unchanged public API."
+    domain_family: {domain: scientific-computing-extension, family: scientific-model-evidence, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["scientific-computing-extension"], "review_skill": null}
   - id: expansion-rag-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-rag-mechanism"}
     prompt: "Implement a backend RAG retrieval quality reranking correction."
+    domain_family: {domain: ai-product-extension, family: retrieval-quality, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
   - id: expansion-inference-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-inference-mechanism"}
     prompt: "Implement a Kubernetes manifest for LLM model inference continuous batching capacity."
+    domain_family: {domain: ai-product-extension, family: inference-performance, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "platform-infrastructure-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
   - id: expansion-ml-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-ml-mechanism"}
     prompt: "Implement a backend ML training checkpoint recovery and distributed sampling repair."
+    domain_family: {domain: ai-product-extension, family: ml-training, variant: canonical}
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
   - id: expansion-stat-mechanism
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-stat-mechanism"}
@@ -1366,36 +1376,50 @@ cases:
   - id: expansion-saas-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-saas-unchanged"}
     prompt: "Implement an accepted backend label correction; SaaS subscription entitlement grace renewal and billing events remain unchanged."
+    domain_anti: saas-product-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["saas-product-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-hosted-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-hosted-unchanged"}
     prompt: "Implement an accepted backend label correction; browser extension manifest and background lifetime remain unchanged."
+    domain_anti: hosted-app-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["hosted-app-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-commerce-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-commerce-unchanged"}
     prompt: "Implement an accepted backend label correction; inventory reservation expiration and fulfillment compensation remain unchanged."
+    domain_anti: commerce-fulfillment-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["commerce-fulfillment-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-media-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-media-unchanged"}
     prompt: "Implement an accepted backend label correction; WebRTC jitter clock and packet loss remain unchanged."
+    domain_anti: realtime-media-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["realtime-media-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-game-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-game-unchanged"}
     prompt: "Implement an accepted backend label correction; game simulation fixed timestep and replay remain unchanged."
+    domain_anti: game-simulation-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["game-simulation-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-gpu-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-gpu-unchanged"}
     prompt: "Implement an accepted backend label correction; WebGPU shader buffer layout synchronization remain unchanged."
+    domain_anti: graphics-compute-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["graphics-compute-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-sci-unchanged
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-sci-unchanged"}
     prompt: "Implement an accepted backend label correction; scientific solver convergence remain unchanged."
+    domain_anti: scientific-computing-extension
+    domain_anti_variant: unchanged-paraphrase
     excluded_skills: ["scientific-computing-extension"]
     expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skill": null}
   - id: expansion-rag-unchanged
@@ -1430,3 +1454,88 @@ cases:
     main_execution: {"producer": "main-control-agent", "task_id": "expansion-codec-review"}
     prompt: "Review the actual diff for incremental decoder truncated frame behavior."
     expected: {"path": "direct", "profile": "review-agent", "primary_skill": "ai-code-review-refactor", "layer3_skills": ["data-format-contract-usage"], "review_skill": "ai-code-review-refactor"}
+  - id: expansion-saas-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-saas-paraphrase}
+    prompt: "Implement an accepted backend seat limit plan change correction when reordered billing events alter the entitlement effective time."
+    domain_family: {domain: saas-product-extension, family: subscription-entitlement, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["saas-product-extension"], "review_skill": null}
+  - id: expansion-hosted-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-hosted-paraphrase}
+    prompt: "Implement an IDE extension activation handler that revokes a host permission during uninstall."
+    domain_family: {domain: hosted-app-extension, family: host-lifecycle-capability, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "installed-client-change-builder", "layer3_skills": ["hosted-app-extension"], "review_skill": null}
+  - id: expansion-commerce-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-commerce-paraphrase}
+    prompt: "Implement a backend shipment compensation repair for a duplicate return merchandise event after partial fulfillment."
+    domain_family: {domain: commerce-fulfillment-extension, family: inventory-order-fulfillment, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["commerce-fulfillment-extension"], "review_skill": null}
+  - id: expansion-media-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-media-paraphrase}
+    prompt: "Fix a frontend component audio stream timestamp backpressure correction to preserve a/v sync."
+    domain_family: {domain: realtime-media-extension, family: media-clock-quality, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["realtime-media-extension"], "review_skill": null}
+  - id: expansion-game-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-game-paraphrase}
+    prompt: "Fix a frontend component physics simulation prediction reconciliation repair with deterministic tick order."
+    domain_family: {domain: game-simulation-extension, family: simulation-authority-time, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["game-simulation-extension"], "review_skill": null}
+  - id: expansion-gpu-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-gpu-paraphrase}
+    prompt: "Fix a frontend component Vulkan command submission memory visibility repair after device loss."
+    domain_family: {domain: graphics-compute-extension, family: device-resource-execution, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["graphics-compute-extension"], "review_skill": null}
+  - id: expansion-sci-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-sci-paraphrase}
+    prompt: "Implement a standalone Python library scientific model conservation and discretization repair with unchanged public API."
+    domain_family: {domain: scientific-computing-extension, family: scientific-model-evidence, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["scientific-computing-extension"], "review_skill": null}
+  - id: expansion-rag-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-rag-paraphrase}
+    prompt: "Implement a backend RAG chunking and citation repair so grounded answer recall uses corrected retrieval quality."
+    domain_family: {domain: ai-product-extension, family: retrieval-quality, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-inference-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-inference-paraphrase}
+    prompt: "Implement a Kubernetes manifest for LLM prefill and decode capacity with bounded KV cache and token latency."
+    domain_family: {domain: ai-product-extension, family: inference-performance, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "platform-infrastructure-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-ml-paraphrase
+    main_execution: {producer: main-control-agent, task_id: expansion-ml-paraphrase}
+    prompt: "Implement a backend model training data split and label leakage repair with resumable gradient accumulation."
+    domain_family: {domain: ai-product-extension, family: ml-training, variant: paraphrase}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["ai-product-extension"], "review_skill": null}
+  - id: expansion-saas-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-saas-transition}
+    prompt: "Implement an accepted backend change to migrate a fixed account seat limit to SaaS subscription renewal entitlements with an explicit grace effective time."
+    domain_transition: {domain: saas-product-extension, family: subscription-entitlement}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["saas-product-extension"], "review_skill": null}
+  - id: expansion-hosted-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-hosted-transition}
+    prompt: "Implement an accepted change to migrate a standalone installed utility into an IDE extension with host activation, host permission revocation, and uninstall cleanup."
+    domain_transition: {domain: hosted-app-extension, family: host-lifecycle-capability}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "installed-client-change-builder", "layer3_skills": ["hosted-app-extension"], "review_skill": null}
+  - id: expansion-commerce-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-commerce-transition}
+    prompt: "Implement an accepted backend change to migrate immediate stock deduction to expiring inventory reservation with fulfillment compensation for duplicate cancellations."
+    domain_transition: {domain: commerce-fulfillment-extension, family: inventory-order-fulfillment}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "backend-change-builder", "layer3_skills": ["commerce-fulfillment-extension"], "review_skill": null}
+  - id: expansion-media-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-media-transition}
+    prompt: "Fix a frontend component to migrate buffered video playback to a realtime media pipeline with timestamp-based a/v sync and packet loss recovery."
+    domain_transition: {domain: realtime-media-extension, family: media-clock-quality}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["realtime-media-extension"], "review_skill": null}
+  - id: expansion-game-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-game-transition}
+    prompt: "Fix a frontend component to migrate a frame-dependent game loop to fixed timestep simulation tick order with deterministic replay."
+    domain_transition: {domain: game-simulation-extension, family: simulation-authority-time}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["game-simulation-extension"], "review_skill": null}
+  - id: expansion-gpu-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-gpu-transition}
+    prompt: "Fix a frontend component to migrate a software renderer to WebGPU command submission with explicit buffer layout and resource lifetime."
+    domain_transition: {domain: graphics-compute-extension, family: device-resource-execution}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "frontend-change-builder", "layer3_skills": ["graphics-compute-extension"], "review_skill": null}
+  - id: expansion-sci-transition
+    main_execution: {producer: main-control-agent, task_id: expansion-sci-transition}
+    prompt: "Implement an accepted standalone Python library change to migrate an empirical approximation to a scientific model with units, conservation and an independent error oracle, preserving the public API."
+    domain_transition: {domain: scientific-computing-extension, family: scientific-model-evidence}
+    expected: {"path": "direct", "profile": "task-agent", "primary_skill": "library-tool-product-builder", "layer3_skills": ["scientific-computing-extension"], "review_skill": null}

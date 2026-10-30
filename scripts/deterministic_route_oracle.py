@@ -4519,7 +4519,7 @@ def _documentation_only(text: str) -> bool:
 
     documentation_change = re.search(
         r"\b(?:edit|implement|migrate|reword|revise|update)\b.{0,120}\b"
-        r"(?:copy|documentation|docs|guide|help text|label|wording)\b",
+        r"(?:copy|documentation|docs|guide|help text|label(?!\s+leakage\b)|wording)\b",
         text,
     )
     documentation_inspection = re.search(
@@ -9006,6 +9006,7 @@ def _classify_professional_families(
     """Classify changed implementation surfaces into semantic owner families."""
 
     effect_statements: list[str] = []
+    middleware_action_scopes: list[str] = []
     projected_changed_scopes: list[str] = []
     for statement in _EFFECT_STATEMENT_BOUNDARY_RE.split(value):
         projected_statement = statement
@@ -9041,6 +9042,13 @@ def _classify_professional_families(
         statement_intent = _task_action_intent(projected_statement)
         if effect_scopes and (statement_intent["implementation"] or statement_intent["preparation"]):
             effect_statements.append(" and ".join(effect_scopes))
+            action_scopes: list[str] = []
+            for scope in effect_scopes:
+                if not action_scopes or _task_action_matches(scope):
+                    action_scopes.append(scope)
+                else:
+                    action_scopes[-1] += " and " + scope
+            middleware_action_scopes.extend(action_scopes)
     effect_value = " ; ".join(effect_statements)
     action_intent = _task_action_intent(value)
     implementation_action = action_intent["implementation"]
@@ -9207,8 +9215,24 @@ def _classify_professional_families(
         ),
         evidence=("installed-application-surface",),
     )
+    # Model execution state does not imply an independent middleware change.
+    # Keep the controlling action boundary and explicit cache owner: an LLM
+    # action cannot suppress a separately changed Redis/server KV cache.
+    middleware_effect_scopes: list[str] = []
+    for scope in middleware_action_scopes:
+        if _contract_domain_hit(
+            scope,
+            _DOMAIN_ROUTE_SPEC_CATALOG["ai-product-extension"]["families"]["inference-performance"],
+        ):
+            scope = re.sub(
+                r"\b(?:(redis|server)\s+)?kv\s+cache\b",
+                lambda match: match.group(0) if match.group(1) else " ",
+                scope,
+            )
+        middleware_effect_scopes.append(scope)
+    middleware_effect_value = " ; ".join(middleware_effect_scopes)
     middleware_subject = any(
-        signal in effect_value
+        signal in middleware_effect_value
         for signal in (
             "database",
             "middleware",

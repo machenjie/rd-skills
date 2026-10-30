@@ -157,7 +157,7 @@ The observed build emitted 27 top-level Skills, 168 targeted Layer 3 bodies,
 The complete temporary Layer 3 projection has 177 entries.
 There are 659 indexed References and one unindexed authoring template.
 
-The current route/admission corpus contains 307 canonical route entries,
+The current route/admission corpus contains 324 canonical route entries,
 62 capability entries and 530 admissions: 110 Professional, 348 Foundation,
 and 72 Domain. These are corpus sizes, not a claim that the final full suite passed.
 The codegen validator accepts 82 definitions, including 32 assertion-backed cases.
