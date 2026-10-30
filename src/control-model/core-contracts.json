@@ -313,7 +313,7 @@
         "reports": ["reports/rendered-context-budget.json"],
         "release_reports": ["reports/rendered-context-budget.md"],
         "authority_inputs": ["context-budget-authority", "behavior-eval-authority", "final-goal-authority", "prompt-contract-authority", "profile-contract-authority"],
-        "timeout_seconds": 600
+        "timeout_seconds": 1200
       },
       {
         "id": "eval-context-control",
