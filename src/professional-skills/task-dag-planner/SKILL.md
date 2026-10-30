@@ -38,7 +38,7 @@ Inspect decisions, semantic boundaries, blocking edges and workspace safety befo
   shared-resource collisions, and uncertainty.
 - Derive splitting, dependencies, parallel safety, ownership, and
   remaining tasks from the accepted decisions.
-- Report a duration critical path only from evidence-backed weights in one time unit. Otherwise report dependency order and timing unknown.
+- Report a duration critical path only from evidence-backed weights in a common unit. Otherwise report dependency order and timing unknown.
 - Do not silently modify acceptance, non-goals, ownership, invariants,
   placement, contract semantics, or rollback.
 - Connect tasks by blocking facts. Compare feasible schedules for the same scope before claiming faster parallel completion.

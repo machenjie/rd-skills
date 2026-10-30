@@ -12,10 +12,11 @@ Use this reference when closing a DAG, repair, parallelization decision, or plan
 
 ## Duration And Parallel Completion
 
-- A timing claim needs nonnegative task-duration weights in one time unit. Record their sources, assumptions, and uncertainty intervals.
+- A timing claim needs nonnegative task-duration weights in a common unit. Record their sources, assumptions, and uncertainty intervals.
 - In an acyclic graph, sum task durations along each dependency path, including single-node paths. The largest sum is the critical-path duration lower bound; retain tied paths and alternatives allowed by uncertain estimates.
 - A dependency lower bound is not a feasible completion schedule. Slot limits, shared resources, scheduling, context transfer, and integration can increase elapsed time.
-- Compare serial and feasible parallel completion for the same accepted scope and assumptions. Include the applicable overhead in both estimates before claiming a time saving.
+- Compare serial and feasible parallel completion for the same accepted scope and assumptions.
+- For that same-scope comparison, include applicable overhead in each estimate before claiming a time saving.
 - Without sufficient duration or overhead evidence, report dependency order, safe parallel opportunities, and timing unknown. Do not invent a benefit from node count or dependency depth.
 
 For example, let A precede B, each taking one hour, with independent C taking ten hours. The duration critical path is C, not the deeper A-to-B path. Serial completion takes twelve hours; two slots with no overhead finish in ten. Three additional hours of parallel-only integration make that schedule take thirteen hours. Scheduling does not shorten the graph's ten-hour dependency lower bound.

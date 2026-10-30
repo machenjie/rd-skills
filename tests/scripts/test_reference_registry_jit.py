@@ -2827,7 +2827,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 ("rejected edges", "nonblocking"),
                 ("collision surfaces", "shared-write surfaces", "resource surfaces"),
                 ("candidate critical path", "supported edges"),
-                ("task durations", "common time unit", "missing duration evidence"),
+                ("task durations", "common unit", "missing duration evidence"),
                 ("dependency-only duration lower bound", "resource limits", "scheduling overhead"),
                 ("parallel opportunity", "no path dependency"),
                 ("cycles", "uncertainty"),

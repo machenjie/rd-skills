@@ -20,7 +20,6 @@ Use this reference when `microservice-splitting` needs deeper split-force calibr
 | Operational capacity | Accountable owners and capacity for operating artifacts required by service risks and platform policy exist | Another service would exceed team support capacity |
 
 ## Extraction Patterns
-
 | Pattern | Fit | Required evidence |
 | --- | --- | --- |
 | In-process module boundary first | Split force is weak or data/contract readiness is low | Import rule, public facade, ownership map, and reassessment trigger |

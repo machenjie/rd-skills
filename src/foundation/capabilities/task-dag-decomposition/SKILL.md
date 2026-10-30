@@ -32,12 +32,12 @@ Analyze nodes and edges as advisory pre-DAG candidate graph evidence that a cons
 
 1. Propose a candidate node only when it owns an acceptance-linked outcome and produced output.
 2. Classify every proposed dependency as a data edge, control edge, contract edge, or order edge.
-3. Pair each proposed edge with current evidence and its downstream blocker before accepting it.
-4. Record rejected edges with evidence that preference, proximity, or chronology is nonblocking.
-5. Map collision, shared-write, and resource surfaces across files, generated outputs, contracts, schemas, fixtures, stores, queues, and external resources.
-6. Derive the candidate critical path from supported edges and evidence-backed durations in one time unit. Without duration evidence, report dependency order and mark timing unknown.
-7. Identify parallel opportunity only where no supported path dependency exists. Retain collision and resource evidence for the consumer.
-8. Detect cycles and ambiguous output ownership; record unresolved facts as uncertainty. State proof limits and residual risk for every material graph conclusion.
+3. Before accepting or rejecting an edge, record current evidence. Acceptance requires a downstream blocker; preference, proximity, or chronology alone is nonblocking.
+4. Map collision, shared-write, and resource surfaces across files, generated outputs, contracts, schemas, fixtures, stores, queues, and external resources.
+5. Derive the candidate critical path from supported edges and evidence-backed durations in a common unit. Without duration evidence, report dependency order and mark timing unknown.
+6. Identify parallel opportunity only where no supported path dependency exists. Retain collision and resource evidence for the consumer.
+7. Detect cycles and ambiguous output ownership. Preserve unresolved facts as uncertainty.
+8. State proof limits and residual risk for every material graph conclusion.
 
 ## Anti-Patterns
 
@@ -52,8 +52,9 @@ Analyze nodes and edges as advisory pre-DAG candidate graph evidence that a cons
 2. Classify and source every proposed edge.
 3. Record rejected edges and cycles.
 4. Map collision, shared-write, and resource surfaces.
-5. Record duration evidence or timing unknown. Identify parallel opportunity separately.
-6. Return uncertainty, proof limits, and residual risk for consumer acceptance or rejection.
+5. Record duration evidence or timing unknown.
+6. Identify parallel opportunity separately.
+7. Return uncertainty, proof limits, and residual risk for consumer acceptance or rejection.
 
 ## Stop Conditions
 
